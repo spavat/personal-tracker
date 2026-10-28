@@ -6,6 +6,7 @@ import { Fragment } from "react/jsx-runtime";
 import PageTitle from "../../components/page-title";
 import { PendingContent } from "../../components/pending-content";
 import { useStoredValue } from "../../hooks/stored-value";
+import { useIsOwner } from "../../hooks/use-is-owner";
 import { formatDate, getPeriodDifference } from "../../utils";
 import { artistDetailsQuery } from "./api";
 import { MODULE_NAME } from "./constants";
@@ -13,6 +14,7 @@ import { formatShowDate } from "./utils";
 
 export default function ArtistDetails({ artistId }: { artistId: string }) {
 	const navigate = useNavigate();
+	const isOwner = useIsOwner();
 
 	const [groupBySpectacle, setGroupBySpectacle] = useStoredValue("show_artist_details_groupBySpectacle", false);
 	const [isPending, startTransition] = useTransition();
@@ -36,25 +38,27 @@ export default function ArtistDetails({ artistId }: { artistId: string }) {
 				<div className="title">
 					<h2>
 						{details.name}{" "}
-						<button
-							type="button"
-							title="Modifier"
-							onClick={() =>
-								navigate({
-									to: "/shows/artists/$artistId/edit",
-									params: { artistId },
-									search: { returnTo: location.pathname },
-									replace: true,
-									resetScroll: false,
-									mask: {
-										to: "/shows/artists/$artistId",
+						{isOwner && (
+							<button
+								type="button"
+								title="Modifier"
+								onClick={() =>
+									navigate({
+										to: "/shows/artists/$artistId/edit",
 										params: { artistId },
-									},
-								})
-							}
-						>
-							<i className="fa-regular fa-pen-to-square"></i>
-						</button>
+										search: { returnTo: location.pathname },
+										replace: true,
+										resetScroll: false,
+										mask: {
+											to: "/shows/artists/$artistId",
+											params: { artistId },
+										},
+									})
+								}
+							>
+								<i className="fa-regular fa-pen-to-square"></i>
+							</button>
+						)}
 					</h2>
 				</div>
 				<div className="general"></div>

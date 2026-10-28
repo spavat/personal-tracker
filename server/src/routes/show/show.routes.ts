@@ -22,6 +22,7 @@ const showRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/search",
 		{
+			config: { public: true },
 			schema: { querystring: SearchQuerystringRequestSchema },
 		},
 		async (request): Promise<any> => searchShow.execute(request.query.search ?? "", request.log),

@@ -5,11 +5,13 @@ import { Fragment } from "react/jsx-runtime";
 
 import { PendingContent } from "../../components/pending-content";
 import { useStoredValue } from "../../hooks/stored-value";
+import { useIsOwner } from "../../hooks/use-is-owner";
 import { groupedWorksQuery } from "./api";
 import { formatShowDate } from "./utils";
 
 export default function WorkList() {
 	const navigate = useNavigate();
+	const isOwner = useIsOwner();
 	const [groupByYear, setGroupByYear] = useStoredValue("show_work_list_groupByYear", false);
 	const [isPending, startTransition] = useTransition();
 	const [optimisticGroupByYear, setOptimisticGroupByYear] = useOptimistic(groupByYear);
@@ -46,7 +48,7 @@ export default function WorkList() {
 							<th>Lieu</th>
 							<th>#</th>
 							<th>Dates</th>
-							<th>Actions</th>
+							{isOwner && <th>Actions</th>}
 						</tr>
 					</thead>
 					{works.map(({ id, name, nbPerformances, nbSpectacles, nbWorks, works }) => {
@@ -142,7 +144,7 @@ export default function WorkList() {
 																);
 															})}
 														</td>
-														{i === 0 && (
+														{isOwner && i === 0 && (
 															<td
 																rowSpan={nbRows}
 																className="alignRight smalltext monospace"
@@ -179,27 +181,29 @@ export default function WorkList() {
 				</table>
 			</PendingContent>
 			<Outlet />
-			<div className="fab-container">
-				<button
-					type="button"
-					className="fab-main"
-					aria-label="Ajouter une oeuvre"
-					onClick={() =>
-						navigate({
-							to: "/shows/works/add",
-							search: { returnTo: location.pathname },
-							replace: true,
-							resetScroll: false,
-							mask: { to: "/shows/works" },
-						})
-					}
-				>
-					<div className="pulse"></div>
-					<div className="heart-line" aria-hidden="true">
-						<i className="fa-solid fa-plus"></i>
-					</div>
-				</button>
-			</div>
+			{isOwner && (
+				<div className="fab-container">
+					<button
+						type="button"
+						className="fab-main"
+						aria-label="Ajouter une oeuvre"
+						onClick={() =>
+							navigate({
+								to: "/shows/works/add",
+								search: { returnTo: location.pathname },
+								replace: true,
+								resetScroll: false,
+								mask: { to: "/shows/works" },
+							})
+						}
+					>
+						<div className="pulse"></div>
+						<div className="heart-line" aria-hidden="true">
+							<i className="fa-solid fa-plus"></i>
+						</div>
+					</button>
+				</div>
+			)}
 		</>
 	);
 }

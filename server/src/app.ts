@@ -4,6 +4,8 @@ import "@fastify/mongodb";
 import { FastifyPluginAsync, FastifyServerOptions } from "fastify";
 import { join } from "node:path";
 
+import { FRONT_URLS } from "./config/front";
+
 interface AppOptions extends FastifyServerOptions, Partial<AutoloadPluginOptions> {}
 // Pass --options via CLI arguments in command to enable these options.
 const options: AppOptions = {};
@@ -11,7 +13,7 @@ const options: AppOptions = {};
 const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void> => {
 	await fastify.register(cors, {
 		// credentials: the front sends the session cookie, which requires an explicit origin
-		origin: process.env.FRONT_URL ?? "http://localhost:5173",
+		origin: FRONT_URLS,
 		credentials: true,
 		methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 	});

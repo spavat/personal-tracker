@@ -27,6 +27,7 @@ const performancesRoutes: FastifyPluginAsync = async (fastify): Promise<void> =>
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/",
 		{
+			config: { public: true },
 			schema: {
 				querystring: PerformanceListQuerystringRequestSchema,
 			},
@@ -39,7 +40,7 @@ const performancesRoutes: FastifyPluginAsync = async (fastify): Promise<void> =>
 		.withTypeProvider<ZodTypeProvider>()
 		.get(
 			"/:performanceId",
-			{ schema: { params: PerformanceDetailsParamsRequestSchema } },
+			{ config: { public: true }, schema: { params: PerformanceDetailsParamsRequestSchema } },
 			async (request, reply) =>
 				(await getPerformance.execute(request.params.performanceId, request.log)) ??
 				reply.notFound("Représentation introuvable"),

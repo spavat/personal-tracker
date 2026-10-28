@@ -30,6 +30,7 @@ const worksRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/grouped",
 		{
+			config: { public: true },
 			schema: {
 				querystring: WorkGroupedListRequestSchema,
 			},

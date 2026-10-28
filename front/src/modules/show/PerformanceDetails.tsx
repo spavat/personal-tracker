@@ -3,12 +3,14 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useLocation } from "@tanstack/react-router";
 
+import { useIsOwner } from "../../hooks/use-is-owner";
 import { performanceDetailsQuery } from "./api";
 import { formatShowDate } from "./utils";
 
 export default function PerformanceDetails({ performanceId }: { performanceId: string }) {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const isOwner = useIsOwner();
 
 	const { data } = useSuspenseQuery(performanceDetailsQuery(performanceId));
 	const details: PerformanceDetailsResponse = data;
@@ -22,25 +24,27 @@ export default function PerformanceDetails({ performanceId }: { performanceId: s
 				<div className="title">
 					<h2>
 						{details.spectacle.name}
-						<button
-							type="button"
-							title="Modifier"
-							onClick={() =>
-								navigate({
-									to: "/shows/performances/$performanceId/edit",
-									params: { performanceId },
-									search: { returnTo: location.pathname },
-									replace: true,
-									resetScroll: false,
-									mask: {
-										to: "/shows/performances/$performanceId",
+						{isOwner && (
+							<button
+								type="button"
+								title="Modifier"
+								onClick={() =>
+									navigate({
+										to: "/shows/performances/$performanceId/edit",
 										params: { performanceId },
-									},
-								})
-							}
-						>
-							<i className="fa-regular fa-pen-to-square"></i>
-						</button>
+										search: { returnTo: location.pathname },
+										replace: true,
+										resetScroll: false,
+										mask: {
+											to: "/shows/performances/$performanceId",
+											params: { performanceId },
+										},
+									})
+								}
+							>
+								<i className="fa-regular fa-pen-to-square"></i>
+							</button>
+						)}
 					</h2>
 				</div>
 				<div className="general">
@@ -71,24 +75,26 @@ export default function PerformanceDetails({ performanceId }: { performanceId: s
 
 				{hasRoles && (
 					<>
-						<button
-							type="button"
-							onClick={() =>
-								navigate({
-									to: "/shows/performances/$performanceId/casting",
-									params: { performanceId: performanceId },
-									search: { returnTo: location.pathname },
-									replace: true,
-									resetScroll: false,
-									mask: {
-										to: "/shows/performances/$performanceId",
+						{isOwner && (
+							<button
+								type="button"
+								onClick={() =>
+									navigate({
+										to: "/shows/performances/$performanceId/casting",
 										params: { performanceId: performanceId },
-									},
-								})
-							}
-						>
-							Editer le casting
-						</button>
+										search: { returnTo: location.pathname },
+										replace: true,
+										resetScroll: false,
+										mask: {
+											to: "/shows/performances/$performanceId",
+											params: { performanceId: performanceId },
+										},
+									})
+								}
+							>
+								Editer le casting
+							</button>
+						)}
 						<table className="list casting alternate">
 							<thead>
 								<tr>
@@ -124,26 +130,28 @@ export default function PerformanceDetails({ performanceId }: { performanceId: s
 				{!hasRoles && (
 					<>
 						<p>Aucun casting</p>
-						<p>
-							<button
-								type="button"
-								onClick={() =>
-									navigate({
-										to: "/shows/performances/$performanceId/casting",
-										params: { performanceId: performanceId },
-										search: { returnTo: location.pathname },
-										replace: true,
-										resetScroll: false,
-										mask: {
-											to: "/shows/performances/$performanceId",
+						{isOwner && (
+							<p>
+								<button
+									type="button"
+									onClick={() =>
+										navigate({
+											to: "/shows/performances/$performanceId/casting",
 											params: { performanceId: performanceId },
-										},
-									})
-								}
-							>
-								Ajouter le casting
-							</button>
-						</p>
+											search: { returnTo: location.pathname },
+											replace: true,
+											resetScroll: false,
+											mask: {
+												to: "/shows/performances/$performanceId",
+												params: { performanceId: performanceId },
+											},
+										})
+									}
+								>
+									Ajouter le casting
+								</button>
+							</p>
+						)}
 					</>
 				)}
 			</div>

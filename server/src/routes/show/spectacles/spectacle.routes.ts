@@ -20,6 +20,7 @@ const spectaclesRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/grouped",
 		{
+			config: { public: true },
 			schema: { querystring: SpectacleGroupedListRequestSchema },
 		},
 		async (request): Promise<any> => getGroupedSpectacles.execute(request.query.groupByYear, request.log),
@@ -27,6 +28,7 @@ const spectaclesRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/:id",
 		{
+			config: { public: true },
 			schema: { params: SpectacleDetailsParamsRequestSchema },
 		},
 		async (request, reply): Promise<any> =>

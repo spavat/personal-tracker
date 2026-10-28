@@ -22,6 +22,7 @@ const placesRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/",
 		{
+			config: { public: true },
 			schema: { querystring: PlaceListQuerystringRequestSchema },
 		},
 		async (request): Promise<any> => listPlaces.execute(request.query.sort, request.log),
@@ -30,6 +31,7 @@ const placesRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/:id",
 		{
+			config: { public: true },
 			schema: { params: PlaceDetailsParamsRequestSchema, querystring: PlaceDetailsQuerystringRequestSchema },
 		},
 		async (request, reply): Promise<any> =>

@@ -53,6 +53,16 @@ export default defineConfig({
 			"@personal-tracker/shared": path.resolve(import.meta.dirname, "../shared/src/index.ts"),
 		},
 	},
+	// Same setup as production: the API is reached on the front origin under /api (VITE_API_BASE_URL=/api),
+	// so the session cookie is first-party whatever host the app is opened from (localhost, LAN IP from a phone)
+	server: {
+		proxy: {
+			"/api": {
+				target: "http://localhost:3000",
+				rewrite: (path) => path.replace(/^\/api/, ""),
+			},
+		},
+	},
 	optimizeDeps: {
 		exclude: ["@personal-tracker/shared"],
 	},
