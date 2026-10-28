@@ -28,11 +28,21 @@
 		"test:ui": "npm run test:ui -w e2e",
 		"test:debug": "npm run test:debug -w e2e",
 		"test:headed": "npm run test:headed -w e2e",
-		"test:db:reset": "npm run db:reset -w e2e"
+		"test:db:reset": "npm run db:reset -w e2e",
+		"prepare": "husky"
 	},
 	"devDependencies": {
 		"@tanstack/eslint-plugin-query": "^5.104.5",
+		"husky": "^9.1.7",
+		"lint-staged": "^17.6.0",
 		"oxfmt": "^0.74.0",
 		"oxlint": "^1.89.0"
+	},
+	"lint-staged": {
+		"*.{js,jsx,ts,tsx,mjs,cjs}": [
+			"oxfmt --no-error-on-unmatched-pattern",
+			"oxlint"
+		],
+		"*.{json,css,md,yml,yaml}": "oxfmt --no-error-on-unmatched-pattern"
 	}
 }
