@@ -1,0 +1,156 @@
+.reading-manga {
+	--complete-color: #608a32;
+	--dev-abandoned-color: darkred;
+	--player-abandoned-color: #df8416;
+	--on-hold-color: #67d0f2;
+
+	--ignore-play-color: #635b5b;
+	.details {
+		display: flex;
+		flex-direction: column;
+		text-align: left;
+	}
+	.tag {
+		width: 100px;
+	}
+	.modelText {
+		width: 20em;
+		height: 25rlh;
+	}
+	.new-reading {
+		text-align: center;
+		padding: 4em;
+	}
+
+	.complete-color {
+		color: var(--complete-color);
+	}
+
+	.dev-abandoned-color {
+		color: var(--dev-abandoned-color);
+	}
+
+	.player-abandoned-color {
+		color: var(--player-abandoned-color);
+	}
+
+	.on-hold-color {
+		color: var(--on-hold-color);
+	}
+
+	.ignore-play-color {
+		color: var(--ignore-play-color);
+	}
+
+	.card_item {
+		&:has(.complete) {
+			border: 2px solid var(--complete-color);
+			background: linear-gradient(
+				var(--gradient-degrees),
+				var(--complete-color) 50px,
+				var(--secondary-background) 0
+			);
+		}
+
+		&:has(.dev-abandoned) {
+			border: 2px solid var(--dev-abandoned-color);
+			background: linear-gradient(
+				var(--gradient-degrees),
+				var(--dev-abandoned-color) 50px,
+				var(--secondary-background) 0
+			);
+		}
+
+		&:has(.player-abandoned) {
+			border: 2px solid var(--player-abandoned-color);
+			background: linear-gradient(
+				var(--gradient-degrees),
+				var(--player-abandoned-color) 50px,
+				var(--secondary-background) 0
+			);
+		}
+
+		&:has(.on-hold) {
+			border: 2px solid var(--on-hold-color);
+			background: linear-gradient(
+				var(--gradient-degrees),
+				var(--on-hold-color) 50px,
+				var(--secondary-background) 0
+			);
+		}
+	}
+
+	/**
+	* MANGA LIST
+	*/
+	/* Position */
+	.list.mangas td:nth-of-type(1),
+	.list.mangas th:nth-of-type(1),
+	/* Actions */
+	.list.mangas td:nth-of-type(8),
+	.list.mangas th:nth-of-type(8) {
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+	/* Manga title */
+	.list.mangas td:nth-of-type(3),
+	.list.mangas th:nth-of-type(3),
+	/* Author */
+	.list.mangas td:nth-of-type(4),
+	.list.mangas th:nth-of-type(4),
+	/* Links */
+	.list.mangas td:nth-of-type(5),
+	.list.mangas th:nth-of-type(5) {
+		text-align: left;
+	}
+
+	/* Status */
+	.list.mangas td:nth-of-type(2),
+	.list.mangas th:nth-of-type(2),
+	/* First reading date */
+	.list.mangas td:nth-of-type(6),
+	.list.mangas th:nth-of-type(6),
+	/* Last reading date */
+	.list.mangas td:nth-of-type(7),
+	.list.mangas th:nth-of-type(7) {
+		text-align: center;
+		font-variant-numeric: tabular-nums;
+	}
+
+	/**
+	* READINGS LIST
+	*/
+	/* Position */
+	.list.readings td:nth-of-type(1),
+	.list.readings th:nth-of-type(1),
+	/* Day*/
+	.list.readings td:nth-of-type(2),
+	.list.readings th:nth-of-type(2),
+	/* Actions */
+	.list.readings td:nth-of-type(8),
+	.list.readings th:nth-of-type(8) {
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* Date */
+	.list.readings td:nth-of-type(3),
+	.list.readings th:nth-of-type(3),
+	/* Name */
+	.list.readings td:nth-of-type(4),
+	.list.readings th:nth-of-type(4),
+	/* Language */
+	.list.readings td:nth-of-type(6),
+	.list.readings th:nth-of-type(6),
+	/* Origin */
+	.list.readings td:nth-of-type(7),
+	.list.readings th:nth-of-type(7) {
+		text-align: left;
+		font-variant-numeric: tabular-nums;
+	}
+	/* Edition */
+	.list.readings td:nth-of-type(5),
+	.list.readings th:nth-of-type(5) {
+		text-align: center;
+	}
+}

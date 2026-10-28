@@ -1,0 +1,38 @@
+{
+	"name": "personal-tracker",
+	"version": "1.0.0",
+	"private": true,
+	"description": "",
+	"license": "ISC",
+	"author": "spavat",
+	"workspaces": [
+		"shared",
+		"front",
+		"server",
+		"e2e"
+	],
+	"type": "module",
+	"scripts": {
+		"front": "npm run dev --prefix front",
+		"server": "cd server && node server.js",
+		"ip": "ip route show | grep -i default | awk '{ print $3}'",
+		"fmt": "oxfmt",
+		"lint": "oxlint",
+		"fmt:check": "oxfmt --check",
+		"env:up": "docker compose up -d --wait && ./docker/garage/init.sh",
+		"env:down": "docker compose down",
+		"dev:up": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --wait && ./docker/garage/init.sh",
+		"dev:down": "docker compose -f docker-compose.yml -f docker-compose.dev.yml down",
+		"test:build": "npm run build --prefix shared && npm run build --prefix server && npm run build:test --prefix front",
+		"test": "npm run test -w e2e",
+		"test:ui": "npm run test:ui -w e2e",
+		"test:debug": "npm run test:debug -w e2e",
+		"test:headed": "npm run test:headed -w e2e",
+		"test:db:reset": "npm run db:reset -w e2e"
+	},
+	"devDependencies": {
+		"@tanstack/eslint-plugin-query": "^5.104.5",
+		"oxfmt": "^0.74.0",
+		"oxlint": "^1.89.0"
+	}
+}

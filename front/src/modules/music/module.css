@@ -1,0 +1,65 @@
+.music {
+	--complete-color: #608a32;
+	--dev-abandoned-color: darkred;
+	--player-abandoned-color: #df8416;
+	--on-hold-color: #67d0f2;
+	--ignore-play-color: #635b5b;
+
+	/**
+	* MUSIC LIST
+	*/
+	/* Position */
+	.list.listenings td:nth-of-type(1),
+	.list.listenings th:nth-of-type(1),
+	/* Release Date */
+	.list.listenings td:nth-of-type(4),
+	.list.listenings th:nth-of-type(4),
+	/* Duration */
+	.list.listenings td:nth-of-type(5),
+	.list.listenings th:nth-of-type(5) {
+		text-align: right;
+	}
+
+	/* Artists, Album */
+	.list.listenings td:nth-of-type(3),
+	.list.listenings th:nth-of-type(3),
+
+	/* Genre */
+	.list.listenings td:nth-of-type(6),
+	.list.listenings th:nth-of-type(6) {
+		text-align: left;
+	}
+
+	/* Date */
+	.list.listenings td:nth-of-type(2),
+	.list.listenings th:nth-of-type(2) {
+		text-align: center;
+	}
+	.list.listenings td:nth-of-type(1) {
+		width: 4%;
+	}
+	.list.listenings td:nth-of-type(2) {
+		width: 9%;
+	}
+	.list.listenings td:nth-of-type(4) {
+		width: 9%;
+	}
+	.list.listenings td:nth-of-type(5) {
+		width: 4%;
+	}
+	.list.listenings td:nth-of-type(6) {
+		width: 13%;
+	}
+	.list.listenings td:nth-of-type(7) {
+		width: 8%;
+	}
+	.list.listenings td:nth-of-type(8) {
+		width: 8%;
+	}
+
+	.list.listenings td[colspan="8"] {
+		width: 100%;
+		text-align: center;
+		padding: 1rem;
+	}
+}

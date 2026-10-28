@@ -1,0 +1,15 @@
+# Dev override: persist data in external volumes (never created/removed by compose).
+# Create them once: docker volume create <name>
+volumes:
+    postgres-data:
+        external: true
+        name: personal-tracker-postgres
+    mongo-data:
+        external: true
+        name: personal-tracker-mongo
+    garage-meta:
+        external: true
+        name: personal-tracker-garage-meta
+    garage-data:
+        external: true
+        name: personal-tracker-garage-data

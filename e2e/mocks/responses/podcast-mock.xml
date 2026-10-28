@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+	<channel>
+		<title>Mock Podcast</title>
+		<itunes:image href="https://images.example.com/podcast-cover.svg"/>
+		<item>
+			<guid isPermaLink="false">mock-pod-4</guid>
+			<title>Podcast épisode 4</title>
+			<link>https://feeds.example.com/mock-pod-4</link>
+			<pubDate>Mon, 26 Oct 2026 06:00:00 +0000</pubDate>
+			<itunes:duration>00:35:00</itunes:duration>
+		</item>
+		<item>
+			<guid isPermaLink="false">mock-pod-3</guid>
+			<title>Podcast épisode 3</title>
+			<link>https://feeds.example.com/mock-pod-3</link>
+			<pubDate>Sun, 25 Oct 2026 06:00:00 +0000</pubDate>
+			<itunes:duration>00:50:00</itunes:duration>
+		</item>
+		<item>
+			<guid isPermaLink="false">mock-pod-2</guid>
+			<title>Podcast épisode 2</title>
+			<link>https://feeds.example.com/mock-pod-2</link>
+			<pubDate>Wed, 21 Oct 2026 06:00:00 +0000</pubDate>
+			<itunes:duration>3600</itunes:duration>
+		</item>
+		<item>
+			<guid isPermaLink="false">mock-pod-1</guid>
+			<title>Podcast épisode 1</title>
+			<link>https://feeds.example.com/mock-pod-1</link>
+			<pubDate>Sat, 17 Oct 2026 06:00:00 +0000</pubDate>
+			<itunes:duration>45:00</itunes:duration>
+		</item>
+	</channel>
+</rss>

@@ -1,0 +1,17 @@
+{
+	"extends": "fastify-tsconfig",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"sourceMap": true,
+		"paths": {
+			"@shared/*": ["../shared/*"]
+		},
+		"lib": ["ESNext"],
+		"module": "commonjs",
+		"moduleResolution": "Bundler",
+		"target": "esnext",
+		"esModuleInterop": true
+	},
+	"include": ["src/**/*.ts"]
+}

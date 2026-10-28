@@ -1,0 +1,62 @@
+.sport {
+	.grid {
+		grid-template-columns: repeat(6, 1fr);
+	}
+	textarea {
+		height: 4lh;
+	}
+
+	.activity-thumbnail {
+		display: block;
+		width: 100%;
+		aspect-ratio: 2 / 1;
+		object-fit: cover;
+		border-radius: 20px;
+		margin-bottom: 8px;
+	}
+
+	.gpx-drop-zone {
+		border: 2px dashed #555;
+		border-radius: 6px;
+		padding: 16px;
+		text-align: center;
+		cursor: pointer;
+		transition:
+			border-color 0.2s,
+			background 0.2s;
+		margin-top: 8px;
+	}
+
+	.gpx-drop-zone.drag-over {
+		border-color: var(--accent-color, #4a9eff);
+		background: color-mix(in srgb, var(--accent-color, #4a9eff) 10%, transparent);
+	}
+
+	.gpx-drop-zone.has-file {
+		border-color: #4caf50;
+		color: #4caf50;
+	}
+
+	/* List table alignment */
+	.list.activities td:nth-of-type(1),
+	.list.activities th:nth-of-type(1) {
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.list.activities td:nth-of-type(2),
+	.list.activities th:nth-of-type(2) {
+		text-align: center;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.list.activities td:nth-of-type(5),
+	.list.activities td:nth-of-type(6),
+	.list.activities td:nth-of-type(7),
+	.list.activities th:nth-of-type(5),
+	.list.activities th:nth-of-type(6),
+	.list.activities th:nth-of-type(7) {
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+}

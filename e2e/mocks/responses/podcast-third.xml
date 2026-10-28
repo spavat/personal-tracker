@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+	<channel>
+		<title>Third Podcast</title>
+		<itunes:image href="https://images.example.com/podcast-cover.svg"/>
+		<item>
+			<guid isPermaLink="false">third-2</guid>
+			<title>Third épisode 2</title>
+			<link>https://feeds.example.com/third-2</link>
+			<pubDate>Thu, 22 Oct 2026 06:00:00 +0000</pubDate>
+			<itunes:duration>25:00</itunes:duration>
+		</item>
+		<item>
+			<guid isPermaLink="false">third-1</guid>
+			<title>Third épisode 1</title>
+			<link>https://feeds.example.com/third-1</link>
+			<pubDate>Tue, 20 Oct 2026 06:00:00 +0000</pubDate>
+			<itunes:duration>30:00</itunes:duration>
+		</item>
+	</channel>
+</rss>

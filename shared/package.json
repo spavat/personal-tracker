@@ -1,0 +1,79 @@
+{
+	"name": "@personal-tracker/shared",
+	"version": "1.0.0",
+	"private": true,
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/index.js"
+		},
+		"./calendar": {
+			"types": "./dist/schemas/calendar.schema.d.ts",
+			"import": "./dist/schemas/calendar.schema.js",
+			"require": "./dist/schemas/calendar.schema.js"
+		},
+		"./game": {
+			"types": "./dist/schemas/game.schema.d.ts",
+			"import": "./dist/schemas/game.schema.js",
+			"require": "./dist/schemas/game.schema.js"
+		},
+		"./context-tag": {
+			"types": "./dist/schemas/context-tag.schema.d.ts",
+			"import": "./dist/schemas/context-tag.schema.js",
+			"require": "./dist/schemas/context-tag.schema.js"
+		},
+		"./internet": {
+			"types": "./dist/schemas/internet.schema.d.ts",
+			"import": "./dist/schemas/internet.schema.js",
+			"require": "./dist/schemas/internet.schema.js"
+		},
+		"./lifespan": {
+			"types": "./dist/schemas/lifespan.schema.d.ts",
+			"import": "./dist/schemas/lifespan.schema.js",
+			"require": "./dist/schemas/lifespan.schema.js"
+		},
+		"./money": {
+			"types": "./dist/schemas/money.schema.d.ts",
+			"import": "./dist/schemas/money.schema.js",
+			"require": "./dist/schemas/money.schema.js"
+		},
+		"./music": {
+			"types": "./dist/schemas/music.schema.d.ts",
+			"import": "./dist/schemas/music.schema.js",
+			"require": "./dist/schemas/music.schema.js"
+		},
+		"./reading-book": {
+			"types": "./dist/schemas/reading-book.schema.d.ts",
+			"import": "./dist/schemas/reading-book.schema.js",
+			"require": "./dist/schemas/reading-book.schema.js"
+		},
+		"./reading-manga": {
+			"types": "./dist/schemas/reading-manga.schema.d.ts",
+			"import": "./dist/schemas/reading-manga.schema.js",
+			"require": "./dist/schemas/reading-manga.schema.js"
+		},
+		"./show": {
+			"types": "./dist/schemas/show.schema.d.ts",
+			"import": "./dist/schemas/show.schema.js",
+			"require": "./dist/schemas/show.schema.js"
+		},
+		"./sport": {
+			"types": "./dist/schemas/sport.schema.d.ts",
+			"import": "./dist/schemas/sport.schema.js",
+			"require": "./dist/schemas/sport.schema.js"
+		}
+	},
+	"scripts": {
+		"build": "tsc",
+		"dev": "tsc --watch"
+	},
+	"dependencies": {
+		"zod": "^4.6.7"
+	},
+	"devDependencies": {
+		"typescript": "^7.0.2"
+	}
+}

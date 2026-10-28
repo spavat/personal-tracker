@@ -1,0 +1,324 @@
+.money {
+	.bank_accounts {
+		display: flex;
+		flex-wrap: wrap;
+
+		ul {
+			text-align: left;
+		}
+		.account {
+			font-size: 18px;
+		}
+
+		.accountBadge {
+			display: flex;
+			margin: 10px;
+			width: 300px;
+			height: 52px;
+			position: relative;
+			overflow: hidden;
+			border-radius: 20px;
+			border: 3px solid;
+		}
+
+		.colorBadge {
+			width: 50px;
+			display: grid;
+			place-items: center;
+		}
+
+		.textBadge {
+			width: 100%;
+			text-align: center;
+			background-color: #efefef;
+		}
+
+		.panelBadge {
+			background-color: rgb(215, 215, 215);
+			position: absolute;
+			right: -100px;
+			width: 75px;
+			height: 100%;
+			transition: 0.5s;
+			display: flex;
+			align-items: center;
+
+			i {
+				color: #000000;
+				width: 33%;
+			}
+		}
+
+		.accountBadge:hover .panelBadge {
+			transition: 0.5s;
+			right: 0;
+		}
+	}
+
+	/* TABLE */
+	table.transactions {
+		.new_week {
+			border-top: dashed 2px rgb(181, 169, 169);
+		}
+
+		.separator_year {
+			background-color: #000;
+			color: white;
+			font-weight: bold;
+		}
+
+		.separator_month {
+			background-color: grey;
+			font-weight: bold;
+			color: white;
+		}
+
+		.threshold {
+			background-color: pink;
+		}
+
+		tr:has(.row_checkbox:checked) {
+			background-color: lightgreen;
+		}
+
+		.edit {
+			background-color: lightgreen;
+		}
+	}
+
+	/* Date */
+	.transactions td:nth-of-type(3),
+	/* Transaction */
+	.transactions td:nth-of-type(4),
+	.transactions th:nth-of-type(3) {
+		text-align: left;
+	}
+
+	/* Weekday */
+	.transactions td:nth-of-type(2),
+	/* Amount */
+	.transactions td:nth-of-type(5),
+	.transactions th:nth-of-type(4) {
+		text-align: right;
+	}
+
+	.transactions .left-actions {
+		/* Expand */
+		width: 3%;
+	}
+
+	.transactions .date {
+		/* Date:Day */
+		width: 4%;
+	}
+
+	.transactions .transaction {
+		/* Description */
+		width: 30%;
+	}
+
+	.transactions .amount {
+		/* Montant */
+		width: 5%;
+	}
+
+	.transactions .tags {
+		/* Montant */
+		width: 40%;
+	}
+
+	.transactions .category {
+		/* Montant */
+		width: 20%;
+	}
+
+	.transactions .paiement {
+		/* Montant */
+		width: 20%;
+	}
+
+	.transactions .right-actions {
+		/* Montant */
+		width: 10%;
+	}
+
+	table.categories,
+	table.tags {
+		/* Index */
+		td:nth-of-type(1),
+		th:nth-of-type(1) {
+			text-align: right;
+		}
+
+		/* Nom */
+		td:nth-of-type(2),
+		th:nth-of-type(2),
+		/* Icone */
+		td:nth-of-type(3),
+		th:nth-of-type(3),
+		/* Display */
+		td:nth-of-type(6),
+		th:nth-of-type(6),
+		/* Actions */
+		td:nth-of-type(7),
+		th:nth-of-type(7) {
+			text-align: left;
+		}
+
+		/* Background color */
+		td:nth-of-type(4),
+		th:nth-of-type(4),
+		/* Text color */
+		td:nth-of-type(5),
+		th:nth-of-type(5) {
+			text-align: center;
+		}
+	}
+
+	.debit {
+		color: red;
+		font-weight: bold;
+
+		input {
+			width: 50px;
+		}
+	}
+
+	.credit {
+		color: green;
+		font-weight: bold;
+
+		input {
+			width: 50px;
+		}
+	}
+
+	.comment {
+		white-space: pre-wrap;
+	}
+
+	.transfert {
+		font-weight: bold;
+	}
+
+	.informative {
+		color: grey;
+		font-weight: bold;
+	}
+
+	.month {
+		margin: 2px;
+	}
+
+	.currentMonth {
+		color: lightblue;
+	}
+
+	.tree {
+		text-align: left;
+	}
+
+	ul.tree {
+		/*remove padding for the root ul*/
+		padding-left: 0px;
+	}
+
+	.tree {
+		--spacing: 1.5rem;
+		--radius: 10px;
+		--marker-bg-default: #ddd;
+		--marker-bg-haschild: #6b9abb;
+		/* line-height: 2rem; */
+	}
+
+	.tree li {
+		display: block;
+		position: relative;
+		padding-left: calc(2 * var(--spacing) - var(--radius) - 2px);
+	}
+
+	.tree ul {
+		margin-left: calc(var(--radius) - var(--spacing));
+		padding-left: 0;
+	}
+
+	.tree ul li {
+		border-left: 2px solid #ddd;
+	}
+
+	.tree ul li:last-child {
+		border-color: transparent;
+	}
+
+	.tree ul li::before {
+		content: "";
+		display: block;
+		position: absolute;
+		top: calc(var(--spacing) / -2);
+		left: -2px;
+		width: calc(var(--spacing) + 2px);
+		height: calc(var(--spacing) + 1px);
+		border: solid #ddd;
+		border-width: 0 0 2px 2px;
+	}
+
+	.tree summary {
+		display: block;
+		cursor: pointer;
+	}
+
+	.tree summary::marker,
+	.tree summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.tree summary:focus {
+		outline: none;
+	}
+
+	.tree summary:focus-visible {
+		outline: 1px dotted #000;
+	}
+
+	.tree li::after,
+	.tree summary::before {
+		content: "";
+		display: block;
+		position: absolute;
+		top: calc(var(--spacing) / 2 - var(--radius) + 2px);
+		left: calc(var(--spacing) - var(--radius) - 2px);
+		width: calc(2 * var(--radius));
+		height: calc(2 * var(--radius));
+		border-radius: 50%;
+		background: var(--marker-bg-default);
+	}
+
+	.tree summary::before {
+		content: "+";
+		z-index: 1;
+		background: var(--marker-bg-haschild);
+		color: #fff;
+		line-height: calc(2 * var(--radius));
+		text-align: center;
+	}
+
+	.tree details[open] > summary::before {
+		content: "−";
+	}
+
+	.recap {
+		td {
+			height: 2lh;
+		}
+
+		td,
+		th {
+			text-align: right;
+		}
+
+		th:nth-of-type(1),
+		td:nth-of-type(1) {
+			text-align: left;
+		}
+	}
+}

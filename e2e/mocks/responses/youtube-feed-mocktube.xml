@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:media="http://search.yahoo.com/mrss/" xmlns="http://www.w3.org/2005/Atom">
+	<title>Mock Tube</title>
+	<entry>
+		<id>yt:video:vid00000006</id>
+		<yt:videoId>vid00000006</yt:videoId>
+		<yt:channelId>UCmocktube00000000000001</yt:channelId>
+		<title>Mock video 6</title>
+		<link rel="alternate" href="https://www.youtube.com/watch?v=vid00000006"/>
+		<published>2026-10-26T10:00:00+00:00</published>
+	</entry>
+	<entry>
+		<id>yt:video:vid00000005</id>
+		<yt:videoId>vid00000005</yt:videoId>
+		<yt:channelId>UCmocktube00000000000001</yt:channelId>
+		<title>Mock video 5</title>
+		<link rel="alternate" href="https://www.youtube.com/watch?v=vid00000005"/>
+		<published>2026-10-25T10:00:00+00:00</published>
+	</entry>
+	<entry>
+		<id>yt:video:vid00000004</id>
+		<yt:videoId>vid00000004</yt:videoId>
+		<yt:channelId>UCmocktube00000000000001</yt:channelId>
+		<title>Mock video 4</title>
+		<link rel="alternate" href="https://www.youtube.com/watch?v=vid00000004"/>
+		<published>2026-10-24T10:00:00+00:00</published>
+	</entry>
+	<entry>
+		<id>yt:video:vid00000003</id>
+		<yt:videoId>vid00000003</yt:videoId>
+		<yt:channelId>UCmocktube00000000000001</yt:channelId>
+		<title>Mock video 3</title>
+		<link rel="alternate" href="https://www.youtube.com/watch?v=vid00000003"/>
+		<published>2026-10-23T10:00:00+00:00</published>
+	</entry>
+	<entry>
+		<id>yt:video:vid00000002</id>
+		<yt:videoId>vid00000002</yt:videoId>
+		<yt:channelId>UCmocktube00000000000001</yt:channelId>
+		<title>Mock video 2</title>
+		<link rel="alternate" href="https://www.youtube.com/watch?v=vid00000002"/>
+		<published>2026-10-22T10:00:00+00:00</published>
+	</entry>
+	<entry>
+		<id>yt:video:vid00000001</id>
+		<yt:videoId>vid00000001</yt:videoId>
+		<yt:channelId>UCmocktube00000000000001</yt:channelId>
+		<title>Mock video 1</title>
+		<link rel="alternate" href="https://www.youtube.com/watch?v=vid00000001"/>
+		<published>2026-10-21T10:00:00+00:00</published>
+	</entry>
+</feed>

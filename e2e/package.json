@@ -1,0 +1,22 @@
+{
+	"name": "personal-tracker-e2e",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Playwright E2E tests for personal-tracker",
+	"scripts": {
+		"db:reset": "node setup-db.js",
+		"test:setup": "COMPOSE_ENV_FILES=e2e/test.env npm run env:up --prefix .. && npm run test:build --prefix .. && node setup-db.js",
+		"test": "npm run test:setup && playwright test",
+		"test:ui": "npm run test:setup && playwright test --ui",
+		"test:debug": "npm run test:setup && playwright test --debug",
+		"test:headed": "npm run test:setup && playwright test --headed"
+	},
+	"dependencies": {
+		"mongodb": "^7.7.0",
+		"pg": "^8.23.1"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.64.1",
+		"@types/node": "^26.6.5"
+	}
+}

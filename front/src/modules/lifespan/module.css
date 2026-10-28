@@ -1,0 +1,209 @@
+.lifespan {
+	--lifespan-in-use: #4fae7a;
+	--lifespan-paused: #d9a441;
+	--lifespan-ended: #6c7a89;
+	--lifespan-dispose: #c0575a;
+
+	.error {
+		color: #c0392b;
+	}
+
+	/**
+	* TIMELINE
+	*/
+	.timeline {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.timeline-toolbar {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.timeline-legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1.5rem;
+		font-size: 0.85rem;
+	}
+
+	.timeline-period-filter {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.85rem;
+	}
+
+	.timeline-legend-item i {
+		margin-right: 0.35rem;
+	}
+
+	.timeline-legend-item.in_use i {
+		color: var(--lifespan-in-use);
+	}
+	.timeline-legend-item.paused i {
+		color: var(--lifespan-paused);
+	}
+	.timeline-legend-item.ended i {
+		color: var(--lifespan-ended);
+	}
+	.timeline-legend-item.dispose i {
+		color: var(--lifespan-dispose);
+	}
+
+	.timeline-header,
+	.timeline-row {
+		display: flex;
+		align-items: center;
+	}
+
+	.timeline-header-label,
+	.timeline-row-label {
+		flex: 0 0 200px;
+		padding-right: 1rem;
+		font-size: 0.9rem;
+	}
+
+	.timeline-header-ticks,
+	.timeline-track {
+		position: relative;
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+
+	.timeline-header-ticks {
+		height: 2lh;
+		border-bottom: 1px solid var(--primary-color);
+	}
+
+	.timeline-year-band {
+		position: absolute;
+		top: 0;
+		height: 100%;
+		box-sizing: border-box;
+		border-left: 1px solid var(--primary-color);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.8rem;
+		font-weight: bold;
+		color: var(--main-color);
+		background-color: color-mix(in srgb, var(--secondary-background) 60%, transparent);
+	}
+	.timeline-year-band.alt {
+		background-color: color-mix(in srgb, var(--secondary-background) 90%, white 2%);
+	}
+
+	.timeline-year-line {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		border-left: 1px solid color-mix(in srgb, var(--primary-color) 40%, transparent);
+	}
+
+	.timeline-category {
+		h3,
+		h4 {
+			margin-bottom: 0.5rem;
+			padding-left: calc(var(--depth, 0) * 1.5rem);
+			border-bottom: 1px solid var(--primary-color);
+
+			a {
+				color: inherit;
+				text-decoration: none;
+			}
+			a:hover {
+				text-decoration: underline;
+			}
+		}
+	}
+
+	.timeline-row {
+		min-height: 2.4rem;
+	}
+
+	.timeline-track {
+		height: 22px;
+		background: linear-gradient(
+			to bottom,
+			transparent calc(50% - 0.5px),
+			var(--primary-color) calc(50% - 0.5px),
+			var(--primary-color) calc(50% + 0.5px),
+			transparent calc(50% + 0.5px)
+		);
+	}
+
+	.timeline-not-started {
+		position: absolute;
+		left: 0;
+		font-size: 0.8rem;
+		font-style: italic;
+		color: var(--primary-color);
+	}
+
+	.timeline-segment {
+		position: absolute;
+		top: 0;
+		height: 22px;
+		border-radius: 4px;
+		border-left: 2px solid var(--secondary-background);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.7rem;
+		color: white;
+	}
+	.timeline-segment.first {
+		border-left: none;
+	}
+
+	.timeline-segment.in_use {
+		background-color: var(--lifespan-in-use);
+	}
+	.timeline-segment.paused {
+		background-color: var(--lifespan-paused);
+	}
+	.timeline-segment.ended {
+		background-color: var(--lifespan-ended);
+	}
+
+	.timeline-segment.ongoing::after {
+		content: "";
+		position: absolute;
+		right: -8px;
+		top: 50%;
+		transform: translateY(-50%);
+		border-top: 5px solid transparent;
+		border-bottom: 5px solid transparent;
+		border-left: 8px solid currentColor;
+	}
+	.timeline-segment.ongoing.in_use::after {
+		color: var(--lifespan-in-use);
+	}
+	.timeline-segment.ongoing.paused::after {
+		color: var(--lifespan-paused);
+	}
+	.timeline-segment.ongoing.ended::after {
+		color: var(--lifespan-ended);
+	}
+
+	.timeline-dispose-marker {
+		position: absolute;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background-color: var(--lifespan-dispose);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.65rem;
+		color: white;
+	}
+}
