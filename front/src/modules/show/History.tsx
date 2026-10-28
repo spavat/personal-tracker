@@ -5,6 +5,7 @@ import { Fragment } from "react/jsx-runtime";
 import { HeaderPortal } from "../../components/HeaderPortal";
 import PageTitle from "../../components/page-title";
 import PeriodSelector from "../../components/period-selector";
+import { useIsOwner } from "../../hooks/use-is-owner";
 import { useYearChanger } from "../../hooks/use-year-changer";
 import { formatMonth } from "../../utils";
 import { performanceHistory } from "./api";
@@ -14,6 +15,7 @@ import { formatShowDate } from "./utils";
 
 export default function History({ year }: { year: string }) {
 	const navigate = useNavigate();
+	const isOwner = useIsOwner();
 	const location = useLocation();
 	const [period, listQuery, goPrevious, goNext, canGoPrevious, canGoNext] = useYearChanger({
 		...performanceHistory,
@@ -132,28 +134,30 @@ export default function History({ year }: { year: string }) {
 				</tbody>
 			</table>
 			<Outlet />
-			<div className="fab-container">
-				<button
-					type="button"
-					className="fab-main"
-					aria-label="Ajouter une représentation"
-					onClick={() =>
-						navigate({
-							to: "/shows/history/$year/add",
-							params: { year },
-							search: { returnTo: location.pathname },
-							replace: true,
-							resetScroll: false,
-							mask: { to: "/shows/history/$year", params: { year } },
-						})
-					}
-				>
-					<div className="pulse"></div>
-					<div className="heart-line" aria-hidden="true">
-						<i className="fa-solid fa-plus"></i>
-					</div>
-				</button>
-			</div>
+			{isOwner && (
+				<div className="fab-container">
+					<button
+						type="button"
+						className="fab-main"
+						aria-label="Ajouter une représentation"
+						onClick={() =>
+							navigate({
+								to: "/shows/history/$year/add",
+								params: { year },
+								search: { returnTo: location.pathname },
+								replace: true,
+								resetScroll: false,
+								mask: { to: "/shows/history/$year", params: { year } },
+							})
+						}
+					>
+						<div className="pulse"></div>
+						<div className="heart-line" aria-hidden="true">
+							<i className="fa-solid fa-plus"></i>
+						</div>
+					</button>
+				</div>
+			)}
 		</>
 	);
 }

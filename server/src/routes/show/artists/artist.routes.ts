@@ -22,6 +22,7 @@ const artistsRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/",
 		{
+			config: { public: true },
 			schema: { querystring: ArtistListQuerystringRequestSchema },
 		},
 		async (request): Promise<any> => listArtists.execute(request.query.sort, request.log),
@@ -30,6 +31,7 @@ const artistsRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/:id",
 		{
+			config: { public: true },
 			schema: {
 				params: ArtistDetailsParamsRequestSchema,
 				querystring: ArtistDetailsQuerystringRequestSchema,

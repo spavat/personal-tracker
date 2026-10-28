@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { Fragment, useState } from "react";
 
+import { useIsOwner } from "../../hooks/use-is-owner";
 import { spectacleDetailsQuery } from "./api";
 import { CastingIcon } from "./CastingIcon";
 import { formatShowDate } from "./utils";
@@ -9,6 +10,7 @@ import { formatShowDate } from "./utils";
 export default function SpectacleDetails({ spectacleId }: { spectacleId: string }) {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const isOwner = useIsOwner();
 
 	const { data: details } = useSuspenseQuery(spectacleDetailsQuery(spectacleId));
 
@@ -125,54 +127,58 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 							return (
 								<div key={model.id} className="card_item">
 									{model.name}{" "}
-									<button
-										type="button"
-										title="Modifier"
-										onClick={() =>
-											navigate({
-												to: "/shows/spectacles/$spectacleId/editModel/$modelId",
-												params: {
-													spectacleId,
-													modelId: model.id,
-												},
-												search: { returnTo: location.pathname },
-												replace: true,
-												resetScroll: false,
-												mask: {
-													to: "/shows/spectacles/$spectacleId",
-													params: {
-														spectacleId,
-													},
-												},
-											})
-										}
-									>
-										<i className="fa-regular fa-pen-to-square"></i>
-									</button>
-									<button
-										type="button"
-										title="Supprimer"
-										onClick={() =>
-											navigate({
-												to: "/shows/spectacles/$spectacleId/deleteModel/$modelId",
-												params: {
-													spectacleId,
-													modelId: model.id,
-												},
-												search: { returnTo: location.pathname },
-												replace: true,
-												resetScroll: false,
-												mask: {
-													to: "/shows/spectacles/$spectacleId",
-													params: {
-														spectacleId,
-													},
-												},
-											})
-										}
-									>
-										<i className="fa-regular fa-trash-can"></i>
-									</button>
+									{isOwner && (
+										<>
+											<button
+												type="button"
+												title="Modifier"
+												onClick={() =>
+													navigate({
+														to: "/shows/spectacles/$spectacleId/editModel/$modelId",
+														params: {
+															spectacleId,
+															modelId: model.id,
+														},
+														search: { returnTo: location.pathname },
+														replace: true,
+														resetScroll: false,
+														mask: {
+															to: "/shows/spectacles/$spectacleId",
+															params: {
+																spectacleId,
+															},
+														},
+													})
+												}
+											>
+												<i className="fa-regular fa-pen-to-square"></i>
+											</button>
+											<button
+												type="button"
+												title="Supprimer"
+												onClick={() =>
+													navigate({
+														to: "/shows/spectacles/$spectacleId/deleteModel/$modelId",
+														params: {
+															spectacleId,
+															modelId: model.id,
+														},
+														search: { returnTo: location.pathname },
+														replace: true,
+														resetScroll: false,
+														mask: {
+															to: "/shows/spectacles/$spectacleId",
+															params: {
+																spectacleId,
+															},
+														},
+													})
+												}
+											>
+												<i className="fa-regular fa-trash-can"></i>
+											</button>
+										</>
+									)}
 									<details>
 										<summary>
 											{model.roles.length} rôle{model.roles.length > 1 ? "s" : ""}
@@ -205,62 +211,64 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 				</>
 			)}
 
-			<div className="fab-container">
-				<button
-					type="button"
-					className="fab-main"
-					title="Ajouter une représentation"
-					onClick={() =>
-						navigate({
-							to: "/shows/spectacles/$spectacleId/addPerformance",
-							params: {
-								spectacleId,
-							},
-							search: { returnTo: location.pathname },
-							replace: true,
-							resetScroll: false,
-							mask: {
-								to: "/shows/spectacles/$spectacleId",
+			{isOwner && (
+				<div className="fab-container">
+					<button
+						type="button"
+						className="fab-main"
+						title="Ajouter une représentation"
+						onClick={() =>
+							navigate({
+								to: "/shows/spectacles/$spectacleId/addPerformance",
 								params: {
 									spectacleId,
 								},
-							},
-						})
-					}
-				>
-					<div className="pulse"></div>
-					<div className="heart-line">
-						<i className="fa-regular fa-calendar-plus"></i>
-					</div>
-				</button>
-				<button
-					type="button"
-					className="fab-main"
-					title="Ajouter un modèle"
-					onClick={() =>
-						navigate({
-							to: "/shows/spectacles/$spectacleId/addModel",
-							params: {
-								spectacleId,
-							},
-							search: { returnTo: location.pathname },
-							replace: true,
-							resetScroll: false,
-							mask: {
-								to: "/shows/spectacles/$spectacleId",
+								search: { returnTo: location.pathname },
+								replace: true,
+								resetScroll: false,
+								mask: {
+									to: "/shows/spectacles/$spectacleId",
+									params: {
+										spectacleId,
+									},
+								},
+							})
+						}
+					>
+						<div className="pulse"></div>
+						<div className="heart-line">
+							<i className="fa-regular fa-calendar-plus"></i>
+						</div>
+					</button>
+					<button
+						type="button"
+						className="fab-main"
+						title="Ajouter un modèle"
+						onClick={() =>
+							navigate({
+								to: "/shows/spectacles/$spectacleId/addModel",
 								params: {
 									spectacleId,
 								},
-							},
-						})
-					}
-				>
-					<div className="pulse"></div>
-					<div className="heart-line">
-						<i className="fa-solid fa-table-list"></i>
-					</div>
-				</button>
-			</div>
+								search: { returnTo: location.pathname },
+								replace: true,
+								resetScroll: false,
+								mask: {
+									to: "/shows/spectacles/$spectacleId",
+									params: {
+										spectacleId,
+									},
+								},
+							})
+						}
+					>
+						<div className="pulse"></div>
+						<div className="heart-line">
+							<i className="fa-solid fa-table-list"></i>
+						</div>
+					</button>
+				</div>
+			)}
 
 			<Outlet />
 		</>
