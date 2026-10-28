@@ -34,6 +34,10 @@
 	.app-content {
 		padding: 0rem 1rem;
 	}
+	/* utility: must win over any component display rule, wherever it is declared */
+	.hide-on-mobile {
+		display: none !important;
+	}
 }
 
 .app-header {
@@ -87,6 +91,65 @@
 		background-color: #1f1a27;
 		color: darkgray;
 		border: darkgray 1px solid;
+	}
+}
+
+/* Pages with header actions (period selector): the header stays visible on scroll, the module menu sticks below it */
+.app-content:has(.header-actions:not(:empty)) {
+	.app-header {
+		position: sticky;
+		top: 0;
+		z-index: 11;
+		background-color: var(--main-background);
+	}
+	.menu {
+		/* the .app-header height (same inherited line-height) */
+		top: 2lh;
+	}
+}
+
+/*
+ * Mobile: the header actions go on their own row under the title.
+ * The header sticks with a negative top, so the title row scrolls away
+ * and only the actions row stays visible, with the module menu stuck just below it.
+ */
+@media (max-width: 768px) {
+	.app-content {
+		--title-row-height: 3rem;
+		--actions-row-height: 3rem;
+	}
+	.app-header {
+		height: auto;
+		flex-wrap: wrap;
+
+		h1 {
+			margin: 0;
+			line-height: var(--title-row-height);
+		}
+	}
+	.header-actions:not(:empty) {
+		flex-basis: 100%;
+		height: var(--actions-row-height);
+		display: flex;
+		align-items: center;
+	}
+	.app-content:has(.header-actions:not(:empty)) {
+		.app-header {
+			top: calc(-1 * var(--title-row-height));
+		}
+		.menu {
+			top: var(--actions-row-height);
+		}
+	}
+	.month-year-selector,
+	.year-selector {
+		width: 100%;
+		margin: 0;
+
+		h2 {
+			margin: 0;
+			font-size: 1.2rem;
+		}
 	}
 }
 
@@ -848,6 +911,109 @@ h2 > label {
 	}
 }
 
+/*
+ * Responsive table (opt-in with the "responsive" class): on mobile, one card per row.
+ * Cells with a data-label are stacked as "label: value"; cells without one form the card title.
+ * Prefixed with .module to outrank the per-module column widths and alignments.
+ */
+@media (max-width: 768px) {
+	.module table.list.responsive,
+	.module table.list.responsive thead,
+	.module table.list.responsive tbody {
+		display: block;
+		width: auto;
+	}
+	/* the table thead height (1.5lh) would clip the wrapped chips once thead is a block */
+	.module table.list.responsive thead {
+		height: auto;
+	}
+	/* the global .list rule splits blocks into 2 columns */
+	.module table.list.responsive {
+		column-count: auto;
+	}
+
+	/* header becomes a "Trier par" bar of chips, only for the sortable columns */
+	.module table.list.responsive thead tr {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px;
+		padding: 10px 16px;
+		background-color: var(--primary-color);
+		border-radius: 20px 20px 0 0;
+	}
+	.module table.list.responsive thead tr::before {
+		content: "Trier par :";
+		color: white;
+		margin-right: 4px;
+	}
+	.module table.list.responsive thead tr th:nth-of-type(n) {
+		padding: 2px 10px;
+		border: 1px solid white;
+		border-radius: 999px;
+		background-color: transparent;
+		font-weight: normal;
+	}
+	.module table.list.responsive thead th a {
+		color: white;
+		font-weight: normal;
+	}
+	/* active sort: filled chip, only one keeps its arrow */
+	.module table.list.responsive thead tr th:nth-of-type(n):has(.fa-sort-up, .fa-sort-down) {
+		background-color: white;
+	}
+	.module table.list.responsive thead th:has(.fa-sort-up, .fa-sort-down) :is(a, i) {
+		color: var(--primary-color);
+		font-weight: bold;
+	}
+	.module table.list.responsive thead th .fa-sort,
+	.module table.list.responsive thead th:not(:has(a)),
+	.module table.list.responsive tfoot {
+		display: none;
+	}
+	/* no sortable column: show the row's data-title instead, or no header at all */
+	.module table.list.responsive thead tr:not(:has(a))::before {
+		content: attr(data-title);
+		font-weight: bold;
+	}
+	.module table.list.responsive thead tr:not(:has(a)):not([data-title]) {
+		display: none;
+	}
+
+	/* title cells first on one line, then one line per labelled cell */
+	.module table.list.responsive tbody tr {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		padding: 8px 16px;
+		border-bottom: 1px solid var(--primary-color);
+	}
+
+	.module table.list.responsive tbody td:nth-of-type(n) {
+		/* contains the floated label, so a short value keeps its own line */
+		display: flow-root;
+		flex-basis: 100%;
+		width: auto;
+		padding: 2px 0;
+		text-align: right;
+	}
+	.module table.list.responsive tbody td::before {
+		content: attr(data-label);
+		float: left;
+		margin-right: 12px;
+	}
+	.module table.list.responsive tbody td:not([data-label]) {
+		order: -1;
+		flex-basis: auto;
+		margin-right: 8px;
+		text-align: left;
+		font-weight: bold;
+	}
+	.module table.list.responsive tbody td:nth-of-type(n):empty {
+		display: none;
+	}
+}
+
 .presentation {
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
@@ -899,6 +1065,54 @@ h2 > label {
 		}
 		.stats {
 			grid-column: 3 / span 2;
+		}
+	}
+}
+
+/* Mobile: the zones become a swipeable carousel under the title (CSS scroll snap) */
+@media (max-width: 768px) {
+	.presentation {
+		grid-template-columns: none;
+		grid-template-rows: auto auto;
+		/* 90% so the next slide peeks out, hinting at the swipe */
+		grid-auto-columns: 90%;
+		column-gap: 12px;
+		overflow-x: auto;
+		scroll-snap-type: x mandatory;
+		overscroll-behavior-x: contain;
+		scrollbar-width: none;
+
+		.title {
+			grid-column: 1;
+			/* stays in view while swiping */
+			position: sticky;
+			left: 0;
+		}
+
+		> .general,
+		> .description,
+		> .stats {
+			grid-column: auto;
+			grid-row: 2;
+			scroll-snap-align: start;
+			padding: 10px;
+			border-radius: 12px;
+			background-color: var(--secondary-background);
+		}
+
+		> .description {
+			max-height: none;
+		}
+
+		> :empty {
+			display: none;
+		}
+
+		&:has(.description:empty) {
+			.general,
+			.stats {
+				grid-column: auto;
+			}
 		}
 	}
 }

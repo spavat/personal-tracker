@@ -137,7 +137,7 @@ export default function MangaDetails({ mangaId }: { mangaId: string }) {
 				</label>
 			</h2>
 			<MutationError error={saveMutation.error} />
-			<table className="list readings alternate">
+			<table className="list readings alternate responsive">
 				<thead>
 					<tr>
 						<th></th>
@@ -156,81 +156,79 @@ export default function MangaDetails({ mangaId }: { mangaId: string }) {
 						const classDisabled = actionsDisabled ? "disabled" : "";
 						const lastReading = getReadingForQuickAdd(reading);
 						return (
-							<Fragment key={reading.id}>
-								<tr>
-									<td className="smalltext">#{index + 1}</td>
-									<td>{formatDay(reading.date)}</td>
-									<td>{formatDate(reading.date)}</td>
-									<td>
-										{getMangaPrefixName(reading)}
-										{reading.name}
-										{reading.title ? ` - ${reading.title}` : ""}
-										{(reading.contextTags ?? []).map((c: string) => (
-											<Badge
-												key={c}
-												icon="fa-solid fa-tag"
-												name={c}
-												color="white"
-												backgroundColor="darkgrey"
-											></Badge>
-										))}
-									</td>
-									<td>{reading.edition}</td>
-									<td>{reading.language}</td>
-									<td>{reading.origin}</td>
-									<td>
-										<button
-											type="button"
-											onDoubleClick={() => quickAddReading(lastReading)}
-											title="Ajouter le suivant"
-										>
-											<i className="fa-regular fa-circle-up"></i>
-										</button>
-										&nbsp;
-										<button
-											type="button"
-											title="Modifier la lecture"
-											onClick={() =>
-												navigate({
-													to: "/reading-manga/manga/$mangaId/reading/$readingId/edit",
-													params: { mangaId, readingId: reading.id },
-													search: { returnTo: location.pathname },
-													replace: true,
-													resetScroll: false,
-													mask: {
-														to: "/reading-manga/manga/$mangaId",
-														params: { mangaId },
-													},
-												})
-											}
-											disabled={actionsDisabled}
-										>
-											<i className={`${classDisabled} fa-regular fa-pen-to-square`}></i>
-										</button>
-										&nbsp;
-										<button
-											type="button"
-											title="Supprimer la lecture"
-											disabled={actionsDisabled}
-											onClick={() =>
-												navigate({
-													to: "/reading-manga/manga/$mangaId/reading/$readingId/delete",
-													params: { mangaId, readingId: reading.id },
-													search: { returnTo: location.pathname },
-													replace: true,
-													resetScroll: false,
-													mask: {
-														to: "/reading-manga/manga/$mangaId",
-														params: { mangaId },
-													},
-												})
-											}
-										>
-											<i className={`${classDisabled} fa-regular fa-trash-can`}></i>
-										</button>
-									</td>
-								</tr>
-							</Fragment>
+							<tr key={reading.id}>
+								<td className="smalltext">#{index + 1}</td>
+								<td data-label="Date">{formatDay(reading.date)}</td>
+								<td data-label="Date">{formatDate(reading.date)}</td>
+								<td>
+									{getMangaPrefixName(reading)}
+									{reading.name}
+									{reading.title ? ` - ${reading.title}` : ""}
+									{(reading.contextTags ?? []).map((c: string) => (
+										<Badge
+											key={c}
+											icon="fa-solid fa-tag"
+											name={c}
+											color="white"
+											backgroundColor="darkgrey"
+										></Badge>
+									))}
+								</td>
+								<td data-label="Edition">{reading.edition}</td>
+								<td data-label="Langue">{reading.language}</td>
+								<td data-label="Origine">{reading.origin}</td>
+								<td data-label="Actions">
+									<button
+										type="button"
+										onDoubleClick={() => quickAddReading(lastReading)}
+										title="Ajouter le suivant"
+									>
+										<i className="fa-regular fa-circle-up"></i>
+									</button>
+									&nbsp;
+									<button
+										type="button"
+										title="Modifier la lecture"
+										onClick={() =>
+											navigate({
+												to: "/reading-manga/manga/$mangaId/reading/$readingId/edit",
+												params: { mangaId, readingId: reading.id },
+												search: { returnTo: location.pathname },
+												replace: true,
+												resetScroll: false,
+												mask: {
+													to: "/reading-manga/manga/$mangaId",
+													params: { mangaId },
+												},
+											})
+										}
+										disabled={actionsDisabled}
+									>
+										<i className={`${classDisabled} fa-regular fa-pen-to-square`}></i>
+									</button>
+									&nbsp;
+									<button
+										type="button"
+										title="Supprimer la lecture"
+										disabled={actionsDisabled}
+										onClick={() =>
+											navigate({
+												to: "/reading-manga/manga/$mangaId/reading/$readingId/delete",
+												params: { mangaId, readingId: reading.id },
+												search: { returnTo: location.pathname },
+												replace: true,
+												resetScroll: false,
+												mask: {
+													to: "/reading-manga/manga/$mangaId",
+													params: { mangaId },
+												},
+											})
+										}
+									>
+										<i className={`${classDisabled} fa-regular fa-trash-can`}></i>
+									</button>
+								</td>
+							</tr>
 						);
 					})}
 				</tbody>

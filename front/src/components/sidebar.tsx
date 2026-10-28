@@ -95,7 +95,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
 				</ul>
 				<button
 					type="button"
-					className="sidebar-toggle"
+					className="sidebar-toggle hide-on-mobile"
 					onClick={toggleCollapsed}
 					title={collapsed ? "Afficher le menu" : "Masquer le menu"}
 				>

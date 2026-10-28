@@ -26,58 +26,53 @@ export default function GameList() {
 	return (
 		<>
 			<PendingContent isPending={isPending}>
-				<table className="list games alternate">
+				<table className="list games alternate responsive">
 					<thead>
 						<tr>{headers.map((h) => h)}</tr>
 					</thead>
 					<tbody>
-						{query.data.map((game, i) => {
-							return (
-								<tr key={game.id}>
-									<td>{i + 1}</td>
-									<td>
-										{game.complete && <i className="complete-color fa-solid fa-circle-check"></i>}
-									</td>
-									<td>
-										<Link to="/game/details/$gameId" params={{ gameId: game.id }}>
-											{game.name}
+						{query.data.map((game, i) => (
+							<tr key={game.id}>
+								<td>{i + 1}</td>
+								<td>{game.complete && <i className="complete-color fa-solid fa-circle-check"></i>}</td>
+								<td>
+									<Link to="/game/details/$gameId" params={{ gameId: game.id }}>
+										{game.name}
+									</Link>
+								</td>
+								<td data-label="Editeur">{game.editor}</td>
+								<td data-label="Développeur">{game.developper}</td>
+								<td data-label="Lien">
+									{(game.links ?? []).map(({ name, link }) => (
+										<Link key={name} to={link}>
+											{name}
 										</Link>
-									</td>
-									<td>{game.editor}</td>
-									<td>{game.developper}</td>
-									<td>
-										{(game.links ?? []).map(({ name, link }) => (
-											<Link key={name} to={link}>
-												{name}
-											</Link>
-										))}
-									</td>
-
-									<td>{formatFullDate(game.latestPlayDate)}</td>
-									<td>{game.playCount}</td>
-									<td>
-										<button
-											type="button"
-											title="Modifier"
-											onClick={() =>
-												navigate({
-													to: "/game/list/$gameId/edit",
-													params: { gameId: game.id },
-													replace: true,
-													resetScroll: false,
-													search: { returnTo: location.pathname },
-													mask: {
-														to: "/game/list",
-													},
-												})
-											}
-										>
-											<i className="fa-regular fa-pen-to-square"></i>
-										</button>
-									</td>
-								</tr>
-							);
-						})}
+									))}
+								</td>
+								<td data-label="Dernière date">{formatFullDate(game.latestPlayDate)}</td>
+								<td data-label="Nombre">{game.playCount}</td>
+								<td data-label="Actions">
+									<button
+										type="button"
+										title="Modifier"
+										onClick={() =>
+											navigate({
+												to: "/game/list/$gameId/edit",
+												params: { gameId: game.id },
+												replace: true,
+												resetScroll: false,
+												search: { returnTo: location.pathname },
+												mask: {
+													to: "/game/list",
+												},
+											})
+										}
+									>
+										<i className="fa-regular fa-pen-to-square"></i>
+									</button>
+								</td>
+							</tr>
+						))}
 					</tbody>
 					<tfoot>
 						<tr>

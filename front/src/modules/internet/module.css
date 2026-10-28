@@ -6,8 +6,9 @@
 		cursor: pointer;
 	}
 
+	/* display (not visibility) so a hidden tooltip takes no room and can't widen the page */
 	.tooltiptext {
-		visibility: hidden;
+		display: none;
 		width: fit-content;
 		background-color: black;
 		color: #ffffff;
@@ -22,7 +23,19 @@
 	}
 
 	.tooltip:hover .tooltiptext {
-		visibility: visible;
+		display: block;
+	}
+
+	/* mobile: open towards the left and wrap long URLs, to stay inside the screen */
+	@media (max-width: 768px) {
+		.tooltiptext {
+			left: auto;
+			right: 0;
+			width: max-content;
+			max-width: 80vw;
+			white-space: normal;
+			overflow-wrap: anywhere;
+		}
 	}
 
 	ul {
@@ -179,7 +192,10 @@
 	}
 
 	/* Weekday */
-	.list.episodes td:nth-of-type(2) {
+	.list.episodes td:nth-of-type(2),
+	/* Tags */
+	.list.episodes td:nth-of-type(5),
+	.list.episodes th:nth-of-type(4) {
 		text-align: right;
 	}
 	/* Weekday */
@@ -187,8 +203,8 @@
 		text-align: center;
 	}
 	/* Duration */
-	.list.episodes td:nth-of-type(5),
-	.list.episodes th:nth-of-type(4) {
+	.list.episodes td:nth-of-type(6),
+	.list.episodes th:nth-of-type(5) {
 		text-align: right;
 		font-variant-numeric: tabular-nums;
 	}

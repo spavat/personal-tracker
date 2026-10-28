@@ -38,7 +38,8 @@ export default function App() {
 					</button>
 					{route ? (
 						<h1>
-							Personal Tracker : {route.title}
+							<span className="hide-on-mobile">Personal Tracker : </span>
+							{route.title}
 							{/* {route.icon} */}
 						</h1>
 					) : (

@@ -180,12 +180,13 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 				</div>
 			</div>
 
-			<table className="list episodes alternate">
+			<table className="list episodes alternate responsive">
 				<thead>
-					<tr>
+					<tr data-title="Épisodes">
 						<th></th>
 						<th colSpan={2}>Date</th>
 						<th>Nom</th>
+						<th>Tags</th>
 						<th>Durée</th>
 						<th>Actions</th>
 					</tr>
@@ -197,14 +198,14 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 						return (
 							<Fragment key={episode.id}>
 								<tr>
-									<td onClick={() => toggleSecondRow(episode.id)}>
+									<td data-label="Type" onClick={() => toggleSecondRow(episode.id)}>
 										{episode.type === "video" && <i className="fa-solid fa-video"></i>}
 										{episode.type === "podcast" && <i className="fa-solid fa-podcast"></i>}
 										{episode.type === "live" && <i className="fa-solid fa-play"></i>}
 										{episode.type === "radio" && <i className="fa-solid fa-radio"></i>}
 									</td>
-									<td>{formatDay(episode.date)}</td>
-									<td>{formatDate(episode.date)}</td>
+									<td data-label="Jour">{formatDay(episode.date)}</td>
+									<td data-label="Date">{formatDate(episode.date)}</td>
 									<td>
 										{episode.name}
 										{episode.comment && (
@@ -223,32 +224,32 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 												</span>
 											</>
 										)}
-										<span className="tags">
-											{(episode.tags ?? []).map((c: string) => (
-												<Badge
-													key={c}
-													icon="fa-solid fa-tag"
-													name={c}
-													color="white"
-													backgroundColor="green"
-												></Badge>
-											))}
-											{(episode.contextTags ?? []).map((c: string) => (
-												<Badge
-													key={c}
-													icon="fa-solid fa-tag"
-													name={c}
-													color="white"
-													backgroundColor="darkgrey"
-												></Badge>
-											))}
-										</span>
 									</td>
-									<td>
+									<td data-label="Tags">
+										{(episode.tags ?? []).map((c: string) => (
+											<Badge
+												key={c}
+												icon="fa-solid fa-tag"
+												name={c}
+												color="white"
+												backgroundColor="green"
+											></Badge>
+										))}
+										{(episode.contextTags ?? []).map((c: string) => (
+											<Badge
+												key={c}
+												icon="fa-solid fa-tag"
+												name={c}
+												color="white"
+												backgroundColor="darkgrey"
+											></Badge>
+										))}
+									</td>
+									<td data-label="Durée">
 										{getDurationString(episode.durationReal ?? episode.duration)}
 										{notFull ? "*" : ""}
 									</td>
-									<td>
+									<td data-label="Actions">
 										<button
 											type="button"
 											title="Modifier"
@@ -287,10 +288,10 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 								{isOpened && (
 									<tr>
 										<td></td>
-										<td colSpan={2} className="small">
+										<td data-label="Date de création" colSpan={2} className="small">
 											{formatDateTime(episode.created)}
 										</td>
-										<td>
+										<td data-label="Lien">
 											<i className="fa-solid fa-link"></i> Lien :{" "}
 											<a href={episode.link}>{episode.link}</a>
 										</td>

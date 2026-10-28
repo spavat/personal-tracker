@@ -39,7 +39,7 @@ export default function List({ period }: { period: string }) {
 				/>
 			</HeaderPortal>
 
-			<table className="list listenings alternate">
+			<table className="list listenings alternate responsive">
 				<thead>
 					<tr>
 						<th></th>
@@ -69,16 +69,14 @@ export default function List({ period }: { period: string }) {
 						return (
 							<tr key={listening.id}>
 								<td>#{index++}</td>
-								<td>{formatFullDate(listening.listeningDate)}</td>
+								<td data-label="Date d'écoute">{formatFullDate(listening.listeningDate)}</td>
 								<td>
-									{listening.artist.join(" • ")}
-									<br />
-									{listening.album}
+									{listening.artist.join(" • ")} - {listening.album}
 								</td>
-								<td>{date}</td>
-								<td>{listening.duration}</td>
-								<td>{listening.genre}</td>
-								<td>
+								<td data-label="Date de sortie">{date}</td>
+								<td data-label="Durée">{listening.duration}</td>
+								<td data-label="Genre">{listening.genre}</td>
+								<td data-label="Contexte tag">
 									{listening.contextTags?.map((contextTag) => (
 										<Badge
 											key={contextTag}
@@ -89,7 +87,7 @@ export default function List({ period }: { period: string }) {
 										></Badge>
 									))}
 								</td>
-								<td>
+								<td data-label="Actions">
 									<button
 										type="button"
 										title="Modifier"
