@@ -136,7 +136,7 @@ export default function WorkList() {
 																return (
 																	<span
 																		key={d.date}
-																		className={`monospace small ${d.canceled ? "canceled" : ""}`}
+																		className={`monospace smalltext ${d.canceled ? "canceled" : ""}`}
 																	>
 																		{isFuture && <>📅</>}
 																		{formatShowDate(d.date, false)}{" "}

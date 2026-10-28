@@ -1,8 +1,10 @@
-.login-form {
-	display: flex;
-	flex-direction: column;
-	gap: 15px;
-	width: 100%;
-	max-width: 400px;
-	margin: 40px auto;
+@layer modules {
+	.login-form {
+		display: flex;
+		flex-direction: column;
+		gap: 15px;
+		width: 100%;
+		max-width: 400px;
+		margin: 40px auto;
+	}
 }

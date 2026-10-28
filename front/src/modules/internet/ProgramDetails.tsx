@@ -288,7 +288,7 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 								{isOpened && (
 									<tr>
 										<td></td>
-										<td data-label="Date de création" colSpan={2} className="small">
+										<td data-label="Date de création" colSpan={2} className="smalltext">
 											{formatDateTime(episode.created)}
 										</td>
 										<td data-label="Lien">

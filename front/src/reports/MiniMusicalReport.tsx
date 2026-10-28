@@ -77,7 +77,7 @@ export default function MiniMusicalReport({ year }: { year: string }) {
 										</td>
 										<td>
 											<span className="count">{s.count}</span>
-											<span className="small">{diffView}</span>
+											<span className="smalltext">{diffView}</span>
 										</td>
 									</tr>
 								);

@@ -1,182 +1,174 @@
-.reading-book {
-	.grid {
-		grid-template-columns: repeat(3, 1fr);
-	}
-
-	@media (max-width: 768px) {
-		.grid {
-			grid-template-columns: 1fr;
+@layer modules {
+	.reading-book {
+		.details {
+			display: flex;
+			flex-direction: column;
+			text-align: left;
+			gap: 16px;
 		}
-	}
-
-	.details {
-		display: flex;
-		flex-direction: column;
-		text-align: left;
-		gap: 16px;
-	}
-	.tag {
-		width: 100px;
-	}
-	.modelText {
-		width: 20em;
-		height: 25rlh;
-	}
-	.new-reading {
-		text-align: center;
-		padding: 4em;
-	}
-
-	ul.book-tree {
-		/*remove padding for the root ul*/
-		padding-left: 0px;
-	}
-	.book-tree {
-		text-align: left;
-	}
-
-	.book-tree {
-		--spacing: 1.5rem;
-		--radius: 10px;
-		--marker-bg-default: #ddd;
-		--marker-bg-haschild: #6b9abb;
-		line-height: 1.5rem;
-	}
-
-	.book-tree li {
-		display: block;
-		position: relative;
-		padding-left: calc(2 * var(--spacing) - var(--radius) - 2px);
-	}
-
-	.book-tree ul {
-		margin-left: calc(var(--radius) - var(--spacing));
-		padding-left: 0;
-	}
-
-	.book-tree ul li {
-		border-left: 2px solid #ddd;
-	}
-
-	.book-tree ul li:last-child {
-		border-color: transparent;
-	}
-
-	.book-tree ul li::before {
-		content: "";
-		display: block;
-		position: absolute;
-		top: calc(var(--spacing) / -2);
-		left: -2px;
-		width: calc(var(--spacing) + 2px);
-		height: calc(var(--spacing) + 1px);
-		border: solid #ddd;
-		border-width: 0 0 2px 2px;
-	}
-
-	.book-tree summary {
-		display: block;
-		cursor: pointer;
-	}
-
-	.book-tree summary::marker,
-	.book-tree summary::-webkit-details-marker {
-		display: none;
-	}
-
-	.book-tree summary:focus {
-		outline: none;
-	}
-
-	.book-tree summary:focus-visible {
-		outline: 1px dotted #000;
-	}
-
-	.book-tree li::after,
-	.book-tree summary::before {
-		content: "";
-		display: block;
-		position: absolute;
-		top: calc(var(--spacing) / 2 - var(--radius) + 2px);
-		left: calc(var(--spacing) - var(--radius) - 2px);
-		width: calc(2 * var(--radius));
-		height: calc(2 * var(--radius));
-		border-radius: 50%;
-		background: var(--marker-bg-default);
-	}
-
-	.book-tree summary::before {
-		content: "-";
-		z-index: 1;
-		background: var(--marker-bg-haschild);
-		color: #fff;
-		line-height: calc(2 * var(--radius));
-		text-align: center;
-	}
-
-	.book-tree details[open] > summary::before {
-		content: "+";
-	}
-
-	.modele-form {
-		display: flex;
-		flex-direction: row;
-		gap: 8px;
-		text-align: left;
-
-		& > * {
-			flex: 1;
+		.tag {
+			width: 100px;
 		}
-	}
+		.modelText {
+			width: 20em;
+			height: 25rlh;
+		}
+		.new-reading {
+			text-align: center;
+			padding: 4em;
+		}
 
-	/**
-	* BOOK LIST
-	*/
-	/* Position */
-	.list.books td:nth-of-type(1),
-	.list.books th:nth-of-type(1),
-	/* Reading count */
-	.list.books td:nth-of-type(6),
-	.list.books th:nth-of-type(6),
-	/* Page count */
-	.list.books td:nth-of-type(9),
-	.list.books th:nth-of-type(9) {
-		text-align: right;
-		font-variant-numeric: tabular-nums;
-	}
-	/* Book title*/
-	.list.books td:nth-of-type(2),
-	.list.books th:nth-of-type(2),
-	/* Author */
-	.list.books td:nth-of-type(3),
-	.list.books th:nth-of-type(3),
-	/* Language */
-	.list.books td:nth-of-type(4),
-	.list.books th:nth-of-type(4) {
-		text-align: left;
-	}
-	/* Country */
-	.list.books td:nth-of-type(5),
-	.list.books th:nth-of-type(5),
-	/* First Date */
-	.list.books td:nth-of-type(7),
-	.list.books th:nth-of-type(7),
-	/* Last Date */
-	.list.books td:nth-of-type(8),
-	.list.books th:nth-of-type(8) {
-		text-align: center;
-		font-variant-numeric: tabular-nums;
-	}
+		ul.book-tree {
+			/*remove padding for the root ul*/
+			padding-left: 0px;
+		}
+		.book-tree {
+			text-align: left;
+		}
 
-	.sticky-helper {
-		position: sticky;
-		float: right;
-		top: 40px; /* sticks to the top of the parent */
-		background: black;
-		z-index: 1;
-		text-align: right;
-		& input[type="text"] {
-			width: 120px;
+		.book-tree {
+			--spacing: 1.5rem;
+			--radius: 10px;
+			--marker-bg-default: #ddd;
+			--marker-bg-haschild: #6b9abb;
+			line-height: 1.5rem;
+		}
+
+		.book-tree li {
+			display: block;
+			position: relative;
+			padding-left: calc(2 * var(--spacing) - var(--radius) - 2px);
+		}
+
+		.book-tree ul {
+			margin-left: calc(var(--radius) - var(--spacing));
+			padding-left: 0;
+		}
+
+		.book-tree ul li {
+			border-left: 2px solid #ddd;
+		}
+
+		.book-tree ul li:last-child {
+			border-color: transparent;
+		}
+
+		.book-tree ul li::before {
+			content: "";
+			display: block;
+			position: absolute;
+			top: calc(var(--spacing) / -2);
+			left: -2px;
+			width: calc(var(--spacing) + 2px);
+			height: calc(var(--spacing) + 1px);
+			border: solid #ddd;
+			border-width: 0 0 2px 2px;
+		}
+
+		.book-tree summary {
+			display: block;
+			cursor: pointer;
+		}
+
+		.book-tree summary::marker,
+		.book-tree summary::-webkit-details-marker {
+			display: none;
+		}
+
+		.book-tree summary:focus {
+			outline: none;
+		}
+
+		.book-tree summary:focus-visible {
+			outline: 1px dotted #000;
+		}
+
+		.book-tree li::after,
+		.book-tree summary::before {
+			content: "";
+			display: block;
+			position: absolute;
+			top: calc(var(--spacing) / 2 - var(--radius) + 2px);
+			left: calc(var(--spacing) - var(--radius) - 2px);
+			width: calc(2 * var(--radius));
+			height: calc(2 * var(--radius));
+			border-radius: 50%;
+			background: var(--marker-bg-default);
+		}
+
+		.book-tree summary::before {
+			content: "-";
+			z-index: 1;
+			background: var(--marker-bg-haschild);
+			color: #fff;
+			line-height: calc(2 * var(--radius));
+			text-align: center;
+		}
+
+		.book-tree details[open] > summary::before {
+			content: "+";
+		}
+
+		.modele-form {
+			display: flex;
+			flex-direction: row;
+			gap: 8px;
+			text-align: left;
+
+			& > * {
+				flex: 1;
+			}
+		}
+
+		/**
+		* BOOK LIST
+		*/
+		/* Position */
+		.list.books td:nth-of-type(1),
+		.list.books th:nth-of-type(1),
+		/* Reading count */
+		.list.books td:nth-of-type(6),
+		.list.books th:nth-of-type(6),
+		/* Page count */
+		.list.books td:nth-of-type(9),
+		.list.books th:nth-of-type(9) {
+			text-align: right;
+			font-variant-numeric: tabular-nums;
+		}
+		/* Book title*/
+		.list.books td:nth-of-type(2),
+		.list.books th:nth-of-type(2),
+		/* Author */
+		.list.books td:nth-of-type(3),
+		.list.books th:nth-of-type(3),
+		/* Language */
+		.list.books td:nth-of-type(4),
+		.list.books th:nth-of-type(4) {
+			text-align: left;
+		}
+		/* Country */
+		.list.books td:nth-of-type(5),
+		.list.books th:nth-of-type(5),
+		/* First Date */
+		.list.books td:nth-of-type(7),
+		.list.books th:nth-of-type(7),
+		/* Last Date */
+		.list.books td:nth-of-type(8),
+		.list.books th:nth-of-type(8) {
+			text-align: center;
+			font-variant-numeric: tabular-nums;
+		}
+
+		.sticky-helper {
+			position: sticky;
+			float: right;
+			top: 40px; /* sticks to the top of the parent */
+			background: black;
+			z-index: 1;
+			text-align: right;
+			& input[type="text"] {
+				width: 120px;
+			}
 		}
 	}
 }

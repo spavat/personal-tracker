@@ -1,118 +1,127 @@
-:root {
-	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-	line-height: 1.5;
-	font-weight: 400;
+/* Cascade layers, lowest to highest priority: a rule in a later layer wins whatever its specificity */
+@layer vendor, base, components, modules, phone, utilities;
 
-	color-scheme: light dark;
-	color: rgba(255, 255, 255, 0.87);
-	background-color: var(--main-background);
-}
+/* third-party CSS goes in the vendor layer, otherwise (unlayered) it would beat all our layers */
+@import url("/font-awesome/7.0.1/css/all.min.css") layer(vendor);
+@import "flag-icons/css/flag-icons.min.css" layer(vendor);
 
-/*
-  Josh's Custom CSS Reset
-  https://www.joshwcomeau.com/css/custom-css-reset/
-*/
-
-*,
-*::before,
-*::after {
-	box-sizing: border-box;
-}
-
-*:not(dialog) {
-	margin: 0;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-	html {
-		interpolate-size: allow-keywords;
-	}
-}
-
-body {
-	line-height: 1.5;
-	-webkit-font-smoothing: antialiased;
-}
-
-img,
-picture,
-video,
-canvas,
-svg {
-	display: block;
-	max-width: 100%;
-}
-
-input,
-button,
-textarea,
-select {
-	font: inherit;
-}
-
-p,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-	overflow-wrap: break-word;
-}
-
-p {
-	text-wrap: pretty;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-	text-wrap: balance;
-}
-
-#root,
-#__next {
-	isolation: isolate;
-}
-
-a {
-	font-weight: 500;
-	color: #d9d9e5;
-	text-decoration: underline;
-}
-
-a:hover {
-	color: #535bf2;
-}
-
-/*
-body {
-	margin: 0;
-	display: flex;
-	place-items: center;
-	min-width: 320px;
-	min-height: 100vh;
-}
-
-h1 {
-	font-size: 3.2em;
-	line-height: 1.1;
-}
-
-@media (prefers-color-scheme: light) {
+@layer base {
 	:root {
-		color: #213547;
-		background-color: #ffffff;
+		font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+		line-height: 1.5;
+		font-weight: 400;
+
+		color-scheme: light dark;
+		color: rgba(255, 255, 255, 0.87);
+		background-color: var(--main-background);
+	}
+
+	/*
+	  Josh's Custom CSS Reset
+	  https://www.joshwcomeau.com/css/custom-css-reset/
+	*/
+
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
+
+	*:not(dialog) {
+		margin: 0;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		html {
+			interpolate-size: allow-keywords;
+		}
+	}
+
+	body {
+		line-height: 1.5;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	img,
+	picture,
+	video,
+	canvas,
+	svg {
+		display: block;
+		max-width: 100%;
+	}
+
+	input,
+	button,
+	textarea,
+	select {
+		font: inherit;
+	}
+
+	p,
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		overflow-wrap: break-word;
+	}
+
+	p {
+		text-wrap: pretty;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		text-wrap: balance;
+	}
+
+	#root,
+	#__next {
+		isolation: isolate;
+	}
+
+	a {
+		font-weight: 500;
+		color: #d9d9e5;
+		text-decoration: underline;
 	}
 
 	a:hover {
-		color: #747bff;
+		color: #535bf2;
 	}
 
-	button {
-		background-color: #f9f9f9;
+	/*
+	body {
+		margin: 0;
+		display: flex;
+		place-items: center;
+		min-width: 320px;
+		min-height: 100vh;
 	}
-} */
+
+	h1 {
+		font-size: 3.2em;
+		line-height: 1.1;
+	}
+
+	@media (prefers-color-scheme: light) {
+		:root {
+			color: #213547;
+			background-color: #ffffff;
+		}
+
+		a:hover {
+			color: #747bff;
+		}
+
+		button {
+			background-color: #f9f9f9;
+		}
+	} */
+}
