@@ -1,4 +1,5 @@
 // Seed data shared by setup-db.js (once, before the run) and resetDb (after mutating tests).
+const { hashPassword } = require("better-auth/crypto");
 const { Client } = require("pg");
 const { MongoClient } = require("mongodb");
 
@@ -1470,6 +1471,23 @@ async function resetDb() {
 	]);
 }
 
+// Owner account the tests log in with (playwright `setup` project). Seeded once by setup-db.js:
+// resetDb doesn't touch the auth schema, so the saved session stays valid.
+const OWNER = { email: "owner@test.local", password: "owner-password" };
+
+/** @param {import("pg").Client} conn */
+async function seedOwner(conn) {
+	const userId = "owner";
+	await conn.query(`INSERT INTO auth.user (id, name, email, email_verified) VALUES ($1, 'Owner', $2, true)`, [
+		userId,
+		OWNER.email,
+	]);
+	await conn.query(
+		`INSERT INTO auth.account (id, account_id, provider_id, user_id, password) VALUES ($1, $1, 'credential', $1, $2)`,
+		[userId, await hashPassword(OWNER.password)],
+	);
+}
+
 // Runs a query against the Postgres test database, e.g. to check rows after a UI action.
 /** @returns {Promise<Record<string, any>[]>} */
 async function queryDb(sql, params = []) {
@@ -1483,4 +1501,4 @@ async function queryDb(sql, params = []) {
 	}
 }
 
-module.exports = { seedPostgres, seedMongo, resetDb, queryDb };
+module.exports = { OWNER, seedOwner, seedPostgres, seedMongo, resetDb, queryDb };

@@ -40,7 +40,10 @@ export async function saveCategory(data: any) {
 
 export async function deleteCategory(data: any): Promise<{ deleted: boolean; reason?: "has_children" | "in_use" }> {
 	const { id } = LifespanCategoryDeleteParamsRequestSchema.parse(data);
-	const response = await fetch(`${API_BASE_URL}/lifespan/categories/${id}`, { method: "DELETE" });
+	const response = await fetch(`${API_BASE_URL}/lifespan/categories/${id}`, {
+		method: "DELETE",
+		credentials: "include",
+	});
 	// 409: deletion refused, the body gives the reason
 	if (response.status !== 409) {
 		await checkResponse(response);

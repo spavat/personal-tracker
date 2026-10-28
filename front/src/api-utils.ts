@@ -7,8 +7,9 @@ export async function checkResponse(response: Response) {
 	}
 }
 
+// credentials: sends the session cookie, the server denies writes and private reads without it
 export async function fetchJson<T = any>(url: string, init?: RequestInit): Promise<T> {
-	const response = await fetch(url, init);
+	const response = await fetch(url, { ...init, credentials: "include" });
 	await checkResponse(response);
 	return response.json();
 }

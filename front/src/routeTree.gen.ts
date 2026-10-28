@@ -15,6 +15,7 @@ import { Route as ContextTagsRouteImport } from './routes/context-tags'
 import { Route as GameRouteImport } from './routes/game'
 import { Route as InternetRouteImport } from './routes/internet'
 import { Route as LifespanRouteImport } from './routes/lifespan'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as MoneyRouteImport } from './routes/money'
 import { Route as MusicRouteImport } from './routes/music'
 import { Route as ReadingBookRouteImport } from './routes/reading-book'
@@ -224,6 +225,11 @@ const InternetRoute = InternetRouteImport.update({
 const LifespanRoute = LifespanRouteImport.update({
   id: '/lifespan',
   path: '/lifespan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MoneyRoute = MoneyRouteImport.update({
@@ -1214,6 +1220,7 @@ export interface FileRoutesByFullPath {
   '/game': typeof GameRouteWithChildren
   '/internet': typeof InternetRouteWithChildren
   '/lifespan': typeof LifespanRouteWithChildren
+  '/login': typeof LoginRoute
   '/money': typeof MoneyRouteWithChildren
   '/music': typeof MusicRouteWithChildren
   '/reading-book': typeof ReadingBookRouteWithChildren
@@ -1397,6 +1404,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/context-tags': typeof ContextTagsListIndexRoute
+  '/login': typeof LoginRoute
   '/reports': typeof ReportsRoute
   '/calendar/$period': typeof CalendarPeriodRouteWithChildren
   '/money/analytics': typeof MoneyAnalyticsRoute
@@ -1564,6 +1572,7 @@ export interface FileRoutesById {
   '/game': typeof GameRouteWithChildren
   '/internet': typeof InternetRouteWithChildren
   '/lifespan': typeof LifespanRouteWithChildren
+  '/login': typeof LoginRoute
   '/money': typeof MoneyRouteWithChildren
   '/music': typeof MusicRouteWithChildren
   '/reading-book': typeof ReadingBookRouteWithChildren
@@ -1754,6 +1763,7 @@ export interface FileRouteTypes {
     | '/game'
     | '/internet'
     | '/lifespan'
+    | '/login'
     | '/money'
     | '/music'
     | '/reading-book'
@@ -1937,6 +1947,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/context-tags'
+    | '/login'
     | '/reports'
     | '/calendar/$period'
     | '/money/analytics'
@@ -2103,6 +2114,7 @@ export interface FileRouteTypes {
     | '/game'
     | '/internet'
     | '/lifespan'
+    | '/login'
     | '/money'
     | '/music'
     | '/reading-book'
@@ -2292,6 +2304,7 @@ export interface RootRouteChildren {
   GameRoute: typeof GameRouteWithChildren
   InternetRoute: typeof InternetRouteWithChildren
   LifespanRoute: typeof LifespanRouteWithChildren
+  LoginRoute: typeof LoginRoute
   MoneyRoute: typeof MoneyRouteWithChildren
   MusicRoute: typeof MusicRouteWithChildren
   ReadingBookRoute: typeof ReadingBookRouteWithChildren
@@ -2343,6 +2356,13 @@ declare module '@tanstack/react-router' {
       path: '/lifespan'
       fullPath: '/lifespan'
       preLoaderRoute: typeof LifespanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/money': {
@@ -4483,6 +4503,7 @@ const rootRouteChildren: RootRouteChildren = {
   GameRoute: GameRouteWithChildren,
   InternetRoute: InternetRouteWithChildren,
   LifespanRoute: LifespanRouteWithChildren,
+  LoginRoute: LoginRoute,
   MoneyRoute: MoneyRouteWithChildren,
   MusicRoute: MusicRouteWithChildren,
   ReadingBookRoute: ReadingBookRouteWithChildren,

@@ -24,7 +24,6 @@ interface Week {
 }
 
 export default function Calendar({ period }: { period: string }) {
-
 	const [{ data }, goPrevious, goNext, canGoPrevious, canGoNext] = useMonthChanger({
 		...monthCalendar,
 		navigationIsDisabled: () => {

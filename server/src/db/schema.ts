@@ -15,6 +15,7 @@ import {
 
 export const money = snakeCase.schema("money");
 export const show = snakeCase.schema("show");
+export const auth = snakeCase.schema("auth");
 
 export const moneyAccount = money.table(
 	"account",
@@ -220,4 +221,67 @@ export const moneyTag = money.table(
 		parentId: integer(),
 	},
 	(table) => [index().on(table.parentId), uniqueIndex().on(table.name)],
+);
+
+// BetterAuth core tables (fields from better-auth's getAuthTables, passed to its drizzle adapter in src/auth.ts)
+export const authUser = auth.table("user", {
+	id: text().primaryKey(),
+	name: text().notNull(),
+	email: text().notNull().unique(),
+	emailVerified: boolean().default(false).notNull(),
+	image: text(),
+	createdAt: timestamp().defaultNow().notNull(),
+	updatedAt: timestamp().defaultNow().notNull(),
+});
+
+export const authSession = auth.table(
+	"session",
+	{
+		id: text().primaryKey(),
+		expiresAt: timestamp().notNull(),
+		token: text().notNull().unique(),
+		createdAt: timestamp().defaultNow().notNull(),
+		updatedAt: timestamp().defaultNow().notNull(),
+		ipAddress: text(),
+		userAgent: text(),
+		userId: text()
+			.notNull()
+			.references(() => authUser.id, { onDelete: "cascade" }),
+	},
+	(table) => [index().on(table.userId)],
+);
+
+export const authAccount = auth.table(
+	"account",
+	{
+		id: text().primaryKey(),
+		accountId: text().notNull(),
+		providerId: text().notNull(),
+		userId: text()
+			.notNull()
+			.references(() => authUser.id, { onDelete: "cascade" }),
+		accessToken: text(),
+		refreshToken: text(),
+		idToken: text(),
+		accessTokenExpiresAt: timestamp(),
+		refreshTokenExpiresAt: timestamp(),
+		scope: text(),
+		password: text(),
+		createdAt: timestamp().defaultNow().notNull(),
+		updatedAt: timestamp().defaultNow().notNull(),
+	},
+	(table) => [index().on(table.userId)],
+);
+
+export const authVerification = auth.table(
+	"verification",
+	{
+		id: text().primaryKey(),
+		identifier: text().notNull(),
+		value: text().notNull(),
+		expiresAt: timestamp().notNull(),
+		createdAt: timestamp().defaultNow().notNull(),
+		updatedAt: timestamp().defaultNow().notNull(),
+	},
+	(table) => [index().on(table.identifier)],
 );

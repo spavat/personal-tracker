@@ -3,6 +3,9 @@ import path from "path";
 
 import { TEST_MONGO_URL, TEST_POSTGRES_URL } from "./db-config";
 
+// written by tests/auth.setup.ts
+const OWNER_STATE = path.resolve(__dirname, ".auth/owner.json");
+
 const SERVER_PORT = 3001;
 const FRONT_PORT = 5174;
 // Garage started by `env:up`, with the dev key and bucket created by docker/garage/init.sh
@@ -27,6 +30,9 @@ export default defineConfig({
 				`DATABASE_URL=${TEST_POSTGRES_URL}`,
 				`MONGODB_URL=${TEST_MONGO_URL}`,
 				`PORT=${SERVER_PORT}`,
+				`BETTER_AUTH_URL=http://localhost:${SERVER_PORT}`,
+				"BETTER_AUTH_SECRET=e2e-secret-e2e-secret-e2e-secret-e2e",
+				`FRONT_URL=http://localhost:${FRONT_PORT}`,
 				// Set explicitly so server/.env (loaded by dotenv, which never overrides) isn't needed, e.g. in CI
 				`S3_ENDPOINT=http://localhost:${GARAGE_PORT}`,
 				"S3_REGION=us-east-1",
@@ -55,9 +61,21 @@ export default defineConfig({
 		},
 	],
 	projects: [
+		// logs the seeded owner in once, the other specs reuse the session
+		{
+			name: "setup",
+			testMatch: /auth\.setup\.ts/,
+		},
 		{
 			name: "chromium",
+			use: { ...devices["Desktop Chrome"], storageState: OWNER_STATE },
+			dependencies: ["setup"],
+			testIgnore: /visitor\.spec\.ts/,
+		},
+		{
+			name: "visitor",
 			use: { ...devices["Desktop Chrome"] },
+			testMatch: /visitor\.spec\.ts/,
 		},
 	],
 });

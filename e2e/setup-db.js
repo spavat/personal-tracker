@@ -4,7 +4,7 @@ const { execSync } = require("child_process");
 const path = require("path");
 const { Client } = require("pg");
 const { MongoClient } = require("mongodb");
-const { seedPostgres, seedMongo } = require("./seed");
+const { seedOwner, seedPostgres, seedMongo } = require("./seed");
 const { TEST_DB, POSTGRES_SERVER_URL, MONGO_SERVER_URL, TEST_POSTGRES_URL } = require("./db-config");
 
 async function setupPostgres() {
@@ -25,6 +25,7 @@ async function setupPostgres() {
 	const conn = new Client({ connectionString: TEST_POSTGRES_URL });
 	await conn.connect();
 	await seedPostgres(conn);
+	await seedOwner(conn);
 	await conn.end();
 	console.log("[setup] Postgres test database ready");
 }

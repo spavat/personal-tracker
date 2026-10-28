@@ -35,3 +35,4 @@ server/src/data/*
 # e2e
 test-results
 playwright-report
+.auth

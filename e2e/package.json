@@ -12,6 +12,7 @@
 		"test:headed": "npm run test:setup && playwright test --headed"
 	},
 	"dependencies": {
+		"better-auth": "^1.7.12",
 		"mongodb": "^7.7.0",
 		"pg": "^8.23.1"
 	},

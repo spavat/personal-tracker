@@ -10,8 +10,9 @@ const options: AppOptions = {};
 
 const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void> => {
 	await fastify.register(cors, {
-		// put your options here
-		origin: true, // or specific origin
+		// credentials: the front sends the session cookie, which requires an explicit origin
+		origin: process.env.FRONT_URL ?? "http://localhost:5173",
+		credentials: true,
 		methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 	});
 	fastify.register(require("@fastify/mongodb"), {
@@ -30,6 +31,8 @@ const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void>
 	// eslint-disable-next-line no-void
 	void fastify.register(AutoLoad, {
 		dir: join(__dirname, "plugins"),
+		// co-located unit tests (plugins/auth.test.ts)
+		ignorePattern: /\.test\.ts$/,
 		options: opts,
 	});
 
