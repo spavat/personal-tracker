@@ -32,7 +32,7 @@ export default function List() {
 	return (
 		<>
 			<PendingContent isPending={isPending}>
-				<table className="list programs alternate">
+				<table className="list programs alternate responsive">
 					<thead>
 						<tr>{headers.map((h) => h)}</tr>
 					</thead>
@@ -46,12 +46,12 @@ export default function List() {
 											{program.name}
 										</Link>
 									</td>
-									<td>{program.author}</td>
-									<td>{program.network}</td>
-									<td>
+									<td data-label="Author">{program.author}</td>
+									<td data-label="Réseau">{program.network}</td>
+									<td data-label="Pays">
 										<span className={`fi fi-${program.country}`}></span>
 									</td>
-									<td>
+									<td data-label="Refs">
 										{refsKeys.map((key) => {
 											const value = program.refs?.[key];
 											if (value) {
@@ -100,10 +100,10 @@ export default function List() {
 											}
 										})}
 									</td>
-									<td>{formatFullDate(program.latestEpisodeDate)}</td>
-									<td>{program.episodeCount}</td>
-									<td>{getDurationString(program.totalDuration)}</td>
-									<td>
+									<td data-label="Dernière écoute">{formatFullDate(program.latestEpisodeDate)}</td>
+									<td data-label="Episodes">{program.episodeCount}</td>
+									<td data-label="Durée">{getDurationString(program.totalDuration)}</td>
+									<td data-label="Tags">
 										{program.tags?.map((t) => (
 											<Badge
 												key={t}
@@ -114,7 +114,7 @@ export default function List() {
 											></Badge>
 										))}
 									</td>
-									<td>
+									<td data-label="Art">
 										<i
 											className={`${!program.profile ? "disabled" : ""} fa-solid fa-circle-user`}
 										></i>
@@ -122,7 +122,7 @@ export default function List() {
 											className={`${!program.banner ? "disabled" : ""} fa-solid fa-users-rectangle`}
 										></i>
 									</td>
-									<td>
+									<td data-label="Actions">
 										<button
 											type="button"
 											title="Modifier"

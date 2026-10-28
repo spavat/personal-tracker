@@ -28,7 +28,7 @@ export default function List() {
 	return (
 		<>
 			<PendingContent isPending={isPending}>
-				<table className="list mangas alternate">
+				<table className="list mangas alternate responsive">
 					<thead>
 						<tr>{headers.map((h) => h)}</tr>
 					</thead>
@@ -47,7 +47,7 @@ export default function List() {
 											{manga.title}
 										</Link>
 									</td>
-									<td>
+									<td data-label="Auteur">
 										{authors.length > 0 && authors.join(", ")}
 										{arts.length > 0 && (
 											<span>
@@ -61,8 +61,8 @@ export default function List() {
 											</span>
 										)}
 									</td>
-									<td>{manga.type}</td>
-									<td>
+									<td data-label="Type">{manga.type}</td>
+									<td data-label="Links">
 										{manga.links &&
 											manga.links.length > 0 &&
 											manga.links.map((link) => (
@@ -73,9 +73,9 @@ export default function List() {
 												</Fragment>
 											))}
 									</td>
-									<td>{formatDate(manga.firstReadingDate)}</td>
-									<td>{formatDate(manga.lastReadingDate)}</td>
-									<td>
+									<td data-label="Première">{formatDate(manga.firstReadingDate)}</td>
+									<td data-label="Dernière">{formatDate(manga.lastReadingDate)}</td>
+									<td data-label="Actions">
 										<button
 											type="button"
 											title="Modifier"

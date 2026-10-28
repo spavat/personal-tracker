@@ -1,6 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { Fragment } from "react";
 
 import { formatDay, formatFullDate, getDurationString } from "../../utils";
 import { gameDetailsQuery } from "./api";
@@ -74,9 +73,9 @@ export default function GameDetails({ gameId }: { gameId: string }) {
 				<div className="stats"></div>
 			</div>
 
-			<table className="list plays alternate">
+			<table className="list plays alternate responsive">
 				<thead>
-					<tr>
+					<tr data-title="Sessions de jeu">
 						<th></th>
 						<th></th>
 						<th>Date</th>
@@ -86,59 +85,57 @@ export default function GameDetails({ gameId }: { gameId: string }) {
 					</tr>
 				</thead>
 				<tbody>
-					{gameData.plays.map((play, i) => {
-						return (
-							<Fragment key={play.id}>
-								<tr>
-									<td className="smalltext">#{i + 1}</td>
-									<td>{formatDay(play.date)}</td>
-									<td>{formatFullDate(play.date)}</td>
-									<td>{getDurationString(play.duration ?? 0)}</td>
-									<td style={{ whiteSpace: "pre-line" }}>{play.comment}</td>
-									<td>
-										<button
-											type="button"
-											title="Modifier"
-											onClick={() =>
-												navigate({
-													to: "/game/details/$gameId/play/$playId/edit",
-													params: {
-														gameId,
-														playId: play.id,
-													},
-													search: { returnTo: location.pathname },
-													replace: true,
-													resetScroll: false,
-												})
-											}
-										>
-											<i className="fa-regular fa-pen-to-square"></i>
-										</button>
-										&nbsp;
-										<button
-											type="button"
-											title="Supprimer"
-											onClick={() =>
-												navigate({
-													to: "/game/details/$gameId/play/$playId/delete",
-													params: {
-														gameId,
-														playId: play.id,
-													},
-													search: { returnTo: location.pathname },
-													replace: true,
-													resetScroll: false,
-												})
-											}
-										>
-											<i className="fa-regular fa-trash-can"></i>
-										</button>
-										&nbsp;
-									</td>
-								</tr>
-							</Fragment>
-						);
-					})}
+					{gameData.plays.map((play, i) => (
+						<tr key={play.id}>
+							<td className="smalltext">#{i + 1}</td>
+							<td data-label="Date">{formatDay(play.date)}</td>
+							<td data-label="Date">{formatFullDate(play.date)}</td>
+							<td data-label="Durée">{getDurationString(play.duration ?? 0)}</td>
+							<td data-label="Commentaire" style={{ whiteSpace: "pre-line" }}>
+								{play.comment}
+							</td>
+							<td data-label="Actions">
+								<button
+									type="button"
+									title="Modifier"
+									onClick={() =>
+										navigate({
+											to: "/game/details/$gameId/play/$playId/edit",
+											params: {
+												gameId,
+												playId: play.id,
+											},
+											search: { returnTo: location.pathname },
+											replace: true,
+											resetScroll: false,
+										})
+									}
+								>
+									<i className="fa-regular fa-pen-to-square"></i>
+								</button>
+								&nbsp;
+								<button
+									type="button"
+									title="Supprimer"
+									onClick={() =>
+										navigate({
+											to: "/game/details/$gameId/play/$playId/delete",
+											params: {
+												gameId,
+												playId: play.id,
+											},
+											search: { returnTo: location.pathname },
+											replace: true,
+											resetScroll: false,
+										})
+									}
+								>
+									<i className="fa-regular fa-trash-can"></i>
+								</button>
+								&nbsp;
+							</td>
+						</tr>
+					))}
 				</tbody>
 				<tfoot></tfoot>
 			</table>

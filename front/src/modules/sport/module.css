@@ -2,6 +2,11 @@
 	.grid {
 		grid-template-columns: repeat(6, 1fr);
 	}
+	@media (max-width: 768px) {
+		.grid {
+			grid-template-columns: 1fr;
+		}
+	}
 	textarea {
 		height: 4lh;
 	}
