@@ -1,92 +1,89 @@
-.game {
-	--complete-color: #608a32;
+@layer modules {
+	.game {
+		--complete-color: #608a32;
 
-	.grid {
-		grid-template-columns: repeat(4, 1fr);
-	}
-	@media (max-width: 768px) {
 		.grid {
-			grid-template-columns: 1fr;
+			grid-template-columns: repeat(4, 1fr);
 		}
-	}
 
-	.form textarea {
-		height: 4lh;
-	}
-
-	.complete-color {
-		color: var(--complete-color);
-	}
-
-	.card_item {
-		&:has(.status.complete) {
-			border: 2px solid var(--complete-color);
-			background: linear-gradient(
-				var(--gradient-degrees),
-				var(--complete-color) 50px,
-				var(--secondary-background) 0
-			);
+		.form textarea {
+			height: 4lh;
 		}
-	}
 
-	/**
-	* GAMES LIST
-	*/
-	/* Position */
-	.list.games td:nth-of-type(1),
-	.list.games th:nth-of-type(1),
-	/* Play count */
-	.list.games td:nth-of-type(8),
-	.list.games th:nth-of-type(8) {
-		text-align: right;
-		font-variant-numeric: tabular-nums;
-	}
+		.complete-color {
+			color: var(--complete-color);
+		}
 
-	/* Name */
-	.list.games td:nth-of-type(3),
-	.list.games th:nth-of-type(3),
-	/* Editor */
-	.list.games td:nth-of-type(4),
-	.list.games th:nth-of-type(4),
-	/* Developper */
-	.list.games td:nth-of-type(5),
-	.list.games th:nth-of-type(5),
-	/* Links */
-	.list.games td:nth-of-type(6),
-	.list.games th:nth-of-type(6) {
-		text-align: left;
-	}
+		.card_item {
+			&:has(.status.complete) {
+				border: 2px solid var(--complete-color);
+				background: linear-gradient(
+					var(--gradient-degrees),
+					var(--complete-color) 50px,
+					var(--secondary-background) 0
+				);
+			}
+		}
 
-	/* Last date */
-	.list.games td:nth-of-type(7),
-	.list.games th:nth-of-type(7) {
-		text-align: center;
-		font-variant-numeric: tabular-nums;
-	}
+		/**
+		* GAMES LIST
+		*/
+		/* Position */
+		.list.games td:nth-of-type(1),
+		.list.games th:nth-of-type(1),
+		/* Play count */
+		.list.games td:nth-of-type(8),
+		.list.games th:nth-of-type(8) {
+			text-align: right;
+			font-variant-numeric: tabular-nums;
+		}
 
-	.list.games tr {
-		--degrees: 115deg;
-		--width: 40%;
-		--based-percent: 50%;
-	}
+		/* Name */
+		.list.games td:nth-of-type(3),
+		.list.games th:nth-of-type(3),
+		/* Editor */
+		.list.games td:nth-of-type(4),
+		.list.games th:nth-of-type(4),
+		/* Developper */
+		.list.games td:nth-of-type(5),
+		.list.games th:nth-of-type(5),
+		/* Links */
+		.list.games td:nth-of-type(6),
+		.list.games th:nth-of-type(6) {
+			text-align: left;
+		}
 
-	/**
-	* PLAY LIST (in GAME DETAILS)
-	*/
-	.list.plays td:nth-of-type(1),
-	.list.plays td:nth-of-type(2),
-	.list.plays td:nth-of-type(4),
-	.list.plays th:nth-of-type(4) {
-		text-align: right;
-		font-variant-numeric: tabular-nums;
-	}
+		/* Last date */
+		.list.games td:nth-of-type(7),
+		.list.games th:nth-of-type(7) {
+			text-align: center;
+			font-variant-numeric: tabular-nums;
+		}
 
-	.list.plays td:nth-of-type(3),
-	.list.plays th:nth-of-type(3),
-	.list.plays td:nth-of-type(4),
-	.list.plays th:nth-of-type(4),
-	.list.plays td:nth-of-type(5) {
-		text-align: left;
-		font-variant-numeric: tabular-nums;
+		.list.games tr {
+			--degrees: 115deg;
+			--width: 40%;
+			--based-percent: 50%;
+		}
+
+		/**
+		* PLAY LIST (in GAME DETAILS)
+		*/
+		.list.plays td:nth-of-type(1),
+		.list.plays td:nth-of-type(2),
+		.list.plays td:nth-of-type(4),
+		.list.plays th:nth-of-type(4) {
+			text-align: right;
+			font-variant-numeric: tabular-nums;
+		}
+
+		.list.plays td:nth-of-type(3),
+		.list.plays th:nth-of-type(3),
+		.list.plays td:nth-of-type(4),
+		.list.plays th:nth-of-type(4),
+		.list.plays td:nth-of-type(5) {
+			text-align: left;
+			font-variant-numeric: tabular-nums;
+		}
 	}
 }

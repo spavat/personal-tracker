@@ -1,199 +1,201 @@
-.shows {
-	.presentation {
-		& .general {
-			grid-column: 1 / span 2;
-		}
-		& .stats {
-			grid-column: 3 / span 2;
-		}
-	}
-
-	.form {
-		textarea.address {
-			height: 3lh;
-		}
-	}
-
-	/* PERFORMANCES */
-	.list.performances :is(td, th):nth-of-type(1) /* Position */ {
-		text-align: right;
-		font-variant-numeric: tabular-nums;
-	}
-	.list.performances :is(td, th):nth-of-type(3), /* Name */
-	.list.performances :is(td, th):nth-of-type(4), /* Place */
-	.list.performances :is(td, th):nth-of-type(6) /* Seat */ {
-		text-align: left;
-	}
-	.list.performances :is(td, th):nth-of-type(2), /* Date */
-	.list.performances :is(td, th):nth-of-type(5) /* Country */ {
-		text-align: center;
-		font-variant-numeric: tabular-nums;
-	}
-	.list.performances td[colspan]:nth-of-type(1) {
-		text-align: left;
-	}
-
-	/* PERFORMANCES WITH ROLE */
-	.list.performancesWithRole td:nth-of-type(1) {
-		text-align: right;
-	}
-	.list.performancesWithRole :is(td, th):nth-of-type(2) /* Date */ {
-		text-align: center;
-		font-variant-numeric: tabular-nums;
-	}
-	.list.performancesWithRole td[colspan]:nth-of-type(1) {
-		text-align: left;
-	}
-
-	/* ARTISTS */
-	.list.artists :is(td, th):nth-of-type(1), /* Position */
-	.list.artists :is(td, th):nth-of-type(3), /* Nb spectacles */
-	.list.artists :is(td, th):nth-of-type(4) /* Nb performances */ {
-		text-align: right;
-		font-variant-numeric: tabular-nums;
-	}
-	.list.artists :is(td, th):nth-of-type(2) /* Artist name */ {
-		text-align: left;
-	}
-
-	/* PLACES */
-	.list.places :is(td, th):nth-of-type(1), /* Position */
-	.list.places :is(td, th):nth-of-type(4), /* Nb spectacles */
-	.list.places :is(td, th):nth-of-type(5) /* Nb performances */ {
-		text-align: right;
-		font-variant-numeric: tabular-nums;
-	}
-	.list.places :is(td, th):nth-of-type(2) /* Place name */ {
-		text-align: left;
-	}
-	.list.places :is(td, th):nth-of-type(3) /* Country */ {
-		text-align: center;
-	}
-
-	/* SPECTACLES */
-	.list.spectacles :is(td, th):nth-of-type(1), /* Position */
-	.list.spectacles :is(td, th):nth-of-type(3) /* Performances count */ {
-		text-align: right;
-		font-variant-numeric: tabular-nums;
-	}
-	.list.spectacles :is(td, th):nth-of-type(2), /* Spectacle name */
-	.list.spectacles :is(td, th):nth-of-type(4) /* Place name */ {
-		text-align: left;
-	}
-	.list.spectacles :is(td, th):nth-of-type(5) /* Dates */ {
-		text-align: left;
-		font-variant-numeric: tabular-nums;
-	}
-	.list.spectacles td[colspan]:nth-of-type(1) {
-		text-align: left;
-	}
-
-	/* WORKS */
-	.list.works tbody.year {
-		text-align: left;
-	}
-	.list.works td {
-		vertical-align: text-top;
-	}
-
-	.list.works :is(td, th):first-child {
-		padding-left: var(--default-cell-padding);
-	}
-
-	.list.works :is(td, th):last-child {
-		padding-right: var(--default-cell-padding);
-	}
-
-	.list.works.alternate {
-		tr,
-		tr:hover {
-			background-color: unset;
+@layer modules {
+	.shows {
+		.presentation {
+			& .general {
+				grid-column: 1 / span 2;
+			}
+			& .stats {
+				grid-column: 3 / span 2;
+			}
 		}
 
-		tbody:nth-child(odd) {
-			background: var(--secondary-background);
+		.form {
+			textarea.address {
+				height: 3lh;
+			}
 		}
 
-		tbody:nth-child(even) {
-			background: color-mix(in srgb, var(--secondary-background) 95%, white 5%);
+		/* PERFORMANCES */
+		.list.performances :is(td, th):nth-of-type(1) /* Position */ {
+			text-align: right;
+			font-variant-numeric: tabular-nums;
+		}
+		.list.performances :is(td, th):nth-of-type(3), /* Name */
+		.list.performances :is(td, th):nth-of-type(4), /* Place */
+		.list.performances :is(td, th):nth-of-type(6) /* Seat */ {
+			text-align: left;
+		}
+		.list.performances :is(td, th):nth-of-type(2), /* Date */
+		.list.performances :is(td, th):nth-of-type(5) /* Country */ {
+			text-align: center;
+			font-variant-numeric: tabular-nums;
+		}
+		.list.performances td[colspan]:nth-of-type(1) {
+			text-align: left;
 		}
 
-		tbody:hover {
-			background: var(--hover-background);
+		/* PERFORMANCES WITH ROLE */
+		.list.performancesWithRole td:nth-of-type(1) {
+			text-align: right;
 		}
-	}
+		.list.performancesWithRole :is(td, th):nth-of-type(2) /* Date */ {
+			text-align: center;
+			font-variant-numeric: tabular-nums;
+		}
+		.list.performancesWithRole td[colspan]:nth-of-type(1) {
+			text-align: left;
+		}
 
-	/* CASTING */
-	/* Position */
-	.list.casting td:nth-of-type(1):not([colspan]) {
-		text-align: right;
-		font-variant-numeric: tabular-nums;
-	}
+		/* ARTISTS */
+		.list.artists :is(td, th):nth-of-type(1), /* Position */
+		.list.artists :is(td, th):nth-of-type(3), /* Nb spectacles */
+		.list.artists :is(td, th):nth-of-type(4) /* Nb performances */ {
+			text-align: right;
+			font-variant-numeric: tabular-nums;
+		}
+		.list.artists :is(td, th):nth-of-type(2) /* Artist name */ {
+			text-align: left;
+		}
 
-	/* ARTIST SEARCH SELECT */
-	.artist-search-select {
-		position: relative;
-		display: inline-block;
-		width: 100%;
+		/* PLACES */
+		.list.places :is(td, th):nth-of-type(1), /* Position */
+		.list.places :is(td, th):nth-of-type(4), /* Nb spectacles */
+		.list.places :is(td, th):nth-of-type(5) /* Nb performances */ {
+			text-align: right;
+			font-variant-numeric: tabular-nums;
+		}
+		.list.places :is(td, th):nth-of-type(2) /* Place name */ {
+			text-align: left;
+		}
+		.list.places :is(td, th):nth-of-type(3) /* Country */ {
+			text-align: center;
+		}
 
-		input {
+		/* SPECTACLES */
+		.list.spectacles :is(td, th):nth-of-type(1), /* Position */
+		.list.spectacles :is(td, th):nth-of-type(3) /* Performances count */ {
+			text-align: right;
+			font-variant-numeric: tabular-nums;
+		}
+		.list.spectacles :is(td, th):nth-of-type(2), /* Spectacle name */
+		.list.spectacles :is(td, th):nth-of-type(4) /* Place name */ {
+			text-align: left;
+		}
+		.list.spectacles :is(td, th):nth-of-type(5) /* Dates */ {
+			text-align: left;
+			font-variant-numeric: tabular-nums;
+		}
+		.list.spectacles td[colspan]:nth-of-type(1) {
+			text-align: left;
+		}
+
+		/* WORKS */
+		.list.works tbody.year {
+			text-align: left;
+		}
+		.list.works td {
+			vertical-align: text-top;
+		}
+
+		.list.works :is(td, th):first-child {
+			padding-left: var(--default-cell-padding);
+		}
+
+		.list.works :is(td, th):last-child {
+			padding-right: var(--default-cell-padding);
+		}
+
+		.list.works.alternate {
+			tr,
+			tr:hover {
+				background-color: unset;
+			}
+
+			tbody:nth-child(odd) {
+				background: var(--secondary-background);
+			}
+
+			tbody:nth-child(even) {
+				background: color-mix(in srgb, var(--secondary-background) 95%, white 5%);
+			}
+
+			tbody:hover {
+				background: var(--hover-background);
+			}
+		}
+
+		/* CASTING */
+		/* Position */
+		.list.casting td:nth-of-type(1):not([colspan]) {
+			text-align: right;
+			font-variant-numeric: tabular-nums;
+		}
+
+		/* ARTIST SEARCH SELECT */
+		.artist-search-select {
+			position: relative;
+			display: inline-block;
 			width: 100%;
-			padding-right: 22px;
+
+			input {
+				width: 100%;
+				padding-right: 22px;
+			}
+
+			.artist-search-select-clear {
+				position: absolute;
+				top: 50%;
+				right: 4px;
+				transform: translateY(-50%);
+
+				padding: 0;
+				border: none;
+				background: none;
+				cursor: pointer;
+				color: var(--primary-color);
+			}
 		}
 
-		.artist-search-select-clear {
-			position: absolute;
-			top: 50%;
-			right: 4px;
-			transform: translateY(-50%);
+		/* MODEL */
+		table.cast {
+			width: 100%;
+			margin: 10px;
+		}
 
-			padding: 0;
-			border: none;
-			background: none;
+		.add-in-footer {
+			border-top: 1px solid grey;
+		}
+	}
+
+	/* Portaled to <body>, so it lives outside the `.shows` wrapper. */
+	.artist-search-select-results {
+		position: fixed;
+		z-index: 100;
+
+		max-height: 200px;
+		overflow-y: auto;
+
+		background-color: var(--secondary-background);
+		border: 1px solid var(--light-border-color);
+
+		.artist-search-select-item {
+			padding: 5px 8px;
 			cursor: pointer;
+			text-align: left;
+
+			&:hover,
+			&.selected {
+				background-color: var(--hover-background);
+			}
+
+			&.create {
+				border-bottom: 1px solid var(--light-border-color);
+			}
+		}
+
+		.artist-search-select-empty {
+			padding: 5px 8px;
 			color: var(--primary-color);
 		}
-	}
-
-	/* MODEL */
-	table.cast {
-		width: 100%;
-		margin: 10px;
-	}
-
-	.add-in-footer {
-		border-top: 1px solid grey;
-	}
-}
-
-/* Portaled to <body>, so it lives outside the `.shows` wrapper. */
-.artist-search-select-results {
-	position: fixed;
-	z-index: 100;
-
-	max-height: 200px;
-	overflow-y: auto;
-
-	background-color: var(--secondary-background);
-	border: 1px solid var(--light-border-color);
-
-	.artist-search-select-item {
-		padding: 5px 8px;
-		cursor: pointer;
-		text-align: left;
-
-		&:hover,
-		&.selected {
-			background-color: var(--hover-background);
-		}
-
-		&.create {
-			border-bottom: 1px solid var(--light-border-color);
-		}
-	}
-
-	.artist-search-select-empty {
-		padding: 5px 8px;
-		color: var(--primary-color);
 	}
 }

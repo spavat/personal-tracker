@@ -89,14 +89,14 @@ export default function SpectacleDetails() {
 												{show.places.map((place: any) => (
 													<span
 														key={`${id}-${show.name}-${place.id}-${place.name}`}
-														className="small"
+														className="smalltext"
 													>
 														{place.performances.map((d: any) => {
 															const isFuture = new Date(d.date) > new Date();
 															return (
 																<span
 																	key={d.date}
-																	className={`small ${d.canceled ? "canceled" : ""}`}
+																	className={`smalltext ${d.canceled ? "canceled" : ""}`}
 																>
 																	{isFuture && <>📅</>}
 																	{formatShowDate(d.date, false)}{" "}

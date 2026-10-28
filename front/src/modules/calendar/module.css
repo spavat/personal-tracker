@@ -1,44 +1,46 @@
-.calendar {
-	--day-color: lightgray;
-	--day-weekend-color: darkgray;
-	--today-color: lightblue;
-	display: grid;
-	gap: 10px;
-	grid-template-columns: repeat(7, 1fr);
+@layer modules {
+	.calendar {
+		--day-color: lightgray;
+		--day-weekend-color: darkgray;
+		--today-color: lightblue;
+		display: grid;
+		gap: 10px;
+		grid-template-columns: repeat(7, 1fr);
 
-	.header {
-		font-weight: bold;
-	}
+		.header {
+			font-weight: bold;
+		}
 
-	.day {
-		white-space: pre-line;
-		background-color: var(--day-color);
-		height: 7lh;
-		border-radius: 1.5rem;
-		position: relative;
-		color: black;
-		text-align: left;
-		padding: 0.5em;
-	}
+		.day {
+			white-space: pre-line;
+			background-color: var(--day-color);
+			height: 7lh;
+			border-radius: 1.5rem;
+			position: relative;
+			color: black;
+			text-align: left;
+			padding: 0.5em;
+		}
 
-	.day.today {
-		background-color: var(--today-color);
-	}
+		.day.today {
+			background-color: var(--today-color);
+		}
 
-	.day.weekend {
-		background-color: var(--day-weekend-color);
-	}
+		.day.weekend {
+			background-color: var(--day-weekend-color);
+		}
 
-	.day p {
-		border: 2px solid white;
-		background-color: black;
-		border-radius: 50%;
-		width: 2em;
-		height: 2em;
-		position: absolute;
-		top: -12px;
-		right: -12px;
-		color: white;
-		text-align: center;
+		.day p {
+			border: 2px solid white;
+			background-color: black;
+			border-radius: 50%;
+			width: 2em;
+			height: 2em;
+			position: absolute;
+			top: -12px;
+			right: -12px;
+			color: white;
+			text-align: center;
+		}
 	}
 }
