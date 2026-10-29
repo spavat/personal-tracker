@@ -15,6 +15,7 @@
 	},
 	"dependencies": {
 		"@dnd-kit/react": "^0.5.1",
+		"@fortawesome/fontawesome-free": "^7.3.1",
 		"@hookform/resolvers": "^6.0.0",
 		"@personal-tracker/shared": "*",
 		"@tanstack/react-query": "^5.104.5",
