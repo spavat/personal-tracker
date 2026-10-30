@@ -28,7 +28,7 @@ export default function ArtistList() {
 			<PageTitle title={`${MODULE_NAME} > Artistes`} />
 			<h2>Artistes</h2>
 			<PendingContent isPending={isPending}>
-				<table className="list artists alternate">
+				<table className="list artists alternate responsive">
 					<thead>
 						<tr>{headers.map((h) => h)}</tr>
 					</thead>
@@ -43,10 +43,10 @@ export default function ArtistList() {
 										</Link>
 									</b>
 								</td>
-								<td>{artist.nbSpectacles}</td>
-								<td>{artist.nbPerformances}</td>
+								<td data-label="Spectacles">{artist.nbSpectacles}</td>
+								<td data-label="Représentatrons">{artist.nbPerformances}</td>
 								{isOwner && (
-									<td>
+									<td data-label="Actions">
 										<button
 											type="button"
 											title="Modifier"

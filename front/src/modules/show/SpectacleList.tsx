@@ -35,7 +35,7 @@ export default function SpectacleDetails() {
 			</h2>
 
 			<PendingContent isPending={isPending}>
-				<table className="list spectacles alternate">
+				<table className="list spectacles alternate responsive">
 					<thead>
 						<tr>
 							<th></th>
@@ -70,8 +70,8 @@ export default function SpectacleDetails() {
 													{show.name}
 												</Link>
 											</td>
-											<td>{show.nbPerformances}</td>
-											<td>
+											<td data-label="Représentations">{show.nbPerformances}</td>
+											<td data-label="Lieu">
 												{show.places.map((place: any) => (
 													// a renamed place is listed once per name (same id)
 													<Fragment key={`${place.id}-${place.name}`}>
@@ -85,7 +85,7 @@ export default function SpectacleDetails() {
 													</Fragment>
 												))}
 											</td>
-											<td>
+											<td data-label="Dates">
 												{show.places.map((place: any) => (
 													<span
 														key={`${id}-${show.name}-${place.id}-${place.name}`}

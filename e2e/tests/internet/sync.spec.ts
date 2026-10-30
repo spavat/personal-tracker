@@ -48,8 +48,8 @@ test.describe("Internet - Sync", () => {
 		await expect(second).toContainText("Durée : 36*");
 		await expect(second).toContainText("Date : 25/10/26");
 		// Unknown feed, unknown episode: nothing to propose
-		await expect(syncCards(page).nth(2)).toContainText("?");
-		await expect(syncCards(page).nth(3)).toContainText("?");
+		await expect(syncCards(page).nth(2).locator(".proposition-details")).toBeEmpty();
+		await expect(syncCards(page).nth(3).locator(".proposition-details")).toBeEmpty();
 
 		await expect(syncForm(page, 0).getByRole("textbox", { name: "Titre *", exact: true })).toHaveValue(
 			"Podcast épisode 3",
@@ -106,7 +106,7 @@ test.describe("Internet - Sync", () => {
 
 	test("reprocess the proposals after adding a feed to a program", async ({ page }, testInfo) => {
 		await uploadBackup(page, testInfo.outputPath("antennapod.db"));
-		await expect(syncCards(page).nth(2)).toContainText("?");
+		await expect(syncCards(page).nth(2).locator(".proposition-details")).toBeEmpty();
 
 		// Old Show now uses the feed of the unmatched listening
 		await page.goto(`/internet/${oldShow.id}`);

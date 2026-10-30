@@ -234,7 +234,7 @@ export default function AddEpisodeModalForm({ programId, returnTo }: { programId
 									titleContent={
 										!isError && (
 											<h3>
-												Accès rapide :&nbsp;
+												Accès rapide :
 												<span>
 													<input
 														type="text"
@@ -246,41 +246,37 @@ export default function AddEpisodeModalForm({ programId, returnTo }: { programId
 																: ""
 														}
 														disabled={isFetching}
-													/>{" "}
+													/>
 												</span>
-												{Object.keys(programData?.refs ?? {}).map((key) => {
-													return (
-														<span key={key}>
-															<button
-																type="button"
-																onClick={() => refreshLatestEpisodes(key)}
-																disabled={isFetching}
-																className={`button-${key}`}
-															>
-																<span className="icon-badge-wrap">
-																	{key === "youtubeChannelId" && (
-																		<i className="fa-brands fa-youtube"></i>
-																	)}
-																	{key === "youtubePlaylistId" && (
-																		<i className="fa-solid fa-list"></i>
-																	)}
-																	{key === "rss" && (
-																		<i className="fa-solid fa-rss"></i>
-																	)}
-																	{key === latestEpisodesData?.type && (
-																		<i className="fa-solid fa-circle-check icon-badge lightgreen"></i>
-																	)}
-																</span>
-															</button>
-															{key === latestEpisodesData?.type && (
-																<span className={`tooltip tooltip-${key}`}>
-																	Dernier refresh : <br />
-																	{formatDateTime(latestEpisodesData.dateTimeUtc)}
-																</span>
-															)}
-														</span>
-													);
-												})}
+												{Object.keys(programData?.refs ?? {}).map((key) => (
+													<span key={key}>
+														<button
+															type="button"
+															onClick={() => refreshLatestEpisodes(key)}
+															disabled={isFetching}
+															className={`button-${key}`}
+														>
+															<span className="icon-badge-wrap">
+																{key === "youtubeChannelId" && (
+																	<i className="fa-brands fa-youtube"></i>
+																)}
+																{key === "youtubePlaylistId" && (
+																	<i className="fa-solid fa-list"></i>
+																)}
+																{key === "rss" && <i className="fa-solid fa-rss"></i>}
+																{key === latestEpisodesData?.type && (
+																	<i className="fa-solid fa-circle-check icon-badge lightgreen"></i>
+																)}
+															</span>
+														</button>
+														{key === latestEpisodesData?.type && (
+															<span className={`tooltip tooltip-${key}`}>
+																Dernier refresh : <br />
+																{formatDateTime(latestEpisodesData.dateTimeUtc)}
+															</span>
+														)}
+													</span>
+												))}
 											</h3>
 										)
 									}
@@ -293,35 +289,27 @@ export default function AddEpisodeModalForm({ programId, returnTo }: { programId
 												</div>
 											)}
 											{isSuccess && !isFetching && (
-												<>
-													<ul className="monospace">
-														{quickAccessEpisodes.map((episode) => (
-															<li key={episode.id}>
-																<a onClick={() => selectEpisode(episode.id)}>
-																	<span
-																		className={
-																			episode.view ? "icon-badge-wrap" : ""
-																		}
-																	>
-																		<span className="date smalltext">
-																			{formatDate(episode.date)}
-																		</span>
-																		{Boolean(episode.view) && (
-																			<i className="fa-solid fa-circle-check icon-badge lightgreen"></i>
-																		)}
+												<ul className="monospace">
+													{quickAccessEpisodes.map((episode) => (
+														<li key={episode.id}>
+															<a onClick={() => selectEpisode(episode.id)}>
+																<span className={episode.view ? "icon-badge-wrap" : ""}>
+																	<span className="date smalltext">
+																		{formatDate(episode.date)}
 																	</span>
-
-																	<span className="titleName">{episode.title}</span>
-																	{Boolean(episode.duration) && (
-																		<span className="duration">
-																			{episode.duration}
-																		</span>
+																	{Boolean(episode.view) && (
+																		<i className="fa-solid fa-circle-check icon-badge lightgreen"></i>
 																	)}
-																</a>
-															</li>
-														))}
-													</ul>
-												</>
+																</span>
+
+																<span className="titleName">{episode.title}</span>
+																{Boolean(episode.duration) && (
+																	<span className="duration">{episode.duration}</span>
+																)}
+															</a>
+														</li>
+													))}
+												</ul>
 											)}
 										</>
 									}
@@ -333,7 +321,7 @@ export default function AddEpisodeModalForm({ programId, returnTo }: { programId
 								onToggle={() => setDirectLinkFolded(!directLinkFolded)}
 								titleContent={
 									<h3>
-										Lien direct :&nbsp;
+										Lien direct :
 										<span>
 											<input
 												id="new-link"
@@ -353,11 +341,15 @@ export default function AddEpisodeModalForm({ programId, returnTo }: { programId
 									</h3>
 								}
 								panelContent={
-									<ul>
+									<ul className="monospace">
 										{(extractedData?.suggestedPrograms ?? []).map((channel) => (
 											<li key={channel.id}>
-												<a onClick={() => selectSuggestedProgram(channel.id)}>{channel.name}</a>{" "}
-												{Boolean(channel.author) && <>({channel.author})</>}
+												<a onClick={() => selectSuggestedProgram(channel.id)}>
+													<span className="titleName">
+														{channel.name}
+														{Boolean(channel.author) && <> par {channel.author}</>}
+													</span>
+												</a>
 											</li>
 										))}
 									</ul>
@@ -374,16 +366,18 @@ export default function AddEpisodeModalForm({ programId, returnTo }: { programId
 										+
 									</button>
 								</div>
-								<label>
-									<select {...methods.register("programId", { onChange: onChangeProgramId })}>
-										<option value=""></option>
-										{programs.map((channel) => (
-											<option value={channel.id} key={channel.id}>
-												{channel.name}
-											</option>
-										))}
-									</select>
-								</label>
+								<div className="form-grid">
+									<label className="form-field full-width">
+										<select {...methods.register("programId", { onChange: onChangeProgramId })}>
+											<option value=""></option>
+											{programs.map((channel) => (
+												<option value={channel.id} key={channel.id}>
+													{channel.name}
+												</option>
+											))}
+										</select>
+									</label>
+								</div>
 							</div>
 							<EpisodeForm />
 							<MutationError error={extractMutation.error} />

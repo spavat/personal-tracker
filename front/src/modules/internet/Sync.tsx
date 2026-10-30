@@ -97,8 +97,8 @@ export default function Sync() {
 										/>
 									)}
 								</div>
-								<div>
-									{item.proposition ? (
+								<div className="proposition-details">
+									{item.proposition && (
 										<>
 											{program && (
 												<Link to={`/internet/$programId`} params={{ programId: program.id }}>
@@ -119,8 +119,6 @@ export default function Sync() {
 											<br />
 											Date : {formatDate(item.proposition.date)}
 										</>
-									) : (
-										<>?</>
 									)}
 								</div>
 							</div>

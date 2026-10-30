@@ -126,7 +126,7 @@ export default function PlaceDetails({ placeId }: { placeId: string }) {
 				</label>
 			</h2>
 			<PendingContent isPending={isPending}>
-				<table className="list performances alternate">
+				<table className="list performances alternate responsive">
 					<thead>
 						<tr>
 							<th></th>
@@ -158,7 +158,7 @@ export default function PlaceDetails({ placeId }: { placeId: string }) {
 									return (
 										<tr key={perf.id} className={perf.canceled ? "canceled" : ""}>
 											<td className="smalltext">{!perf.canceled && <>#{index++}</>}</td>
-											<td>
+											<td data-label="Date">
 												{date} <span className="smalltext">{time}</span>
 											</td>
 											<td>
@@ -169,11 +169,11 @@ export default function PlaceDetails({ placeId }: { placeId: string }) {
 													{perf.spectacleName}
 												</Link>
 											</td>
-											<td>{perf.placeName}</td>
-											<td>
+											<td data-label="Lieu">{perf.placeName}</td>
+											<td data-label="Pays">
 												<span className={`fi fi-${perf.placeCountry}`}></span>
 											</td>
-											<td>{perf.seat ? <> 🎫 {perf.seat}</> : ""}</td>
+											<td data-label="Place">{perf.seat ? <> 🎫 {perf.seat}</> : ""}</td>
 										</tr>
 									);
 								})}

@@ -105,10 +105,8 @@ export default function SyncItemForm({ item, onDone }: { item: SyncItem; onDone:
 									{showAddProgramPanel ? "Choisir existant" : "+ Nouveau"}
 								</button>
 							</div>
-							<label>
-								{programs.isLoading ? (
-									<>Chargement&hellip;</>
-								) : (
+							<div className="form-grid">
+								<label className="form-field full-width">
 									<select {...methods.register("programId", { onChange: onChangeProgramId })}>
 										<option value=""></option>
 										{programs.data?.map((p) => (
@@ -117,8 +115,8 @@ export default function SyncItemForm({ item, onDone }: { item: SyncItem; onDone:
 											</option>
 										))}
 									</select>
-								)}
-							</label>
+								</label>
+							</div>
 						</div>
 						<EpisodeForm />
 					</div>

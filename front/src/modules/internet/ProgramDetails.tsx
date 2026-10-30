@@ -58,7 +58,8 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 			<div className="presentation">
 				<div className="title">
 					<h2>
-						{program.name} {program.shortName && <span className="subTitle">({program.shortName})</span>}{" "}
+						{program.name}
+						{program.shortName && <span className="subTitle"> ({program.shortName})</span>}
 						<button
 							type="button"
 							title="Modifier"

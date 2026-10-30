@@ -1,5 +1,14 @@
 @layer modules {
 	.internet {
+		h3 > span {
+			font-size: 14px;
+			font-weight: normal;
+		}
+
+		h3 input {
+			width: 50%;
+		}
+
 		.tooltip {
 			position: relative;
 			display: inline-block;
@@ -42,15 +51,7 @@
 		ul {
 			margin-top: 0px;
 			padding-left: 0px;
-
-			li {
-				list-style: inside;
-			}
 		}
-
-		/* input {
-			width: 65%;
-		} */
 
 		input[name="program.country"] {
 			width: 30%;
@@ -68,6 +69,7 @@
 			width: 100%;
 		}
 
+		.directLink,
 		.latest {
 			li {
 				white-space: nowrap; /* Prevents text from wrapping to next line */
@@ -311,6 +313,8 @@
 			display: flex;
 			flex-direction: column;
 			gap: 16px;
+			/* the sync cards switch to two lines on the width of the list, not of the screen */
+			container-type: inline-size;
 		}
 
 		.sync-item .form-footer,
@@ -369,6 +373,58 @@
 			}
 			& > .proposition {
 				width: 150px;
+			}
+
+			/* no proposition: nothing to point to */
+			&:has(> .proposition-details:empty) > .arrow {
+				display: none;
+			}
+		}
+
+		/*
+		 * Not enough room for one line: origin (date / info) on the first line, proposition below,
+		 * and the arrow, turned down, in a zero-height row so it floats on the boundary.
+		 */
+		@container (width < 800px) {
+			.card_sync_item {
+				display: grid;
+				grid-template-columns: auto 1fr;
+				grid-template-rows: auto 0 auto;
+				grid-template-areas:
+					"date info"
+					"arrow ."
+					"proposition details";
+				gap: 0.5rem 1rem;
+
+				& > .date {
+					grid-area: date;
+					width: auto;
+				}
+				& > .info {
+					grid-area: info;
+					width: auto;
+				}
+				& > .arrow {
+					grid-area: arrow;
+					align-self: center;
+					justify-self: end;
+					transform: rotate(90deg);
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					width: 3rem;
+					height: 3rem;
+					border: 2px solid currentColor;
+					border-radius: 50%;
+					background-color: var(--secondary-background);
+				}
+				& > .proposition {
+					grid-area: proposition;
+					width: auto;
+				}
+				& > .proposition-details {
+					grid-area: details;
+				}
 			}
 		}
 	}

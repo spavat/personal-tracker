@@ -26,7 +26,7 @@ export default function PlaceList() {
 		<>
 			<h2>Lieux</h2>
 			<PendingContent isPending={isPending}>
-				<table className="list places alternate">
+				<table className="list places alternate responsive">
 					<thead>
 						<tr>{headers.map((h) => h)}</tr>
 					</thead>
@@ -41,13 +41,13 @@ export default function PlaceList() {
 										</Link>
 									</b>
 								</td>
-								<td>
+								<td data-label="Pays">
 									<span className={`fi fi-${place.country}`}></span>
 								</td>
-								<td>{place.nbSpectacles}</td>
-								<td>{place.nbPerformances}</td>
+								<td data-label="Spectacles">{place.nbSpectacles}</td>
+								<td data-label="Représentations">{place.nbPerformances}</td>
 								{isOwner && (
-									<td>
+									<td data-label="Actions">
 										<button
 											type="button"
 											title="Modifier"

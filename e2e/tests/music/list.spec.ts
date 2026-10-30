@@ -56,7 +56,7 @@ test.describe("Music - List", () => {
 		await expect(listeningRows(page).nth(0).locator("td")).toHaveText([
 			"#1",
 			"20/10/2026",
-			`${discovery.artist}${discovery.album}`,
+			`${discovery.artist} - ${discovery.album}`,
 			"12/03/2001",
 			"61",
 			"Electro",
@@ -64,7 +64,7 @@ test.describe("Music - List", () => {
 			" ",
 		]);
 		await expect(listeningRows(page).nth(1).locator("td").nth(2)).toHaveText(
-			`${okComputer.artist}${okComputer.album}`,
+			`${okComputer.artist} - ${okComputer.album}`,
 		);
 		await expect(listeningRows(page).nth(1).locator("td").nth(6)).toHaveText("train");
 		await expect(listeningRows(page).nth(2).locator("td").nth(3)).toHaveText("1991");
@@ -72,7 +72,9 @@ test.describe("Music - List", () => {
 
 	test("several artists and an unknown release", async ({ page }) => {
 		await page.goto("/music/list/2026-09");
-		await expect(listeningRow(page, cross.album).locator("td").nth(2)).toHaveText(`Justice • Mehdi${cross.album}`);
+		await expect(listeningRow(page, cross.album).locator("td").nth(2)).toHaveText(
+			`Justice • Mehdi - ${cross.album}`,
+		);
 
 		await page.goto("/music/list/2025-12");
 		await expect(listeningRows(page).first().locator("td").nth(3)).toHaveText("????");
@@ -118,7 +120,7 @@ test.describe("Music - List", () => {
 		await expect(listeningRows(page).first().locator("td")).toHaveText([
 			"#1",
 			"25/10/2026",
-			"Massive Attack • Elizabeth FraserMezzanine",
+			"Massive Attack • Elizabeth Fraser - Mezzanine",
 			"20/04/1998",
 			"63",
 			"Trip Hop",
@@ -170,7 +172,7 @@ test.describe("Music - List", () => {
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(dialog).not.toBeVisible();
-		await expect(listeningRows(page).first()).toContainText("Portishead • Beth GibbonsDummy");
+		await expect(listeningRows(page).first()).toContainText("Portishead • Beth Gibbons - Dummy");
 	});
 
 	test("invalid Navidrome data is ignored", async ({ page }) => {

@@ -15,7 +15,7 @@ export default function GameDetails({ gameId }: { gameId: string }) {
 			<div className="presentation">
 				<div className="title">
 					<h2>
-						{gameData.name}{" "}
+						{gameData.name}
 						<button
 							key="edit"
 							type="button"

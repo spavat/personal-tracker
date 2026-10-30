@@ -102,7 +102,7 @@ export default function ArtistDetails({ artistId }: { artistId: string }) {
 			</h2>
 
 			<PendingContent isPending={isPending}>
-				<table className="list performancesWithRole alternate">
+				<table className="list performancesWithRole alternate responsive">
 					<thead>
 						<tr>
 							<th></th>
@@ -135,7 +135,7 @@ export default function ArtistDetails({ artistId }: { artistId: string }) {
 									return (
 										<tr key={perf.id} className={perf.canceled ? "canceled" : ""}>
 											<td className="smalltext">{!perf.canceled && <>#{index++}</>}</td>
-											<td>
+											<td data-label="Date">
 												{date} <span className="smalltext">{time}</span>
 											</td>
 											<td>
@@ -146,12 +146,12 @@ export default function ArtistDetails({ artistId }: { artistId: string }) {
 													{perf.spectacleName}
 												</Link>
 											</td>
-											<td>{perf.role}</td>
-											<td>{perf.placeName}</td>
-											<td>
+											<td data-label="Rôle">{perf.role}</td>
+											<td data-label="Lieu">{perf.placeName}</td>
+											<td data-label="Pays">
 												<span className={`fi fi-${perf.placeCountry}`}></span>
 											</td>
-											<td>{perf.seat ? <> 🎫 {perf.seat}</> : ""}</td>
+											<td data-label="Place">{perf.seat ? <> 🎫 {perf.seat}</> : ""}</td>
 										</tr>
 									);
 								})}
