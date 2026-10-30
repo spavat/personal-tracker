@@ -29,7 +29,7 @@ export default function BookDetails({ bookId }: { bookId: string }) {
 			<div className="presentation">
 				<div className="title">
 					<h2>
-						{book.book}{" "}
+						{book.book}
 						<button
 							type="button"
 							title="Modifier"
@@ -77,7 +77,7 @@ export default function BookDetails({ bookId }: { bookId: string }) {
 			</div>
 
 			<h2>
-				Modele{" "}
+				Modele
 				<button
 					type="button"
 					title="Modifier"

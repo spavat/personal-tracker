@@ -44,8 +44,8 @@ test.describe("Internet - Program details", () => {
 		]);
 		const first = episodeRows(page).first().locator("td");
 		await expect(first.nth(2)).toHaveText("24/10/26");
-		await expect(first.nth(3)).toContainText("metro");
-		await expect(first.nth(4)).toHaveText("30min*");
+		await expect(first.nth(4)).toContainText("metro");
+		await expect(first.nth(5)).toHaveText("30min*");
 	});
 
 	test("the first cell toggles the episode second row", async ({ page }) => {
@@ -108,17 +108,17 @@ test.describe("Internet - Program details", () => {
 
 		await expect(dialog).not.toBeVisible();
 		const row = episodeRow(page, "Podcast épisode zéro");
-		await expect(row.locator("td").nth(3)).toContainText("intro");
-		await expect(row.locator("td").nth(3)).toContainText("velo");
+		await expect(row.locator("td").nth(4)).toContainText("intro");
+		await expect(row.locator("td").nth(4)).toContainText("velo");
 		await expect(row.locator(".fa-circle-info")).toBeVisible();
-		await expect(row.locator("td").nth(4)).toHaveText("25min*");
+		await expect(row.locator("td").nth(5)).toHaveText("25min*");
 	});
 
 	test("clear the real duration and the context tags of an episode", async ({ page }) => {
 		await openProgram(page, mockPodcast);
 		const row = episodeRow(page, "Podcast épisode 1");
-		await expect(row.locator("td").nth(3)).toContainText("metro");
-		await expect(row.locator("td").nth(4)).toHaveText("30min*");
+		await expect(row.locator("td").nth(4)).toContainText("metro");
+		await expect(row.locator("td").nth(5)).toHaveText("30min*");
 
 		await row.getByRole("button", { name: "Modifier" }).click();
 		const dialog = page.getByRole("dialog", { name: "Modifier épisode" });
@@ -127,8 +127,8 @@ test.describe("Internet - Program details", () => {
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(dialog).not.toBeVisible();
-		await expect(row.locator("td").nth(3)).not.toContainText("metro");
-		await expect(row.locator("td").nth(4)).toHaveText("45min");
+		await expect(row.locator("td").nth(4)).not.toContainText("metro");
+		await expect(row.locator("td").nth(5)).toHaveText("45min");
 	});
 
 	test("delete an episode", async ({ page }) => {

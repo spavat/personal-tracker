@@ -468,11 +468,6 @@
 				justify-content: space-between;
 				border-bottom: 1px solid #2a2a40;
 				margin-bottom: 5px;
-				button {
-					font-size: 16px;
-					height: 10px;
-					/* margin-bottom: 10px; */
-				}
 				h3 {
 					border-bottom: none;
 				}
@@ -674,10 +669,12 @@
 		}
 	}
 
+	:is(h2, h3) > * {
+		margin-left: 10px;
+	}
 	h2 > label {
 		font-size: 14px;
 		font-weight: normal;
-		margin-left: 10px;
 	}
 
 	.list th a {
@@ -710,17 +707,6 @@
 	.list th {
 		padding-left: var(--default-cell-padding);
 		padding-right: var(--default-cell-padding);
-	}
-
-	.internet {
-		h3 > span {
-			font-size: 14px;
-			font-weight: normal;
-		}
-
-		h3 input {
-			width: 50%;
-		}
 	}
 
 	/* TABLE */
@@ -930,7 +916,7 @@
 
 	.form-grid {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 15px;
 	}
 
@@ -1122,7 +1108,8 @@
 		margin-bottom: 10px;
 		padding-bottom: 5px;
 		display: flex;
-		gap: 20px;
+		flex-wrap: wrap;
+		gap: 4px 20px;
 	}
 	.empty-table {
 		text-align: center;
@@ -1317,6 +1304,24 @@
 		table.list.responsive tbody td:empty {
 			display: none;
 		}
+
+		/*
+		 * Rows grouped with rowspan (one tbody per group): rowspan means nothing once cells are blocks,
+		 * so the tbody becomes the card and its rows are sections of it.
+		 */
+		table.list.responsive tbody:has(td[rowspan]) {
+			padding: 8px 16px;
+			border-bottom: 1px solid var(--primary-color);
+		}
+		table.list.responsive tbody:has(td[rowspan]) tr {
+			padding: 0;
+			border-bottom: none;
+		}
+		table.list.responsive tbody:has(td[rowspan]) tr + tr {
+			margin-top: 6px;
+			padding-top: 6px;
+			border-top: 1px dashed color-mix(in srgb, var(--primary-color) 50%, transparent);
+		}
 	}
 
 	/* Mobile: the presentation zones become a swipeable carousel under the title (CSS scroll snap) */
@@ -1357,6 +1362,17 @@
 			> :empty {
 				display: none;
 			}
+		}
+	}
+
+	/* Mobile: Modals take the available width */
+	@media (max-width: 768px) {
+		.dialog-small,
+		.dialog-medium,
+		.dialog-large,
+		.dialog-extralarge {
+			width: unset;
+			min-width: unset;
 		}
 	}
 }

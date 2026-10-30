@@ -71,31 +71,33 @@ export default function PerformanceDetails({ performanceId }: { performanceId: s
 				</div>
 			</div>
 			<div className="base_content">
-				<h3>Casting</h3>
+				<h3>
+					Casting
+					{isOwner && (
+						<button
+							type="button"
+							onClick={() =>
+								navigate({
+									to: "/shows/performances/$performanceId/casting",
+									params: { performanceId: performanceId },
+									search: { returnTo: location.pathname },
+									replace: true,
+									resetScroll: false,
+									mask: {
+										to: "/shows/performances/$performanceId",
+										params: { performanceId: performanceId },
+									},
+								})
+							}
+						>
+							{hasRoles ? "Editer le casting" : "Ajouter le casting"}
+						</button>
+					)}
+				</h3>
 
 				{hasRoles && (
 					<>
-						{isOwner && (
-							<button
-								type="button"
-								onClick={() =>
-									navigate({
-										to: "/shows/performances/$performanceId/casting",
-										params: { performanceId: performanceId },
-										search: { returnTo: location.pathname },
-										replace: true,
-										resetScroll: false,
-										mask: {
-											to: "/shows/performances/$performanceId",
-											params: { performanceId: performanceId },
-										},
-									})
-								}
-							>
-								Editer le casting
-							</button>
-						)}
-						<table className="list casting alternate">
+						<table className="list casting alternate responsive">
 							<thead>
 								<tr>
 									<th></th>
@@ -109,7 +111,7 @@ export default function PerformanceDetails({ performanceId }: { performanceId: s
 									<tr key={role.id}>
 										<td className="smalltext">#{index + 1}</td>
 										<td>{role.name}</td>
-										<td>
+										<td data-label="Artiste">
 											<Link
 												to="/shows/artists/$artistId"
 												params={{ artistId: String(role.artistId) }}
@@ -117,7 +119,7 @@ export default function PerformanceDetails({ performanceId }: { performanceId: s
 												{role.artistName}
 											</Link>
 										</td>
-										<td>{role.status}</td>
+										<td data-label="Statut">{role.status}</td>
 									</tr>
 								))}
 							</tbody>
@@ -127,33 +129,7 @@ export default function PerformanceDetails({ performanceId }: { performanceId: s
 						<p>Origine: {details.casting_origin}</p>
 					</>
 				)}
-				{!hasRoles && (
-					<>
-						<p>Aucun casting</p>
-						{isOwner && (
-							<p>
-								<button
-									type="button"
-									onClick={() =>
-										navigate({
-											to: "/shows/performances/$performanceId/casting",
-											params: { performanceId: performanceId },
-											search: { returnTo: location.pathname },
-											replace: true,
-											resetScroll: false,
-											mask: {
-												to: "/shows/performances/$performanceId",
-												params: { performanceId: performanceId },
-											},
-										})
-									}
-								>
-									Ajouter le casting
-								</button>
-							</p>
-						)}
-					</>
-				)}
+				{!hasRoles && <p>Aucun casting</p>}
 			</div>
 
 			<Outlet />

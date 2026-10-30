@@ -43,7 +43,7 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 
 			<div className="base_content">
 				<h3>Représentations ({details.performances?.length})</h3>
-				<table className="list performances alternate">
+				<table className="list performances alternate responsive">
 					<thead>
 						<tr>
 							<th></th>
@@ -65,7 +65,7 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 										<td onClick={() => toggleSecondRow(perf.id)} className="smalltext">
 											{!perf.canceled && <>#{index++}</>}
 										</td>
-										<td>
+										<td data-label="Date">
 											{date} <span className="smalltext">{time}</span>
 										</td>
 										<td>
@@ -76,7 +76,7 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 												{details.name}
 											</Link>
 										</td>
-										<td>
+										<td data-label="Lieu">
 											<Link
 												to="/shows/places/$placeId"
 												params={{ placeId: String(perf.place.id) }}
@@ -84,11 +84,11 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 												{perf.place.name}
 											</Link>
 										</td>
-										<td>
+										<td data-label="Pays">
 											<span className={`fi fi-${perf.place.country}`}></span>
 										</td>
-										<td>{perf.seat ? <> 🎫 {perf.seat}</> : ""}</td>
-										<td onClick={() => toggleSecondRow(perf.id)}>
+										<td data-label="Place">{perf.seat ? <> 🎫 {perf.seat}</> : ""}</td>
+										<td data-label="Casting" onClick={() => toggleSecondRow(perf.id)}>
 											<CastingIcon {...perf} />
 										</td>
 									</tr>
@@ -123,90 +123,92 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 				<>
 					<div className="base_content">
 						<h3>Modèles</h3>
-						{details.models.map((model: any) => {
-							return (
-								<div key={model.id} className="card_item">
-									{model.name}{" "}
-									{isOwner && (
-										<>
-											<button
-												type="button"
-												title="Modifier"
-												onClick={() =>
-													navigate({
-														to: "/shows/spectacles/$spectacleId/editModel/$modelId",
-														params: {
-															spectacleId,
-															modelId: model.id,
-														},
-														search: { returnTo: location.pathname },
-														replace: true,
-														resetScroll: false,
-														mask: {
-															to: "/shows/spectacles/$spectacleId",
+						<div className="grid">
+							{details.models.map((model: any) => {
+								return (
+									<div key={model.id} className="card_item">
+										{model.name}{" "}
+										{isOwner && (
+											<>
+												<button
+													type="button"
+													title="Modifier"
+													onClick={() =>
+														navigate({
+															to: "/shows/spectacles/$spectacleId/editModel/$modelId",
 															params: {
 																spectacleId,
+																modelId: model.id,
 															},
-														},
-													})
-												}
-											>
-												<i className="fa-regular fa-pen-to-square"></i>
-											</button>
-											<button
-												type="button"
-												title="Supprimer"
-												onClick={() =>
-													navigate({
-														to: "/shows/spectacles/$spectacleId/deleteModel/$modelId",
-														params: {
-															spectacleId,
-															modelId: model.id,
-														},
-														search: { returnTo: location.pathname },
-														replace: true,
-														resetScroll: false,
-														mask: {
-															to: "/shows/spectacles/$spectacleId",
+															search: { returnTo: location.pathname },
+															replace: true,
+															resetScroll: false,
+															mask: {
+																to: "/shows/spectacles/$spectacleId",
+																params: {
+																	spectacleId,
+																},
+															},
+														})
+													}
+												>
+													<i className="fa-regular fa-pen-to-square"></i>
+												</button>
+												<button
+													type="button"
+													title="Supprimer"
+													onClick={() =>
+														navigate({
+															to: "/shows/spectacles/$spectacleId/deleteModel/$modelId",
 															params: {
 																spectacleId,
+																modelId: model.id,
 															},
-														},
-													})
-												}
-											>
-												<i className="fa-regular fa-trash-can"></i>
-											</button>
-										</>
-									)}
-									<details>
-										<summary>
-											{model.roles.length} rôle{model.roles.length > 1 ? "s" : ""}
-										</summary>
-										{model.roles.map((role: any) => {
-											return (
-												<li key={role.id}>
-													{role.name}{" "}
-													{role.artistId ? (
-														<>
-															:{" "}
-															<Link
-																to="/shows/artists/$artistId"
-																params={{ artistId: String(role.artistId) }}
-															>
-																{role.artistName}
-															</Link>
-														</>
-													) : (
-														""
-													)}
-												</li>
-											);
-										})}
-									</details>
-								</div>
-							);
-						})}
+															search: { returnTo: location.pathname },
+															replace: true,
+															resetScroll: false,
+															mask: {
+																to: "/shows/spectacles/$spectacleId",
+																params: {
+																	spectacleId,
+																},
+															},
+														})
+													}
+												>
+													<i className="fa-regular fa-trash-can"></i>
+												</button>
+											</>
+										)}
+										<details>
+											<summary>
+												{model.roles.length} rôle{model.roles.length > 1 ? "s" : ""}
+											</summary>
+											{model.roles.map((role: any) => {
+												return (
+													<li key={role.id}>
+														{role.name}{" "}
+														{role.artistId ? (
+															<>
+																:{" "}
+																<Link
+																	to="/shows/artists/$artistId"
+																	params={{ artistId: String(role.artistId) }}
+																>
+																	{role.artistName}
+																</Link>
+															</>
+														) : (
+															""
+														)}
+													</li>
+												);
+											})}
+										</details>
+									</div>
+								);
+							})}
+						</div>
 					</div>
 				</>
 			)}

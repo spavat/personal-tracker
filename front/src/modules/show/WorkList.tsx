@@ -37,7 +37,7 @@ export default function WorkList() {
 			</h2>
 
 			<PendingContent isPending={isPending}>
-				<table className="list works alternate">
+				<table className="list works alternate responsive">
 					<thead>
 						<tr>
 							<th></th>
@@ -111,26 +111,37 @@ export default function WorkList() {
 															</td>
 														)}
 														{i === 0 && (
-															<td rowSpan={nbRows} className="alignRight monospace">
+															<td
+																rowSpan={nbRows}
+																className="alignRight monospace"
+																data-label="Représentations"
+															>
 																{work.nbPerformances}
 															</td>
 														)}
 														{i === 0 && (
-															<td rowSpan={nbRows} className="alignRight monospace">
+															<td
+																rowSpan={nbRows}
+																className="alignRight monospace"
+																data-label="Spectacles"
+															>
 																{work.nbSpectacles}
 															</td>
 														)}
 
 														{dataRow.hasSpectacle && (
-															<td rowSpan={dataRow.rowSpan} className="alignLeft">
+															<td rowSpan={dataRow.rowSpan} data-label="Spectacle">
 																{dataRow.displaySpectacle ? dataRow.spectacleName : ""}
 															</td>
 														)}
-														<td className="alignLeft">{dataRow.placeName}</td>
-														<td className="alignRight monospace">
+														<td data-label="Lieu">{dataRow.placeName}</td>
+														<td
+															className="alignRight monospace"
+															data-label="Représentations"
+														>
 															{dataRow.performances.length}
 														</td>
-														<td className="alignLeft">
+														<td data-label="Dates">
 															{dataRow.performances.map((d: any) => {
 																const isFuture = new Date(d.date) > new Date();
 																return (
@@ -148,6 +159,7 @@ export default function WorkList() {
 															<td
 																rowSpan={nbRows}
 																className="alignRight smalltext monospace"
+																data-label="Actions"
 															>
 																<button
 																	type="button"

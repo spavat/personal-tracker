@@ -61,7 +61,7 @@ export default function History({ year }: { year: string }) {
 			<PageTitle title={`${MODULE_NAME} > Historique ${period}`} />
 			<h2>Spectacles de l'année {period}</h2>
 
-			<table className="list performances alternate">
+			<table className="list performances alternate responsive">
 				<thead>
 					<tr>
 						<th></th>
@@ -91,7 +91,7 @@ export default function History({ year }: { year: string }) {
 									return (
 										<tr key={show.id} className={show.canceled ? "canceled" : ""}>
 											<td className="smalltext">{!show.canceled && <>#{index++}</>}</td>
-											<td>
+											<td data-label="Date">
 												<Link
 													to="/shows/performances/$performanceId"
 													params={{ performanceId: String(show.id) }}
@@ -110,7 +110,7 @@ export default function History({ year }: { year: string }) {
 													</Link>
 												</b>
 											</td>
-											<td>
+											<td data-label="Lieu">
 												<Link
 													to="/shows/places/$placeId"
 													params={{ placeId: String(show.placeId) }}
@@ -118,11 +118,11 @@ export default function History({ year }: { year: string }) {
 													{show.place}
 												</Link>
 											</td>
-											<td>
+											<td data-label="Pays">
 												<span className={`fi fi-${show.country}`}></span>
 											</td>
-											<td>{show.seat ? <> 🎫 {show.seat}</> : ""}</td>
-											<td>
+											<td data-label="Place">{show.seat ? <> 🎫 {show.seat}</> : ""}</td>
+											<td data-label="Casting">
 												<CastingIcon {...show} />
 											</td>
 										</tr>

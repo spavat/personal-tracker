@@ -96,6 +96,10 @@
 		.list.works td {
 			vertical-align: text-top;
 		}
+		/* by data-label, not nth-of-type: rowspan shifts the column positions in the following rows */
+		.list.works td:is([data-label="Spectacle"], [data-label="Lieu"], [data-label="Dates"]) {
+			text-align: left;
+		}
 
 		.list.works :is(td, th):first-child {
 			padding-left: var(--default-cell-padding);

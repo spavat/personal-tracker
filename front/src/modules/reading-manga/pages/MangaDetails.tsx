@@ -67,7 +67,7 @@ export default function MangaDetails({ mangaId }: { mangaId: string }) {
 			<div className="presentation">
 				<div className="title">
 					<h2>
-						{book.title}{" "}
+						{book.title}
 						<button
 							type="button"
 							title="Modifier le manga"
