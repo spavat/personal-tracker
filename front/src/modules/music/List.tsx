@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import Badge from "../../components/Badge";
 import { HeaderPortal } from "../../components/HeaderPortal";
 import PeriodSelector from "../../components/PeriodSelector";
+import { useIsOwner } from "../../hooks/use-is-owner";
 import { useMonthChanger } from "../../hooks/use-month-changer";
 import { formatFullDate, formatMonth } from "../../utils";
 import { listeningHistory } from "./api";
@@ -10,6 +11,7 @@ import { listeningHistory } from "./api";
 export default function List({ period }: { period: string }) {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const isOwner = useIsOwner();
 	const [listQuery, goPrevious, goNext, canGoPrevious, canGoNext] = useMonthChanger({
 		...listeningHistory,
 		navigationIsDisabled: (period: string, delta: "previous" | "next") => {
@@ -49,13 +51,13 @@ export default function List({ period }: { period: string }) {
 						<th>Durée</th>
 						<th>Genre</th>
 						<th>Tags</th>
-						<th>Actions</th>
+						{isOwner && <th>Actions</th>}
 					</tr>
 				</thead>
 				<tbody>
 					{listenings.length === 0 && (
 						<tr>
-							<td colSpan={8}>Aucune écoute trouvée.</td>
+							<td colSpan={isOwner ? 8 : 7}>Aucune écoute trouvée.</td>
 						</tr>
 					)}
 					{listenings.map((listening) => {
@@ -87,47 +89,49 @@ export default function List({ period }: { period: string }) {
 										></Badge>
 									))}
 								</td>
-								<td data-label="Actions">
-									<button
-										type="button"
-										title="Modifier"
-										onClick={() =>
-											navigate({
-												to: "/music/list/$period/$listeningId/edit",
-												params: { period, listeningId: listening.id },
-												search: { returnTo: location.pathname },
-												replace: true,
-												resetScroll: false,
-												mask: {
-													to: "/music/list/$period",
-													params: { period },
-												},
-											})
-										}
-									>
-										<i className="fa-regular fa-pen-to-square"></i>
-									</button>
-									&nbsp;
-									<button
-										type="button"
-										title="Supprimer"
-										onClick={() =>
-											navigate({
-												to: "/music/list/$period/$listeningId/delete",
-												params: { period, listeningId: listening.id },
-												search: { returnTo: location.pathname },
-												replace: true,
-												resetScroll: false,
-												mask: {
-													to: "/music/list/$period",
-													params: { period },
-												},
-											})
-										}
-									>
-										<i className="fa-regular fa-trash-can"></i>
-									</button>
-								</td>
+								{isOwner && (
+									<td data-label="Actions">
+										<button
+											type="button"
+											title="Modifier"
+											onClick={() =>
+												navigate({
+													to: "/music/list/$period/$listeningId/edit",
+													params: { period, listeningId: listening.id },
+													search: { returnTo: location.pathname },
+													replace: true,
+													resetScroll: false,
+													mask: {
+														to: "/music/list/$period",
+														params: { period },
+													},
+												})
+											}
+										>
+											<i className="fa-regular fa-pen-to-square"></i>
+										</button>
+										&nbsp;
+										<button
+											type="button"
+											title="Supprimer"
+											onClick={() =>
+												navigate({
+													to: "/music/list/$period/$listeningId/delete",
+													params: { period, listeningId: listening.id },
+													search: { returnTo: location.pathname },
+													replace: true,
+													resetScroll: false,
+													mask: {
+														to: "/music/list/$period",
+														params: { period },
+													},
+												})
+											}
+										>
+											<i className="fa-regular fa-trash-can"></i>
+										</button>
+									</td>
+								)}
 							</tr>
 						);
 					})}
@@ -136,31 +140,33 @@ export default function List({ period }: { period: string }) {
 			</table>
 			<Outlet />
 
-			<div className="fab-container">
-				<button
-					type="button"
-					className="fab-main"
-					title="Ajouter une écoute"
-					onClick={() =>
-						navigate({
-							to: "/music/list/$period/add",
-							params: { period },
-							search: { returnTo: location.pathname },
-							replace: true,
-							resetScroll: false,
-							mask: {
-								to: "/music/list/$period",
+			{isOwner && (
+				<div className="fab-container">
+					<button
+						type="button"
+						className="fab-main"
+						title="Ajouter une écoute"
+						onClick={() =>
+							navigate({
+								to: "/music/list/$period/add",
 								params: { period },
-							},
-						})
-					}
-				>
-					<div className="pulse"></div>
-					<div className="heart-line">
-						<i className="fa-solid fa-plus"></i>
-					</div>
-				</button>
-			</div>
+								search: { returnTo: location.pathname },
+								replace: true,
+								resetScroll: false,
+								mask: {
+									to: "/music/list/$period",
+									params: { period },
+								},
+							})
+						}
+					>
+						<div className="pulse"></div>
+						<div className="heart-line">
+							<i className="fa-solid fa-plus"></i>
+						</div>
+					</button>
+				</div>
+			)}
 		</>
 	);
 }

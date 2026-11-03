@@ -53,6 +53,7 @@ const music: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/list",
 		{
+			config: { public: true },
 			schema: {
 				querystring: ListQuerystringRequestSchema,
 				response: {
@@ -66,6 +67,7 @@ const music: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/search",
 		{
+			config: { public: true },
 			schema: {
 				querystring: SearchQuerystringRequestSchema,
 				response: {
@@ -79,6 +81,7 @@ const music: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/id",
 		{
+			config: { public: true },
 			schema: {
 				querystring: DetailsQuerystringRequestSchema,
 				response: {
@@ -137,6 +140,7 @@ const music: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/stats",
 		{
+			config: { public: true },
 			schema: {
 				querystring: StatsQuerystringRequestSchema,
 				response: {
@@ -150,6 +154,7 @@ const music: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/fortnight-stats",
 		{
+			config: { public: true },
 			schema: {
 				response: {
 					200: FortnightStatsResponseSchema,

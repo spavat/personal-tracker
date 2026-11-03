@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Outlet } from "@tanstack/react-router";
 
 import { HeaderPortal } from "../../components/HeaderPortal";
 import PeriodSelector from "../../components/PeriodSelector";
+import { useIsOwner } from "../../hooks/use-is-owner";
 import { useMonthChanger } from "../../hooks/use-month-changer";
 import { formatFullDay, formatMonth } from "../../utils";
 import { listeningHistory } from "./api";
@@ -10,6 +11,7 @@ import { listeningHistory } from "./api";
 export default function History({ period }: { period: string }) {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const isOwner = useIsOwner();
 	const [listQuery, goPrevious, goNext, canGoPrevious, canGoNext] = useMonthChanger({
 		...listeningHistory,
 		navigationIsDisabled: (period: string, delta: "previous" | "next") => {
@@ -87,31 +89,33 @@ export default function History({ period }: { period: string }) {
 
 			<Outlet />
 
-			<div className="fab-container">
-				<button
-					type="button"
-					className="fab-main"
-					title="Ajouter une écoute"
-					onClick={() =>
-						navigate({
-							to: "/music/history/$period/add",
-							params: { period },
-							search: { returnTo: location.pathname },
-							replace: true,
-							resetScroll: false,
-							mask: {
-								to: "/music/history/$period",
+			{isOwner && (
+				<div className="fab-container">
+					<button
+						type="button"
+						className="fab-main"
+						title="Ajouter une écoute"
+						onClick={() =>
+							navigate({
+								to: "/music/history/$period/add",
 								params: { period },
-							},
-						})
-					}
-				>
-					<div className="pulse"></div>
-					<div className="heart-line">
-						<i className="fa-solid fa-plus"></i>
-					</div>
-				</button>
-			</div>
+								search: { returnTo: location.pathname },
+								replace: true,
+								resetScroll: false,
+								mask: {
+									to: "/music/history/$period",
+									params: { period },
+								},
+							})
+						}
+					>
+						<div className="pulse"></div>
+						<div className="heart-line">
+							<i className="fa-solid fa-plus"></i>
+						</div>
+					</button>
+				</div>
+			)}
 		</>
 	);
 }

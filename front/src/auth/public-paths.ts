@@ -11,6 +11,9 @@ const PUBLIC_PATHS = [
 	/^\/internet\/history\/\d{4}-\d{2}$/,
 	/^\/internet\/stats\/\d{4}$/,
 	/^\/internet\/[0-9a-f-]{36}$/,
+	/^\/music(\/(history|list|stats))?$/,
+	/^\/music\/(history|list)\/\d{4}-\d{2}$/,
+	/^\/music\/stats\/\d{4}$/,
 ];
 
 export function isPublicPath(pathname: string) {
