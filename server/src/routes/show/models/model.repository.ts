@@ -32,11 +32,11 @@ export class ModelRepository {
 	}
 
 	updateModel(tx: any, id: number, data: SaveModelBodyRequest) {
-		return tx.update(showModel).set(data).where(eq(showModel.id, id));
+		return tx.update(showModel).set(data).where(eq(showModel.id, id)).returning();
 	}
 
 	insertModel(tx: any, data: SaveModelBodyRequest) {
-		return tx.insert(showModel).values(data).returning({ id: showModel.id });
+		return tx.insert(showModel).values(data).returning();
 	}
 
 	insertArtist(tx: any, name: string) {

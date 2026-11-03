@@ -4,8 +4,10 @@ import { makeFakeDrizzle } from "../../../test-support/fake-drizzle";
 import { buildRouteApp } from "../../../test-support/route-harness";
 import artistRoutes from "./artist.routes";
 
-async function buildApp() {
-	const { db, table } = makeFakeDrizzle();
+const callas = { id: 7, name: "Callas", pictureId: null };
+
+async function buildApp(builderResult?: unknown) {
+	const { db, table } = makeFakeDrizzle({ builderResult });
 	const app = await buildRouteApp(artistRoutes, { db });
 	return { app, db, table };
 }
@@ -41,17 +43,33 @@ describe("show/artists routes", () => {
 		expect((await ctx.app.inject({ method: "POST", url: "/save", payload: {} })).statusCode).toBe(400);
 	});
 
-	it("POST /save persists a valid artist", async () => {
+	it("POST /save creates an artist: 201 with the created artist", async () => {
+		await ctx.app.close();
+		ctx = await buildApp([callas]);
 		const res = await ctx.app.inject({ method: "POST", url: "/save", payload: { name: "Callas" } });
-		expect(res.statusCode).toBe(200);
-		expect(res.json()).toEqual({ ok: true });
+		expect(res.statusCode).toBe(201);
+		expect(res.json()).toEqual({ ...callas, pictureUrl: null });
 		expect(ctx.db.insert).toHaveBeenCalled();
 	});
 
-	it("DELETE /:id reports ok", async () => {
-		const res = await ctx.app.inject({ method: "DELETE", url: "/5" });
+	it("POST /save updates an artist: 200 with the updated artist", async () => {
+		await ctx.app.close();
+		ctx = await buildApp([callas]);
+		const res = await ctx.app.inject({ method: "POST", url: "/save", payload: callas });
 		expect(res.statusCode).toBe(200);
-		expect(res.json()).toEqual({ ok: true });
+		expect(res.json()).toEqual({ ...callas, pictureUrl: null });
+		expect(ctx.db.update).toHaveBeenCalled();
+	});
+
+	it("POST /save 404s when updating an unknown artist", async () => {
+		const res = await ctx.app.inject({ method: "POST", url: "/save", payload: callas });
+		expect(res.statusCode).toBe(404);
+	});
+
+	it("DELETE /:id answers 204 without body", async () => {
+		const res = await ctx.app.inject({ method: "DELETE", url: "/5" });
+		expect(res.statusCode).toBe(204);
+		expect(res.body).toBe("");
 		expect(ctx.db.delete).toHaveBeenCalled();
 	});
 });

@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../../components/modal-status";
+import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { placeDetailsQuery } from "../../../modules/show/api";
 import PlaceModalForm from "../../../modules/show/modals/PlaceModalForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/shows/places/_list/edit/$placeId")({
 	loader: ({ context, params }) =>

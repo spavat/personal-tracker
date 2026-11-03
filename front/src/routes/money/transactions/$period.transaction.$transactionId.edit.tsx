@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../../components/modal-status";
+import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { categoriesQuery, paymentTypesQuery, tagsQuery, transactionQuery } from "../../../modules/money/api";
 import NewTransactionForm from "../../../modules/money/NewTransactionForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/transactions/$period/transaction/$transactionId/edit")({
 	loader: ({ context, params }) =>

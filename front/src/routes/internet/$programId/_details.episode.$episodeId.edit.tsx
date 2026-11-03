@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../../components/modal-status";
+import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { programDetailsQuery } from "../../../modules/internet/api";
 import EditEpisodeModalForm from "../../../modules/internet/modals/EditEpisodeModalForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/internet/$programId/_details/episode/$episodeId/edit")({
 	loader: async ({ context, params }) => {

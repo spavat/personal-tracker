@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../components/modal-status";
+import { ModalError, ModalPending } from "../../components/ModalStatus";
 import { dailyCalendarQuery } from "../../modules/calendar/api";
 import DetailsDay from "../../modules/calendar/DetailsDay";
-import { withReturnToSchema } from "../../router/searchParams";
+import { withReturnToSchema } from "../../router/search-params";
 
 export const Route = createFileRoute("/calendar/$period/$date")({
 	loader: ({ context, params }) =>

@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../../../components/modal-status";
+import { ModalError, ModalPending } from "../../../../components/ModalStatus";
 import { artistsQuery } from "../../../../modules/show/api";
 import ModelModalForm from "../../../../modules/show/modals/ModelModalForm";
-import { withReturnToSchema } from "../../../../router/searchParams";
+import { withReturnToSchema } from "../../../../router/search-params";
 
 export const Route = createFileRoute("/shows/spectacles/$spectacleId/_details/addModel")({
 	loader: ({ context }) => context.queryClient.query({ ...artistsQuery(), staleTime: "static" }),

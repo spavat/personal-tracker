@@ -1,13 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { makeFakeDrizzle } from "../../test-support/fake-drizzle";
 import { makeFakeMongo } from "../../test-support/fake-mongo";
 import { buildRouteApp } from "../../test-support/route-harness";
 import imagesRoutes from "./images.routes";
 
 async function buildApp() {
 	const { mongo, collection } = makeFakeMongo();
-	const app = await buildRouteApp(imagesRoutes, { mongo });
-	return { app, internet: collection("internet"), sport: collection("sport") };
+	const { db, table } = makeFakeDrizzle();
+	const app = await buildRouteApp(imagesRoutes, { mongo, db });
+	return { app, internet: collection("internet"), sport: collection("sport"), media: table("showMedia") };
 }
 
 describe("images routes", () => {
@@ -35,5 +37,20 @@ describe("images routes", () => {
 		const res = await ctx.app.inject({ method: "GET", url: "/sport/act-1/thumbnail" });
 		expect(res.statusCode).toBe(404);
 		expect(ctx.sport.findOne).toHaveBeenCalled();
+	});
+
+	it("404s for a non-uuid show media id", async () => {
+		const res = await ctx.app.inject({ method: "GET", url: "/show/42" });
+		expect(res.statusCode).toBe(404);
+		expect(ctx.media.findFirst).not.toHaveBeenCalled();
+	});
+
+	it("404s for an unknown show media, after looking it up by id", async () => {
+		const res = await ctx.app.inject({ method: "GET", url: "/show/0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e" });
+		expect(res.statusCode).toBe(404);
+		expect(ctx.media.findFirst).toHaveBeenCalledWith({
+			where: { id: "0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e" },
+			columns: { key: true },
+		});
 	});
 });

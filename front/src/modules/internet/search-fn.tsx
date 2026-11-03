@@ -1,4 +1,4 @@
-import Badge from "../../components/badge";
+import Badge from "../../components/Badge";
 
 export function renderInternetResultItem(item: any, selected: boolean, clickFn: (item: any) => void) {
 	const icon = getIconType(item);

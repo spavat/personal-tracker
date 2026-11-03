@@ -110,7 +110,7 @@ describe("CreateTransactionUseCase", () => {
 describe("DeleteTransactionUseCase", () => {
 	it("throws when the transaction is missing", async () => {
 		await expect(new DeleteTransactionUseCase(asRepo(fakeRepo())).execute(1, asLog(makeLog()))).rejects.toThrow(
-			"Transaction not found",
+			"Transaction introuvable",
 		);
 	});
 
@@ -122,9 +122,8 @@ describe("DeleteTransactionUseCase", () => {
 		const transaction = { id: 1, children };
 		repo.findByIdWithChildren.mockResolvedValue(transaction);
 
-		const result = await new DeleteTransactionUseCase(asRepo(repo)).execute(1, asLog(makeLog()));
+		await new DeleteTransactionUseCase(asRepo(repo)).execute(1, asLog(makeLog()));
 
-		expect(result).toEqual({ deleted: true });
 		expect(repo.deleteTransactionTags).toHaveBeenCalledWith([1, 2, 3], { transaction: t });
 		expect(repo.destroyInstance).toHaveBeenCalledTimes(3);
 		expect(repo.destroyInstance).toHaveBeenCalledWith(children[0], { transaction: t });

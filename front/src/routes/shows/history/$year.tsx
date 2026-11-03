@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { yearQuery } from "../../../hooks/use-year-changer";
 import { performanceHistory } from "../../../modules/show/api";
-import History from "../../../modules/show/History";
+import History from "../../../modules/show/pages/History";
 
 export const Route = createFileRoute("/shows/history/$year")({
 	loader: ({ context, params }) =>

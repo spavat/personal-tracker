@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { Fragment } from "react/jsx-runtime";
 
-import { PendingContent } from "../../../components/pending-content";
+import { PendingContent } from "../../../components/PendingContent";
 import { useSortTable } from "../../../hooks/use-sort-table";
 import { formatDate } from "../../../utils";
 import { mangaListSort } from "../api";

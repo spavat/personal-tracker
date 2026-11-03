@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../../components/modal-status";
+import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { gamesQuery } from "../../../modules/game/api";
 import AddPlayModalForm from "../../../modules/game/modals/AddPlayModalForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/game/list/_list/add")({
 	loader: ({ context }) => context.queryClient.query({ ...gamesQuery(), staleTime: "static" }),

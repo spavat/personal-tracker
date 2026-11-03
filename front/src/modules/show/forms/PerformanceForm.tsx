@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 
-import { placesQuery, spectaclesQuery } from "../api";
+import { placesQuery, spectacleMediaQuery, spectaclesQuery } from "../api";
+import MediaPicker from "../components/MediaPicker";
 import { type PerformanceForm } from "./PerformanceForm.utils";
 
 export default function PerformanceFormComponent({
@@ -16,10 +17,20 @@ export default function PerformanceFormComponent({
 		setValue,
 		formState: { errors },
 	} = useFormContext<PerformanceForm>();
-	const [spectacleId, placeId] = useWatch({ control, name: ["performance.spectacleId", "performance.placeId"] });
+	const [spectacleId, placeId, posterId] = useWatch({
+		control,
+		name: ["performance.spectacleId", "performance.placeId", "performance.posterId"],
+	});
 
 	const { data: spectacleList = [], isFetching: spectacleListIsFetching } = useQuery(spectaclesQuery());
 	const { data: placeList = [], isFetching: placeListIsFetching } = useQuery(placesQuery());
+	const { data: posters = [] } = useQuery({
+		...spectacleMediaQuery(spectacleId ?? 0, "poster"),
+		enabled: !!spectacleId,
+	});
+
+	// a poster belongs to its spectacle
+	const clearPoster = () => setValue("performance.posterId", null, { shouldDirty: true });
 
 	useEffect(() => {
 		if (spectacleId) {
@@ -35,6 +46,7 @@ export default function PerformanceFormComponent({
 
 	const clickNewSpectacle = () => {
 		setValue("performance.spectacleId", 0);
+		clearPoster();
 		showFormPart("spectacle");
 	};
 
@@ -59,7 +71,9 @@ export default function PerformanceFormComponent({
 						{spectacleListIsFetching ? (
 							<>...</>
 						) : (
-							<select {...register("performance.spectacleId", { valueAsNumber: true })}>
+							<select
+								{...register("performance.spectacleId", { valueAsNumber: true, onChange: clearPoster })}
+							>
 								<option key={"empty"} value="0"></option>
 								{spectacleList?.map((spectacle) => (
 									<option key={spectacle.id} value={spectacle.id}>
@@ -70,6 +84,16 @@ export default function PerformanceFormComponent({
 						)}
 						{errors.performance?.spectacleId && <span className="error">Le spectacle est obligatoire</span>}
 					</label>
+					{posters.length > 0 && (
+						<div className="form-field full-width">
+							<span>Affiche</span>
+							<MediaPicker
+								media={posters}
+								value={posterId}
+								onChange={(mediaId) => setValue("performance.posterId", mediaId, { shouldDirty: true })}
+							/>
+						</div>
+					)}
 				</div>
 			</div>
 			<div className="panel">

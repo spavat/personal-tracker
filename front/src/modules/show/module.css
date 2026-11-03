@@ -1,17 +1,78 @@
 @layer modules {
 	.shows {
-		.presentation {
-			& .general {
-				grid-column: 1 / span 2;
+		.grid.artists {
+			grid-template-columns: repeat(5, 1fr);
+		}
+
+		/* SPECTACLE */
+		.spectacle-links {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+		}
+		.tracklist {
+			h4,
+			h5 {
+				margin: 1em 0 0.3em;
 			}
-			& .stats {
-				grid-column: 3 / span 2;
+			ul {
+				margin: 0;
+				padding-left: 1.2em;
 			}
+			em {
+				opacity: 0.75;
+				font-size: 0.9em;
+			}
+
+			&:not(.open) {
+				max-height: 10lh;
+				overflow: hidden;
+			}
+			&.overflows:not(.open) {
+				mask-image: linear-gradient(to bottom, black calc(100% - 3lh), transparent 90%);
+			}
+		}
+		/* tracklist on the left, models on the right; models alone take the left column */
+		.tracklist-models {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			align-items: start;
+			gap: 1rem;
+			margin-top: 1rem;
+
+			&:empty {
+				display: none;
+			}
+			.base_content + .base_content {
+				margin-top: 0;
+			}
+			.grid {
+				grid-template-columns: repeat(1, 1fr);
+			}
+			@media (max-width: 768px) {
+				grid-template-columns: 1fr;
+			}
+		}
+		/* sits over the faded bottom of the tracklist */
+		.tracklist-toggle {
+			position: relative;
+			display: flex;
+			align-items: flex-end;
+			justify-content: center;
+			width: 100%;
+			height: 4em;
+			margin-top: -4em;
+			background: none;
+			border: none;
+			cursor: pointer;
 		}
 
 		.form {
 			textarea.address {
 				height: 3lh;
+			}
+			textarea.tracklist-input {
+				font-family: monospace;
 			}
 		}
 
@@ -168,6 +229,204 @@
 
 		.add-in-footer {
 			border-top: 1px solid grey;
+		}
+
+		.card_item.performance {
+			display: flex;
+			direction: row;
+		}
+
+		.card_item.artist {
+			display: flex;
+			direction: row;
+		}
+
+		.portrait-card {
+			width: 100px;
+			height: 100px;
+			object-fit: cover;
+			border-radius: 50%;
+			margin-right: 10px;
+			flex-shrink: 0;
+		}
+		div.portrait-card {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 2.5rem;
+			color: gray;
+			background: rgb(128 128 128 / 15%);
+		}
+
+		.poster-card {
+			width: 120px;
+			min-width: 120px;
+			height: 150px;
+			object-fit: contain;
+			border-radius: 8px;
+			margin-right: 10px;
+		}
+		div.poster-card {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 2.5rem;
+			color: gray;
+			background: rgb(128 128 128 / 15%);
+		}
+
+		/* MEDIA */
+		.poster-thumb,
+		.portrait-thumb {
+			height: 1.6lh;
+			margin-right: 6px;
+			vertical-align: middle;
+			border-radius: 3px;
+			object-fit: cover;
+		}
+		.poster-thumb.in-list,
+		.portrait-thumb.in-list {
+			display: inline;
+		}
+		.portrait-thumb {
+			width: 1.6lh;
+			border-radius: 50%;
+		}
+		.presentation .poster,
+		.presentation .artist-picture {
+			max-height: 220px;
+			max-width: 100%;
+			border-radius: 8px;
+		}
+		/* the description slot is sized for text (4 lines, scrolling): let an image take its height */
+		.presentation .description:has(> img) {
+			max-height: none;
+			overflow: visible;
+		}
+
+		.media-gallery {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+			gap: 12px;
+
+			figure {
+				margin: 0;
+				padding: 6px;
+				border: 1px solid var(--light-border-color);
+				border-radius: 8px;
+
+				&.main {
+					border-color: var(--primary-color);
+				}
+				a {
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					height: 180px;
+				}
+				img {
+					max-width: 100%;
+					max-height: 100%;
+					border-radius: 4px;
+				}
+				.fa-file-pdf {
+					font-size: 4rem;
+				}
+				figcaption {
+					margin-top: 4px;
+					overflow-wrap: anywhere;
+				}
+				.actions {
+					display: flex;
+					gap: 4px;
+					margin-top: 4px;
+				}
+			}
+		}
+
+		.media-upload {
+			display: flex;
+			flex-direction: column;
+			align-items: stretch;
+			align-self: center;
+			gap: 8px;
+			grid-column: span 2;
+			padding: 6px;
+			border: 1px solid var(--light-border-color);
+			border-radius: 8px;
+
+			@media (max-width: 768px) {
+				grid-column: 1 / -1;
+			}
+		}
+
+		.media-drop-zone {
+			border: 2px dashed #555;
+			border-radius: 6px;
+			padding: 16px;
+			text-align: center;
+			transition:
+				border-color 0.2s,
+				background 0.2s;
+
+			&.drag-over {
+				border-color: var(--accent-color, #4a9eff);
+				background: color-mix(in srgb, var(--accent-color, #4a9eff) 10%, transparent);
+			}
+			&.has-file {
+				border-color: #4caf50;
+				color: #4caf50;
+				overflow-wrap: anywhere;
+			}
+			label {
+				cursor: pointer;
+				text-decoration: underline;
+			}
+			input[type="file"] {
+				display: none;
+			}
+		}
+
+		.role-portrait {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+		.artist-photo-button {
+			cursor: pointer;
+			padding: 4px;
+
+			&.error {
+				color: var(--error-color, red);
+			}
+		}
+
+		.media-picker {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 4px;
+
+			button {
+				padding: 2px;
+				border: 2px solid transparent;
+				border-radius: 4px;
+
+				&.selected {
+					border-color: var(--primary-color);
+				}
+			}
+			img {
+				display: block;
+				height: 48px;
+			}
+			.no-picture {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				height: 48px;
+				width: 30px;
+			}
 		}
 	}
 

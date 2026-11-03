@@ -1,6 +1,8 @@
 import type { SaveModelBodyRequest } from "@personal-tracker/shared/show";
 import type { FastifyBaseLogger } from "fastify";
 
+import { httpErrors } from "@fastify/sensible";
+
 import type { ModelRepository } from "./model.repository";
 export class GetModelUseCase {
 	constructor(private repo: ModelRepository) {}
@@ -16,26 +18,26 @@ export class SaveModelUseCase {
 
 	async execute(data: SaveModelBodyRequest, log: FastifyBaseLogger) {
 		log.info("SaveModelUseCase.execute");
-		if (data) {
-			await this.repo.runInTransaction(async (tx) => {
-				if (data.id) {
-					// UPDATE
-					// Remove model roles
-					await this.repo.deleteModelRoles(tx, data.id);
-					// Add model roles
-					await this.processRoleModel(tx, data.roles, data.id);
-					// Update model
-					await this.repo.updateModel(tx, data.id, data);
-				} else {
-					// Insert model
-					const [result] = await this.repo.insertModel(tx, data);
-					// Add model roles
-					await this.processRoleModel(tx, data.roles, result.id);
+		return this.repo.runInTransaction(async (tx) => {
+			if (data.id) {
+				// UPDATE
+				// Update model (first: an unknown id rolls back before touching the roles)
+				const [model] = await this.repo.updateModel(tx, data.id, data);
+				if (!model) {
+					throw httpErrors.notFound("Modèle introuvable");
 				}
-			});
-		}
-
-		return { ok: true };
+				// Remove model roles
+				await this.repo.deleteModelRoles(tx, data.id);
+				// Add model roles
+				await this.processRoleModel(tx, data.roles, data.id);
+				return model;
+			}
+			// Insert model
+			const [model] = await this.repo.insertModel(tx, data);
+			// Add model roles
+			await this.processRoleModel(tx, data.roles, model.id);
+			return model;
+		});
 	}
 
 	private async processRoleModel(tx: any, roles: SaveModelBodyRequest["roles"], modelId: number) {
@@ -63,7 +65,5 @@ export class DeleteModelUseCase {
 			await this.repo.deleteModelRoles(tx, id);
 			await this.repo.deleteModel(tx, id);
 		});
-
-		return { ok: true };
 	}
 }

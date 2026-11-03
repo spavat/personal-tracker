@@ -1,7 +1,7 @@
 import "./module.css";
 import { Outlet } from "@tanstack/react-router";
 
-import PageTitle from "../../components/page-title";
+import PageTitle from "../../components/PageTitle";
 
 export default function AppCalendar() {
 	return (

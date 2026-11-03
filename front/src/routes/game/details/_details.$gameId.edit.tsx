@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../../components/modal-status";
+import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { gameDetailsQuery } from "../../../modules/game/api";
 import GameModalForm from "../../../modules/game/modals/GameModalForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/game/details/_details/$gameId/edit")({
 	loader: ({ context, params }) =>

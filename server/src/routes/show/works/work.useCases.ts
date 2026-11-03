@@ -181,8 +181,7 @@ export class SaveWorkUseCase {
 
 	async execute(data: SaveWorkBody, log: FastifyBaseLogger) {
 		log.info("SaveWorkUseCase.execute");
-		await this.repo.save(data);
-		return { ok: true };
+		return (await this.repo.save(data)) ?? null;
 	}
 }
 
@@ -192,6 +191,5 @@ export class DeleteWorkUseCase {
 	async execute(id: number, log: FastifyBaseLogger) {
 		log.info("DeleteWorkUseCase.execute");
 		await this.repo.delete(id);
-		return { ok: true };
 	}
 }

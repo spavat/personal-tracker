@@ -3,10 +3,12 @@ import { Link } from "@tanstack/react-router";
 import { useOptimistic, useTransition } from "react";
 import { Fragment } from "react/jsx-runtime";
 
-import { PendingContent } from "../../components/pending-content";
-import { useStoredValue } from "../../hooks/stored-value";
-import { groupedSpectaclesQuery } from "./api";
-import { formatShowDate } from "./utils";
+import PageTitle from "../../../components/PageTitle";
+import { PendingContent } from "../../../components/PendingContent";
+import { useStoredValue } from "../../../hooks/stored-value";
+import { groupedSpectaclesQuery } from "../api";
+import { MODULE_NAME } from "../constants";
+import { formatShowDate, isFutureShow } from "../utils";
 
 export default function SpectacleDetails() {
 	const [groupByYear, setGroupByYear] = useStoredValue("show_spectacle_list_groupByYear", false);
@@ -26,6 +28,7 @@ export default function SpectacleDetails() {
 
 	return (
 		<>
+			<PageTitle title={`${MODULE_NAME} > Spectacles`} />
 			<h2>
 				Spectacles
 				<label>
@@ -92,7 +95,7 @@ export default function SpectacleDetails() {
 														className="smalltext"
 													>
 														{place.performances.map((d: any) => {
-															const isFuture = new Date(d.date) > new Date();
+															const isFuture = isFutureShow(d.date);
 															return (
 																<span
 																	key={d.date}

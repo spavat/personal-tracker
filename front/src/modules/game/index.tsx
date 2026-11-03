@@ -6,8 +6,8 @@ import "./module.css";
 import { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 
-import SearchModal from "../../components/search-modal";
-import Submenu from "../../components/submenu";
+import SearchModal from "../../components/SearchModal";
+import Submenu from "../../components/Submenu";
 import { getGameList } from "./api";
 import { linkItem, renderResultItem } from "./search-fn";
 

@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { Fragment, Suspense, useState } from "react";
 
-import { PendingContent } from "../../../components/pending-content";
+import { PendingContent } from "../../../components/PendingContent";
 import { useSortTable } from "../../../hooks/use-sort-table";
 import { formatFullDate } from "../../../utils";
 import { categoriesQuery, objectDetailsQuery, objectListSort } from "../api";

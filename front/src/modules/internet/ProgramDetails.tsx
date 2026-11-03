@@ -3,7 +3,7 @@ import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { Fragment, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 
-import Badge from "../../components/badge";
+import Badge from "../../components/Badge";
 import { API_BASE_URL } from "../../config";
 import { formatDate, formatDateTime, formatDay, getDurationString, getPeriodDifference } from "../../utils";
 import { programDetailsQuery } from "./api";

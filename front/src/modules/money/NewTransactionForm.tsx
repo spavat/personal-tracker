@@ -3,9 +3,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { useRef } from "react";
 import { useForm, type SubmitHandler, useFieldArray, FormProvider, useWatch } from "react-hook-form";
 
-import Badge from "../../components/badge";
-import Modal from "../../components/modal";
-import MutationError from "../../components/mutation-error";
+import Badge from "../../components/Badge";
+import Modal from "../../components/Modal";
+import MutationError from "../../components/MutationError";
 import { useOptionalSuspenseQuery } from "../../hooks/use-optional-suspense-query";
 import { categoriesQuery, paymentTypesQuery, saveTransaction, tagsQuery, transactionQuery } from "./api";
 import NewTransactionChildForm from "./NewTransactionChildForm";

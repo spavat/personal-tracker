@@ -4,8 +4,8 @@ import "./App.css";
 import { useEffect, useRef, useState } from "react";
 
 import { mainNavItems, moneyNavItem } from "./components/nav-items";
-import PageTitle from "./components/page-title";
-import Sidebar from "./components/sidebar";
+import PageTitle from "./components/PageTitle";
+import Sidebar from "./components/Sidebar";
 import { useHeaderSlot } from "./hooks/use-header-slot";
 
 const allNavItems = [...mainNavItems, moneyNavItem];

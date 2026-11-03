@@ -1,6 +1,6 @@
 import { lazy } from "react";
 
-import { WidgetBoundary } from "../components/widget-boundary";
+import { WidgetBoundary } from "../components/WidgetBoundary";
 import MiniMusicalDashboard from "./MiniMusicalDashboard";
 import MiniReadingDashboard from "./MiniReadingDashboard";
 

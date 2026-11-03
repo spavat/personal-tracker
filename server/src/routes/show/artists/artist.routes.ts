@@ -5,6 +5,7 @@ import {
 	ArtistDetailsParamsRequestSchema,
 	ArtistDetailsQuerystringRequestSchema,
 	ArtistListQuerystringRequestSchema,
+	ArtistViewSchema,
 	DeleteArtistParamsRequestSchema,
 	SaveArtistBodyRequestSchema,
 } from "@personal-tracker/shared/show";
@@ -44,17 +45,30 @@ const artistsRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 			)) ?? reply.notFound("Artiste introuvable"),
 	);
 
-	fastify
-		.withTypeProvider<ZodTypeProvider>()
-		.post("/save", { schema: { body: SaveArtistBodyRequestSchema } }, async (request) =>
-			saveArtist.execute(request.body, request.log),
-		);
+	// 201 with the new artist on create, 200 with the updated one on update
+	fastify.withTypeProvider<ZodTypeProvider>().post(
+		"/save",
+		{
+			schema: {
+				body: SaveArtistBodyRequestSchema,
+				response: { 200: ArtistViewSchema, 201: ArtistViewSchema },
+			},
+		},
+		async (request, reply) => {
+			const artist = await saveArtist.execute(request.body, request.log);
+			if (!artist) {
+				return reply.notFound("Artiste introuvable");
+			}
+			return reply.code(request.body.id ? 200 : 201).send(artist);
+		},
+	);
 
 	fastify
 		.withTypeProvider<ZodTypeProvider>()
-		.delete("/:id", { schema: { params: DeleteArtistParamsRequestSchema } }, async (request) =>
-			deleteArtist.execute(request.params.id, request.log),
-		);
+		.delete("/:id", { schema: { params: DeleteArtistParamsRequestSchema } }, async (request, reply) => {
+			await deleteArtist.execute(request.params.id, request.log);
+			return reply.code(204).send();
+		});
 };
 
 export default artistsRoutes;

@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Fragment } from "react/jsx-runtime";
 
-import Modal from "../../components/modal";
+import Modal from "../../components/Modal";
 import { formatLocalizedDate, getDurationString } from "../../utils";
 import { getReadingIcons } from "../reading-book/utils";
 import { getMangaPrefixName, mergeReadings } from "../reading-manga/utils";

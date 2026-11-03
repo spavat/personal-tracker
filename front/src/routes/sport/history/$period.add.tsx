@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import ActivityModalForm from "../../../modules/sport/modals/ActivityModalForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/sport/history/$period/add")({
 	validateSearch: withReturnToSchema,

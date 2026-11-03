@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import BookForm from "../../../modules/reading-book/forms/BookForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/reading-book/history/$year/add")({
 	validateSearch: withReturnToSchema,

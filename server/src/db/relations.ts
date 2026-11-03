@@ -77,6 +77,11 @@ export const relations = defineRelations(schema, (r) => ({
 	},
 	showArtist: {
 		role: r.many.showRole(),
+		mediaLinks: r.many.showArtistMedia(),
+		picture: r.one.showMedia({
+			from: r.showArtist.pictureId,
+			to: r.showMedia.id,
+		}),
 	},
 	showModel: {
 		spectacle: r.one.showSpectacle({
@@ -93,6 +98,10 @@ export const relations = defineRelations(schema, (r) => ({
 		artist: r.one.showArtist({
 			from: r.showModelRole.artistId,
 			to: r.showArtist.id,
+		}),
+		picture: r.one.showMedia({
+			from: r.showModelRole.pictureId,
+			to: r.showMedia.id,
 		}),
 	},
 	showPlace: {
@@ -111,6 +120,7 @@ export const relations = defineRelations(schema, (r) => ({
 	},
 	showSpectacle: {
 		models: r.many.showModel(),
+		mediaLinks: r.many.showSpectacleMedia(),
 		performance: r.many.showPerformance(),
 		places: r.many.showPlace(),
 		work: r.one.showWork({
@@ -128,6 +138,10 @@ export const relations = defineRelations(schema, (r) => ({
 			to: r.showSpectacle.id,
 		}),
 		role: r.many.showRole(),
+		poster: r.one.showMedia({
+			from: r.showPerformance.posterId,
+			to: r.showMedia.id,
+		}),
 	},
 	showRole: {
 		performance: r.one.showPerformance({
@@ -138,8 +152,36 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.showRole.artistId,
 			to: r.showArtist.id,
 		}),
+		picture: r.one.showMedia({
+			from: r.showRole.pictureId,
+			to: r.showMedia.id,
+		}),
 	},
 	showWork: {
 		spectacle: r.many.showSpectacle(),
+	},
+	showSpectacleMedia: {
+		spectacle: r.one.showSpectacle({
+			from: r.showSpectacleMedia.spectacleId,
+			to: r.showSpectacle.id,
+		}),
+		media: r.one.showMedia({
+			from: r.showSpectacleMedia.mediaId,
+			to: r.showMedia.id,
+		}),
+	},
+	showArtistMedia: {
+		artist: r.one.showArtist({
+			from: r.showArtistMedia.artistId,
+			to: r.showArtist.id,
+		}),
+		media: r.one.showMedia({
+			from: r.showArtistMedia.mediaId,
+			to: r.showMedia.id,
+		}),
+		spectacle: r.one.showSpectacle({
+			from: r.showArtistMedia.spectacleId,
+			to: r.showSpectacle.id,
+		}),
 	},
 }));

@@ -1,7 +1,7 @@
 import { useFieldArray, useFormContext } from "react-hook-form";
 
-import Badge from "../../../components/badge";
-import BadgeEdit from "../../../components/badge-edit";
+import Badge from "../../../components/Badge";
+import BadgeEdit from "../../../components/BadgeEdit";
 import { type EpisodeInputs } from "./EpisodeForm.utils";
 
 export default function EpisodeForm() {

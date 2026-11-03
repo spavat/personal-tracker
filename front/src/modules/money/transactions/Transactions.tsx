@@ -2,7 +2,7 @@ import { useSuspenseQueries } from "@tanstack/react-query";
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useOptimistic, useTransition } from "react";
 
-import { PendingContent } from "../../../components/pending-content";
+import { PendingContent } from "../../../components/PendingContent";
 import { useStoredValue } from "../../../hooks/stored-value";
 import { useMonthNavigation } from "../../../hooks/use-month-changer";
 import {

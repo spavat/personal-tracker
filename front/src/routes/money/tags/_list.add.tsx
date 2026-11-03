@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../../components/modal-status";
+import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { tagsQuery } from "../../../modules/money/api";
 import NewTagForm from "../../../modules/money/tags/NewTagForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/tags/_list/add")({
 	loader: ({ context }) => context.queryClient.query({ ...tagsQuery(), staleTime: "static" }),

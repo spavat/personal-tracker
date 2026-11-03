@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../../components/modal-status";
+import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { tagQuery } from "../../../modules/money/api";
 import DeleteTagForm from "../../../modules/money/tags/DeleteTagForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/tags/_list/$tagId/delete")({
 	loader: ({ context, params }) =>

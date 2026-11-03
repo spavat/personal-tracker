@@ -12,6 +12,11 @@
 	#root {
 		margin: 0 auto;
 		text-align: center;
+		&:has(.empty-state) {
+			display: flex;
+			flex-direction: column;
+			min-height: 100dvh;
+		}
 	}
 
 	.app-content {
@@ -67,6 +72,7 @@
 		}
 		.title {
 			flex-grow: 1;
+			justify-content: center;
 		}
 		button {
 			vertical-align: middle;
@@ -669,12 +675,20 @@
 		}
 	}
 
-	:is(h2, h3) > * {
-		margin-left: 10px;
-	}
-	h2 > label {
-		font-size: 14px;
-		font-weight: normal;
+	:is(h2, h3, h4) {
+		> :not(a) {
+			font-size: 14px;
+			font-weight: normal;
+		}
+		> a {
+			font-weight: unset; /* Link in title keep weight */
+		}
+		& > .right {
+			margin-left: auto;
+		}
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
 	}
 
 	.list th a {
@@ -876,8 +890,20 @@
 		}
 	}
 
+	.presentation-with-picture {
+		display: flex;
+		margin: 10px 0px;
+		gap: 10px;
+		.picture {
+			max-width: 200px;
+		}
+	}
+
 	.base_content {
 		text-align: left;
+	}
+	.base_content + .base_content {
+		margin-top: 1rem;
 	}
 
 	.single-panel {

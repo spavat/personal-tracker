@@ -5,8 +5,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { FormProvider, Resolver, useFieldArray, useForm, useFormContext, useWatch } from "react-hook-form";
 import { z } from "zod";
 
-import Modal from "../../../components/modal";
-import MutationError from "../../../components/mutation-error";
+import Modal from "../../../components/Modal";
+import MutationError from "../../../components/MutationError";
 import { bookDetailsQuery, saveModel } from "../api";
 import { renderItemModel } from "../render-modele-fn";
 import { parseTocText } from "../utils";

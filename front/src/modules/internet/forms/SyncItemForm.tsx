@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 
-import MutationError from "../../../components/mutation-error";
+import MutationError from "../../../components/MutationError";
 import { deleteSyncProposal, programsQuery, validateSyncProposal } from "../api";
 import EpisodeForm from "./EpisodeForm";
 import { type EpisodeInputs, onSubmitEpisode } from "./EpisodeForm.utils";

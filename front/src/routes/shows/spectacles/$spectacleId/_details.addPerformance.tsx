@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../../../components/modal-status";
+import { ModalError, ModalPending } from "../../../../components/ModalStatus";
 import { placesQuery, spectacleDetailsQuery, spectaclesQuery } from "../../../../modules/show/api";
 import PerformanceModalForm from "../../../../modules/show/modals/PerformanceModalForm";
-import { withReturnToSchema } from "../../../../router/searchParams";
+import { withReturnToSchema } from "../../../../router/search-params";
 
 export const Route = createFileRoute("/shows/spectacles/$spectacleId/_details/addPerformance")({
 	loader: ({ context, params }) =>

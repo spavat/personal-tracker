@@ -76,9 +76,11 @@ test.describe("Shows - Performances", () => {
 
 	test("details page shows the performance and its casting", async ({ page }) => {
 		await openPerformance(page, performances.paris2025, spectacles.miserablesParis.name);
-		await expect(page.locator(".presentation .general")).toContainText(`Lieu : ${places.chatelet.formerName}`);
-		await expect(page.locator(".presentation .general")).toContainText("Date : 20/03/25 à 20:00");
-		await expect(page.locator(".presentation .stats")).toContainText("Place : 🎫 B7");
+		await expect(page.locator(".presentation-with-picture .general")).toContainText(
+			`Lieu : ${places.chatelet.formerName}`,
+		);
+		await expect(page.locator(".presentation-with-picture .general")).toContainText("Date : 20/03/25 à 20:00");
+		await expect(page.locator(".presentation-with-picture .general")).toContainText("Place : 🎫 B7");
 
 		await expect(castingRows(page)).toHaveCount(2);
 		await expect(castingRows(page).first().locator("td")).toHaveText(["#1", "Fantine", artists.alice.name, ""]);
@@ -91,7 +93,7 @@ test.describe("Shows - Performances", () => {
 
 	test("edit a performance", async ({ page }) => {
 		await openPerformance(page, performances.hamletSept, spectacles.hamlet.name);
-		await page.locator(".presentation").getByRole("button", { name: "Modifier" }).click();
+		await page.locator(".presentation-with-picture").getByRole("button", { name: "Modifier" }).click();
 		const dialog = page.getByRole("dialog", { name: "Modifier la représentation" });
 		await expect(dialog).toBeVisible();
 		await expect(dialog.getByRole("combobox", { name: "Spectacle" })).toHaveValue(String(spectacles.hamlet.id));
@@ -103,13 +105,13 @@ test.describe("Shows - Performances", () => {
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(dialog).not.toBeVisible();
-		await expect(page.locator(".presentation .general")).toContainText("Date : 06/09/26 à 16:30");
-		await expect(page.locator(".presentation .stats")).toContainText("Place : 🎫 G2");
+		await expect(page.locator(".presentation-with-picture .general")).toContainText("Date : 06/09/26 à 16:30");
+		await expect(page.locator(".presentation-with-picture .general")).toContainText("Place : 🎫 G2");
 	});
 
 	test("cancel a performance", async ({ page }) => {
 		await openPerformance(page, performances.hamletSept, spectacles.hamlet.name);
-		await page.locator(".presentation").getByRole("button", { name: "Modifier" }).click();
+		await page.locator(".presentation-with-picture").getByRole("button", { name: "Modifier" }).click();
 		const dialog = page.getByRole("dialog", { name: "Modifier la représentation" });
 		await dialog.getByRole("checkbox", { name: "Annulé" }).check();
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
@@ -182,6 +184,22 @@ test.describe("Shows - Performances", () => {
 		await expect(dialog).not.toBeVisible();
 		await expect(castingRows(page)).toHaveCount(1);
 		await expect(castingRows(page).first().locator("td")).toHaveText(["#1", "Javert", artists.bob.name, ""]);
+	});
+
+	test("edit the casting of roles without status", async ({ page }) => {
+		await openPerformance(page, performances.paris2025, spectacles.miserablesParis.name);
+		const dialog = await openCastingModal(page, "Editer le casting");
+		await dialog.locator('input[name="roles.1.status"]').fill("remplaçant");
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+
+		await expect(dialog).not.toBeVisible();
+		await expect(castingRows(page).nth(0).locator("td")).toHaveText(["#1", "Fantine", artists.alice.name, ""]);
+		await expect(castingRows(page).nth(1).locator("td")).toHaveText([
+			"#2",
+			"Javert",
+			artists.bob.name,
+			"remplaçant",
+		]);
 	});
 
 	test("search with ctrl+shift+f", async ({ page }) => {

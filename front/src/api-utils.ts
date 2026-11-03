@@ -11,7 +11,8 @@ export async function checkResponse(response: Response) {
 export async function fetchJson<T = any>(url: string, init?: RequestInit): Promise<T> {
 	const response = await fetch(url, { ...init, credentials: "include" });
 	await checkResponse(response);
-	return response.json();
+	// 204 No Content: nothing to parse
+	return response.status === 204 ? (undefined as T) : response.json();
 }
 
 // no Content-Type without a body: fastify rejects an empty body announced as JSON

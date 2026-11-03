@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { performanceDetailsQuery } from "../../../modules/show/api";
-import PerformanceDetails from "../../../modules/show/PerformanceDetails";
+import PerformanceDetails from "../../../modules/show/pages/PerformanceDetails";
 
 export const Route = createFileRoute("/shows/performances/$performanceId")({
 	loader: ({ context, params }) =>

@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../components/modal-status";
+import { ModalError, ModalPending } from "../../components/ModalStatus";
 import { contextTagsQuery } from "../../modules/context-tags/api";
 import DeleteContextTagModalForm from "../../modules/context-tags/modals/DeleteContextTagModalForm";
-import { withReturnToSchema } from "../../router/searchParams";
+import { withReturnToSchema } from "../../router/search-params";
 
 export const Route = createFileRoute("/context-tags/_list/delete/$id")({
 	loader: async ({ context, params }) => {

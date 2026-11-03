@@ -2,7 +2,7 @@ import { Outlet } from "@tanstack/react-router";
 
 import "../../App.css";
 import "./module.css";
-import Submenu from "../../components/submenu";
+import Submenu from "../../components/Submenu";
 
 const links = [
 	{

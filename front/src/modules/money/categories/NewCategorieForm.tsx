@@ -2,9 +2,9 @@ import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-q
 import { useNavigate } from "@tanstack/react-router";
 import { type SubmitHandler, useForm, useWatch } from "react-hook-form";
 
-import Badge from "../../../components/badge";
-import Modal from "../../../components/modal";
-import MutationError from "../../../components/mutation-error";
+import Badge from "../../../components/Badge";
+import Modal from "../../../components/Modal";
+import MutationError from "../../../components/MutationError";
 import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-query";
 import { categoriesQuery, categoryQuery, updateCategory } from "../api";
 

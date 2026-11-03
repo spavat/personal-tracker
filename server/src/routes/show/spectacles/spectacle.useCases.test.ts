@@ -3,7 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 import type { SpectacleRepository } from "./spectacle.repository";
 
 import { asLog, makeLog } from "../../../test-support/fake-log";
-import { GetGroupedSpectaclesUseCase, GetSpectacleUseCase, ListSpectaclesUseCase } from "./spectacle.useCases";
+import {
+	GetGroupedSpectaclesUseCase,
+	GetSpectacleUseCase,
+	ListSpectaclesUseCase,
+	SaveSpectacleUseCase,
+} from "./spectacle.useCases";
 
 function fakeRepo() {
 	return {
@@ -11,6 +16,7 @@ function fakeRepo() {
 		findAllWithPerformancesAndPlaces: vi.fn().mockResolvedValue(null),
 		findByIdWithDetails: vi.fn().mockResolvedValue(null),
 		findByName: vi.fn().mockResolvedValue([]),
+		save: vi.fn().mockResolvedValue(undefined),
 	};
 }
 const asRepo = (r: ReturnType<typeof fakeRepo>) => r as unknown as SpectacleRepository;
@@ -43,7 +49,16 @@ describe("GetGroupedSpectaclesUseCase", () => {
 			{
 				id: 2,
 				name: "Carmen",
-				performance: [{ id: 12, date: "2024-05-01", canceled: true, placeId: 7, placeName: "Bastille", place }],
+				performance: [
+					{
+						id: "22222222-2222-4222-8222-222222222222",
+						date: "2024-05-01",
+						canceled: true,
+						placeId: 7,
+						placeName: "Bastille",
+						place,
+					},
+				],
 			},
 		]);
 
@@ -63,6 +78,11 @@ describe("GetSpectacleUseCase", () => {
 		repo.findByIdWithDetails.mockResolvedValue({
 			id: 1,
 			name: "Tosca",
+			workId: 2,
+			description: "Drame lyrique",
+			descriptionSource: "https://fr.wikipedia.org/wiki/Tosca",
+			links: [{ label: "Wikipédia", url: "https://fr.wikipedia.org/wiki/Tosca" }],
+			tracklist: "# Acte 1\n- Recondita armonia",
 			performance: [
 				{
 					id: 10,
@@ -71,16 +91,49 @@ describe("GetSpectacleUseCase", () => {
 					seat: "A1",
 					casting_status: "ok",
 					casting_origin: "manual",
+					spectacleId: 1,
 					placeName: "Old Bastille",
 					place: { id: 7, name: "Bastille", country: "fr" },
-					role: [{ id: 3, artistId: 5, artist: { name: "Callas" }, name: "Tosca", status: "confirmed" }],
+					posterId: "11111111-1111-4111-8111-111111111111",
+					// no role portrait: falls back to the artist's main photo
+					role: [
+						{
+							id: 3,
+							artistId: 5,
+							artist: { name: "Callas", pictureId: "22222222-2222-4222-8222-222222222222" },
+							name: "Tosca",
+							status: "confirmed",
+							pictureId: null,
+						},
+					],
 				},
 			],
 			models: [
 				{
 					id: 20,
 					name: "Cast A",
-					roles: [{ id: 4, name: "Lead", main: true, artistId: 5, artist: { name: "Callas" } }],
+					roles: [
+						{
+							id: 4,
+							name: "Lead",
+							main: true,
+							artistId: 5,
+							order: 1,
+							artist: { id: 5, name: "Callas" },
+							pictureId: "33333333-3333-4333-8333-333333333333",
+						},
+					],
+				},
+			],
+			mediaLinks: [
+				{
+					kind: "poster",
+					media: {
+						id: "11111111-1111-4111-8111-111111111111",
+						key: "k",
+						label: "Saison 1",
+						contentType: "image/avif",
+					},
 				},
 			],
 		});
@@ -90,14 +143,33 @@ describe("GetSpectacleUseCase", () => {
 		expect(result).toEqual({
 			id: 1,
 			name: "Tosca",
+			workId: 2,
+			description: "Drame lyrique",
+			descriptionSource: "https://fr.wikipedia.org/wiki/Tosca",
+			links: [{ label: "Wikipédia", url: "https://fr.wikipedia.org/wiki/Tosca" }],
+			tracklist: "# Acte 1\n- Recondita armonia",
 			performances: [
 				{
 					id: 10,
 					date: "2024-01-01",
 					canceled: false,
 					seat: "A1",
+					posterId: "11111111-1111-4111-8111-111111111111",
+					posterUrl: "/images/show/11111111-1111-4111-8111-111111111111",
 					place: { id: 7, name: "Old Bastille", country: "fr" },
-					cast: [{ id: 3, artist_id: 5, artist_name: "Callas", name: "Tosca", status: "confirmed" }],
+					spectacle: { id: 1, name: "Tosca" },
+					roles: [
+						{
+							id: 3,
+							name: "Tosca",
+							main: false,
+							status: "confirmed",
+							order: 0,
+							pictureId: null,
+							artist: { id: 5, name: "Callas" },
+							pictureUrl: "/images/show/22222222-2222-4222-8222-222222222222",
+						},
+					],
 					casting_status: "ok",
 					casting_origin: "manual",
 				},
@@ -106,9 +178,37 @@ describe("GetSpectacleUseCase", () => {
 				{
 					id: 20,
 					name: "Cast A",
-					roles: [{ id: 4, name: "Lead", main: true, artistId: 5, artistName: "Callas" }],
+					roles: [
+						{
+							id: 4,
+							name: "Lead",
+							main: true,
+							order: 1,
+							pictureId: "33333333-3333-4333-8333-333333333333",
+							artist: { id: 5, name: "Callas" },
+						},
+					],
+				},
+			],
+			media: [
+				{
+					id: "11111111-1111-4111-8111-111111111111",
+					label: "Saison 1",
+					contentType: "image/avif",
+					url: "/images/show/11111111-1111-4111-8111-111111111111",
+					kind: "poster",
 				},
 			],
 		});
+	});
+});
+
+describe("SaveSpectacleUseCase", () => {
+	it("saves through the repository", async () => {
+		const repo = fakeRepo();
+		const data = { id: 1, name: "Tosca", workId: 2, links: [], tracklist: "# Acte 1" };
+		repo.save.mockResolvedValue(data);
+		expect(await new SaveSpectacleUseCase(asRepo(repo)).execute(data, asLog(makeLog()))).toEqual(data);
+		expect(repo.save).toHaveBeenCalledWith(data);
 	});
 });

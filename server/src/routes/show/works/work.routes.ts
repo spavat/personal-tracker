@@ -6,6 +6,7 @@ import {
 	SaveWorkBodyRequestSchema,
 	WorkDetailsParamsRequestSchema,
 	WorkGroupedListRequestSchema,
+	WorkSchema,
 } from "@shared/dist/schemas/show.schema";
 
 import { WorkRepository } from "./work.repository";
@@ -46,17 +47,27 @@ const worksRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 		async (request, reply): Promise<any> =>
 			(await getWork.execute(request.params.id, request.log)) ?? reply.notFound("Œuvre introuvable"),
 	);
+	// 201 with the new work on create, 200 with the updated one on update
 	fastify
 		.withTypeProvider<ZodTypeProvider>()
-		.post("/save", { schema: { body: SaveWorkBodyRequestSchema } }, async (request) =>
-			saveWork.execute(request.body, request.log),
+		.post(
+			"/save",
+			{ schema: { body: SaveWorkBodyRequestSchema, response: { 200: WorkSchema, 201: WorkSchema } } },
+			async (request, reply) => {
+				const work = await saveWork.execute(request.body, request.log);
+				if (!work) {
+					return reply.notFound("Œuvre introuvable");
+				}
+				return reply.code(request.body.id ? 200 : 201).send(work);
+			},
 		);
 
 	fastify
 		.withTypeProvider<ZodTypeProvider>()
-		.delete("/:id", { schema: { params: DeleteWorkParamsRequestSchema } }, async (request) =>
-			deleteWork.execute(request.params.id, request.log),
-		);
+		.delete("/:id", { schema: { params: DeleteWorkParamsRequestSchema } }, async (request, reply) => {
+			await deleteWork.execute(request.params.id, request.log);
+			return reply.code(204).send();
+		});
 };
 
 export default worksRoutes;

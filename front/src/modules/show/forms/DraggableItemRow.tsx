@@ -4,8 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
 import { Control, FieldValues, UseFormRegister, Path, UseFormSetValue, useWatch } from "react-hook-form";
 
-import { artistsQuery } from "../api";
-import ArtistSearchSelect from "../ArtistSearchSelect";
+import { artistMediaQuery } from "../api";
+import ArtistSearchSelect from "../components/ArtistSearchSelect";
+import MediaPicker from "../components/MediaPicker";
+import ArtistPhotoButton from "./ArtistPhotoButton";
 
 interface DraggableItemRowProps<T extends FieldValues> {
 	id: string;
@@ -16,6 +18,8 @@ interface DraggableItemRowProps<T extends FieldValues> {
 	name: Path<T>; // e.g. "roles.0"
 	onRemove: () => void;
 	variant: "model" | "cast";
+	// portraits taken for this spectacle are listed first
+	spectacleId?: number;
 }
 
 export default function DraggableItemRow<T extends FieldValues>({
@@ -27,6 +31,7 @@ export default function DraggableItemRow<T extends FieldValues>({
 	name,
 	id,
 	variant,
+	spectacleId,
 }: DraggableItemRowProps<T>) {
 	const handleRef = useRef(null);
 	const { ref } = useSortable({
@@ -36,8 +41,13 @@ export default function DraggableItemRow<T extends FieldValues>({
 		modifiers: [RestrictToVerticalAxis],
 	});
 
-	const { data = [] } = useQuery(artistsQuery());
 	const artistId = useWatch({ control, name: `${name}.artistId` as Path<T> });
+	const pictureId = useWatch({ control, name: `${name}.pictureId` as Path<T> });
+	const roleName = useWatch({ control, name: `${name}.name` as Path<T> });
+	const { data: artistMedia = [] } = useQuery({ ...artistMediaQuery(artistId), enabled: !!artistId });
+	const portraits = artistMedia.toSorted(
+		(a, b) => Number(b.spectacleId === spectacleId) - Number(a.spectacleId === spectacleId),
+	);
 
 	return (
 		<tr ref={ref}>
@@ -58,17 +68,29 @@ export default function DraggableItemRow<T extends FieldValues>({
 			<td>
 				<ArtistSearchSelect
 					value={artistId}
-					onChange={(artistId: number) => setValue(`${name}.artistId` as Path<T>, artistId as any)}
+					onChange={(artistId: number) => {
+						setValue(`${name}.artistId` as Path<T>, artistId as any);
+						// a portrait belongs to its artist
+						setValue(`${name}.pictureId` as Path<T>, null as any);
+					}}
 				/>
-				<br />
-				<select {...register(`${name}.artistId` as Path<T>, { valueAsNumber: true })} hidden>
-					<option key="empty" value={0}></option>
-					{data?.map((artist) => (
-						<option key={artist.id} value={artist.id}>
-							{artist.name}
-						</option>
-					))}
-				</select>
+			</td>
+			<td>
+				<div className="role-portrait">
+					<MediaPicker
+						media={portraits}
+						value={pictureId}
+						onChange={(mediaId) => setValue(`${name}.pictureId` as Path<T>, mediaId as any)}
+					/>
+					{!!artistId && (
+						<ArtistPhotoButton
+							artistId={artistId}
+							spectacleId={spectacleId}
+							label={roleName}
+							onRolePortrait={(mediaId) => setValue(`${name}.pictureId` as Path<T>, mediaId as any)}
+						/>
+					)}
+				</div>
 			</td>
 			{variant === "cast" && (
 				<td>

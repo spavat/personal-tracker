@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
 import { HeaderPortal } from "../../../components/HeaderPortal";
-import PeriodSelector from "../../../components/period-selector";
+import PeriodSelector from "../../../components/PeriodSelector";
 import { formatMonth } from "../../../utils";
 
 export default function TransactionsHeader({

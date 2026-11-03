@@ -2,7 +2,7 @@ import { useSuspenseQueries } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Fragment } from "react";
 
-import Badge from "../../../components/badge";
+import Badge from "../../../components/Badge";
 import { formatDate, formatDay, formatMonth } from "../../../utils";
 import { groupDetailsQuery, groupTransactionsQuery } from "../api";
 import { formatAmount, getAmountClassName } from "../utils";

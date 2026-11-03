@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { type SubmitHandler, useForm } from "react-hook-form";
 
-import Modal from "../../components/modal";
+import Modal from "../../components/Modal";
 
 interface Inputs {
 	search: string;

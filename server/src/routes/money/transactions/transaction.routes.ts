@@ -59,17 +59,18 @@ const moneyRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 			(await getTransaction.execute(request.params.id, request.log)) ?? reply.notFound("Transaction introuvable"),
 	);
 
-	fastify.post<{ Body: TransactionBody }>("/", async (request) =>
-		createTransaction.execute(request.body, request.log),
+	fastify.post<{ Body: TransactionBody }>("/", async (request, reply) =>
+		reply.code(201).send(await createTransaction.execute(request.body, request.log)),
 	);
 
 	fastify.post<{ Body: TransactionBody; Params: UpdateParams }>("/:id/:type", async (request) =>
 		updateTransaction.execute(request.params.id, request.params.type, request.body, request.log),
 	);
 
-	fastify.delete<{ Params: ParamsWithId }>("/:id", async (request) =>
-		deleteTransaction.execute(request.params.id, request.log),
-	);
+	fastify.delete<{ Params: ParamsWithId }>("/:id", async (request, reply) => {
+		await deleteTransaction.execute(request.params.id, request.log);
+		return reply.code(204).send();
+	});
 
 	fastify.get<{ Params: AccountParams }>("/account/:accountId", async (request) =>
 		listTransactionsByAccount.execute(request.params.accountId, request.log),

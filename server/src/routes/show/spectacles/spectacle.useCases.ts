@@ -1,7 +1,12 @@
-import type { SpectacleListResponse } from "@shared/dist/schemas/show.schema";
+import type { SpectacleDetailsResponse, SpectacleListResponse } from "@shared/dist/schemas/show.schema";
 import type { FastifyBaseLogger } from "fastify";
 
+import type { SaveSpectacleBody } from "./spectacle.entity";
 import type { SpectacleRepository } from "./spectacle.repository";
+
+import { sortByMediaOrder, toSpectacleMedia } from "../media/media.entity";
+import { toModelView } from "../models/model.entity";
+import { toPerformanceView } from "../performances/performance.entity";
 
 export class ListSpectaclesUseCase {
 	constructor(private repo: SpectacleRepository) {}
@@ -132,7 +137,7 @@ export class GetGroupedSpectaclesUseCase {
 export class GetSpectacleUseCase {
 	constructor(private repo: SpectacleRepository) {}
 
-	async execute(id: number, log: FastifyBaseLogger) {
+	async execute(id: number, log: FastifyBaseLogger): Promise<SpectacleDetailsResponse | null> {
 		log.info("GetSpectacleUseCase.execute");
 		const spec = await this.repo.findByIdWithDetails(id);
 		if (!spec) {
@@ -141,41 +146,23 @@ export class GetSpectacleUseCase {
 		return {
 			id: spec.id,
 			name: spec.name,
-			performances: (spec.performance ?? []).map((perf) => {
-				return {
-					id: perf.id,
-					date: perf.date,
-					canceled: perf.canceled,
-					seat: perf.seat,
-					place: {
-						id: perf.place?.id,
-						name: perf.placeName,
-						country: perf.place?.country,
-					},
-					cast: (perf.role ?? []).map((role) => {
-						return {
-							id: role.id,
-							artist_id: role.artistId,
-							artist_name: role.artist?.name,
-							name: role.name,
-							status: role.status,
-						};
-					}),
-					casting_status: perf.casting_status,
-					casting_origin: perf.casting_origin,
-				};
-			}),
-			models: (spec.models ?? []).map((model) => ({
-				id: model.id,
-				name: model.name,
-				roles: model.roles.map((role) => ({
-					id: role.id,
-					name: role.name,
-					main: role.main,
-					artistId: role.artistId,
-					artistName: role.artist?.name ?? "",
-				})),
-			})),
+			workId: spec.workId,
+			description: spec.description,
+			descriptionSource: spec.descriptionSource,
+			links: spec.links,
+			tracklist: spec.tracklist,
+			performances: (spec.performance ?? []).map((perf) => toPerformanceView({ ...perf, spectacle: spec })),
+			models: (spec.models ?? []).map(toModelView),
+			media: sortByMediaOrder(spec.mediaLinks ?? []).map(toSpectacleMedia),
 		};
+	}
+}
+
+export class SaveSpectacleUseCase {
+	constructor(private repo: SpectacleRepository) {}
+
+	async execute(data: SaveSpectacleBody, log: FastifyBaseLogger) {
+		log.info("SaveSpectacleUseCase.execute");
+		return (await this.repo.save(data)) ?? null;
 	}
 }

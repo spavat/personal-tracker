@@ -4,6 +4,8 @@ import type { FastifyBaseLogger } from "fastify";
 import type { SavePlaceBody } from "./place.entity";
 import type { PlaceRepository } from "./place.repository";
 
+import { toPerformanceView } from "../performances/performance.entity";
+
 export class ListPlacesUseCase {
 	constructor(private repo: PlaceRepository) {}
 
@@ -44,17 +46,7 @@ export class GetPlaceUseCase {
 					spectacles[spectacleId] = perf.spectacle;
 					spectacles[spectacleId].performances = [];
 				}
-				spectacles[spectacleId].performances.push({
-					id: perf.id,
-					date: perf.date,
-					canceled: perf.canceled,
-					seat: perf.seat,
-					placeId: perf.place?.id,
-					placeName: perf.placeName,
-					placeCountry: perf.place?.country,
-					spectacleId: perf.spectacle?.id,
-					spectacleName: perf.spectacle?.name,
-				});
+				spectacles[spectacleId].performances.push(toPerformanceView(perf));
 			});
 			groups = Object.values(spectacles);
 			stats.nbSpectacles = groups.length;
@@ -65,17 +57,7 @@ export class GetPlaceUseCase {
 						if (!perf.canceled) {
 							uniqueShows.add(perf.spectacleId);
 						}
-						return {
-							id: perf.id,
-							date: perf.date,
-							canceled: perf.canceled,
-							seat: perf.seat,
-							placeId: perf.place?.id,
-							placeName: perf.placeName,
-							placeCountry: perf.place?.country,
-							spectacleId: perf.spectacle?.id,
-							spectacleName: perf.spectacle?.name,
-						};
+						return toPerformanceView(perf);
 					}),
 				},
 			];
@@ -103,8 +85,7 @@ export class SavePlaceUseCase {
 
 	async execute(data: SavePlaceBody, log: FastifyBaseLogger) {
 		log.info("SavePlaceUseCase.execute");
-		await this.repo.save(data);
-		return { ok: true };
+		return (await this.repo.save(data)) ?? null;
 	}
 }
 
@@ -114,6 +95,5 @@ export class DeletePlaceUseCase {
 	async execute(id: number, log: FastifyBaseLogger) {
 		log.info("DeletePlaceUseCase.execute");
 		await this.repo.delete(id);
-		return { ok: true };
 	}
 }

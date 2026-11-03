@@ -10,7 +10,4 @@ export type PerformanceForm = z.infer<typeof PerformanceFormSchema>;
 
 const PerformanceFormSchemaTransformation = PlaceInsideFormSchema;
 
-export const onSubmitPerformance = (data: PerformanceForm) => {
-	data.performance.date = data.performance.date.replace(" ", "T");
-	return PerformanceFormSchemaTransformation.parse(data);
-};
+export const onSubmitPerformance = (data: PerformanceForm) => PerformanceFormSchemaTransformation.parse(data);

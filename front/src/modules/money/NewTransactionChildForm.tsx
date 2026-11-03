@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
-import Badge from "../../components/badge";
+import Badge from "../../components/Badge";
 
 interface Form {
 	id: string;

@@ -4,7 +4,7 @@ import { useFormContext } from "react-hook-form";
 
 import type { QuickEditInputs } from "./TransactionsTable";
 
-import Badge from "../../../components/badge";
+import Badge from "../../../components/Badge";
 import { formatDate, formatDay } from "../../../utils";
 import { getAmountClassName } from "../utils";
 import TransactionChildRow from "./TransactionChildRow";

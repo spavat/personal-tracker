@@ -1,16 +1,24 @@
-import type { PerformanceListResponse } from "@personal-tracker/shared/show";
+import type { PerformanceView } from "@personal-tracker/shared/show";
 import type { FastifyBaseLogger } from "fastify";
+
+import { httpErrors } from "@fastify/sensible";
 
 import type { SaveCastingBody, SavePerformanceBody } from "./performance.entity";
 import type { PerformanceRepository } from "./performance.repository";
 
+import { toModelView } from "../models/model.entity";
+import { toPerformanceView } from "./performance.entity";
+
 export class ListPerformancesUseCase {
 	constructor(private repo: PerformanceRepository) {}
 
-	async execute({ from, to }: { from?: string; to?: string }, log: FastifyBaseLogger) {
+	async execute(
+		{ from, to }: { from?: string; to?: string },
+		log: FastifyBaseLogger,
+	): Promise<Array<PerformanceView>> {
 		log.info("ListPerformancesUseCase.execute");
-		const performances = await this.repo.findAll({ from, to });
-		return performances as Array<PerformanceListResponse>;
+		const performances = await this.repo.findAllWithDetails({ from, to });
+		return performances.map(toPerformanceView);
 	}
 }
 
@@ -21,21 +29,9 @@ export class GetPerformanceUseCase {
 		log.info("GetPerformanceUseCase.execute");
 		const performance = await this.repo.findByIdWithDetails(performanceId);
 		if (!performance) return null;
-		const { role, placeName, place, ...otherData } = performance;
-		return {
-			...otherData,
-			place: place && { ...place, name: placeName },
-			roles: (role ?? []).map((r) => {
-				return {
-					id: r.id,
-					artistId: r.artistId,
-					artistName: r.artist?.name,
-					name: r.name,
-					status: r.status,
-					main: r.main,
-				};
-			}),
-		};
+		// the details also need the spectacle models, for the casting form
+		const { models, ...spectacle } = performance.spectacle!;
+		return { ...toPerformanceView(performance), spectacle: { ...spectacle, models: models.map(toModelView) } };
 	}
 }
 
@@ -46,7 +42,7 @@ export class SavePerformanceUseCase {
 		log.info("SavePerformanceUseCase.execute");
 		const { work, spectacle, place, performance } = body;
 
-		await this.repo.runInTransaction(async (tx) => {
+		return this.repo.runInTransaction(async (tx) => {
 			let placeId = performance.placeId;
 			if (!placeId && place) {
 				const [placeResult] = await this.repo.insertPlace(tx, place);
@@ -66,19 +62,30 @@ export class SavePerformanceUseCase {
 				});
 				spectacleId = spectacleResult.id;
 			}
+			// the FK guarantees the poster belongs to the spectacle, not that it is a poster
+			if (performance.posterId) {
+				const kind = await this.repo.findSpectacleMediaKind(tx, spectacleId!, performance.posterId);
+				if (kind !== "poster") {
+					throw httpErrors.badRequest("L'affiche doit être un média « affiche » de ce spectacle");
+				}
+			}
 			const dataToSave = {
 				date: performance.date,
 				canceled: performance.canceled,
 				seat: performance.seat,
 				casting_status: performance.casting_status,
 				casting_origin: performance.casting_origin,
+				posterId: performance.posterId,
 				placeId,
 				spectacleId: spectacleId!,
 			};
-			await this.repo.savePerformance(tx, performance.id, dataToSave);
+			const [saved] = await this.repo.savePerformance(tx, performance.id, dataToSave);
+			if (!saved) {
+				// rolls back the place, work and spectacle created above
+				throw httpErrors.notFound("Représentation introuvable");
+			}
+			return saved;
 		});
-
-		return { ok: true };
 	}
 }
 
@@ -109,6 +116,5 @@ export class SaveCastingUseCase {
 				await this.repo.deleteRolesExcept(tx, data.performanceId, incomingIds, insertedIds);
 			});
 		}
-		return { ok: true };
 	}
 }

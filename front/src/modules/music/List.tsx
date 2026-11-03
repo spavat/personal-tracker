@@ -1,8 +1,8 @@
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
-import Badge from "../../components/badge";
+import Badge from "../../components/Badge";
 import { HeaderPortal } from "../../components/HeaderPortal";
-import PeriodSelector from "../../components/period-selector";
+import PeriodSelector from "../../components/PeriodSelector";
 import { useMonthChanger } from "../../hooks/use-month-changer";
 import { formatFullDate, formatMonth } from "../../utils";
 import { listeningHistory } from "./api";

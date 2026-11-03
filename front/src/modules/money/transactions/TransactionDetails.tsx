@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 
-import Badge from "../../../components/badge";
+import Badge from "../../../components/Badge";
 import { formatDate, formatDay } from "../../../utils";
 import { transactionQuery } from "../api";
 import { getAmountClassName } from "../utils";

@@ -1,0 +1,1 @@
+ALTER TABLE "show"."model" ALTER COLUMN "name" SET NOT NULL;

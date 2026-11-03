@@ -42,12 +42,12 @@ export class WorkRepository {
 		});
 	}
 
+	// undefined when updating an unknown id
 	async save(data: SaveWorkBody) {
-		if (data.id) {
-			await this.db.update(showWork).set(data).where(eq(showWork.id, data.id));
-		} else {
-			await this.db.insert(showWork).values(data);
-		}
+		const [work] = data.id
+			? await this.db.update(showWork).set(data).where(eq(showWork.id, data.id)).returning()
+			: await this.db.insert(showWork).values(data).returning();
+		return work;
 	}
 
 	delete(id: number) {

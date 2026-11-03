@@ -1,5 +1,7 @@
 import type { FastifyBaseLogger } from "fastify";
 
+import { httpErrors } from "@fastify/sensible";
+
 import type { TransactionRepository } from "./transaction.repository";
 
 import { mergeAndSortTransactions, normalizeTransactionRefs, type TransactionBody } from "./transaction.entity";
@@ -85,7 +87,7 @@ export class UpdateTransactionUseCase {
 		// Retrieve parent transaction and its children
 		const transaction = await this.repo.findByIdWithChildren(id);
 		if (!transaction) {
-			throw new Error("Transaction not found");
+			throw httpErrors.notFound("Transaction introuvable");
 		}
 		const transactionIds = [id, ...(transaction.children?.map((c) => c.id) ?? [])];
 
@@ -102,88 +104,79 @@ export class UpdateTransactionUseCase {
 			// Update parent transaction
 			console.log("==> quick update");
 			await this.repo.updateInstance(transaction, normalizeTransactionRefs(body));
-			return { ok: true };
+			return this.repo.findByIdWithChildren(id);
 		}
 
-		try {
-			await this.repo.runInTransaction(async (t) => {
-				// Clear all transaction tags
-				console.log("==> clear all transactions tags");
-				await this.repo.deleteTransactionTags(transactionIds, { transaction: t });
+		// a failure rolls back and reaches the client as a 500
+		await this.repo.runInTransaction(async (t) => {
+			// Clear all transaction tags
+			console.log("==> clear all transactions tags");
+			await this.repo.deleteTransactionTags(transactionIds, { transaction: t });
 
-				// Update parent transaction
-				console.log("==> update parent");
-				await this.repo.updateInstance(transaction, normalizeTransactionRefs(body), { transaction: t });
+			// Update parent transaction
+			console.log("==> update parent");
+			await this.repo.updateInstance(transaction, normalizeTransactionRefs(body), { transaction: t });
 
-				// Add transaction tag for the parent
-				console.log("==> add transcation tag parent");
-				if (body.tags?.length) {
-					await this.repo.bulkCreateTags(
-						body.tags.map((t) => ({
-							transactionId: transaction.id,
-							tagId: t.id,
-						})),
-						{ transaction: t },
-					);
-				}
+			// Add transaction tag for the parent
+			console.log("==> add transcation tag parent");
+			if (body.tags?.length) {
+				await this.repo.bulkCreateTags(
+					body.tags.map((t) => ({
+						transactionId: transaction.id,
+						tagId: t.id,
+					})),
+					{ transaction: t },
+				);
+			}
 
-				// update existing children
-				console.log("==> udpate existing children");
-				for (const [childId, childInstance] of existingById) {
-					const child = incomingById.get(childId);
-					if (child) {
-						await this.repo.updateInstance(childInstance, child, { transaction: t });
-						if (child.tags?.length) {
-							console.log("==> tag");
-							await this.repo.bulkCreateTags(
-								child.tags.map((t) => ({
-									transactionId: child.id,
-									tagId: t.id,
-								})),
-								{ transaction: t },
-							);
-						}
+			// update existing children
+			console.log("==> udpate existing children");
+			for (const [childId, childInstance] of existingById) {
+				const child = incomingById.get(childId);
+				if (child) {
+					await this.repo.updateInstance(childInstance, child, { transaction: t });
+					if (child.tags?.length) {
+						console.log("==> tag");
+						await this.repo.bulkCreateTags(
+							child.tags.map((t) => ({
+								transactionId: child.id,
+								tagId: t.id,
+							})),
+							{ transaction: t },
+						);
 					}
 				}
+			}
 
-				// create new children
-				console.log("==> create children");
-				for (const child of incomingChildren) {
-					if (!child.id) {
-						console.log("creation children", child);
-						const createdChild = await this.repo.create(child, { transaction: t });
-						if (child.tags?.length) {
-							console.log("==> tag");
-							await this.repo.bulkCreateTags(
-								child.tags.map((t) => ({
-									transactionId: createdChild.id,
-									tagId: t.id,
-								})),
-								{ transaction: t },
-							);
-						}
+			// create new children
+			console.log("==> create children");
+			for (const child of incomingChildren) {
+				if (!child.id) {
+					console.log("creation children", child);
+					const createdChild = await this.repo.create(child, { transaction: t });
+					if (child.tags?.length) {
+						console.log("==> tag");
+						await this.repo.bulkCreateTags(
+							child.tags.map((t) => ({
+								transactionId: createdChild.id,
+								tagId: t.id,
+							})),
+							{ transaction: t },
+						);
 					}
 				}
+			}
 
-				// delete removed children
-				console.log("==> delete children");
-				for (const [childId, childInstance] of existingById) {
-					if (!incomingById.has(childId)) {
-						await this.repo.destroyInstance(childInstance, { transaction: t });
-					}
+			// delete removed children
+			console.log("==> delete children");
+			for (const [childId, childInstance] of existingById) {
+				if (!incomingById.has(childId)) {
+					await this.repo.destroyInstance(childInstance, { transaction: t });
 				}
-			});
+			}
+		});
 
-			// If the execution reaches this line, the transaction has been committed successfully
-			// `result` is whatever was returned from the transaction callback
-		} catch (error) {
-			// If the execution reaches this line, an error occurred.
-			// The transaction has already been rolled back automatically by Drizzle!
-			console.log("error !!!!!!", error);
-			return { ok: false };
-		}
-
-		return { ok: true };
+		return this.repo.findByIdWithChildren(id);
 	}
 }
 
@@ -194,7 +187,7 @@ export class DeleteTransactionUseCase {
 		log.info({ id }, "DeleteTransactionUseCase.execute");
 		const transaction = await this.repo.findByIdWithChildren(id);
 		if (!transaction) {
-			throw new Error("Transaction not found");
+			throw httpErrors.notFound("Transaction introuvable");
 		}
 		const children = transaction.children ?? [];
 		const transactionIds = [id, ...children.map((c) => c.id)];
@@ -208,8 +201,6 @@ export class DeleteTransactionUseCase {
 			}
 			await this.repo.destroyInstance(transaction, { transaction: t });
 		});
-
-		return { deleted: true };
 	}
 }
 

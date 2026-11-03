@@ -1,6 +1,6 @@
 import { type ErrorComponentProps, useNavigate, useRouter, useSearch } from "@tanstack/react-router";
 
-import Modal from "./modal";
+import Modal from "./Modal";
 
 // pendingComponent of the modal routes: an empty modal while the form data loads
 export function ModalPending() {

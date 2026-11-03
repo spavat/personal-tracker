@@ -11,7 +11,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { saveReading } from "../api";
-import { ReadingFormItem } from "../render-reading-fn";
+import { ReadingFormItem } from "../ReadingFormItem";
 import { FrontReading } from "../types";
 import { getReadingDuration } from "../utils";
 

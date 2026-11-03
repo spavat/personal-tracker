@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
-import Modal from "../../../components/modal";
-import MutationError from "../../../components/mutation-error";
+import Modal from "../../../components/Modal";
+import MutationError from "../../../components/MutationError";
 import { artistDetailsQuery, deleteArtist } from "../api";
 
 export default function DeleteArtistModalForm({ artistId, returnTo }: { artistId: string; returnTo: string }) {
@@ -42,7 +42,7 @@ export default function DeleteArtistModalForm({ artistId, returnTo }: { artistId
 			<div className="dialog-body">
 				{canBeDeleted ? (
 					<p>
-						Êtes-vous sûr de vouloir supprimer l'artiste?
+						Êtes-vous sûr de vouloir supprimer l'artiste ?
 						<br />
 						Nom : {data.name}
 						<br />

@@ -1,6 +1,11 @@
 import type { FastifyInstance } from "fastify";
 
+import { eq } from "drizzle-orm";
+
+import type { SaveSpectacleBody } from "./spectacle.entity";
+
 import { contains } from "../../../db/contains";
+import { showSpectacle } from "../../../db/schema";
 import { placeNameAt } from "../places/place.repository";
 
 export class SpectacleRepository {
@@ -16,6 +21,7 @@ export class SpectacleRepository {
 		return this.db.query.showSpectacle.findMany({
 			with: {
 				performance: {
+					orderBy: { date: "asc" },
 					extras: { placeName: placeNameAt },
 					with: {
 						place: true,
@@ -30,6 +36,7 @@ export class SpectacleRepository {
 			where: { id },
 			with: {
 				performance: {
+					orderBy: { date: "asc" },
 					extras: { placeName: placeNameAt },
 					with: {
 						place: true,
@@ -50,6 +57,9 @@ export class SpectacleRepository {
 						},
 					},
 				},
+				mediaLinks: {
+					with: { media: true },
+				},
 			},
 		});
 	}
@@ -67,5 +77,13 @@ export class SpectacleRepository {
 				},
 			},
 		});
+	}
+
+	// undefined when updating an unknown id
+	async save({ models: _models, ...data }: SaveSpectacleBody) {
+		const [spectacle] = data.id
+			? await this.db.update(showSpectacle).set(data).where(eq(showSpectacle.id, data.id)).returning()
+			: await this.db.insert(showSpectacle).values(data).returning();
+		return spectacle;
 	}
 }

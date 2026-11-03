@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../../components/modal-status";
+import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { workDetailsQuery } from "../../../modules/show/api";
 import WorkModalForm from "../../../modules/show/modals/WorkModalForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/shows/works/_list/edit/$workId")({
 	loader: ({ context, params }) =>

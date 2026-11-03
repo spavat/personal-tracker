@@ -1,6 +1,5 @@
 import { DragDropProvider } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
-import { useQuery } from "@tanstack/react-query";
 import {
 	useFieldArray,
 	Control,
@@ -13,8 +12,7 @@ import {
 	useWatch,
 } from "react-hook-form";
 
-import { artistsQuery } from "../api";
-import ArtistSearchSelect from "../ArtistSearchSelect";
+import ArtistSearchSelect from "../components/ArtistSearchSelect";
 import DraggableItemRow from "./DraggableItemRow";
 
 interface RolesFieldProps<T extends FieldValues> {
@@ -23,9 +21,17 @@ interface RolesFieldProps<T extends FieldValues> {
 	setValue: UseFormSetValue<T>;
 	name: ArrayPath<T>;
 	variant: "model" | "cast";
+	spectacleId?: number;
 }
 
-export function RolesField<T extends FieldValues>({ control, register, setValue, name, variant }: RolesFieldProps<T>) {
+export function RolesField<T extends FieldValues>({
+	control,
+	register,
+	setValue,
+	name,
+	variant,
+	spectacleId,
+}: RolesFieldProps<T>) {
 	const { fields, append, remove, move } = useFieldArray({ control, name });
 
 	const {
@@ -36,7 +42,6 @@ export function RolesField<T extends FieldValues>({ control, register, setValue,
 		handleSubmit: handleSubmitTemp,
 	} = useForm();
 
-	const { data = [] } = useQuery(artistsQuery());
 	const tempArtistId = useWatch({ control: controlTemp, name: "artistId" });
 
 	const addModelRole = handleSubmitTemp((values) => {
@@ -61,6 +66,7 @@ export function RolesField<T extends FieldValues>({ control, register, setValue,
 						<th>Rôle</th>
 						<th>Principal</th>
 						<th>Artiste</th>
+						<th>Portrait</th>
 						{variant === "cast" && <th>Statut</th>}
 						<th>Actions</th>
 						<th></th>
@@ -88,11 +94,12 @@ export function RolesField<T extends FieldValues>({ control, register, setValue,
 								name={`${name}.${index}` as Path<T>}
 								onRemove={() => remove(index)}
 								variant={variant}
+								spectacleId={spectacleId}
 							/>
 						))}
 						{fields.length === 0 && (
 							<tr>
-								<td className="empty-table" colSpan={variant === "cast" ? 7 : 6}>
+								<td className="empty-table" colSpan={variant === "cast" ? 8 : 7}>
 									Aucun rôle enregistré
 								</td>
 							</tr>
@@ -122,16 +129,9 @@ export function RolesField<T extends FieldValues>({ control, register, setValue,
 								value={tempArtistId}
 								onChange={(artistId: number) => setValueTemp("artistId", artistId)}
 							/>
-							<br />
-							<select {...registerTemp("artistId", { valueAsNumber: true })} hidden>
-								<option key="empty" value={0}></option>
-								{data?.map((artist) => (
-									<option key={artist.id} value={artist.id}>
-										{artist.name}
-									</option>
-								))}
-							</select>
 						</td>
+						<td></td>
+						{variant === "cast" && <td></td>}
 						<td>
 							<button type="button" onClick={addModelRole}>
 								<i className="fa-regular fa-plus"></i> Ajouter

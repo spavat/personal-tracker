@@ -4,8 +4,8 @@ import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Fragment } from "react/jsx-runtime";
 
-import Badge from "../../../components/badge";
-import MutationError from "../../../components/mutation-error";
+import Badge from "../../../components/Badge";
+import MutationError from "../../../components/MutationError";
 import { useStoredValue } from "../../../hooks/stored-value";
 import { formatDate, formatDay, getCurrentOrPreviousDate } from "../../../utils";
 import { mangaDetailsQuery, save } from "../api";

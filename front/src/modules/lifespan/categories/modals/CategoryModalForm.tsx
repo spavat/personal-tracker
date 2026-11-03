@@ -3,8 +3,8 @@ import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-q
 import { useNavigate } from "@tanstack/react-router";
 import { SubmitHandler, useForm } from "react-hook-form";
 
-import Modal from "../../../../components/modal";
-import MutationError from "../../../../components/mutation-error";
+import Modal from "../../../../components/Modal";
+import MutationError from "../../../../components/MutationError";
 import { categoriesQuery, saveCategory } from "../../api";
 
 type CategoryFormInputs = {

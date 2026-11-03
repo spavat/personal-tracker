@@ -25,6 +25,12 @@ const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void>
 		url: process.env.MONGODB_URL ?? "mongodb://localhost:27017/personal_tracker",
 	});
 
+	// TEMP: 30s delay on every request to test loading states (CORS preflights skipped so the delay isn't doubled)
+	// fastify.addHook("onRequest", async (request) => {
+	// 	if (request.method === "OPTIONS") return;
+	// 	await new Promise((resolve) => setTimeout(resolve, 30_000));
+	// });
+
 	// Do not touch the following lines
 
 	// This loads all plugins defined in plugins

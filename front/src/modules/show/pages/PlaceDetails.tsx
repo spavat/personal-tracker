@@ -3,12 +3,14 @@ import { Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useOptimistic, useTransition } from "react";
 import { Fragment } from "react/jsx-runtime";
 
-import { PendingContent } from "../../components/pending-content";
-import { useStoredValue } from "../../hooks/stored-value";
-import { useIsOwner } from "../../hooks/use-is-owner";
-import { formatDate, getPeriodDifference } from "../../utils";
-import { placeDetailsQuery } from "./api";
-import { formatShowDate } from "./utils";
+import PageTitle from "../../../components/PageTitle";
+import { PendingContent } from "../../../components/PendingContent";
+import { useStoredValue } from "../../../hooks/stored-value";
+import { useIsOwner } from "../../../hooks/use-is-owner";
+import { formatDate, getPeriodDifference } from "../../../utils";
+import { placeDetailsQuery } from "../api";
+import { MODULE_NAME } from "../constants";
+import { formatShowDate } from "../utils";
 
 export default function PlaceDetails({ placeId }: { placeId: string }) {
 	const navigate = useNavigate();
@@ -32,10 +34,11 @@ export default function PlaceDetails({ placeId }: { placeId: string }) {
 
 	return (
 		<>
+			<PageTitle title={`${MODULE_NAME} > Lieu > ${details.name}`} />
 			<div className="presentation">
 				<div className="title">
 					<h2>
-						<span className={`fi fi-${details.country}`}></span> {details.name}{" "}
+						<span className={`fi fi-${details.country}`}></span> {details.name}
 						{isOwner && (
 							<button
 								type="button"
@@ -87,6 +90,7 @@ export default function PlaceDetails({ placeId }: { placeId: string }) {
 						)}
 					</div>
 				</div>
+				<div className="description"></div>
 				<div className="stats">
 					<div>
 						<span>
@@ -117,7 +121,6 @@ export default function PlaceDetails({ placeId }: { placeId: string }) {
 					</div>
 				</div>
 			</div>
-
 			<h2>
 				Liste des représentations
 				<label>
@@ -164,14 +167,14 @@ export default function PlaceDetails({ placeId }: { placeId: string }) {
 											<td>
 												<Link
 													to="/shows/spectacles/$spectacleId"
-													params={{ spectacleId: String(perf.spectacleId) }}
+													params={{ spectacleId: String(perf.spectacle.id) }}
 												>
-													{perf.spectacleName}
+													{perf.spectacle.name}
 												</Link>
 											</td>
-											<td data-label="Lieu">{perf.placeName}</td>
+											<td data-label="Lieu">{perf.place?.name}</td>
 											<td data-label="Pays">
-												<span className={`fi fi-${perf.placeCountry}`}></span>
+												<span className={`fi fi-${perf.place?.country}`}></span>
 											</td>
 											<td data-label="Place">{perf.seat ? <> 🎫 {perf.seat}</> : ""}</td>
 										</tr>

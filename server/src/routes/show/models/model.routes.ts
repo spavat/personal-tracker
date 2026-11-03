@@ -5,6 +5,7 @@ import {
 	DeleteModelParamsRequestSchema,
 	ModelDetailsParamsRequestSchema,
 	SaveModelBodyRequestSchema,
+	SaveModelResponseSchema,
 } from "@personal-tracker/shared/show";
 
 import { ModelRepository } from "./model.repository";
@@ -24,17 +25,25 @@ const modelsRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 		async (request, reply): Promise<any> =>
 			(await getModel.execute(request.params.id, request.log)) ?? reply.notFound("Modèle introuvable"),
 	);
-	fastify
-		.withTypeProvider<ZodTypeProvider>()
-		.post("/save", { schema: { body: SaveModelBodyRequestSchema } }, async (request) =>
-			saveModel.execute(request.body, request.log),
-		);
+	// 201 with the new model on create, 200 with the updated one on update
+	fastify.withTypeProvider<ZodTypeProvider>().post(
+		"/save",
+		{
+			schema: {
+				body: SaveModelBodyRequestSchema,
+				response: { 200: SaveModelResponseSchema, 201: SaveModelResponseSchema },
+			},
+		},
+		async (request, reply) =>
+			reply.code(request.body.id ? 200 : 201).send(await saveModel.execute(request.body, request.log)),
+	);
 
 	fastify
 		.withTypeProvider<ZodTypeProvider>()
-		.delete("/:id", { schema: { params: DeleteModelParamsRequestSchema } }, async (request) =>
-			deleteModel.execute(request.params.id, request.log),
-		);
+		.delete("/:id", { schema: { params: DeleteModelParamsRequestSchema } }, async (request, reply) => {
+			await deleteModel.execute(request.params.id, request.log);
+			return reply.code(204).send();
+		});
 };
 
 export default modelsRoutes;

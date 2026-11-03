@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
-import Badge from "../../../components/badge";
+import Badge from "../../../components/Badge";
 import { banksTreeQuery } from "../api";
 
 export default function AccountList() {

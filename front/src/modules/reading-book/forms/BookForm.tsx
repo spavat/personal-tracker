@@ -6,8 +6,8 @@ import { useFieldArray, useForm } from "react-hook-form";
 
 import type { FormData } from "./BookForm.utils";
 
-import Modal from "../../../components/modal";
-import MutationError from "../../../components/mutation-error";
+import Modal from "../../../components/Modal";
+import MutationError from "../../../components/MutationError";
 import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-query";
 import { bookDetailsQuery, saveBook } from "../api";
 import { BookFormSchema, BookFormSchemaTransformation } from "./BookForm.utils";

@@ -1,21 +1,22 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
-import PageTitle from "../../components/page-title";
-import { PendingContent } from "../../components/pending-content";
-import { useIsOwner } from "../../hooks/use-is-owner";
-import { useSortTable } from "../../hooks/use-sort-table";
-import { artistListSort } from "./api";
-import { MODULE_NAME } from "./constants";
+import PageTitle from "../../../components/PageTitle";
+import { PendingContent } from "../../../components/PendingContent";
+import { useIsOwner } from "../../../hooks/use-is-owner";
+import { useSortTable } from "../../../hooks/use-sort-table";
+import { placeListSort } from "../api";
+import { MODULE_NAME } from "../constants";
 
-export default function ArtistList() {
+export default function PlaceList() {
 	const navigate = useNavigate();
-	const location = useLocation();
 	const isOwner = useIsOwner();
+	const location = useLocation();
 	const { query, headers, isPending } = useSortTable({
-		...artistListSort,
+		...placeListSort,
 		columnsList: [
 			null,
 			{ name: "Nom", colName: "name", isSortable: true },
+			{ name: "Pays", colName: "country", isSortable: true },
 			{ name: "Spectacle(s)", colName: "nbSpectacles", isSortable: true },
 			{ name: "Représentation(s)", colName: "nbPerformances", isSortable: true },
 			...(isOwner ? [{ name: "Actions", colName: "actions", isSortable: false }] : []),
@@ -25,26 +26,29 @@ export default function ArtistList() {
 	let index = 1;
 	return (
 		<>
-			<PageTitle title={`${MODULE_NAME} > Artistes`} />
-			<h2>Artistes</h2>
+			<PageTitle title={`${MODULE_NAME} > Lieux`} />
+			<h2>Lieux</h2>
 			<PendingContent isPending={isPending}>
-				<table className="list artists alternate responsive">
+				<table className="list places alternate responsive">
 					<thead>
 						<tr>{headers.map((h) => h)}</tr>
 					</thead>
 					<tbody>
-						{query.data.map((artist) => (
-							<tr key={artist.id}>
+						{query.data.map((place) => (
+							<tr key={`${place.id}`}>
 								<td className="smalltext">#{index++}</td>
 								<td>
 									<b>
-										<Link to="/shows/artists/$artistId" params={{ artistId: String(artist.id) }}>
-											{artist.name}
+										<Link to="/shows/places/$placeId" params={{ placeId: String(place.id) }}>
+											{place.name}
 										</Link>
 									</b>
 								</td>
-								<td data-label="Spectacles">{artist.nbSpectacles}</td>
-								<td data-label="Représentatrons">{artist.nbPerformances}</td>
+								<td data-label="Pays">
+									<span className={`fi fi-${place.country}`}></span>
+								</td>
+								<td data-label="Spectacles">{place.nbSpectacles}</td>
+								<td data-label="Représentations">{place.nbPerformances}</td>
 								{isOwner && (
 									<td data-label="Actions">
 										<button
@@ -52,13 +56,13 @@ export default function ArtistList() {
 											title="Modifier"
 											onClick={() =>
 												navigate({
-													to: "/shows/artists/edit/$artistId",
-													params: { artistId: String(artist.id) },
+													to: "/shows/places/edit/$placeId",
+													params: { placeId: String(place.id) },
 													search: { returnTo: location.pathname },
 													replace: true,
 													resetScroll: false,
 													mask: {
-														to: "/shows/artists",
+														to: "/shows/places",
 													},
 												})
 											}
@@ -71,17 +75,17 @@ export default function ArtistList() {
 											title="Supprimer"
 											onClick={() =>
 												navigate({
-													to: "/shows/artists/delete/$artistId",
-													params: { artistId: String(artist.id) },
+													to: "/shows/places/delete/$placeId",
+													params: { placeId: String(place.id) },
 													search: { returnTo: location.pathname },
 													replace: true,
 													resetScroll: false,
 													mask: {
-														to: "/shows/artists",
+														to: "/shows/places",
 													},
 												})
 											}
-											disabled={artist.nbSpectacles > 0 || artist.nbPerformances > 0}
+											disabled={place.nbSpectacles > 0 || place.nbPerformances > 0}
 										>
 											<i className="fa-regular fa-trash-can"></i>
 										</button>
@@ -92,21 +96,21 @@ export default function ArtistList() {
 					</tbody>
 				</table>
 			</PendingContent>
-
 			<Outlet />
+
 			{isOwner && (
 				<div className="fab-container">
 					<button
 						type="button"
 						className="fab-main"
-						aria-label="Ajouter un artiste"
+						title="Ajouter un lieu"
 						onClick={() =>
 							navigate({
-								to: "/shows/artists/add",
+								to: "/shows/places/add",
 								search: { returnTo: location.pathname },
 								replace: true,
 								resetScroll: false,
-								mask: { to: "/shows/artists" },
+								mask: { to: "/shows/places" },
 							})
 						}
 					>

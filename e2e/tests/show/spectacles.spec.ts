@@ -187,4 +187,59 @@ test.describe("Shows - Spectacles", () => {
 		await expect(dialog).not.toBeVisible();
 		await expect(page.getByRole("heading", { name: "Modèles" })).not.toBeVisible();
 	});
+
+	test("edit the description, links and tracklist", async ({ page }) => {
+		await openSpectacle(page, spectacles.miserablesParis);
+		await expect(page.getByRole("heading", { name: "Programme" })).not.toBeVisible();
+
+		await page.locator(".presentation .title").getByRole("button", { name: "Modifier" }).click();
+		const dialog = page.getByRole("dialog", { name: "Modifier le spectacle" });
+		await dialog
+			.getByRole("textbox", { name: "Description", exact: true })
+			.fill("Comédie musicale d'après Victor Hugo");
+		await dialog.getByRole("textbox", { name: "Source de la description" }).fill("pas une url");
+		await dialog.getByRole("button", { name: "Ajouter un lien" }).click();
+		await dialog.getByPlaceholder("Libellé").fill("Wikipédia");
+		await dialog
+			.getByPlaceholder("https://")
+			.fill("https://fr.wikipedia.org/wiki/Les_Misérables_(comédie_musicale)");
+		await dialog
+			.locator("textarea.tracklist-input")
+			.fill("# Acte 1\n- Prologue\n- Valjean *(chanson)*\n# Acte 2\n- Final");
+
+		// the source must be a URL (checked by the browser: the form is not sent)
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+		await expect(dialog).toBeVisible();
+		expect(
+			await dialog
+				.getByRole("textbox", { name: "Source de la description" })
+				.evaluate((el: HTMLInputElement) => el.validity.valid),
+		).toBe(false);
+		await dialog.getByRole("textbox", { name: "Source de la description" }).fill("https://fr.wikipedia.org");
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+		await expect(dialog).not.toBeVisible();
+
+		await expect(page.locator(".description")).toContainText("Comédie musicale d'après Victor Hugo");
+		await expect(page.locator(".description").getByRole("link", { name: "(source)" })).toHaveAttribute(
+			"href",
+			"https://fr.wikipedia.org",
+		);
+		await expect(page.locator(".presentation .general").getByRole("link", { name: "Wikipédia" })).toBeVisible();
+		const tracklist = page.locator(".tracklist");
+		await expect(tracklist.locator("h4")).toHaveText(["Acte 1", "Acte 2"]);
+		await expect(tracklist.locator("li")).toHaveText(["Prologue", "Valjean (chanson)", "Final"]);
+		await expect(tracklist.locator("em")).toHaveText("(chanson)");
+
+		// emptied fields are removed from the page
+		await page.reload();
+		await page.locator(".presentation .title").getByRole("button", { name: "Modifier" }).click();
+		await dialog.getByRole("textbox", { name: "Description", exact: true }).fill("");
+		await dialog.getByRole("button", { name: "Supprimer" }).click();
+		await dialog.locator("textarea.tracklist-input").fill("");
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+		await expect(dialog).not.toBeVisible();
+		await expect(page.locator(".description")).toHaveCount(0);
+		await expect(page.locator(".presentation .general a")).toHaveCount(0);
+		await expect(page.getByRole("heading", { name: "Programme" })).not.toBeVisible();
+	});
 });

@@ -4,8 +4,8 @@ import { makeFakeDrizzle } from "../../../test-support/fake-drizzle";
 import { buildRouteApp } from "../../../test-support/route-harness";
 import modelRoutes from "./model.routes";
 
-async function buildApp() {
-	const { db } = makeFakeDrizzle();
+async function buildApp(builderResult?: unknown) {
+	const { db } = makeFakeDrizzle({ builderResult });
 	const app = await buildRouteApp(modelRoutes, { db });
 	return { app, db };
 }
@@ -28,10 +28,21 @@ describe("show/models routes", () => {
 		expect((await ctx.app.inject({ method: "POST", url: "/save", payload: {} })).statusCode).toBe(400);
 	});
 
+	it("POST /save creates a model: 201 with the model, without its roles", async () => {
+		await ctx.app.close();
+		ctx = await buildApp([{ id: 7, name: "Cast A", spectacleId: 3 }]);
+		const res = await ctx.app.inject({
+			method: "POST",
+			url: "/save",
+			payload: { name: "Cast A", spectacleId: 3, roles: [{ name: "Lead", main: true, order: 0, artistId: 5 }] },
+		});
+		expect(res.statusCode).toBe(201);
+		expect(res.json()).toEqual({ id: 7, name: "Cast A", spectacleId: 3 });
+	});
+
 	it("DELETE /:id removes the model inside a transaction", async () => {
 		const res = await ctx.app.inject({ method: "DELETE", url: "/7" });
-		expect(res.statusCode).toBe(200);
-		expect(res.json()).toEqual({ ok: true });
+		expect(res.statusCode).toBe(204);
 		expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
 	});
 });

@@ -4,8 +4,8 @@ import { makeFakeDrizzle } from "../../../test-support/fake-drizzle";
 import { buildRouteApp } from "../../../test-support/route-harness";
 import workRoutes from "./work.routes";
 
-async function buildApp() {
-	const { db, table } = makeFakeDrizzle();
+async function buildApp(builderResult?: unknown) {
+	const { db, table } = makeFakeDrizzle({ builderResult });
 	const app = await buildRouteApp(workRoutes, { db });
 	return { app, db, table };
 }
@@ -36,13 +36,22 @@ describe("show/works routes", () => {
 	it("POST /save rejects an empty body then persists a valid one", async () => {
 		expect((await ctx.app.inject({ method: "POST", url: "/save", payload: {} })).statusCode).toBe(400);
 
+		await ctx.app.close();
+		ctx = await buildApp([{ id: 4, name: "Tosca" }]);
 		const res = await ctx.app.inject({ method: "POST", url: "/save", payload: { name: "Tosca" } });
-		expect(res.statusCode).toBe(200);
+		expect(res.statusCode).toBe(201);
+		expect(res.json()).toEqual({ id: 4, name: "Tosca" });
 		expect(ctx.db.insert).toHaveBeenCalled();
 	});
 
-	it("DELETE /:id reports ok", async () => {
-		expect((await ctx.app.inject({ method: "DELETE", url: "/4" })).json()).toEqual({ ok: true });
+	it("POST /save 404s when updating an unknown work", async () => {
+		expect(
+			(await ctx.app.inject({ method: "POST", url: "/save", payload: { id: 4, name: "Tosca" } })).statusCode,
+		).toBe(404);
+	});
+
+	it("DELETE /:id answers 204", async () => {
+		expect((await ctx.app.inject({ method: "DELETE", url: "/4" })).statusCode).toBe(204);
 		expect(ctx.db.delete).toHaveBeenCalled();
 	});
 });

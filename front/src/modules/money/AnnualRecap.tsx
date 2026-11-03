@@ -2,8 +2,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { useOptimistic, useState, useTransition } from "react";
 
 import { HeaderPortal } from "../../components/HeaderPortal";
-import { PendingContent } from "../../components/pending-content";
-import PeriodSelector from "../../components/period-selector";
+import { PendingContent } from "../../components/PendingContent";
+import PeriodSelector from "../../components/PeriodSelector";
 import { useYearChanger } from "../../hooks/use-year-changer";
 import { formatMonth } from "../../utils";
 import { annualRecap } from "./api";

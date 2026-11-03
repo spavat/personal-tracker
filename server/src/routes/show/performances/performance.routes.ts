@@ -4,9 +4,9 @@ import { ZodTypeProvider } from "@marcalexiei/fastify-type-provider-zod";
 import {
 	PerformanceDetailsParamsRequestSchema,
 	PerformanceListQuerystringRequestSchema,
-	PerformanceListResponse,
 	SaveCastingBodyRequestSchema,
 	SavePerformanceBodyRequestSchema,
+	SavePerformanceResponseSchema,
 } from "@personal-tracker/shared/show";
 
 import { PerformanceRepository } from "./performance.repository";
@@ -32,8 +32,7 @@ const performancesRoutes: FastifyPluginAsync = async (fastify): Promise<void> =>
 				querystring: PerformanceListQuerystringRequestSchema,
 			},
 		},
-		async (request): Promise<Array<PerformanceListResponse>> =>
-			listPerformances.execute(request.query, request.log),
+		async (request) => listPerformances.execute(request.query, request.log),
 	);
 
 	fastify
@@ -46,16 +45,27 @@ const performancesRoutes: FastifyPluginAsync = async (fastify): Promise<void> =>
 				reply.notFound("Représentation introuvable"),
 		);
 
+	// 201 with the new performance on create, 200 with the updated one on update
+	fastify.withTypeProvider<ZodTypeProvider>().post(
+		"/save",
+		{
+			schema: {
+				body: SavePerformanceBodyRequestSchema,
+				response: { 200: SavePerformanceResponseSchema, 201: SavePerformanceResponseSchema },
+			},
+		},
+		async (request, reply) =>
+			reply
+				.code(request.body.performance.id ? 200 : 201)
+				.send(await savePerformance.execute(request.body, request.log)),
+	);
+	// replaces the whole casting: nothing to send back
 	fastify
 		.withTypeProvider<ZodTypeProvider>()
-		.post("/save", { schema: { body: SavePerformanceBodyRequestSchema } }, async (request) =>
-			savePerformance.execute(request.body, request.log),
-		);
-	fastify
-		.withTypeProvider<ZodTypeProvider>()
-		.post("/saveCasting", { schema: { body: SaveCastingBodyRequestSchema } }, async (request) =>
-			saveCasting.execute(request.body, request.log),
-		);
+		.post("/saveCasting", { schema: { body: SaveCastingBodyRequestSchema } }, async (request, reply) => {
+			await saveCasting.execute(request.body, request.log);
+			return reply.code(204).send();
+		});
 };
 
 export default performancesRoutes;

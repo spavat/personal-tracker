@@ -22,12 +22,13 @@ describe("ListPlacesUseCase / Save / Delete", () => {
 		await new ListPlacesUseCase(asRepo(repo)).execute(undefined, asLog(makeLog()));
 		expect(repo.findAll).toHaveBeenCalledWith({ sortField: "name", sortDirection: "asc" });
 
+		repo.save.mockResolvedValue({ id: 3, name: "Bastille", formerNames: [] });
 		expect(await new SavePlaceUseCase(asRepo(repo)).execute({ name: "Bastille" } as any, asLog(makeLog()))).toEqual(
-			{ ok: true },
+			{ id: 3, name: "Bastille", formerNames: [] },
 		);
 		expect(repo.save).toHaveBeenCalledWith({ name: "Bastille" });
 
-		expect(await new DeletePlaceUseCase(asRepo(repo)).execute(3, asLog(makeLog()))).toEqual({ ok: true });
+		await new DeletePlaceUseCase(asRepo(repo)).execute(3, asLog(makeLog()));
 		expect(repo.delete).toHaveBeenCalledWith(3);
 	});
 });
@@ -83,6 +84,6 @@ describe("GetPlaceUseCase", () => {
 			stats: { nbPerformances: 2, nbSpectacles: 1, lastPerformance: "2024-03-01" },
 		});
 		expect(result?.groups[0].performances.map((p: any) => p.id)).toEqual([1, 2, 3]);
-		expect(result?.groups[0].performances[0].placeName).toBe("Old Bastille");
+		expect(result?.groups[0].performances[0].place?.name).toBe("Old Bastille");
 	});
 });

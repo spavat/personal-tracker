@@ -1,9 +1,12 @@
 import type { FastifyPluginAsync } from "fastify";
 
 import "@fastify/mongodb";
+import * as z from "zod";
 
 import { ImageStorageRepository } from "../internet/image-storage.repository";
 import { InternetRepository } from "../internet/internet.repository";
+import { MediaStorageRepository } from "../show/media/media-storage.repository";
+import { MediaRepository } from "../show/media/media.repository";
 import { SportRepository } from "../sport/sport.repository";
 import { ThumbnailStorageRepository } from "../sport/thumbnail-storage.repository";
 
@@ -12,6 +15,8 @@ const images: FastifyPluginAsync = async (fastify): Promise<void> => {
 	const imageStorage = new ImageStorageRepository();
 	const sportRepository = new SportRepository(fastify.mongo);
 	const thumbnailStorage = new ThumbnailStorageRepository();
+	const mediaRepository = new MediaRepository(fastify.db);
+	const mediaStorage = new MediaStorageRepository();
 
 	fastify.get("/internet/:key", async (request, reply) => {
 		const { key } = request.params as { key: string };
@@ -50,6 +55,28 @@ const images: FastifyPluginAsync = async (fastify): Promise<void> => {
 		try {
 			const object = await thumbnailStorage.getObject(activity.thumbnailKey);
 			reply.header("Content-Type", object.ContentType ?? "image/avif");
+			reply.header("Cache-Control", "public, max-age=86400");
+			return reply.send(object.Body);
+		} catch {
+			return reply.notFound();
+		}
+	});
+
+	// public: show media (posters, portraits, programmes...) are visible like the rest of the show module
+	fastify.get("/show/:id", { config: { public: true } }, async (request, reply) => {
+		const { id } = request.params as { id: string };
+		if (!z.uuid().safeParse(id).success) {
+			return reply.notFound();
+		}
+
+		const key = await mediaRepository.findKey(id);
+		if (!key) {
+			return reply.notFound();
+		}
+
+		try {
+			const object = await mediaStorage.getObject(key);
+			reply.header("Content-Type", object.ContentType ?? "application/octet-stream");
 			reply.header("Cache-Control", "public, max-age=86400");
 			return reply.send(object.Body);
 		} catch {

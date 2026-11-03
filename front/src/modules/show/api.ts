@@ -1,7 +1,8 @@
 import {
 	ArtistListResponse,
 	ArtistDetailsResponse,
-	PerformanceListResponse,
+	ArtistView,
+	PerformanceView,
 	PlaceDetailsResponse,
 	PlaceListResponse,
 	SaveArtistBodyRequestSchema,
@@ -12,10 +13,18 @@ import {
 	WorkDetailsResponse,
 	SaveCastingBodyRequestSchema,
 	PerformanceDetailsResponse,
+	SpectacleDetailsResponse,
 	SavePerformanceBodyRequestSchema,
+	SaveSpectacleBodyRequestSchema,
 	WorkListResponse,
 	SpectacleListResponse,
 	GetReportResponse,
+	SpectacleMedia,
+	SpectacleMediaKind,
+	ArtistMedia,
+	UploadMediaBodyRequestSchema,
+	UpdateMediaBodyRequestSchema,
+	ReorderMediaBodyRequestSchema,
 } from "@personal-tracker/shared/show";
 import { queryOptions } from "@tanstack/react-query";
 
@@ -69,24 +78,28 @@ export const groupedSpectaclesQuery = (groupByYear: boolean) =>
 		queryFn: () => getGroupedSpectacles(groupByYear),
 	});
 async function getSpectacleDetails(id: string) {
-	return fetchJson(`${API_BASE_URL}/show/spectacles/${id}`);
+	return fetchJson<SpectacleDetailsResponse>(`${API_BASE_URL}/show/spectacles/${id}`);
 }
 export const spectacleDetailsQuery = (id: string) =>
 	queryOptions({
 		queryKey: ["shows", "spectacles", id],
 		queryFn: () => getSpectacleDetails(id),
 	});
+export async function saveSpectacle(data: any) {
+	const sentData = SaveSpectacleBodyRequestSchema.parse(data);
+	return sendJson(`${API_BASE_URL}/show/spectacles/save`, "POST", sentData);
+}
 
 // PERFORMANCES
 export async function getPerformances(from?: string, to?: string) {
-	return fetchJson<Array<PerformanceListResponse>>(withQuery(`${API_BASE_URL}/show/performances/`, { from, to }));
+	return fetchJson<Array<PerformanceView>>(withQuery(`${API_BASE_URL}/show/performances/`, { from, to }));
 }
 export const performancesQuery = () =>
 	queryOptions({
 		queryKey: ["shows", "performances"],
 		queryFn: () => getPerformances(),
 	});
-export const performanceHistory: YearQueryConfig<Array<PerformanceListResponse>> = {
+export const performanceHistory: YearQueryConfig<Array<PerformanceView>> = {
 	queryKey: ["shows", "performances"],
 	queryFn: getPerformances,
 };
@@ -128,10 +141,10 @@ export const artistDetailsQuery = (id: string, groupBySpectacle: boolean) =>
 	});
 export async function saveArtist(data: any) {
 	const sentData = SaveArtistBodyRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/show/artists/save`, "POST", sentData);
+	return sendJson<ArtistView>(`${API_BASE_URL}/show/artists/save`, "POST", sentData);
 }
 export async function deleteArtist(id: string) {
-	return sendJson(`${API_BASE_URL}/show/artists/${id}`, "DELETE");
+	return sendJson<void>(`${API_BASE_URL}/show/artists/${id}`, "DELETE");
 }
 
 // PLACES
@@ -208,6 +221,36 @@ export async function saveCasting(data: any) {
 export async function savePerformance(data: any) {
 	const sentData = SavePerformanceBodyRequestSchema.parse(data);
 	return sendJson(`${API_BASE_URL}/show/performances/save`, "POST", sentData);
+}
+
+// MEDIA
+export type MediaOwner = { spectacleId: number } | { artistId: number };
+function mediaOwnerUrl(owner: MediaOwner) {
+	return "artistId" in owner
+		? `${API_BASE_URL}/show/media/artists/${owner.artistId}`
+		: `${API_BASE_URL}/show/media/spectacles/${owner.spectacleId}`;
+}
+export const spectacleMediaQuery = (spectacleId: number, kind?: SpectacleMediaKind) =>
+	queryOptions({
+		queryKey: ["shows", "media", "spectacles", spectacleId, kind],
+		queryFn: () => fetchJson<Array<SpectacleMedia>>(withQuery(mediaOwnerUrl({ spectacleId }), { kind })),
+	});
+export const artistMediaQuery = (artistId: number) =>
+	queryOptions({
+		queryKey: ["shows", "media", "artists", artistId],
+		queryFn: () => fetchJson<Array<ArtistMedia>>(mediaOwnerUrl({ artistId })),
+	});
+export async function uploadMedia(owner: MediaOwner, data: unknown) {
+	return sendJson(mediaOwnerUrl(owner), "POST", UploadMediaBodyRequestSchema.parse(data));
+}
+export async function updateMedia(owner: MediaOwner, mediaId: string, data: unknown) {
+	return sendJson(`${mediaOwnerUrl(owner)}/${mediaId}`, "POST", UpdateMediaBodyRequestSchema.parse(data));
+}
+export async function reorderMedia(owner: MediaOwner, mediaIds: Array<string>) {
+	return sendJson(`${mediaOwnerUrl(owner)}/order`, "POST", ReorderMediaBodyRequestSchema.parse({ mediaIds }));
+}
+export async function deleteMedia(owner: MediaOwner, mediaId: string) {
+	return sendJson(`${mediaOwnerUrl(owner)}/${mediaId}`, "DELETE");
 }
 
 // REPORT

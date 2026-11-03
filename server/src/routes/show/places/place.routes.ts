@@ -7,6 +7,7 @@ import {
 	PlaceDetailsQuerystringRequestSchema,
 	PlaceListQuerystringRequestSchema,
 	SavePlaceBodyRequestSchema,
+	SavePlaceResponseSchema,
 } from "@personal-tracker/shared/show";
 
 import { PlaceRepository } from "./place.repository";
@@ -41,17 +42,30 @@ const placesRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 			)) ?? reply.notFound("Salle introuvable"),
 	);
 
-	fastify
-		.withTypeProvider<ZodTypeProvider>()
-		.post("/save", { schema: { body: SavePlaceBodyRequestSchema } }, async (request) =>
-			savePlace.execute(request.body, request.log),
-		);
+	// 201 with the new place on create, 200 with the updated one on update
+	fastify.withTypeProvider<ZodTypeProvider>().post(
+		"/save",
+		{
+			schema: {
+				body: SavePlaceBodyRequestSchema,
+				response: { 200: SavePlaceResponseSchema, 201: SavePlaceResponseSchema },
+			},
+		},
+		async (request, reply) => {
+			const place = await savePlace.execute(request.body, request.log);
+			if (!place) {
+				return reply.notFound("Salle introuvable");
+			}
+			return reply.code(request.body.id ? 200 : 201).send(place);
+		},
+	);
 
 	fastify
 		.withTypeProvider<ZodTypeProvider>()
-		.delete("/:id", { schema: { params: DeletePlaceParamsRequestSchema } }, async (request) =>
-			deletePlace.execute(request.params.id, request.log),
-		);
+		.delete("/:id", { schema: { params: DeletePlaceParamsRequestSchema } }, async (request, reply) => {
+			await deletePlace.execute(request.params.id, request.log);
+			return reply.code(204).send();
+		});
 };
 
 export default placesRoutes;

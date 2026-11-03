@@ -2,12 +2,12 @@ import { Outlet } from "@tanstack/react-router";
 import { Fragment, ReactNode } from "react";
 
 import { HeaderPortal } from "../../components/HeaderPortal";
-import PeriodSelector from "../../components/period-selector";
+import PeriodSelector from "../../components/PeriodSelector";
 import { useMonthChanger } from "../../hooks/use-month-changer";
 import { formatMonth, getDurationString } from "../../utils";
 import { monthCalendar } from "./api";
 import Day from "./Day";
-import HeaderCell from "./header-cell";
+import HeaderCell from "./HeaderCell";
 
 interface Day {
 	id: string;

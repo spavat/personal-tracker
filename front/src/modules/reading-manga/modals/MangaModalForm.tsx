@@ -4,8 +4,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { DefaultValues, FormProvider, SubmitHandler, useForm } from "react-hook-form";
 
-import Modal from "../../../components/modal";
-import MutationError from "../../../components/mutation-error";
+import Modal from "../../../components/Modal";
+import MutationError from "../../../components/MutationError";
 import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-query";
 import { mangaDetailsQuery, save } from "../api";
 import MangaFormComponent from "../forms/MangaForm";

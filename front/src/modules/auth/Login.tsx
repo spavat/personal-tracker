@@ -4,7 +4,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 
 import "./auth.css";
 import { authClient } from "../../auth/auth-client";
-import MutationError from "../../components/mutation-error";
+import MutationError from "../../components/MutationError";
 
 type LoginFormInputs = {
 	email: string;

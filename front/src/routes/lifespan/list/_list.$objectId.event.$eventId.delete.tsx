@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../../components/modal-status";
+import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { objectDetailsQuery } from "../../../modules/lifespan/api";
 import DeleteEventModalForm from "../../../modules/lifespan/objects/modals/DeleteEventModalForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/lifespan/list/_list/$objectId/event/$eventId/delete")({
 	loader: async ({ context, params }) => {

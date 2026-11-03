@@ -77,13 +77,15 @@ describe("work use cases", () => {
 		expect(repo.findByIdWithSpectacles).toHaveBeenCalledWith(4);
 	});
 
-	it("save and delete persist then report ok", async () => {
+	it("save returns the saved work, delete persists", async () => {
 		const repo = fakeRepo();
+		repo.save.mockResolvedValue({ id: 4, name: "Tosca" });
 		expect(await new SaveWorkUseCase(asRepo(repo)).execute({ name: "Tosca" } as any, asLog(makeLog()))).toEqual({
-			ok: true,
+			id: 4,
+			name: "Tosca",
 		});
 		expect(repo.save).toHaveBeenCalledWith({ name: "Tosca" });
-		expect(await new DeleteWorkUseCase(asRepo(repo)).execute(4, asLog(makeLog()))).toEqual({ ok: true });
+		await new DeleteWorkUseCase(asRepo(repo)).execute(4, asLog(makeLog()));
 		expect(repo.delete).toHaveBeenCalledWith(4);
 	});
 });

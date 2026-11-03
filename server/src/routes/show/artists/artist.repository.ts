@@ -43,6 +43,9 @@ export class ArtistRepository {
 		const artist = await this.db.query.showArtist.findFirst({
 			where: { id: artistId },
 			with: {
+				mediaLinks: {
+					with: { media: true },
+				},
 				role: {
 					with: {
 						performance: {
@@ -78,12 +81,12 @@ export class ArtistRepository {
 		});
 	}
 
+	// undefined when updating an unknown id
 	async save(data: SaveArtistBodyRequest) {
-		if (data.id) {
-			await this.db.update(showArtist).set(data).where(eq(showArtist.id, data.id));
-		} else {
-			await this.db.insert(showArtist).values(data);
-		}
+		const [artist] = data.id
+			? await this.db.update(showArtist).set(data).where(eq(showArtist.id, data.id)).returning()
+			: await this.db.insert(showArtist).values(data).returning();
+		return artist;
 	}
 
 	delete(id: number) {

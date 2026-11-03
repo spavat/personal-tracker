@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 
-import { MusicPreviousDays } from "../charts/music-previous-day";
+import { MusicPreviousDays } from "../charts/MusicPreviousDays";
 import { getFortnightStats } from "../modules/music/api";
 
 export default function MiniMusicDashboard() {

@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 
 import { and, asc, eq, gte, lt, notInArray, sql } from "drizzle-orm";
 
-import { showPerformance, showPlace, showRole, showSpectacle, showWork } from "../../../db/schema";
+import { showPerformance, showPlace, showRole, showSpectacle, showSpectacleMedia, showWork } from "../../../db/schema";
 import { placeNameAt } from "../places/place.repository";
 
 export class PerformanceRepository {
@@ -39,6 +39,7 @@ export class PerformanceRepository {
 				hasCasting: sql<boolean>`count(${showRole.id}) > 0`,
 				casting_status: showPerformance.casting_status,
 				casting_origin: showPerformance.casting_origin,
+				posterId: showPerformance.posterId,
 			})
 			.from(showPerformance)
 			.leftJoin(showPlace, eq(showPerformance.placeId, showPlace.id))
@@ -47,6 +48,31 @@ export class PerformanceRepository {
 			.where(where.length ? and(...where) : undefined)
 			.groupBy(showPerformance.id, showSpectacle.id, showPlace.id)
 			.orderBy(asc(showPerformance.date));
+	}
+
+	findAllWithDetails({ from, to }: { from?: string; to?: string } = {}) {
+		const date: { gte?: string; lt?: string } = {};
+		if (from) {
+			const fromDate = Temporal.PlainDate.from(from);
+			date.gte = fromDate.toPlainDateTime().toString();
+		}
+		if (to) {
+			const toDate = Temporal.PlainDate.from(to);
+			date.lt = toDate.add({ days: 1 }).toPlainDateTime().toString();
+		}
+
+		return this.db.query.showPerformance.findMany({
+			where: { date },
+			orderBy: { date: "asc" },
+			extras: { placeName: placeNameAt },
+			with: {
+				place: true,
+				spectacle: true,
+				role: {
+					with: { artist: true },
+				},
+			},
+		});
 	}
 
 	findByIdWithDetails(performanceId: number) {
@@ -60,6 +86,7 @@ export class PerformanceRepository {
 							with: {
 								roles: {
 									orderBy: (role, { asc }) => [asc(role.order)],
+									with: { artist: true },
 								},
 							},
 						},
@@ -73,6 +100,14 @@ export class PerformanceRepository {
 				},
 			},
 		});
+	}
+
+	async findSpectacleMediaKind(tx: any, spectacleId: number, mediaId: string) {
+		const [link] = await tx
+			.select({ kind: showSpectacleMedia.kind })
+			.from(showSpectacleMedia)
+			.where(and(eq(showSpectacleMedia.spectacleId, spectacleId), eq(showSpectacleMedia.mediaId, mediaId)));
+		return link?.kind;
 	}
 
 	insertPlace(tx: any, place: any) {
@@ -89,9 +124,9 @@ export class PerformanceRepository {
 
 	savePerformance(tx: any, performanceId: number | undefined, data: any) {
 		if (performanceId) {
-			return tx.update(showPerformance).set(data).where(eq(showPerformance.id, performanceId));
+			return tx.update(showPerformance).set(data).where(eq(showPerformance.id, performanceId)).returning();
 		}
-		return tx.insert(showPerformance).values(data);
+		return tx.insert(showPerformance).values(data).returning();
 	}
 
 	insertRoles(tx: any, roles: any[]) {
@@ -110,6 +145,7 @@ export class PerformanceRepository {
 					artistId: sql`excluded.artist_id`,
 					status: sql`excluded.status`,
 					order: sql`excluded."order"`,
+					pictureId: sql`excluded.picture_id`,
 				},
 			});
 	}

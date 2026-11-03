@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../../components/modal-status";
+import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import NewPaymentTypeForm from "../../../modules/money/accounts/NewPaymentTypeForm";
 import { banksTreeQuery, paymentTypeQuery } from "../../../modules/money/api";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/accounts/_tree/paymentType/$paymentTypeId/edit")({
 	loader: ({ context, params }) =>

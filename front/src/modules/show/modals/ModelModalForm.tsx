@@ -4,8 +4,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 
-import Modal from "../../../components/modal";
-import MutationError from "../../../components/mutation-error";
+import Modal from "../../../components/Modal";
+import MutationError from "../../../components/MutationError";
 import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-query";
 import { modelDetailsQuery, saveModel } from "../api";
 import ModelRoleFormComponent from "../forms/ModelRoleForm";

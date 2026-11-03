@@ -1,7 +1,7 @@
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
-import Badge from "../../../components/badge";
-import BadgeEdit from "../../../components/badge-edit";
+import Badge from "../../../components/Badge";
+import BadgeEdit from "../../../components/BadgeEdit";
 import { API_BASE_URL } from "../../../config";
 import { type ProgramInputs } from "./ProgramForm.utils";
 

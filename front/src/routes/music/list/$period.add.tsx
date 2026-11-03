@@ -2,7 +2,7 @@ import { MusicListeningSchema } from "@personal-tracker/shared/music";
 import { createFileRoute } from "@tanstack/react-router";
 
 import AddListeningModalForm from "../../../modules/music/modal/AddListeningModalForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/music/list/$period/add")({
 	validateSearch: withReturnToSchema.extend({

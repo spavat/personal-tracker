@@ -3,6 +3,10 @@ import type { FastifyBaseLogger } from "fastify";
 
 import type { ArtistRepository } from "./artist.repository";
 
+import { sortByMediaOrder, toArtistMedia } from "../media/media.entity";
+import { toPerformanceView } from "../performances/performance.entity";
+import { toArtistView } from "./artist.entity";
+
 export class ListArtistsUseCase {
 	constructor(private repo: ArtistRepository) {}
 
@@ -10,7 +14,11 @@ export class ListArtistsUseCase {
 		log.info("ListArtistsUseCase.execute");
 		const [sortField, sortDirection] = sort ?? ["name", "asc"];
 		const artists = await this.repo.findAll({ sortField, sortDirection });
-		return artists as Array<ArtistListResponse>;
+		return artists.map(({ nbPerformances, nbSpectacles, ...artist }): ArtistListResponse => ({
+			...toArtistView(artist),
+			nbPerformances,
+			nbSpectacles,
+		}));
 	}
 }
 
@@ -42,16 +50,8 @@ export class GetArtistUseCase {
 					spectacles[spectacleId].performances = [];
 				}
 				spectacles[spectacleId].performances.push({
-					id: role.performance?.id,
-					date: role.performance?.date,
-					canceled: role.performance?.canceled,
-					seat: role.performance?.seat,
-					role: role.name,
-					placeId: role.performance?.place?.id,
-					placeName: role.performance?.placeName,
-					placeCountry: role.performance?.place?.country,
-					spectacleId: role.performance?.spectacle?.id,
-					spectacleName: role.performance?.spectacle?.name,
+					...toPerformanceView(role.performance!),
+					role: role.name ?? "",
 				});
 			});
 			groups = Object.values(spectacles);
@@ -64,18 +64,7 @@ export class GetArtistUseCase {
 				{
 					performances: artistData?.role?.map((role) => {
 						uniqueShows.add(role.performance?.spectacleId ?? 0);
-						return {
-							id: role.performance?.id,
-							date: role.performance?.date,
-							canceled: role.performance?.canceled,
-							seat: role.performance?.seat,
-							role: role.name,
-							placeId: role.performance?.place?.id,
-							placeName: role.performance?.placeName,
-							placeCountry: role.performance?.place?.country,
-							spectacleId: role.performance?.spectacle?.id,
-							spectacleName: role.performance?.spectacle?.name,
-						};
+						return { ...toPerformanceView(role.performance!), role: role.name ?? "" };
 					}),
 				},
 			];
@@ -84,10 +73,9 @@ export class GetArtistUseCase {
 			stats.lastPerformance = groups[0].performances.at(-1)?.date ?? "";
 		}
 
-		const { id, name } = artistData ?? {};
 		return {
-			id,
-			name,
+			...toArtistView(artistData),
+			media: sortByMediaOrder(artistData.mediaLinks ?? []).map(toArtistMedia),
 			groups: Object.values(groups).toSorted((a, b) =>
 				(a.performances?.[0]?.date ?? "").localeCompare(b.performances?.[0]?.date ?? ""),
 			),
@@ -101,8 +89,8 @@ export class SaveArtistUseCase {
 
 	async execute(data: SaveArtistBodyRequest, log: FastifyBaseLogger) {
 		log.info("SaveArtistUseCase.execute");
-		await this.repo.save(data);
-		return { ok: true };
+		const artist = await this.repo.save(data);
+		return artist ? toArtistView(artist) : null;
 	}
 }
 
@@ -112,6 +100,5 @@ export class DeleteArtistUseCase {
 	async execute(id: number, log: FastifyBaseLogger) {
 		log.info("DeleteArtistUseCase.execute");
 		await this.repo.delete(id);
-		return { ok: true };
 	}
 }

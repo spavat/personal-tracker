@@ -1,10 +1,10 @@
 import { useState, useTransition } from "react";
 
 import { HeaderPortal } from "../components/HeaderPortal";
-import PageTitle from "../components/page-title";
-import { PendingContent } from "../components/pending-content";
-import PeriodSelector from "../components/period-selector";
-import { WidgetBoundary } from "../components/widget-boundary";
+import PageTitle from "../components/PageTitle";
+import { PendingContent } from "../components/PendingContent";
+import PeriodSelector from "../components/PeriodSelector";
+import { WidgetBoundary } from "../components/WidgetBoundary";
 import MiniMusicalReport from "./MiniMusicalReport";
 import MiniMusicReport from "./MiniMusicReport";
 import MiniReadingReport from "./MiniReadingReport";

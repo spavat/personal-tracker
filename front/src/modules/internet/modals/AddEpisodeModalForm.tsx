@@ -4,9 +4,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 
-import FoldablePanel from "../../../components/foldable-panel";
-import Modal from "../../../components/modal";
-import MutationError from "../../../components/mutation-error";
+import FoldablePanel from "../../../components/FoldablePanel";
+import Modal from "../../../components/Modal";
+import MutationError from "../../../components/MutationError";
 import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-query";
 import { formatDate, formatDateTime, getCurrentOrPreviousDate } from "../../../utils";
 import {

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import PlaceDetails from "../../../../modules/show/PlaceDetails";
+import PlaceDetails from "../../../../modules/show/pages/PlaceDetails";
 
 export const Route = createFileRoute("/shows/places/$placeId/_details")({
 	component: RouteComponent,

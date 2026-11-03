@@ -6,11 +6,14 @@ import { S3_BUCKET, s3Client } from "../../config/s3";
 const IMAGE_TARGET_SIZE = {
 	profile: { width: 200, height: 200 },
 	banner: { width: 2500, height: 400 },
+	poster: { width: 600, height: 900 },
+	portrait: { width: 400, height: 400 },
+	photo: { width: 1600, height: 1600 },
 } as const;
 
 export type ImageKind = keyof typeof IMAGE_TARGET_SIZE;
 
-async function fetchImageBuffer(source: string): Promise<Buffer> {
+export async function fetchImageBuffer(source: string): Promise<Buffer> {
 	const dataUriMatch = source.match(/^data:([^;]+);base64,(.*)$/);
 	if (dataUriMatch) {
 		return Buffer.from(dataUriMatch[2], "base64");
@@ -23,7 +26,7 @@ async function fetchImageBuffer(source: string): Promise<Buffer> {
 	return Buffer.from(await response.arrayBuffer());
 }
 
-function processImage(buffer: Buffer, kind: ImageKind): Promise<Buffer> {
+export function processImage(buffer: Buffer, kind: ImageKind): Promise<Buffer> {
 	const { width, height } = IMAGE_TARGET_SIZE[kind];
 	// fit "outside" + withoutEnlargement: resize down to cover the target box while
 	// keeping the aspect ratio, but never upscale an image smaller than the target.

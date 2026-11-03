@@ -1,7 +1,7 @@
 import { useNavigate, useLocation, Outlet } from "@tanstack/react-router";
 
 import { HeaderPortal } from "../../components/HeaderPortal";
-import PeriodSelector from "../../components/period-selector";
+import PeriodSelector from "../../components/PeriodSelector";
 import { useMonthChanger } from "../../hooks/use-month-changer";
 import { formatMonth } from "../../utils";
 import { programHistory } from "./api";

@@ -150,6 +150,8 @@ test.describe("Internet - Add episode", () => {
 		await expect(programPanel.locator('input[name="program.links.0.value"]')).toHaveValue(
 			"http://www.youtube.com/@newchannel",
 		);
+		// The date defaults to today: pinned to stay in the October history
+		await dialog.getByLabel("Date *").fill("2026-10-25");
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 		await expect(dialog).not.toBeVisible();
 

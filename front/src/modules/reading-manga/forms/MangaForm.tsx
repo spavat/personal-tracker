@@ -2,8 +2,8 @@ import { MangaTypeEnumSchema, StatusEnumSchema } from "@personal-tracker/shared/
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { Fragment } from "react/jsx-runtime";
 
-import Badge from "../../../components/badge";
-import BadgeEdit from "../../../components/badge-edit";
+import Badge from "../../../components/Badge";
+import BadgeEdit from "../../../components/BadgeEdit";
 import { type MangaForm } from "./MangaForm.utils";
 
 export default function MangaFormComponent() {

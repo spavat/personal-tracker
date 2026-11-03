@@ -2,7 +2,7 @@ import { MangaOverview, Reading } from "@personal-tracker/shared/reading-manga";
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
 import { HeaderPortal } from "../../../components/HeaderPortal";
-import PeriodSelector from "../../../components/period-selector";
+import PeriodSelector from "../../../components/PeriodSelector";
 import { useYearChanger } from "../../../hooks/use-year-changer";
 import { formatMonth } from "../../../utils";
 import { mangaHistory } from "../api";

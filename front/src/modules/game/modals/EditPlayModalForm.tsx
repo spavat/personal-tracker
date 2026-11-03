@@ -2,8 +2,8 @@ import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-q
 import { useNavigate } from "@tanstack/react-router";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 
-import Modal from "../../../components/modal";
-import MutationError from "../../../components/mutation-error";
+import Modal from "../../../components/Modal";
+import MutationError from "../../../components/MutationError";
 import { gameDetailsQuery, save } from "../api";
 import PlayForm from "../forms/PlayForm";
 import { type PlayInputs, onSubmitPlay } from "../forms/PlayForm.utils";

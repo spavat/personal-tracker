@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../../components/modal-status";
+import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { artistsQuery, performanceDetailsQuery } from "../../../modules/show/api";
 import CastingModalForm from "../../../modules/show/modals/CastingModalForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/shows/performances/$performanceId/casting")({
 	loader: ({ context, params }) =>

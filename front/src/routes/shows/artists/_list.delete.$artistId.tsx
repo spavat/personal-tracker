@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../../components/modal-status";
+import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { artistDetailsQuery } from "../../../modules/show/api";
 import DeleteArtistModalForm from "../../../modules/show/modals/DeleteArtistModalForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/shows/artists/_list/delete/$artistId")({
 	loader: ({ context, params }) =>

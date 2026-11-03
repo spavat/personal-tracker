@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { FormProvider, type SubmitHandler, useForm } from "react-hook-form";
 
-import MutationError from "../../../components/mutation-error";
+import MutationError from "../../../components/MutationError";
 import { quickSaveTransaction } from "../api";
 import { getAmountClassName } from "../utils";
 import TransactionRow from "./TransactionRow";

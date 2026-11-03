@@ -1,10 +1,10 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Fragment, useOptimistic, useTransition } from "react";
 
-import { PendingContent } from "../../components/pending-content";
+import { PendingContent } from "../../components/PendingContent";
 import { useStoredValue } from "../../hooks/stored-value";
+import AccountBadge from "./AccountBadge";
 import { analyticsQuery, SPLIT_PARENT_STORAGE } from "./api";
-import AccountBadge from "./badgeAccount";
 import { normalizeZero } from "./utils";
 
 export default function MoneyAnalytics() {

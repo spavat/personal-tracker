@@ -1,17 +1,17 @@
-import { PerformanceListResponse } from "@personal-tracker/shared/show";
+import { PerformanceView } from "@personal-tracker/shared/show";
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { Fragment } from "react/jsx-runtime";
 
-import { HeaderPortal } from "../../components/HeaderPortal";
-import PageTitle from "../../components/page-title";
-import PeriodSelector from "../../components/period-selector";
-import { useIsOwner } from "../../hooks/use-is-owner";
-import { useYearChanger } from "../../hooks/use-year-changer";
-import { formatMonth } from "../../utils";
-import { performanceHistory } from "./api";
-import { CastingIcon } from "./CastingIcon";
-import { MODULE_NAME } from "./constants";
-import { formatShowDate } from "./utils";
+import { HeaderPortal } from "../../../components/HeaderPortal";
+import PageTitle from "../../../components/PageTitle";
+import PeriodSelector from "../../../components/PeriodSelector";
+import { useIsOwner } from "../../../hooks/use-is-owner";
+import { useYearChanger } from "../../../hooks/use-year-changer";
+import { formatMonth } from "../../../utils";
+import { performanceHistory } from "../api";
+import { CastingIcon } from "../components/CastingIcon";
+import { MODULE_NAME } from "../constants";
+import { formatShowDate } from "../utils";
 
 export default function History({ year }: { year: string }) {
 	const navigate = useNavigate();
@@ -31,7 +31,7 @@ export default function History({ year }: { year: string }) {
 		initialPeriod: year,
 	});
 
-	const groups: Record<string, { name: string; performances: Array<PerformanceListResponse> }> = {};
+	const groups: Record<string, { name: string; performances: Array<PerformanceView> }> = {};
 	listQuery.data.forEach((perf) => {
 		const month = perf.date.substring(5, 7);
 		if (!groups[month]) {
@@ -104,22 +104,22 @@ export default function History({ year }: { year: string }) {
 												<b>
 													<Link
 														to="/shows/spectacles/$spectacleId"
-														params={{ spectacleId: String(show.spectacleId) }}
+														params={{ spectacleId: String(show.spectacle.id) }}
 													>
-														{show.spectacle}
+														{show.spectacle.name}
 													</Link>
 												</b>
 											</td>
 											<td data-label="Lieu">
 												<Link
 													to="/shows/places/$placeId"
-													params={{ placeId: String(show.placeId) }}
+													params={{ placeId: String(show.place?.id) }}
 												>
-													{show.place}
+													{show.place?.name}
 												</Link>
 											</td>
 											<td data-label="Pays">
-												<span className={`fi fi-${show.country}`}></span>
+												<span className={`fi fi-${show.place?.country}`}></span>
 											</td>
 											<td data-label="Place">{show.seat ? <> 🎫 {show.seat}</> : ""}</td>
 											<td data-label="Casting">

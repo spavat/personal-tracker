@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 
 import { useSearch } from "../hooks/use-search";
-import Modal from "./modal";
+import Modal from "./Modal";
 
 type SearchProps<T> = {
 	isOpen: boolean;

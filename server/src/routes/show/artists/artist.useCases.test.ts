@@ -31,16 +31,27 @@ describe("ListArtistsUseCase", () => {
 });
 
 describe("SaveArtistUseCase / DeleteArtistUseCase", () => {
-	it("save persists then reports ok", async () => {
+	it("save persists then returns the saved artist view", async () => {
 		const repo = fakeRepo();
+		repo.save.mockResolvedValue({ id: 7, name: "Callas", pictureId: null });
 		const data = { name: "Callas" };
-		expect(await new SaveArtistUseCase(asRepo(repo)).execute(data as any, asLog(makeLog()))).toEqual({ ok: true });
+		expect(await new SaveArtistUseCase(asRepo(repo)).execute(data as any, asLog(makeLog()))).toEqual({
+			id: 7,
+			name: "Callas",
+			pictureId: null,
+			pictureUrl: null,
+		});
 		expect(repo.save).toHaveBeenCalledWith(data);
 	});
 
-	it("delete removes then reports ok", async () => {
+	it("save returns null when updating an unknown artist", async () => {
 		const repo = fakeRepo();
-		expect(await new DeleteArtistUseCase(asRepo(repo)).execute(5, asLog(makeLog()))).toEqual({ ok: true });
+		expect(await new SaveArtistUseCase(asRepo(repo)).execute({ id: 5, name: "X" }, asLog(makeLog()))).toBeNull();
+	});
+
+	it("delete removes the artist", async () => {
+		const repo = fakeRepo();
+		await new DeleteArtistUseCase(asRepo(repo)).execute(5, asLog(makeLog()));
 		expect(repo.delete).toHaveBeenCalledWith(5);
 	});
 });
@@ -61,6 +72,18 @@ describe("GetArtistUseCase", () => {
 		repo.findByIdWithPerformances.mockResolvedValue({
 			id: 1,
 			name: "Callas",
+			pictureId: "22222222-2222-4222-8222-222222222222",
+			mediaLinks: [
+				{
+					spectacleId: 100,
+					media: {
+						id: "22222222-2222-4222-8222-222222222222",
+						key: "k",
+						label: "",
+						contentType: "image/avif",
+					},
+				},
+			],
 			role: [
 				{
 					name: "Tosca",
@@ -99,15 +122,26 @@ describe("GetArtistUseCase", () => {
 		expect(result).toMatchObject({
 			id: 1,
 			name: "Callas",
+			pictureId: "22222222-2222-4222-8222-222222222222",
+			pictureUrl: "/images/show/22222222-2222-4222-8222-222222222222",
+			media: [
+				{
+					id: "22222222-2222-4222-8222-222222222222",
+					label: "",
+					contentType: "image/avif",
+					url: "/images/show/22222222-2222-4222-8222-222222222222",
+					spectacleId: 100,
+				},
+			],
 			stats: { nbPerformances: 2, nbSpectacles: 1, lastPerformance: "2024-03-01" },
 		});
 		expect(result.groups).toHaveLength(1);
 		expect(result.groups[0].performances.map((p: any) => p.id)).toEqual([10, 11]);
 		expect(result.groups[0].performances[0]).toMatchObject({
 			role: "Tosca",
-			placeName: "Old Bastille",
-			spectacleName: "Tosca",
+			place: { id: 7, name: "Old Bastille", country: "fr" },
+			spectacle: { id: 100, name: "Tosca" },
 		});
-		expect(result.groups[0].performances[1]).toMatchObject({ placeName: "Bastille" });
+		expect(result.groups[0].performances[1]).toMatchObject({ place: { name: "Bastille" } });
 	});
 });

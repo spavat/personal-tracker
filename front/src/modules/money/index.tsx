@@ -5,7 +5,7 @@ import "./money.css";
 import { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 
-import Submenu from "../../components/submenu";
+import Submenu from "../../components/Submenu";
 import SearchTransactionForm from "./SearchTransactionForm";
 
 const links = [

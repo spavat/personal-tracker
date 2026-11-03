@@ -109,7 +109,7 @@ test.describe("Shows - Artists", () => {
 
 	test("details page shows the artist performances", async ({ page }) => {
 		await openArtist(page, artists.bob);
-		const stats = page.locator(".presentation .stats");
+		const stats = page.locator(".presentation-with-picture .general");
 		await expect(stats).toContainText("2 spectacles");
 		await expect(stats).toContainText("2 représentations");
 		await expect(stats).toContainText("(08/11/25)");
@@ -132,7 +132,7 @@ test.describe("Shows - Artists", () => {
 
 	test("details page of an artist without performance", async ({ page }) => {
 		await openArtist(page, artists.claire);
-		const stats = page.locator(".presentation .stats");
+		const stats = page.locator(".presentation-with-picture .general");
 		await expect(stats).toContainText("0 spectacle");
 		await expect(stats).toContainText("Dernière fois : Aucune");
 		await expect(performanceRows(page)).toHaveCount(0);
@@ -140,7 +140,7 @@ test.describe("Shows - Artists", () => {
 
 	test("edit an artist from its page", async ({ page }) => {
 		await openArtist(page, artists.alice);
-		await page.locator(".presentation").getByRole("button", { name: "Modifier" }).click();
+		await page.locator(".presentation-with-picture").getByRole("button", { name: "Modifier" }).click();
 		const dialog = page.getByRole("dialog", { name: "Modifier l'artiste" });
 		await dialog.getByRole("textbox", { name: "Nom *" }).fill("Alice Martin-Leroy");
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();

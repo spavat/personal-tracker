@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-import { MusicGenres } from "../../charts/music-genre";
+import { MusicGenres } from "../../charts/MusicGenres";
 import { HeaderPortal } from "../../components/HeaderPortal";
-import PeriodSelector from "../../components/period-selector";
+import PeriodSelector from "../../components/PeriodSelector";
 import { useYearChanger } from "../../hooks/use-year-changer";
 import { getDurationString } from "../../utils";
 import { internetStats } from "./api";

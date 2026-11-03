@@ -6,8 +6,8 @@ import { useCallback, useEffect, useState } from "react";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 import z from "zod";
 
-import Modal from "../../../components/modal";
-import MutationError from "../../../components/mutation-error";
+import Modal from "../../../components/Modal";
+import MutationError from "../../../components/MutationError";
 import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-query";
 import { performanceDetailsQuery, savePerformance, spectacleDetailsQuery } from "../api";
 import PerformanceFormComponent from "../forms/PerformanceForm";
@@ -62,18 +62,19 @@ export default function PerformanceModalForm({
 		};
 	} else if (performanceData) {
 		// Only the performance fields: the place, spectacle and roles are not edited here
-		const { id, date, canceled, seat, placeId, spectacleId, casting_status, casting_origin } = performanceData;
+		const { id, date, canceled, seat, place, spectacle, casting_status, casting_origin, posterId } =
+			performanceData;
 		defaultValues = {
 			performance: {
 				id,
-				// "YYYY-MM-DD HH:mm:ss" from the database, a datetime-local input needs a "T"
-				date: date.replace(" ", "T"),
+				date,
 				canceled,
 				seat,
-				placeId,
-				spectacleId,
+				placeId: place?.id,
+				spectacleId: spectacle.id,
 				casting_status,
 				casting_origin,
+				posterId,
 			},
 		};
 	}

@@ -1,6 +1,6 @@
 import { createRouter } from "@tanstack/react-router";
 
-import { RouteError, RoutePending } from "./components/route-status";
+import { RouteError, RoutePending } from "./components/RouteStatus";
 import { routeTree } from "./routeTree.gen"; // auto-generated
 
 export const router = createRouter({

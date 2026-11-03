@@ -171,6 +171,7 @@ import { Route as ShowsPlacesListEditPlaceIdRouteImport } from './routes/shows/p
 import { Route as ShowsSpectaclesSpectacleIdDetailsIndexRouteImport } from './routes/shows/spectacles/$spectacleId/_details.index'
 import { Route as ShowsSpectaclesSpectacleIdDetailsAddModelRouteImport } from './routes/shows/spectacles/$spectacleId/_details.addModel'
 import { Route as ShowsSpectaclesSpectacleIdDetailsAddPerformanceRouteImport } from './routes/shows/spectacles/$spectacleId/_details.addPerformance'
+import { Route as ShowsSpectaclesSpectacleIdDetailsEditRouteImport } from './routes/shows/spectacles/$spectacleId/_details.edit'
 import { Route as ShowsWorksListEditWorkIdRouteImport } from './routes/shows/works/_list.edit.$workId'
 import { Route as SportListListDeleteActivityIdRouteImport } from './routes/sport/list/_list.delete.$activityId'
 import { Route as SportListListEditActivityIdRouteImport } from './routes/sport/list/_list.edit.$activityId'
@@ -1062,6 +1063,12 @@ const ShowsSpectaclesSpectacleIdDetailsAddPerformanceRoute =
     path: '/addPerformance',
     getParentRoute: () => ShowsSpectaclesSpectacleIdDetailsRoute,
   } as any)
+const ShowsSpectaclesSpectacleIdDetailsEditRoute =
+  ShowsSpectaclesSpectacleIdDetailsEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => ShowsSpectaclesSpectacleIdDetailsRoute,
+  } as any)
 const ShowsWorksListEditWorkIdRoute =
   ShowsWorksListEditWorkIdRouteImport.update({
     id: '/edit/$workId',
@@ -1372,6 +1379,7 @@ export interface FileRoutesByFullPath {
   '/shows/places/edit/$placeId': typeof ShowsPlacesListEditPlaceIdRoute
   '/shows/spectacles/$spectacleId/addModel': typeof ShowsSpectaclesSpectacleIdDetailsAddModelRoute
   '/shows/spectacles/$spectacleId/addPerformance': typeof ShowsSpectaclesSpectacleIdDetailsAddPerformanceRoute
+  '/shows/spectacles/$spectacleId/edit': typeof ShowsSpectaclesSpectacleIdDetailsEditRoute
   '/shows/works/edit/$workId': typeof ShowsWorksListEditWorkIdRoute
   '/sport/list/delete/$activityId': typeof SportListListDeleteActivityIdRoute
   '/sport/list/edit/$activityId': typeof SportListListEditActivityIdRoute
@@ -1535,6 +1543,7 @@ export interface FileRoutesByTo {
   '/shows/places/edit/$placeId': typeof ShowsPlacesListEditPlaceIdRoute
   '/shows/spectacles/$spectacleId/addModel': typeof ShowsSpectaclesSpectacleIdDetailsAddModelRoute
   '/shows/spectacles/$spectacleId/addPerformance': typeof ShowsSpectaclesSpectacleIdDetailsAddPerformanceRoute
+  '/shows/spectacles/$spectacleId/edit': typeof ShowsSpectaclesSpectacleIdDetailsEditRoute
   '/shows/works/edit/$workId': typeof ShowsWorksListEditWorkIdRoute
   '/sport/list/delete/$activityId': typeof SportListListDeleteActivityIdRoute
   '/sport/list/edit/$activityId': typeof SportListListEditActivityIdRoute
@@ -1725,6 +1734,7 @@ export interface FileRoutesById {
   '/shows/places/_list/edit/$placeId': typeof ShowsPlacesListEditPlaceIdRoute
   '/shows/spectacles/$spectacleId/_details/addModel': typeof ShowsSpectaclesSpectacleIdDetailsAddModelRoute
   '/shows/spectacles/$spectacleId/_details/addPerformance': typeof ShowsSpectaclesSpectacleIdDetailsAddPerformanceRoute
+  '/shows/spectacles/$spectacleId/_details/edit': typeof ShowsSpectaclesSpectacleIdDetailsEditRoute
   '/shows/works/_list/edit/$workId': typeof ShowsWorksListEditWorkIdRoute
   '/sport/list/_list/delete/$activityId': typeof SportListListDeleteActivityIdRoute
   '/sport/list/_list/edit/$activityId': typeof SportListListEditActivityIdRoute
@@ -1915,6 +1925,7 @@ export interface FileRouteTypes {
     | '/shows/places/edit/$placeId'
     | '/shows/spectacles/$spectacleId/addModel'
     | '/shows/spectacles/$spectacleId/addPerformance'
+    | '/shows/spectacles/$spectacleId/edit'
     | '/shows/works/edit/$workId'
     | '/sport/list/delete/$activityId'
     | '/sport/list/edit/$activityId'
@@ -2078,6 +2089,7 @@ export interface FileRouteTypes {
     | '/shows/places/edit/$placeId'
     | '/shows/spectacles/$spectacleId/addModel'
     | '/shows/spectacles/$spectacleId/addPerformance'
+    | '/shows/spectacles/$spectacleId/edit'
     | '/shows/works/edit/$workId'
     | '/sport/list/delete/$activityId'
     | '/sport/list/edit/$activityId'
@@ -2267,6 +2279,7 @@ export interface FileRouteTypes {
     | '/shows/places/_list/edit/$placeId'
     | '/shows/spectacles/$spectacleId/_details/addModel'
     | '/shows/spectacles/$spectacleId/_details/addPerformance'
+    | '/shows/spectacles/$spectacleId/_details/edit'
     | '/shows/works/_list/edit/$workId'
     | '/sport/list/_list/delete/$activityId'
     | '/sport/list/_list/edit/$activityId'
@@ -3450,6 +3463,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShowsSpectaclesSpectacleIdDetailsAddPerformanceRouteImport
       parentRoute: typeof ShowsSpectaclesSpectacleIdDetailsRoute
     }
+    '/shows/spectacles/$spectacleId/_details/edit': {
+      id: '/shows/spectacles/$spectacleId/_details/edit'
+      path: '/edit'
+      fullPath: '/shows/spectacles/$spectacleId/edit'
+      preLoaderRoute: typeof ShowsSpectaclesSpectacleIdDetailsEditRouteImport
+      parentRoute: typeof ShowsSpectaclesSpectacleIdDetailsRoute
+    }
     '/shows/works/_list/edit/$workId': {
       id: '/shows/works/_list/edit/$workId'
       path: '/edit/$workId'
@@ -4370,6 +4390,7 @@ const ShowsPlacesPlaceIdDetailsRouteWithChildren =
 interface ShowsSpectaclesSpectacleIdDetailsRouteChildren {
   ShowsSpectaclesSpectacleIdDetailsAddModelRoute: typeof ShowsSpectaclesSpectacleIdDetailsAddModelRoute
   ShowsSpectaclesSpectacleIdDetailsAddPerformanceRoute: typeof ShowsSpectaclesSpectacleIdDetailsAddPerformanceRoute
+  ShowsSpectaclesSpectacleIdDetailsEditRoute: typeof ShowsSpectaclesSpectacleIdDetailsEditRoute
   ShowsSpectaclesSpectacleIdDetailsIndexRoute: typeof ShowsSpectaclesSpectacleIdDetailsIndexRoute
   ShowsSpectaclesSpectacleIdDetailsDeleteModelModelIdRoute: typeof ShowsSpectaclesSpectacleIdDetailsDeleteModelModelIdRoute
   ShowsSpectaclesSpectacleIdDetailsEditModelModelIdRoute: typeof ShowsSpectaclesSpectacleIdDetailsEditModelModelIdRoute
@@ -4381,6 +4402,8 @@ const ShowsSpectaclesSpectacleIdDetailsRouteChildren: ShowsSpectaclesSpectacleId
       ShowsSpectaclesSpectacleIdDetailsAddModelRoute,
     ShowsSpectaclesSpectacleIdDetailsAddPerformanceRoute:
       ShowsSpectaclesSpectacleIdDetailsAddPerformanceRoute,
+    ShowsSpectaclesSpectacleIdDetailsEditRoute:
+      ShowsSpectaclesSpectacleIdDetailsEditRoute,
     ShowsSpectaclesSpectacleIdDetailsIndexRoute:
       ShowsSpectaclesSpectacleIdDetailsIndexRoute,
     ShowsSpectaclesSpectacleIdDetailsDeleteModelModelIdRoute:

@@ -1,11 +1,11 @@
 import { Outlet } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { MusicGenres } from "../../charts/music-genre";
-import { MusicReleaseYear } from "../../charts/music-release-year";
-import { MusicYear } from "../../charts/music-year";
+import { MusicGenres } from "../../charts/MusicGenres";
+import { MusicReleaseYear } from "../../charts/MusicReleaseYear";
+import { MusicYear } from "../../charts/MusicYear";
 import { HeaderPortal } from "../../components/HeaderPortal";
-import PeriodSelector from "../../components/period-selector";
+import PeriodSelector from "../../components/PeriodSelector";
 import { useYearChanger } from "../../hooks/use-year-changer";
 import { formatMonth, getDurationString } from "../../utils";
 import { musicStats } from "./api";

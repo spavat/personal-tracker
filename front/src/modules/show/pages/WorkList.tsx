@@ -3,11 +3,13 @@ import { Outlet, useNavigate } from "@tanstack/react-router";
 import { useOptimistic, useTransition } from "react";
 import { Fragment } from "react/jsx-runtime";
 
-import { PendingContent } from "../../components/pending-content";
-import { useStoredValue } from "../../hooks/stored-value";
-import { useIsOwner } from "../../hooks/use-is-owner";
-import { groupedWorksQuery } from "./api";
-import { formatShowDate } from "./utils";
+import PageTitle from "../../../components/PageTitle";
+import { PendingContent } from "../../../components/PendingContent";
+import { useStoredValue } from "../../../hooks/stored-value";
+import { useIsOwner } from "../../../hooks/use-is-owner";
+import { groupedWorksQuery } from "../api";
+import { MODULE_NAME } from "../constants";
+import { formatShowDate, isFutureShow } from "../utils";
 
 export default function WorkList() {
 	const navigate = useNavigate();
@@ -28,6 +30,7 @@ export default function WorkList() {
 
 	return (
 		<>
+			<PageTitle title={`${MODULE_NAME} > Oeuvres`} />
 			<h2>
 				Oeuvres
 				<label>
@@ -44,7 +47,7 @@ export default function WorkList() {
 							<th>Oeuvre</th>
 							<th>Représentations</th>
 							<th>Spectacles</th>
-							<th>Spectacles</th>
+							<th>Nom du spectacle</th>
 							<th>Lieu</th>
 							<th>#</th>
 							<th>Dates</th>
@@ -143,7 +146,7 @@ export default function WorkList() {
 														</td>
 														<td data-label="Dates">
 															{dataRow.performances.map((d: any) => {
-																const isFuture = new Date(d.date) > new Date();
+																const isFuture = isFutureShow(d.date);
 																return (
 																	<span
 																		key={d.date}

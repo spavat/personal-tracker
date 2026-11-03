@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import MangaModalForm from "../../../modules/reading-manga/modals/MangaModalForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/reading-manga/history/$year/add")({
 	validateSearch: withReturnToSchema,

@@ -2,8 +2,8 @@ import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-q
 import { useNavigate } from "@tanstack/react-router";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 
-import Modal from "../../../components/modal";
-import MutationError from "../../../components/mutation-error";
+import Modal from "../../../components/Modal";
+import MutationError from "../../../components/MutationError";
 import { performanceDetailsQuery, saveCasting } from "../api";
 import CastingRoleFormComponent from "../forms/CastingRoleForm";
 import { CastingForm, onSubmitCasting } from "../forms/CastingRoleForm.utils";
@@ -33,7 +33,11 @@ export default function CastingModalForm({ performanceId, returnTo }: { performa
 		defaultValues = {
 			performanceId: parseInt(performanceId ?? "0"),
 			// copy: the data is shared with the performance page cache
-			roles: data.roles.map((r) => ({ ...r, order: 0 })), // Order are processed before submit
+			roles: (data.roles ?? []).map(({ artist, pictureUrl: _pictureUrl, ...r }) => ({
+				...r,
+				artistId: artist.id,
+				order: 0, // Order are processed before submit
+			})),
 		};
 	} else {
 		defaultValues = {
@@ -56,7 +60,8 @@ export default function CastingModalForm({ performanceId, returnTo }: { performa
 					order: role.order,
 					name: role.name,
 					main: role.main,
-					artistId: role.artistId ?? 0,
+					artistId: role.artist?.id ?? 0,
+					pictureId: role.pictureId,
 				})),
 			);
 		}
@@ -109,7 +114,7 @@ export default function CastingModalForm({ performanceId, returnTo }: { performa
 								</span>
 							</h3>
 						)}
-						<CastingRoleFormComponent />
+						<CastingRoleFormComponent spectacleId={data.spectacle.id} />
 					</div>
 
 					<div className="dialog-footer">

@@ -2,10 +2,10 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Fragment } from "react";
 
-import Badge from "../../components/badge";
+import Badge from "../../components/Badge";
 import { useStoredValue } from "../../hooks/stored-value";
+import AccountBadge from "./AccountBadge";
 import { banksOverviewQuery } from "./api";
-import AccountBadge from "./badgeAccount";
 import { normalizeZero } from "./utils";
 
 export default function MoneyOverview() {

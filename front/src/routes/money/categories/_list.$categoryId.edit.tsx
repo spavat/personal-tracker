@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ModalError, ModalPending } from "../../../components/modal-status";
+import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { categoriesQuery, categoryQuery } from "../../../modules/money/api";
 import NewCategoryForm from "../../../modules/money/categories/NewCategorieForm";
-import { withReturnToSchema } from "../../../router/searchParams";
+import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/categories/_list/$categoryId/edit")({
 	loader: ({ context, params }) =>

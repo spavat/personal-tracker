@@ -5,8 +5,8 @@ import { useState } from "react";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 import z from "zod";
 
-import Modal from "../../../components/modal";
-import MutationError from "../../../components/mutation-error";
+import Modal from "../../../components/Modal";
+import MutationError from "../../../components/MutationError";
 import { getCurrentOrPreviousDate } from "../../../utils";
 import { gamesQuery, save } from "../api";
 import GameForm from "../forms/GameForm";

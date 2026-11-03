@@ -11,7 +11,7 @@ function fakeRepo() {
 		findByIdWithDetails: vi.fn().mockResolvedValue(null),
 		runInTransaction: vi.fn(async (fn: (t: unknown) => unknown) => fn(tx)),
 		deleteModelRoles: vi.fn().mockResolvedValue(undefined),
-		updateModel: vi.fn().mockResolvedValue(undefined),
+		updateModel: vi.fn().mockResolvedValue([{ id: 7, name: "Cast A", spectacleId: 1 }]),
 		insertModel: vi.fn().mockResolvedValue([{ id: 42 }]),
 		insertArtist: vi.fn().mockResolvedValue([{ id: 99 }]),
 		insertModelRole: vi.fn().mockResolvedValue([{ id: 1 }]),
@@ -32,7 +32,7 @@ describe("GetModelUseCase", () => {
 describe("SaveModelUseCase", () => {
 	it("updates an existing model: clears roles, re-adds them, updates the model", async () => {
 		const repo = fakeRepo();
-		await new SaveModelUseCase(asRepo(repo)).execute(
+		const saved = await new SaveModelUseCase(asRepo(repo)).execute(
 			{
 				id: 7,
 				name: "Cast A",
@@ -45,6 +45,16 @@ describe("SaveModelUseCase", () => {
 		expect(repo.insertModelRole).toHaveBeenCalledWith(repo.tx, { name: "Lead", artistId: 5, modelId: 7 });
 		expect(repo.updateModel).toHaveBeenCalledWith(repo.tx, 7, expect.objectContaining({ id: 7, name: "Cast A" }));
 		expect(repo.insertModel).not.toHaveBeenCalled();
+		expect(saved).toEqual({ id: 7, name: "Cast A", spectacleId: 1 });
+	});
+
+	it("rejects an unknown model before touching its roles", async () => {
+		const repo = fakeRepo();
+		repo.updateModel.mockResolvedValue([]);
+		await expect(
+			new SaveModelUseCase(asRepo(repo)).execute({ id: 7, name: "X", roles: [] } as any, asLog(makeLog())),
+		).rejects.toThrow("Modèle introuvable");
+		expect(repo.deleteModelRoles).not.toHaveBeenCalled();
 	});
 
 	it("inserts a new model and creates a missing artist for a role", async () => {
@@ -71,7 +81,7 @@ describe("SaveModelUseCase", () => {
 describe("DeleteModelUseCase", () => {
 	it("removes the model roles then the model, in a transaction", async () => {
 		const repo = fakeRepo();
-		expect(await new DeleteModelUseCase(asRepo(repo)).execute(7, asLog(makeLog()))).toEqual({ ok: true });
+		await new DeleteModelUseCase(asRepo(repo)).execute(7, asLog(makeLog()));
 		expect(repo.deleteModelRoles).toHaveBeenCalledWith(repo.tx, 7);
 		expect(repo.deleteModel).toHaveBeenCalledWith(repo.tx, 7);
 	});

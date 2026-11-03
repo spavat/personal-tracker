@@ -95,21 +95,23 @@ export class PlaceRepository {
 	}
 
 	save({ formerNames, ...data }: SavePlaceBody) {
+		// undefined when updating an unknown id
 		return this.db.transaction(async (tx) => {
-			let placeId = data.id;
-			if (placeId) {
-				await tx.update(showPlace).set(data).where(eq(showPlace.id, placeId));
-			} else {
-				[{ id: placeId }] = await tx.insert(showPlace).values(data).returning({ id: showPlace.id });
+			const [place] = data.id
+				? await tx.update(showPlace).set(data).where(eq(showPlace.id, data.id)).returning()
+				: await tx.insert(showPlace).values(data).returning();
+			if (!place) {
+				return undefined;
 			}
 
 			// Former names are replaced as a whole
-			await tx.delete(showPlaceFormerName).where(eq(showPlaceFormerName.placeId, placeId));
+			await tx.delete(showPlaceFormerName).where(eq(showPlaceFormerName.placeId, place.id));
 			if (formerNames.length) {
 				await tx
 					.insert(showPlaceFormerName)
-					.values(formerNames.map((formerName) => ({ ...formerName, placeId })));
+					.values(formerNames.map((formerName) => ({ ...formerName, placeId: place.id })));
 			}
+			return { ...place, formerNames };
 		});
 	}
 

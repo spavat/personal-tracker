@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
-import { PendingContent } from "../../components/pending-content";
+import { PendingContent } from "../../components/PendingContent";
 import { useSortTable } from "../../hooks/use-sort-table";
 import { formatFullDate } from "../../utils";
 import { gameListSort } from "./api";

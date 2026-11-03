@@ -2,7 +2,7 @@ import { useFormContext } from "react-hook-form";
 
 import type { QuickEditInputs } from "./TransactionsTable";
 
-import Badge from "../../../components/badge";
+import Badge from "../../../components/Badge";
 import { getAmountClassName } from "../utils";
 
 export default function TransactionChildRow({

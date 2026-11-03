@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
-import Badge from "../../components/badge";
-import { PendingContent } from "../../components/pending-content";
+import Badge from "../../components/Badge";
+import { PendingContent } from "../../components/PendingContent";
 import { useSortTable } from "../../hooks/use-sort-table";
 import { formatFullDate, getDurationString } from "../../utils";
 import { programListSort } from "./api";

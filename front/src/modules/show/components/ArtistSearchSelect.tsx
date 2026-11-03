@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { artistsQuery, saveArtist } from "./api";
+import { artistsQuery, saveArtist } from "../api";
 
 type ArtistSearchSelectProps = {
 	value?: number;
@@ -22,14 +22,9 @@ export default function ArtistSearchSelect({ value, onChange, placeholder }: Art
 
 	const createMutation = useMutation({
 		mutationFn: saveArtist,
-		onSuccess: async (_result, variables) => {
+		onSuccess: async (created) => {
 			await queryClient.invalidateQueries({ queryKey: ["shows", "artists"] });
-			// the list is displayed here, so invalidateQueries has just refetched it: reuse it as is
-			const artists = await queryClient.query({ ...artistsQuery(), staleTime: "static" });
-			const created = artists.find((artist) => artist.name === variables.name);
-			if (created) {
-				selectArtist(created.id, created.name);
-			}
+			selectArtist(created.id, created.name);
 		},
 	});
 
