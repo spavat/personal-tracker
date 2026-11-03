@@ -275,6 +275,61 @@
 			background: rgb(128 128 128 / 15%);
 		}
 
+		/* corner ribbon on a poster: add ribbon-canceled / ribbon-upcoming on .poster-frame */
+		.poster-frame {
+			position: relative;
+			overflow: hidden;
+			flex-shrink: 0;
+			height: fit-content;
+			width: fit-content;
+			border-radius: 8px;
+		}
+		.poster-frame > img {
+			display: block;
+		}
+		.card_item .poster-frame {
+			margin-right: 10px;
+		}
+		.poster-frame > .poster-card {
+			margin-right: 0;
+		}
+		/* frame hugs the image's real ratio so the ribbon sits on its corner */
+		.poster-frame > img.poster-card {
+			display: block;
+			width: auto;
+			min-width: 0;
+			height: auto;
+			max-width: 120px;
+			max-height: 150px;
+		}
+		.poster-frame.ribbon-canceled > * {
+			filter: brightness(0.4) grayscale(0.5);
+		}
+		.poster-frame.ribbon-canceled::after,
+		.poster-frame.ribbon-upcoming::after {
+			position: absolute;
+			right: -32px;
+			bottom: 14px;
+			width: 120px;
+			padding: 2px 0;
+			transform: rotate(-45deg);
+			font-size: 0.7rem;
+			font-weight: bold;
+			text-align: center;
+			text-transform: uppercase;
+			color: white;
+			box-shadow: 0 1px 3px rgb(0 0 0 / 40%);
+			pointer-events: none;
+		}
+		.poster-frame.ribbon-canceled::after {
+			content: "Annulé";
+			background: #c0392b;
+		}
+		.poster-frame.ribbon-upcoming::after {
+			content: "À venir";
+			background: #2980b9;
+		}
+
 		/* MEDIA */
 		.poster-thumb,
 		.portrait-thumb {

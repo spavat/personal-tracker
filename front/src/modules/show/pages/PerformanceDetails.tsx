@@ -10,7 +10,7 @@ import { useIsOwner } from "../../../hooks/use-is-owner";
 import { performanceDetailsQuery } from "../api";
 import CardArtist from "../components/CardArtist";
 import { MODULE_NAME } from "../constants";
-import { formatShowDate, mediaSrc } from "../utils";
+import { formatShowDate, mediaSrc, posterRibbon } from "../utils";
 
 export default function PerformanceDetails({ performanceId }: { performanceId: string }) {
 	const navigate = useNavigate();
@@ -31,12 +31,14 @@ export default function PerformanceDetails({ performanceId }: { performanceId: s
 			<div className="presentation-with-picture">
 				<div className="picture">
 					{details.posterUrl && (
-						<img
-							src={mediaSrc(details.posterUrl)}
-							alt="Affiche"
-							className="poster"
-							style={{ viewTransitionName: `poster-${details.id}` }}
-						/>
+						<div className={`poster-frame ${posterRibbon(details)}`}>
+							<img
+								src={mediaSrc(details.posterUrl)}
+								alt="Affiche"
+								className="poster"
+								style={{ viewTransitionName: `poster-${details.id}` }}
+							/>
+						</div>
 					)}
 				</div>
 				<div className="general">

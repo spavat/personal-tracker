@@ -1,7 +1,7 @@
 import { PerformanceView } from "@personal-tracker/shared/show";
 import { Link } from "@tanstack/react-router";
 
-import { formatShowDate, mediaSrc } from "../utils";
+import { formatShowDate, mediaSrc, posterRibbon } from "../utils";
 import { CastingIcon } from "./CastingIcon";
 
 export default function Card({ performance }: { performance: PerformanceView }) {
@@ -9,19 +9,21 @@ export default function Card({ performance }: { performance: PerformanceView }) 
 
 	return (
 		<div className="card_item performance">
-			{performance.posterUrl ? (
-				<img
-					src={mediaSrc(performance.posterUrl)}
-					alt=""
-					className="poster-card"
-					style={{ viewTransitionName: `poster-${performance.id}` }}
-					loading="lazy"
-				/>
-			) : (
-				<div className="poster-card">
-					<i className="fa-solid fa-masks-theater"></i>
-				</div>
-			)}
+			<div className={`poster-frame ${posterRibbon(performance)}`}>
+				{performance.posterUrl ? (
+					<img
+						src={mediaSrc(performance.posterUrl)}
+						alt=""
+						className="poster-card"
+						style={{ viewTransitionName: `poster-${performance.id}` }}
+						loading="lazy"
+					/>
+				) : (
+					<div className="poster-card">
+						<i className="fa-solid fa-masks-theater"></i>
+					</div>
+				)}
+			</div>
 			<div>
 				<span className="title">
 					<Link to="/shows/performances/$performanceId" params={{ performanceId: String(performance.id) }}>

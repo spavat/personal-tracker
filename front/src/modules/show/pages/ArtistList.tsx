@@ -104,7 +104,7 @@ export default function ArtistList() {
 						</tbody>
 					</table>
 				) : (
-					<div className="grid">
+					<div className="grid artists">
 						{query.data.map((artist) => (
 							<CardArtist key={artist.id} artist={artist} pictureUrl={artist.pictureUrl}>
 								{artist.nbSpectacles} spectacle(s) · {artist.nbPerformances} représentation(s)

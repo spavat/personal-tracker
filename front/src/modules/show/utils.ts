@@ -30,3 +30,9 @@ export function formatShowDate(isoDate: string, showHour = true) {
 export function isFutureShow(isoDate: string) {
 	return Temporal.PlainDateTime.compare(isoDate, Temporal.Now.plainDateTimeISO()) > 0;
 }
+
+// ribbon class for a .poster-frame (see module.css)
+export function posterRibbon({ canceled, date }: { canceled: boolean; date: string }) {
+	if (canceled) return "ribbon-canceled";
+	return isFutureShow(date) ? "ribbon-upcoming" : "";
+}
