@@ -1,10 +1,10 @@
 import { ReadingModelItem } from "@personal-tracker/shared/reading-book";
 import { useFieldArray, useFormContext } from "react-hook-form";
 
-import { useIsOwner } from "../../hooks/use-is-owner";
-import { formatFullDate } from "../../utils";
-import { FrontReading } from "./types";
-import { getReadingDurationFromDates, getReadingIcons } from "./utils";
+import { useIsOwner } from "../../../hooks/use-is-owner";
+import { formatFullDate } from "../../../utils";
+import { FrontReading } from "../types";
+import { getReadingDurationFromDates, getReadingIcons } from "../utils";
 
 type ItemProps = {
 	modelItem: ReadingModelItem;

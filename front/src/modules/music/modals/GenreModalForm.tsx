@@ -3,10 +3,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 
-import Modal from "../../../../components/Modal";
-import MutationError from "../../../../components/MutationError";
-import { useOptionalSuspenseQuery } from "../../../../hooks/use-optional-suspense-query";
-import { genresQuery, saveGenre } from "../../api";
+import Modal from "../../../components/Modal";
+import MutationError from "../../../components/MutationError";
+import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-query";
+import { genresQuery, saveGenre } from "../api";
 
 type GenreFormInputs = {
 	name: string;

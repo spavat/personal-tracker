@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { bookDetailsQuery } from "../../../modules/reading-book/api";
-import BookDetails from "../../../modules/reading-book/BookDetails";
+import BookDetails from "../../../modules/reading-book/pages/BookDetails";
 
 export const Route = createFileRoute("/reading-book/book/$bookId")({
 	loader: ({ context, params }) =>

@@ -1,14 +1,14 @@
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
-import Badge from "../../components/Badge";
-import { HeaderPortal } from "../../components/HeaderPortal";
-import PeriodSelector from "../../components/PeriodSelector";
-import { useIsOwner } from "../../hooks/use-is-owner";
-import { useMonthChanger } from "../../hooks/use-month-changer";
-import { formatFullDate, formatMonth } from "../../utils";
-import { listeningHistory } from "./api";
+import Badge from "../../../components/Badge";
+import { HeaderPortal } from "../../../components/HeaderPortal";
+import PeriodSelector from "../../../components/PeriodSelector";
+import { useIsOwner } from "../../../hooks/use-is-owner";
+import { useMonthChanger } from "../../../hooks/use-month-changer";
+import { formatFullDate, formatMonth } from "../../../utils";
+import { listeningHistory } from "../api";
 
-export default function List({ period }: { period: string }) {
+export default function ListeningList({ period }: { period: string }) {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const isOwner = useIsOwner();

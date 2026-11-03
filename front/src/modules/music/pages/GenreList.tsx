@@ -3,7 +3,7 @@ import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
 import { genresQuery } from "../api";
 
-export default function GenresList() {
+export default function GenreList() {
 	const navigate = useNavigate();
 	const location = useLocation();
 

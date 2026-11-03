@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { genresQuery } from "../../../modules/music/api";
-import DeleteGenreModalForm from "../../../modules/music/genres/modals/DeleteGenreModalForm";
+import DeleteGenreModalForm from "../../../modules/music/modals/DeleteGenreModalForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/music/genres/_list/delete/$id")({

@@ -7,7 +7,7 @@ import { useIsOwner } from "../../../hooks/use-is-owner";
 import { useYearChanger } from "../../../hooks/use-year-changer";
 import { formatMonth } from "../../../utils";
 import { mangaHistory } from "../api";
-import ReadingCardManga from "../CardManga";
+import ReadingCardManga from "../components/CardManga";
 import { FrontManga } from "../types";
 import { mergeReadings } from "../utils";
 

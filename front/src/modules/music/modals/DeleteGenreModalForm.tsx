@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
-import Modal from "../../../../components/Modal";
-import MutationError from "../../../../components/MutationError";
-import { deleteGenre, genresQuery } from "../../api";
+import Modal from "../../../components/Modal";
+import MutationError from "../../../components/MutationError";
+import { deleteGenre, genresQuery } from "../api";
 
 export default function DeleteGenreModalForm({ id, returnTo }: { id: string; returnTo: string }) {
 	const navigate = useNavigate();

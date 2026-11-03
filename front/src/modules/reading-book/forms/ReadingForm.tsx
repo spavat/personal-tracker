@@ -12,9 +12,9 @@ import { z } from "zod";
 
 import { useIsOwner } from "../../../hooks/use-is-owner";
 import { saveReading } from "../api";
-import { ReadingFormItem } from "../ReadingFormItem";
 import { FrontReading } from "../types";
 import { getReadingDuration } from "../utils";
+import { ReadingFormItem } from "./ReadingFormItem";
 
 const ReadingFormSchema = ReadingSchema.extend({
 	details: z.array(

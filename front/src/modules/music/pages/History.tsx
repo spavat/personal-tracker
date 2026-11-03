@@ -1,12 +1,12 @@
 import { MusicListening } from "@personal-tracker/shared/music";
 import { useNavigate, useLocation, Outlet } from "@tanstack/react-router";
 
-import { HeaderPortal } from "../../components/HeaderPortal";
-import PeriodSelector from "../../components/PeriodSelector";
-import { useIsOwner } from "../../hooks/use-is-owner";
-import { useMonthChanger } from "../../hooks/use-month-changer";
-import { formatFullDay, formatMonth } from "../../utils";
-import { listeningHistory } from "./api";
+import { HeaderPortal } from "../../../components/HeaderPortal";
+import PeriodSelector from "../../../components/PeriodSelector";
+import { useIsOwner } from "../../../hooks/use-is-owner";
+import { useMonthChanger } from "../../../hooks/use-month-changer";
+import { formatFullDay, formatMonth } from "../../../utils";
+import { listeningHistory } from "../api";
 
 export default function History({ period }: { period: string }) {
 	const navigate = useNavigate();

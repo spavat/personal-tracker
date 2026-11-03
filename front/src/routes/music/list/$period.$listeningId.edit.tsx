@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { listeningDetailsQuery } from "../../../modules/music/api";
-import EditListeningModalForm from "../../../modules/music/modal/EditListeningModalForm";
+import EditListeningModalForm from "../../../modules/music/modals/EditListeningModalForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/music/list/$period/$listeningId/edit")({

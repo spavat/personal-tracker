@@ -1,12 +1,12 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
-import { PendingContent } from "../../components/PendingContent";
-import { useIsOwner } from "../../hooks/use-is-owner";
-import { useSortTable } from "../../hooks/use-sort-table";
-import { formatDate } from "../../utils";
-import { bookListSort } from "./api";
+import { PendingContent } from "../../../components/PendingContent";
+import { useIsOwner } from "../../../hooks/use-is-owner";
+import { useSortTable } from "../../../hooks/use-sort-table";
+import { formatDate } from "../../../utils";
+import { bookListSort } from "../api";
 
-export default function List() {
+export default function BookList() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const isOwner = useIsOwner();

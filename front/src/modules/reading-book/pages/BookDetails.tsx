@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
-import { useIsOwner } from "../../hooks/use-is-owner";
-import { addReading, bookDetailsQuery } from "./api";
-import { ReadingForm } from "./forms/ReadingForm";
-import { renderItemModel } from "./render-modele-fn";
+import { useIsOwner } from "../../../hooks/use-is-owner";
+import { addReading, bookDetailsQuery } from "../api";
+import { ReadingForm } from "../forms/ReadingForm";
+import { renderItemModel } from "../render-modele-fn";
 
 export default function BookDetails({ bookId }: { bookId: string }) {
 	const queryClient = useQueryClient();

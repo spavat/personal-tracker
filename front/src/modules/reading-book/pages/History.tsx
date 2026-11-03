@@ -1,12 +1,12 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
-import { HeaderPortal } from "../../components/HeaderPortal";
-import PeriodSelector from "../../components/PeriodSelector";
-import { useIsOwner } from "../../hooks/use-is-owner";
-import { useYearChanger } from "../../hooks/use-year-changer";
-import { formatDate } from "../../utils";
-import { bookHistory } from "./api";
-import { getStatusIcon } from "./utils";
+import { HeaderPortal } from "../../../components/HeaderPortal";
+import PeriodSelector from "../../../components/PeriodSelector";
+import { useIsOwner } from "../../../hooks/use-is-owner";
+import { useYearChanger } from "../../../hooks/use-year-changer";
+import { formatDate } from "../../../utils";
+import { bookHistory } from "../api";
+import { getStatusIcon } from "../utils";
 
 export default function History({ year }: { year: string }) {
 	const navigate = useNavigate();

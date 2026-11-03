@@ -8,7 +8,7 @@ import { formatDate } from "../../../utils";
 import { mangaListSort } from "../api";
 import { getStatusIcon } from "../search-fn";
 
-export default function List() {
+export default function MangaList() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const isOwner = useIsOwner();

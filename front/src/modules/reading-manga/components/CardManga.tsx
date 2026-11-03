@@ -1,10 +1,10 @@
 import { Reading } from "@personal-tracker/shared/reading-manga";
 import { Link } from "@tanstack/react-router";
 
-import { formatFullDate } from "../../utils";
-import { getStatusIcon } from "./search-fn";
-import { FrontManga } from "./types";
-import { getMangaPrefixName, getReadingSummary } from "./utils";
+import { formatFullDate } from "../../../utils";
+import { getStatusIcon } from "../search-fn";
+import { FrontManga } from "../types";
+import { getMangaPrefixName, getReadingSummary } from "../utils";
 
 function getEdition(manga: Reading) {
 	if (manga.type !== "volume") {

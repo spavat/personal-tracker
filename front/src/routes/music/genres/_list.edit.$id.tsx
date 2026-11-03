@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { genresQuery } from "../../../modules/music/api";
-import GenreModalForm from "../../../modules/music/genres/modals/GenreModalForm";
+import GenreModalForm from "../../../modules/music/modals/GenreModalForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/music/genres/_list/edit/$id")({

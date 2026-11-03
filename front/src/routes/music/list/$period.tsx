@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { monthQuery } from "../../../hooks/use-month-changer";
 import { listeningHistory } from "../../../modules/music/api";
-import List from "../../../modules/music/List";
+import ListeningList from "../../../modules/music/pages/ListeningList";
 
 export const Route = createFileRoute("/music/list/$period")({
 	loader: ({ context, params }) =>
@@ -12,5 +12,5 @@ export const Route = createFileRoute("/music/list/$period")({
 
 function RouteComponent() {
 	const { period } = Route.useParams();
-	return <List period={period} />;
+	return <ListeningList period={period} />;
 }

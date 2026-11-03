@@ -1,14 +1,14 @@
 import { Outlet } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { MusicGenres } from "../../charts/MusicGenres";
-import { MusicReleaseYear } from "../../charts/MusicReleaseYear";
-import { MusicYear } from "../../charts/MusicYear";
-import { HeaderPortal } from "../../components/HeaderPortal";
-import PeriodSelector from "../../components/PeriodSelector";
-import { useYearChanger } from "../../hooks/use-year-changer";
-import { formatMonth, getDurationString } from "../../utils";
-import { musicStats } from "./api";
+import { MusicGenres } from "../../../charts/MusicGenres";
+import { MusicReleaseYear } from "../../../charts/MusicReleaseYear";
+import { MusicYear } from "../../../charts/MusicYear";
+import { HeaderPortal } from "../../../components/HeaderPortal";
+import PeriodSelector from "../../../components/PeriodSelector";
+import { useYearChanger } from "../../../hooks/use-year-changer";
+import { formatMonth, getDurationString } from "../../../utils";
+import { musicStats } from "../api";
 
 export default function Stats({ year }: { year: string }) {
 	const [period, statsQuery, goPrevious, goNext, canGoPrevious, canGoNext] = useYearChanger({
