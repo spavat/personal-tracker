@@ -55,6 +55,20 @@ services:
             mongo:
                 condition: service_healthy
         networks: [internal, traefik]
+        # Traefik only routes to a healthy container: the maintenance page answers during migrations/startup
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "fetch('http://localhost:3000/auth/get-session').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+                ]
+            interval: 5s
+            timeout: 5s
+            retries: 3
+            start_period: 60s
+            start_interval: 1s
         labels:
             - traefik.enable=true
             - traefik.docker.network=${TRAEFIK_NETWORK:?}
@@ -69,6 +83,13 @@ services:
         image: ghcr.io/spavat/personal-tracker-front:${TAG:-latest}
         restart: unless-stopped
         networks: [traefik]
+        healthcheck:
+            test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+            interval: 5s
+            timeout: 5s
+            retries: 3
+            start_period: 30s
+            start_interval: 1s
         labels:
             - traefik.enable=true
             - traefik.docker.network=${TRAEFIK_NETWORK:?}
@@ -76,6 +97,25 @@ services:
             - traefik.http.routers.personal-tracker.entrypoints=${TRAEFIK_ENTRYPOINT:?}
             - traefik.http.routers.personal-tracker.tls.certresolver=${TRAEFIK_CERTRESOLVER:?}
             - traefik.http.services.personal-tracker.loadbalancer.server.port=80
+
+    # Fallback while front/server restart: only started by the CI deploy job around the restart (profile: not
+    # started by a plain `docker compose up`). priority=1: the front and /api routers (priority = rule length)
+    # always win when they exist.
+    maintenance:
+        image: nginx:1.29-alpine
+        profiles: [maintenance]
+        volumes:
+            - ./maintenance/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+            - ./maintenance/index.html:/usr/share/nginx/html/index.html:ro
+        networks: [traefik]
+        labels:
+            - traefik.enable=true
+            - traefik.docker.network=${TRAEFIK_NETWORK:?}
+            - traefik.http.routers.personal-tracker-maintenance.rule=Host(`tracker.spvt.fr`)
+            - traefik.http.routers.personal-tracker-maintenance.priority=1
+            - traefik.http.routers.personal-tracker-maintenance.entrypoints=${TRAEFIK_ENTRYPOINT:?}
+            - traefik.http.routers.personal-tracker-maintenance.tls.certresolver=${TRAEFIK_CERTRESOLVER:?}
+            - traefik.http.services.personal-tracker-maintenance.loadbalancer.server.port=80
 
 networks:
     internal:

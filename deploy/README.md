@@ -4,6 +4,8 @@ Pipeline (`.github/workflows/ci.yml`): `checks` (lint, fmt, typecheck, unit) + `
 
 The server image runs the Drizzle migrations (`dist/migrate.js`) before starting.
 
+During a deploy, the job starts the `maintenance` service (Compose profile, never started by a plain `docker compose up`) before recreating `front`/`server`, and stops it once they are healthy. Meanwhile Traefik falls back to it (lowest-priority router on the same host): a 503 page that reloads itself every 5 s.
+
 ## One-time setup
 
 ### GitHub
@@ -15,7 +17,7 @@ The server image runs the Drizzle migrations (`dist/migrate.js`) before starting
 
 ```sh
 mkdir -p ~/apps/personal-tracker
-# copy deploy/docker-compose.yml there, and deploy/vps.env.example as .env (fill it, chmod 600)
+# copy deploy/docker-compose.yml and deploy/maintenance/ there, and deploy/vps.env.example as .env (fill it, chmod 600)
 cat gh-deploy.pub >> ~/.ssh/authorized_keys
 ```
 

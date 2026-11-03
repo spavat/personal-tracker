@@ -126,5 +126,9 @@ jobs:
                       sed -i '/^TAG=/d' .env
                       echo "TAG=${{ github.sha }}" >> .env
                       docker compose pull server front
-                      docker compose up -d --wait
+                      # maintenance page only during the restart; 2s for Traefik to register its router
+                      docker compose up -d maintenance
+                      sleep 2
+                      docker compose up -d --wait server front
+                      docker compose stop maintenance
                       docker image prune -f
