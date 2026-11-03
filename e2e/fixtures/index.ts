@@ -16,7 +16,7 @@ export const test = base.extend({
 	},
 });
 export { expect };
-export { OWNER, resetDb, queryDb } from "../seed";
+export { OWNER, resetDb, queryDb, updateMongo } from "../seed";
 
 export const SEED = {
 	music: {

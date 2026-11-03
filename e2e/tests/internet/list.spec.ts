@@ -136,6 +136,29 @@ test.describe("Internet - List", () => {
 		await expect(row.locator("td").nth(3)).toHaveText("Great Network");
 	});
 
+	test("mark a program as private", async ({ page }) => {
+		await page.goto("/internet/list");
+		const row = programRows(page).filter({ hasText: mockPodcast.name });
+		await expect(row.locator(".fa-mask")).toHaveCount(0);
+
+		await row.getByRole("button", { name: "Modifier" }).click();
+		const dialog = page.getByRole("dialog", { name: "Modifier programme" });
+		const privateBox = dialog.getByRole("checkbox", { name: "Privé" });
+		await expect(privateBox).not.toBeChecked();
+		await privateBox.check();
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+		await expect(dialog).not.toBeVisible();
+		// The owner still sees it, flagged with a mask
+		await expect(row.locator(".fa-mask")).toBeVisible();
+
+		await row.getByRole("button", { name: "Modifier" }).click();
+		await expect(privateBox).toBeChecked();
+		await privateBox.uncheck();
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+		await expect(dialog).not.toBeVisible();
+		await expect(row.locator(".fa-mask")).toHaveCount(0);
+	});
+
 	test("cancel the add modal", async ({ page }) => {
 		const dialog = await openAddModal(page);
 		await dialog.getByRole("textbox", { name: "Titre *", exact: true }).fill("Cancelled");

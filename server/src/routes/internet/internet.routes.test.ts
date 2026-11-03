@@ -55,7 +55,8 @@ describe("internet routes", () => {
 			ctx.programs.findOne.mockResolvedValueOnce({ id: PROGRAM_UUID, name: "Prog", episodes: [] });
 			const res = await ctx.app.inject({ method: "GET", url: `/id/${PROGRAM_UUID}` });
 			expect(res.statusCode).toBe(200);
-			expect(ctx.programs.findOne).toHaveBeenCalledWith({ id: PROGRAM_UUID });
+			// anonymous viewer (no auth plugin here): private programs are filtered out
+			expect(ctx.programs.findOne).toHaveBeenCalledWith({ private: { $ne: true }, id: PROGRAM_UUID });
 		});
 
 		it("DELETE /programs/:programId/episodes/:episodeId pulls the episode", async () => {

@@ -286,7 +286,6 @@
 
 		.profile-thumbnail {
 			float: right;
-			/* width: 75px; */
 			height: 100px;
 			object-fit: cover;
 			border-radius: 8px;

@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { viewerIsOwner } from "../request-context";
 import { buildRouteApp } from "../test-support/route-harness";
 import authPlugin from "./auth";
 
@@ -14,7 +15,10 @@ vi.mock("../auth", () => ({
 const routes: FastifyPluginAsync = async (fastify) => {
 	await fastify.register(authPlugin);
 	fastify.get("/private", async () => ({ ok: true }));
-	fastify.get("/public", { config: { public: true } }, async (request) => ({ isOwner: request.isOwner }));
+	fastify.get("/public", { config: { public: true } }, async (request) => {
+		await Promise.resolve(); // the request context must survive async continuations
+		return { isOwner: request.isOwner, viewerIsOwner: viewerIsOwner() };
+	});
 	fastify.post("/public", { config: { public: true } }, async () => ({ ok: true }));
 	fastify.delete("/items/:id", async () => ({ ok: true }));
 };
@@ -41,7 +45,7 @@ describe("auth plugin", () => {
 		it("reaches a public GET route", async () => {
 			const res = await app.inject({ method: "GET", url: "/public" });
 			expect(res.statusCode).toBe(200);
-			expect(res.json()).toEqual({ isOwner: false });
+			expect(res.json()).toEqual({ isOwner: false, viewerIsOwner: false });
 		});
 
 		it("401s on a write even when the route is flagged public", async () => {
@@ -80,7 +84,7 @@ describe("auth plugin", () => {
 
 		it("is flagged on the request", async () => {
 			const res = await app.inject({ method: "GET", url: "/public" });
-			expect(res.json()).toEqual({ isOwner: true });
+			expect(res.json()).toEqual({ isOwner: true, viewerIsOwner: true });
 		});
 	});
 });

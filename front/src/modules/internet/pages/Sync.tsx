@@ -2,10 +2,10 @@ import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-q
 import { Link } from "@tanstack/react-router";
 import { Fragment, SubmitEvent, useState } from "react";
 
-import { API_BASE_URL } from "../../config";
-import { formatDate, formatDateTime } from "../../utils";
-import { programsQuery, reprocessSync, syncQuery, uploadSync } from "./api";
-import SyncItemForm from "./forms/SyncItemForm";
+import { API_BASE_URL } from "../../../config";
+import { formatDate, formatDateTime } from "../../../utils";
+import { programsQuery, reprocessSync, syncQuery, uploadSync } from "../api";
+import SyncItemForm from "../forms/SyncItemForm";
 
 function SyncUploadForm() {
 	const queryClient = useQueryClient();

@@ -1501,4 +1501,16 @@ async function queryDb(sql, params = []) {
 	}
 }
 
-module.exports = { OWNER, seedOwner, seedPostgres, seedMongo, resetDb, queryDb };
+// Updates documents of the Mongo test database, e.g. to set up a state the seed doesn't have.
+// Pair it with `resetDb` so the change doesn't leak into the other tests.
+async function updateMongo(collection, filter, update) {
+	const client = new MongoClient(MONGO_SERVER_URL);
+	await client.connect();
+	try {
+		await client.db(TEST_DB).collection(collection).updateMany(filter, update);
+	} finally {
+		await client.close();
+	}
+}
+
+module.exports = { OWNER, seedOwner, seedPostgres, seedMongo, resetDb, queryDb, updateMongo };

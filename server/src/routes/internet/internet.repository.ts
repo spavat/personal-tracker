@@ -2,6 +2,8 @@ import type { FastifyInstance } from "fastify";
 
 import type { ProgramMongo } from "./internet.entity";
 
+import { privacyMatch } from "../../request-context";
+
 const MONGO_INTERNET_COLLECTION = "internet";
 // Not sent by the episode form when empty (see onSubmitEpisode and cleanEpisode)
 const CLEARABLE_EPISODE_FIELDS = ["durationReal", "tags", "contextTags"];
@@ -23,6 +25,7 @@ export class InternetRepository {
 		const cursor = this.collection?.aggregate([
 			{
 				$match: {
+					...privacyMatch(),
 					$or: [
 						{ name: new RegExp(`${search.normalize("NFC")}`, "i") },
 						{ author: new RegExp(`${search.normalize("NFC")}`, "i") },
@@ -67,6 +70,7 @@ export class InternetRepository {
 			{
 				// 1️⃣ Keep only programs with at least one episode in the period
 				$match: {
+					...privacyMatch(),
 					episodes: {
 						$elemMatch: {
 							date: {
@@ -126,27 +130,30 @@ export class InternetRepository {
 	}
 
 	findById(id: string) {
-		return this.collection?.findOne({ id });
+		return this.collection?.findOne({ ...privacyMatch(), id });
 	}
 
 	findByRssUrl(rssUrl: string) {
-		return this.collection?.findOne({ "refs.rss": rssUrl } as any);
+		return this.collection?.findOne({ ...privacyMatch(), "refs.rss": rssUrl } as any);
 	}
 
 	findChannelsByYoutubeChannelId(channelId: string) {
 		const cursor = this.collection
-			?.find({ "refs.youtubeChannelId": channelId } as any)
+			?.find({ ...privacyMatch(), "refs.youtubeChannelId": channelId } as any)
 			.project({ id: 1, name: 1, author: 1, network: 1 });
 		return cursor?.toArray();
 	}
 
 	findChannelsByUrl(url: string) {
-		const cursor = this.collection?.find({ links: url } as any).project({ id: 1, name: 1, author: 1, network: 1 });
+		const cursor = this.collection
+			?.find({ ...privacyMatch(), links: url } as any)
+			.project({ id: 1, name: 1, author: 1, network: 1 });
 		return cursor?.toArray();
 	}
 
 	findProgramsWithYoutubeChannel() {
 		const cursor = this.collection?.find({
+			...privacyMatch(),
 			"refs.youtubeChannelId": { $exists: true, $ne: "" },
 			$or: [{ profile: { $exists: false } }, { banner: { $exists: false } }],
 		} as any);
@@ -155,6 +162,7 @@ export class InternetRepository {
 
 	findProgramsWithRssFeed() {
 		const cursor = this.collection?.find({
+			...privacyMatch(),
 			"refs.rss": { $exists: true, $ne: "" },
 			"refs.youtubeChannelId": { $exists: false },
 			profile: { $exists: false },
@@ -203,6 +211,7 @@ export class InternetRepository {
 			{
 				// 1️⃣ Keep only channels with at least one episode in 2026
 				$match: {
+					...privacyMatch(),
 					episodes: {
 						$elemMatch: {
 							date: {

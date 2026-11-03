@@ -2,10 +2,10 @@ import { Program } from "@personal-tracker/shared/internet";
 import { Link } from "@tanstack/react-router";
 import { ReactNode } from "react";
 
-import { API_BASE_URL } from "../../config";
-import { formatFullDate, getDurationString } from "../../utils";
+import { API_BASE_URL } from "../../../config";
+import { formatFullDate, getDurationString } from "../../../utils";
 
-export default function Card({ program }: { program: Program }) {
+export default function CardProgram({ program }: { program: Program }) {
 	let lastSeenString = null;
 	if (program.episodes.length > 0) {
 		const lastSeen = program.episodes[program.episodes.length - 1];
@@ -21,14 +21,20 @@ export default function Card({ program }: { program: Program }) {
 	const total = program.episodes.reduce((sum, episode) => (episode.durationReal ?? episode.duration) + sum, 0);
 
 	const hasSubtitle = Boolean(program.author || program.network);
-
+	console.log("program.profile ok", program.profile);
 	return (
 		<div className="card_item">
 			{program.profile && (
-				<img src={`${API_BASE_URL}${program.profile}`} alt="" className="profile-thumbnail" loading="lazy" />
+				<img
+					src={`${API_BASE_URL}${program.profile}`}
+					alt=""
+					className="profile-thumbnail"
+					loading="lazy"
+					style={{ viewTransitionName: `program-profile-${program.id}` }}
+				/>
 			)}
 			<span className="title">
-				<Link to="/internet/$programId" params={{ programId: program.id }}>
+				<Link to="/internet/$programId" params={{ programId: program.id }} viewTransition>
 					{program.name}
 				</Link>
 			</span>

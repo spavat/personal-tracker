@@ -51,7 +51,7 @@ const internet: FastifyPluginAsync = async (fastify): Promise<void> => {
 	const imageStorage = new ImageStorageRepository();
 	const syncRepository = new SyncRepository(fastify.mongo);
 
-	const listPrograms = new ListProgramsUseCase(repository);
+	const listPrograms = new ListProgramsUseCase(repository, imageStorage);
 	const listEpisodes = new ListEpisodesUseCase(repository, imageStorage);
 	const extractInfo = new ExtractInfoUseCase(repository);
 	const syncCovers = new SyncCoversUseCase(repository, imageStorage);
@@ -76,6 +76,7 @@ const internet: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/programs",
 		{
+			config: { public: true },
 			schema: { querystring: ProgramListQuerystringRequestSchema },
 		},
 		async (request): Promise<any> => listPrograms.execute(request.query, request.log),
@@ -84,6 +85,7 @@ const internet: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/episodes",
 		{
+			config: { public: true },
 			schema: { querystring: EpisodeListQuerystringRequestSchema },
 		},
 		async (request) => listEpisodes.execute(request.query, request.log),
@@ -120,6 +122,7 @@ const internet: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/id/:programId",
 		{
+			config: { public: true },
 			schema: {
 				params: DetailsProgramParamsRequestSchema,
 			},
@@ -201,6 +204,7 @@ const internet: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/stats",
 		{
+			config: { public: true },
 			schema: {
 				querystring: StatsRequestSchema,
 				response: {
@@ -214,6 +218,7 @@ const internet: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/fortnight-stats",
 		{
+			config: { public: true },
 			schema: {
 				response: {
 					200: FortnightStatsResponseSchema,

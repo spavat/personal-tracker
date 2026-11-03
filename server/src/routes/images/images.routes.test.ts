@@ -30,7 +30,8 @@ describe("images routes", () => {
 	it("404s when the program has no image key, after looking it up by id", async () => {
 		const res = await ctx.app.inject({ method: "GET", url: "/internet/prog-1.profile" });
 		expect(res.statusCode).toBe(404);
-		expect(ctx.internet.findOne).toHaveBeenCalledWith({ id: "prog-1" });
+		// anonymous viewer (no auth plugin here): private programs are filtered out
+		expect(ctx.internet.findOne).toHaveBeenCalledWith({ private: { $ne: true }, id: "prog-1" });
 	});
 
 	it("404s when the activity has no thumbnail key", async () => {

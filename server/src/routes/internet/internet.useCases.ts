@@ -33,12 +33,16 @@ type EpisodeListQuery = z.infer<typeof EpisodeListQuerystringRequestSchema>;
 type StatsQuery = z.infer<typeof StatsRequestSchema>;
 
 export class ListProgramsUseCase {
-	constructor(private repo: InternetRepository) {}
+	constructor(
+		private repo: InternetRepository,
+		private imageStorage: ImageStorageRepository,
+	) {}
 
-	execute({ sort, search }: ProgramListQuery, log: FastifyBaseLogger) {
+	async execute({ sort, search }: ProgramListQuery, log: FastifyBaseLogger) {
 		log.info("ListProgramsUseCase.execute");
 		const [sortField, sortDirection] = sort ?? ["name", "asc"];
-		return this.repo.findAll({ search: search ?? "", sortField, sortDirection });
+		const programs = await this.repo.findAll({ search: search ?? "", sortField, sortDirection });
+		return (programs ?? []).map((program: any) => this.imageStorage.resolveImages(program));
 	}
 }
 

@@ -1,16 +1,18 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
-import Badge from "../../components/Badge";
-import { PendingContent } from "../../components/PendingContent";
-import { useSortTable } from "../../hooks/use-sort-table";
-import { formatFullDate, getDurationString } from "../../utils";
-import { programListSort } from "./api";
+import Badge from "../../../components/Badge";
+import { PendingContent } from "../../../components/PendingContent";
+import { useIsOwner } from "../../../hooks/use-is-owner";
+import { useSortTable } from "../../../hooks/use-sort-table";
+import { formatFullDate, getDurationString } from "../../../utils";
+import { programListSort } from "../api";
 
 const refsKeys = ["youtubeChannelId", "youtubePlaylistId", "rss"] as const;
 
-export default function List() {
+export default function ProgramList() {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const isOwner = useIsOwner();
 	const { query, headers, isPending } = useSortTable({
 		...programListSort,
 		columnsList: [
@@ -25,7 +27,7 @@ export default function List() {
 			{ name: "Durée", colName: "totalDuration", isSortable: true },
 			{ name: "Tags", colName: "", isSortable: false },
 			{ name: "Art", colName: "", isSortable: false },
-			{ name: "Actions", colName: "", isSortable: false },
+			...(isOwner ? [{ name: "Actions", colName: "", isSortable: false }] : []),
 		],
 	});
 
@@ -38,12 +40,23 @@ export default function List() {
 					</thead>
 					<tbody>
 						{query.data.map((program, i) => {
+							console.log("program.profile ko", program.profile);
 							return (
 								<tr key={program.id}>
 									<td>{i + 1}</td>
 									<td>
-										<Link to="/internet/$programId" params={{ programId: program.id }}>
+										<Link
+											to="/internet/$programId"
+											params={{ programId: program.id }}
+											viewTransition
+										>
 											{program.name}
+											{program.private && (
+												<>
+													{" "}
+													<i className="fa-solid fa-mask" title="Privé"></i>
+												</>
+											)}
 										</Link>
 									</td>
 									<td data-label="Author">{program.author}</td>
@@ -122,24 +135,26 @@ export default function List() {
 											className={`${!program.banner ? "disabled" : ""} fa-solid fa-users-rectangle`}
 										></i>
 									</td>
-									<td data-label="Actions">
-										<button
-											type="button"
-											title="Modifier"
-											onClick={() =>
-												navigate({
-													to: "/internet/list/edit/$programId",
-													params: { programId: program.id },
-													search: { returnTo: location.pathname },
-													replace: true,
-													resetScroll: false,
-													mask: { to: "/internet/list" },
-												})
-											}
-										>
-											<i className="fa-regular fa-pen-to-square"></i>
-										</button>
-									</td>
+									{isOwner && (
+										<td data-label="Actions">
+											<button
+												type="button"
+												title="Modifier"
+												onClick={() =>
+													navigate({
+														to: "/internet/list/edit/$programId",
+														params: { programId: program.id },
+														search: { returnTo: location.pathname },
+														replace: true,
+														resetScroll: false,
+														mask: { to: "/internet/list" },
+													})
+												}
+											>
+												<i className="fa-regular fa-pen-to-square"></i>
+											</button>
+										</td>
+									)}
 								</tr>
 							);
 						})}
@@ -152,27 +167,29 @@ export default function List() {
 				</table>
 			</PendingContent>
 
-			<div className="fab-container">
-				<button
-					type="button"
-					className="fab-main"
-					title="Ajouter un programme"
-					onClick={() =>
-						navigate({
-							to: "/internet/list/add",
-							search: { returnTo: location.pathname },
-							replace: true,
-							resetScroll: false,
-							mask: { to: "/internet/list" },
-						})
-					}
-				>
-					<div className="pulse"></div>
-					<div className="heart-line" aria-hidden="true">
-						<i className="fa-solid fa-plus"></i>
-					</div>
-				</button>
-			</div>
+			{isOwner && (
+				<div className="fab-container">
+					<button
+						type="button"
+						className="fab-main"
+						title="Ajouter un programme"
+						onClick={() =>
+							navigate({
+								to: "/internet/list/add",
+								search: { returnTo: location.pathname },
+								replace: true,
+								resetScroll: false,
+								mask: { to: "/internet/list" },
+							})
+						}
+					>
+						<div className="pulse"></div>
+						<div className="heart-line" aria-hidden="true">
+							<i className="fa-solid fa-plus"></i>
+						</div>
+					</button>
+				</div>
+			)}
 			<Outlet />
 		</>
 	);

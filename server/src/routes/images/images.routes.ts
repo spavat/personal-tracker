@@ -18,7 +18,8 @@ const images: FastifyPluginAsync = async (fastify): Promise<void> => {
 	const mediaRepository = new MediaRepository(fastify.db);
 	const mediaStorage = new MediaStorageRepository();
 
-	fastify.get("/internet/:key", async (request, reply) => {
+	// public: private programs are filtered out by the repository (findById) for anonymous visitors
+	fastify.get("/internet/:key", { config: { public: true } }, async (request, reply) => {
 		const { key } = request.params as { key: string };
 		const separatorIndex = key.lastIndexOf(".");
 		const programId = key.slice(0, separatorIndex);

@@ -1,11 +1,11 @@
 import { useState } from "react";
 
-import { MusicGenres } from "../../charts/MusicGenres";
-import { HeaderPortal } from "../../components/HeaderPortal";
-import PeriodSelector from "../../components/PeriodSelector";
-import { useYearChanger } from "../../hooks/use-year-changer";
-import { getDurationString } from "../../utils";
-import { internetStats } from "./api";
+import { MusicGenres } from "../../../charts/MusicGenres";
+import { HeaderPortal } from "../../../components/HeaderPortal";
+import PeriodSelector from "../../../components/PeriodSelector";
+import { useYearChanger } from "../../../hooks/use-year-changer";
+import { getDurationString } from "../../../utils";
+import { internetStats } from "../api";
 
 export default function Stats({ year }: { year: string }) {
 	const [period, listQuery, goPrevious, goNext, canGoPrevious, canGoNext] = useYearChanger({

@@ -1,7 +1,8 @@
-import { expect, SEED, test } from "../fixtures";
+import { expect, resetDb, SEED, test, updateMongo } from "../fixtures";
 
 const API = "http://localhost:3001";
 const { artists, spectacles, performances } = SEED.show;
+const { mockPodcast, mockTube } = SEED.internet;
 
 test.describe("anonymous visitor", () => {
 	test("only sees the public home page", async ({ page }) => {
@@ -70,6 +71,102 @@ test.describe("anonymous visitor", () => {
 			expect((await request.get(`${API}/show/reports?from=2026-01-01&to=2026-12-31`)).status()).toBe(401);
 			expect((await request.post(`${API}/show/artists/save`, { data: { name: "Intrus" } })).status()).toBe(401);
 			expect((await request.delete(`${API}/show/artists/${artists.alice.id}`)).status()).toBe(401);
+		});
+	});
+
+	test.describe("internet (read only)", () => {
+		test("list without add or edit buttons, and no Sync Podcast", async ({ page }) => {
+			await page.goto("/");
+			await page.getByRole("link", { name: "Internet" }).click();
+			await expect(page).toHaveURL(/\/internet\/history\/\d{4}-\d{2}$/);
+			await expect(page.getByRole("link", { name: "Sync Podcast" })).toHaveCount(0);
+
+			await page.goto("/internet/list");
+			await expect(page.getByRole("link", { name: mockPodcast.name })).toBeVisible();
+			await expect(page.getByRole("columnheader", { name: "Actions" })).toHaveCount(0);
+			await expect(page.getByRole("button", { name: "Ajouter un programme" })).toHaveCount(0);
+			await expect(page.getByTitle("Modifier")).toHaveCount(0);
+		});
+
+		test("history and details without add, edit or delete buttons", async ({ page }) => {
+			await page.goto("/internet/history/2026-10");
+			await expect(page.getByRole("link", { name: mockPodcast.name, exact: true })).toBeVisible();
+			await expect(page.getByRole("button", { name: "Ajouter un programme" })).toHaveCount(0);
+
+			await page.goto(`/internet/${mockPodcast.id}`);
+			await expect(page.getByRole("heading", { name: mockPodcast.name })).toBeVisible();
+			await expect(page.getByText("Podcast épisode 0")).toBeVisible();
+			await expect(page.getByTitle("Modifier")).toHaveCount(0);
+			await expect(page.getByTitle("Supprimer")).toHaveCount(0);
+			await expect(page.getByTitle("Ajouter un épisode")).toHaveCount(0);
+			await page.keyboard.press("Control+Shift+N");
+			await expect(page.getByRole("dialog", { name: "Ajouter épisode" })).toHaveCount(0);
+		});
+
+		test("stats are public", async ({ page }) => {
+			await page.goto("/internet/stats/2026");
+			await expect(page).toHaveURL("/internet/stats/2026");
+			await expect(page.getByRole("heading", { name: "Année 2026" })).toBeVisible();
+		});
+
+		for (const url of [
+			"/internet/sync",
+			"/internet/list/add",
+			`/internet/list/edit/${mockPodcast.id}`,
+			`/internet/${mockPodcast.id}/edit`,
+			`/internet/${mockPodcast.id}/add`,
+			"/internet/history/2026-10/add",
+		]) {
+			test(`is sent back home from ${url}`, async ({ page }) => {
+				await page.goto(url);
+				await expect(page).toHaveURL("/");
+			});
+		}
+
+		test("reads the public endpoints but cannot write", async ({ request }) => {
+			expect((await request.get(`${API}/internet/programs`)).status()).toBe(200);
+			expect((await request.get(`${API}/internet/id/${mockPodcast.id}`)).status()).toBe(200);
+			expect((await request.get(`${API}/internet/stats?from=2026-01-01&to=2026-12-31`)).status()).toBe(200);
+			expect((await request.get(`${API}/internet/sync`)).status()).toBe(401);
+			expect((await request.get(`${API}/internet/latest/${mockPodcast.id}`)).status()).toBe(401);
+			expect((await request.get(`${API}/internet/extract?url=https://example.com`)).status()).toBe(401);
+			expect(
+				(await request.post(`${API}/internet/save`, { data: { program: { name: "Intrus" } } })).status(),
+			).toBe(401);
+			expect(
+				(
+					await request.delete(`${API}/internet/programs/${mockPodcast.id}/episodes/${mockPodcast.id}`)
+				).status(),
+			).toBe(401);
+		});
+
+		test.describe("private program", () => {
+			test.beforeEach(() => updateMongo("internet", { id: mockTube.id }, { $set: { private: true } }));
+			test.afterEach(resetDb);
+
+			test("is hidden from the list, the history and the search", async ({ page, request }) => {
+				await page.goto("/internet/list");
+				await expect(page.getByRole("link", { name: mockPodcast.name })).toBeVisible();
+				await expect(page.getByRole("link", { name: mockTube.name })).toHaveCount(0);
+
+				await page.goto("/internet/history/2026-10");
+				await expect(page.getByRole("link", { name: mockPodcast.name, exact: true })).toBeVisible();
+				await expect(page.getByRole("link", { name: mockTube.name, exact: true })).toHaveCount(0);
+
+				const search = await (await request.get(`${API}/internet/programs?search=tube`)).json();
+				expect(search).toEqual([]);
+			});
+
+			test("is not found by id", async ({ request }) => {
+				expect((await request.get(`${API}/internet/id/${mockTube.id}`)).status()).toBe(404);
+			});
+
+			test("is left out of the stats", async ({ request }) => {
+				const stats = await (await request.get(`${API}/internet/stats?from=2026-01-01&to=2026-12-31`)).json();
+				const names = stats.programs.map((p: { name: string }) => p.name);
+				expect(names).toContain(mockPodcast.name);
+				expect(names).not.toContain(mockTube.name);
+			});
 		});
 	});
 });

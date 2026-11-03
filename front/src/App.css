@@ -871,8 +871,6 @@
 			/* For the vertical alignment */
 			display: flex;
 			align-items: end;
-			max-height: 4lh;
-			overflow: scroll;
 		}
 
 		.stats {

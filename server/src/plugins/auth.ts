@@ -2,11 +2,15 @@ import { fromNodeHeaders } from "better-auth/node";
 import fp from "fastify-plugin";
 
 import { auth } from "../auth";
+import { runInRequestContext, setViewerIsOwner } from "../request-context";
 
 // Default deny: the owner (any logged-in session) can do everything,
 // anonymous visitors only reach GET routes declared with `config: { public: true }`.
 export default fp(async (fastify) => {
 	fastify.decorateRequest("isOwner", false);
+
+	// Callback style on purpose: `done` (so the next hooks and the handler) runs inside the context
+	fastify.addHook("onRequest", (_request, _reply, done) => runInRequestContext(done));
 
 	fastify.addHook("onRequest", async (request, reply) => {
 		if (request.method === "OPTIONS" || request.url.startsWith(`${auth.options.basePath}/`)) {
@@ -15,6 +19,7 @@ export default fp(async (fastify) => {
 
 		const session = await auth.api.getSession({ headers: fromNodeHeaders(request.headers) });
 		request.isOwner = session !== null;
+		setViewerIsOwner(request.isOwner);
 
 		const isRead = request.method === "GET" || request.method === "HEAD";
 		if (request.isOwner || (isRead && request.routeOptions.config?.public)) {

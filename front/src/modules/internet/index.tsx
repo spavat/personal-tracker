@@ -6,6 +6,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 
 import SearchModal from "../../components/SearchModal";
 import Submenu from "../../components/Submenu";
+import { useIsOwner } from "../../hooks/use-is-owner";
 import { getProgramList } from "./api";
 import { linkItem, renderInternetResultItem } from "./search-fn";
 
@@ -28,16 +29,18 @@ const links = [
 	{
 		link: "/internet/sync",
 		label: "Sync Podcast",
+		ownerOnly: true,
 	},
 ];
 
 export default function AppInternet() {
+	const isOwner = useIsOwner();
 	const [isSearchProgramModalOpen, setSearchProgramModalOpen] = useState<boolean>(false);
 
 	useHotkeys("ctrl+shift+f", () => setSearchProgramModalOpen(true), { preventDefault: true });
 	return (
 		<>
-			<Submenu links={links} />
+			<Submenu links={links.filter((link) => isOwner || !link.ownerOnly)} />
 
 			<div className="module internet">
 				<Outlet />

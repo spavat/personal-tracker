@@ -20,6 +20,7 @@ export interface ProgramInputs {
 		tags?: Array<Item>;
 		refs?: Array<ItemRef>;
 		description?: string;
+		private?: boolean;
 		type?: string;
 		profile?: string;
 		banner?: string;

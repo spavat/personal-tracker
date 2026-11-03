@@ -29,6 +29,7 @@ export interface ProgramMongo {
 	tags?: Array<string>;
 	refs?: Record<string, string>;
 	description?: string;
+	private?: boolean;
 }
 
 export function buildEpisode(input: any) {

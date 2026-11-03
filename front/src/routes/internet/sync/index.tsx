@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { programsQuery, syncQuery } from "../../../modules/internet/api";
-import Sync from "../../../modules/internet/Sync";
+import Sync from "../../../modules/internet/pages/Sync";
 
 export const Route = createFileRoute("/internet/sync/")({
 	loader: ({ context }) =>

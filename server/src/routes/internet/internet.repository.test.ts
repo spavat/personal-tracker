@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { runInRequestContext, setViewerIsOwner } from "../../request-context";
 import { InternetRepository } from "./internet.repository";
 
 function buildRepo() {
@@ -34,5 +35,40 @@ describe("InternetRepository.updateEpisode", () => {
 		await repo.updateEpisode("p1", { id: "e1", durationReal: 10, tags: ["a"], contextTags: ["b"] });
 
 		expect(updateOne.mock.calls[0][1]).not.toHaveProperty("$unset");
+	});
+});
+
+describe("InternetRepository private programs", () => {
+	function buildReadRepo() {
+		const findOne = vi.fn();
+		const aggregate = vi.fn(() => ({ toArray: () => [] }));
+		const mongo = { db: { collection: () => ({ findOne, aggregate }) } } as any;
+		return { repo: new InternetRepository(mongo), findOne, aggregate };
+	}
+	const listFilters = { search: "", sortField: "name", sortDirection: "asc" };
+
+	it("hides private programs from anonymous visitors", () => {
+		const { repo, findOne, aggregate } = buildReadRepo();
+
+		runInRequestContext(() => {
+			repo.findById("p1");
+			repo.findAll(listFilters);
+		});
+
+		expect(findOne).toHaveBeenCalledWith({ private: { $ne: true }, id: "p1" });
+		expect((aggregate.mock.calls[0] as any)[0][0].$match).toHaveProperty("private", { $ne: true });
+	});
+
+	it("shows every program to the owner", () => {
+		const { repo, findOne, aggregate } = buildReadRepo();
+
+		runInRequestContext(() => {
+			setViewerIsOwner(true);
+			repo.findById("p1");
+			repo.findAll(listFilters);
+		});
+
+		expect(findOne).toHaveBeenCalledWith({ id: "p1" });
+		expect((aggregate.mock.calls[0] as any)[0][0].$match).not.toHaveProperty("private");
 	});
 });

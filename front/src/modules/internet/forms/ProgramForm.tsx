@@ -108,6 +108,11 @@ export default function ProgramForm({ onLatestAsked }: { onLatestAsked?: (type: 
 						<span>Description</span>
 						<textarea {...register("program.description")} />
 					</label>
+
+					<label className="form-field checkbox full-width">
+						<input type="checkbox" {...register("program.private")} />
+						Privé
+					</label>
 				</div>
 			</div>
 

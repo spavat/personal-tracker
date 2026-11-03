@@ -62,7 +62,11 @@ beforeEach(() => {
 describe("ListProgramsUseCase", () => {
 	it("defaults the sort and normalises search", () => {
 		const repo = fakeRepo();
-		new ListProgramsUseCase(asRepo(repo)).execute({} as any, asLog(makeLog()));
+		const imageStorage = { resolveImages: vi.fn((p) => ({ ...p, resolved: true })) };
+		new ListProgramsUseCase(asRepo(repo), imageStorage as unknown as ImageStorageRepository).execute(
+			{} as any,
+			asLog(makeLog()),
+		);
 		expect(repo.findAll).toHaveBeenCalledWith({ search: "", sortField: "name", sortDirection: "asc" });
 	});
 });

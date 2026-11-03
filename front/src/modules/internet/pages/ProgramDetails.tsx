@@ -3,11 +3,12 @@ import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { Fragment, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 
-import Badge from "../../components/Badge";
-import { API_BASE_URL } from "../../config";
-import { formatDate, formatDateTime, formatDay, getDurationString, getPeriodDifference } from "../../utils";
-import { programDetailsQuery } from "./api";
-import { getIconType } from "./search-fn";
+import Badge from "../../../components/Badge";
+import { API_BASE_URL } from "../../../config";
+import { useIsOwner } from "../../../hooks/use-is-owner";
+import { formatDate, formatDateTime, formatDay, getDurationString, getPeriodDifference } from "../../../utils";
+import { programDetailsQuery } from "../api";
+import { getIconType } from "../search-fn";
 
 function getDomain(url: string) {
 	try {
@@ -20,6 +21,7 @@ function getDomain(url: string) {
 export default function ProgramDetails({ programId }: { programId: string }) {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const isOwner = useIsOwner();
 
 	function goToCreationModal() {
 		navigate({
@@ -32,10 +34,14 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 		});
 	}
 
-	useHotkeys("ctrl+shift+n", (e) => {
-		e.preventDefault();
-		goToCreationModal();
-	});
+	useHotkeys(
+		"ctrl+shift+n",
+		(e) => {
+			e.preventDefault();
+			goToCreationModal();
+		},
+		{ enabled: isOwner },
+	);
 
 	const { data: program } = useSuspenseQuery(programDetailsQuery(programId));
 
@@ -60,29 +66,36 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 					<h2>
 						{program.name}
 						{program.shortName && <span className="subTitle"> ({program.shortName})</span>}
-						<button
-							type="button"
-							title="Modifier"
-							onClick={() =>
-								navigate({
-									to: "/internet/$programId/edit",
-									params: { programId: program.id },
-									search: { returnTo: location.pathname },
-									replace: true,
-									resetScroll: false,
-									mask: { to: "/internet/$programId", params: { programId: program.id } },
-								})
-							}
-						>
-							<i className="fa-regular fa-pen-to-square"></i>
-						</button>
+						{isOwner && (
+							<button
+								type="button"
+								title="Modifier"
+								onClick={() =>
+									navigate({
+										to: "/internet/$programId/edit",
+										params: { programId: program.id },
+										search: { returnTo: location.pathname },
+										replace: true,
+										resetScroll: false,
+										mask: { to: "/internet/$programId", params: { programId: program.id } },
+									})
+								}
+							>
+								<i className="fa-regular fa-pen-to-square"></i>
+							</button>
+						)}
 					</h2>
 				</div>
 
 				<div className="general">
 					{program.profile && (
 						<div className="profile">
-							<img src={`${API_BASE_URL}${program.profile}`} alt="" className="program-profile" />
+							<img
+								src={`${API_BASE_URL}${program.profile}`}
+								alt=""
+								className="program-profile"
+								style={{ viewTransitionName: `program-profile-${program.id}` }}
+							/>
 						</div>
 					)}
 					<div>
@@ -189,7 +202,7 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 						<th>Nom</th>
 						<th>Tags</th>
 						<th>Durée</th>
-						<th>Actions</th>
+						{isOwner && <th>Actions</th>}
 					</tr>
 				</thead>
 				<tbody>
@@ -250,41 +263,43 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 										{getDurationString(episode.durationReal ?? episode.duration)}
 										{notFull ? "*" : ""}
 									</td>
-									<td data-label="Actions">
-										<button
-											type="button"
-											title="Modifier"
-											onClick={() =>
-												navigate({
-													to: "/internet/$programId/episode/$episodeId/edit",
-													params: { programId, episodeId: episode.id },
-													search: { returnTo: location.pathname },
-													replace: true,
-													resetScroll: false,
-													mask: { to: "/internet/$programId", params: { programId } },
-												})
-											}
-										>
-											<i className="fa-regular fa-pen-to-square"></i>
-										</button>
-										&nbsp;
-										<button
-											type="button"
-											title="Supprimer"
-											onClick={() =>
-												navigate({
-													to: "/internet/$programId/episode/$episodeId/delete",
-													params: { programId, episodeId: episode.id },
-													search: { returnTo: location.pathname },
-													replace: true,
-													resetScroll: false,
-													mask: { to: "/internet/$programId", params: { programId } },
-												})
-											}
-										>
-											<i className="fa-regular fa-trash-can"></i>
-										</button>
-									</td>
+									{isOwner && (
+										<td data-label="Actions">
+											<button
+												type="button"
+												title="Modifier"
+												onClick={() =>
+													navigate({
+														to: "/internet/$programId/episode/$episodeId/edit",
+														params: { programId, episodeId: episode.id },
+														search: { returnTo: location.pathname },
+														replace: true,
+														resetScroll: false,
+														mask: { to: "/internet/$programId", params: { programId } },
+													})
+												}
+											>
+												<i className="fa-regular fa-pen-to-square"></i>
+											</button>
+											&nbsp;
+											<button
+												type="button"
+												title="Supprimer"
+												onClick={() =>
+													navigate({
+														to: "/internet/$programId/episode/$episodeId/delete",
+														params: { programId, episodeId: episode.id },
+														search: { returnTo: location.pathname },
+														replace: true,
+														resetScroll: false,
+														mask: { to: "/internet/$programId", params: { programId } },
+													})
+												}
+											>
+												<i className="fa-regular fa-trash-can"></i>
+											</button>
+										</td>
+									)}
 								</tr>
 								{isOpened && (
 									<tr>
@@ -298,6 +313,7 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 										</td>
 										<td></td>
 										<td></td>
+										{isOwner && <td></td>}
 									</tr>
 								)}
 							</Fragment>
@@ -307,14 +323,16 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 				<tfoot></tfoot>
 			</table>
 
-			<div className="fab-container">
-				<button type="button" className="fab-main" onClick={goToCreationModal} title="Ajouter un épisode">
-					<div className="pulse"></div>
-					<div className="heart-line">
-						<i className="fa-solid fa-plus"></i>
-					</div>
-				</button>
-			</div>
+			{isOwner && (
+				<div className="fab-container">
+					<button type="button" className="fab-main" onClick={goToCreationModal} title="Ajouter un épisode">
+						<div className="pulse"></div>
+						<div className="heart-line">
+							<i className="fa-solid fa-plus"></i>
+						</div>
+					</button>
+				</div>
+			)}
 
 			<Outlet />
 		</>

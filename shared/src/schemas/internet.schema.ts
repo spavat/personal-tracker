@@ -44,6 +44,7 @@ export const ProgramSchema = z.object({
 	refs: refsSchema.optional(),
 	description: z.string().optional(),
 	type: z.string().optional(),
+	private: z.boolean().optional(),
 });
 
 export type Episode = z.infer<typeof EpisodeSchema>;
