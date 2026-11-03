@@ -2,6 +2,7 @@ import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
 import { HeaderPortal } from "../../components/HeaderPortal";
 import PeriodSelector from "../../components/PeriodSelector";
+import { useIsOwner } from "../../hooks/use-is-owner";
 import { useYearChanger } from "../../hooks/use-year-changer";
 import { formatDate } from "../../utils";
 import { bookHistory } from "./api";
@@ -10,6 +11,7 @@ import { getStatusIcon } from "./utils";
 export default function History({ year }: { year: string }) {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const isOwner = useIsOwner();
 
 	const [period, listQuery, goPrevious, goNext, canGoPrevious, canGoNext] = useYearChanger({
 		...bookHistory,
@@ -66,28 +68,30 @@ export default function History({ year }: { year: string }) {
 				))}
 			</div>
 
-			<div className="fab-container">
-				<button
-					type="button"
-					className="fab-main"
-					title="Ajouter un livre"
-					onClick={() =>
-						navigate({
-							to: "/reading-book/history/$year/add",
-							params: { year },
-							search: { returnTo: location.pathname },
-							replace: true,
-							resetScroll: false,
-							mask: { to: "/reading-book/history/$year", params: { year } },
-						})
-					}
-				>
-					<div className="pulse"></div>
-					<div className="heart-line">
-						<i className="fa-solid fa-plus"></i>
-					</div>
-				</button>
-			</div>
+			{isOwner && (
+				<div className="fab-container">
+					<button
+						type="button"
+						className="fab-main"
+						title="Ajouter un livre"
+						onClick={() =>
+							navigate({
+								to: "/reading-book/history/$year/add",
+								params: { year },
+								search: { returnTo: location.pathname },
+								replace: true,
+								resetScroll: false,
+								mask: { to: "/reading-book/history/$year", params: { year } },
+							})
+						}
+					>
+						<div className="pulse"></div>
+						<div className="heart-line">
+							<i className="fa-solid fa-plus"></i>
+						</div>
+					</button>
+				</div>
+			)}
 			<Outlet />
 		</>
 	);

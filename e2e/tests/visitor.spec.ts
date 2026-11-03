@@ -4,6 +4,8 @@ const API = "http://localhost:3001";
 const { artists, spectacles, performances } = SEED.show;
 const { mockPodcast, mockTube } = SEED.internet;
 const { discovery, genres: musicGenres } = SEED.music;
+const { alice } = SEED.book;
+const ALICE_READING_ID = "0883b913-75f8-4cf2-83b2-a9b832a9311e";
 
 test.describe("anonymous visitor", () => {
 	test("only sees the public home page", async ({ page }) => {
@@ -12,7 +14,8 @@ test.describe("anonymous visitor", () => {
 		await expect(page.getByRole("link", { name: "Se connecter" })).toBeVisible();
 		await expect(page.getByRole("link", { name: "Spectacle" })).toBeVisible();
 		await expect(page.getByRole("link", { name: "Musique" })).toBeVisible();
-		await expect(page.getByRole("link", { name: "Livre" })).toHaveCount(0);
+		await expect(page.getByRole("link", { name: "Livre" })).toBeVisible();
+		await expect(page.getByRole("link", { name: "Jeux" })).toHaveCount(0);
 		await expect(page.getByRole("link", { name: "Argent" })).toHaveCount(0);
 	});
 
@@ -233,6 +236,73 @@ test.describe("anonymous visitor", () => {
 			expect((await request.delete(`${API}/music/${discovery.id}`)).status()).toBe(401);
 			expect((await request.post(`${API}/music/genres/save`, { data: { name: "Intrus" } })).status()).toBe(401);
 			expect((await request.delete(`${API}/music/genres/${musicGenres.rock.id}`)).status()).toBe(401);
+		});
+	});
+
+	test.describe("reading book (read only)", () => {
+		test("history and list without add buttons", async ({ page }) => {
+			await page.goto("/");
+			await page.getByRole("link", { name: "Livre" }).click();
+			await expect(page).toHaveURL(/\/reading-book\/history\/\d{4}$/);
+
+			await page.goto("/reading-book/history/2026");
+			await expect(page.getByRole("link", { name: alice.book })).toBeVisible();
+			await expect(page.getByRole("button", { name: "Ajouter un livre" })).toHaveCount(0);
+
+			await page.goto("/reading-book/list");
+			await expect(page.getByRole("link", { name: alice.book })).toBeVisible();
+			await expect(page.getByRole("columnheader", { name: "Actions" })).toHaveCount(0);
+			await expect(page.getByRole("button", { name: "Ajouter un livre" })).toHaveCount(0);
+		});
+
+		test("details without edit buttons", async ({ page }) => {
+			await page.goto(`/reading-book/book/${alice.id}`);
+			await expect(page.getByRole("heading", { name: alice.book })).toBeVisible();
+			await expect(page.getByText("Statut : complete")).toBeVisible();
+			await expect(page.getByTitle("Modifier")).toHaveCount(0);
+			await expect(page.getByRole("button", { name: "+ Commencer une lecture" })).toHaveCount(0);
+			await expect(page.getByTitle("Activer la saisie rapide")).toHaveCount(0);
+		});
+
+		test.describe("in-progress reading", () => {
+			test.beforeEach(() =>
+				updateMongo("reading_book", { id: alice.id }, { $set: { "readings.0.status": "in-progress" } }),
+			);
+			test.afterEach(resetDb);
+
+			test("is shown read only", async ({ page }) => {
+				await page.goto(`/reading-book/book/${alice.id}`);
+				await expect(page.getByText("Statut : in-progress")).toBeVisible();
+				await expect(page.getByText("I: Down the Rabbit-Hole : 05/02/2026")).toBeVisible();
+				await expect(page.getByRole("combobox")).toHaveCount(0);
+				await expect(page.getByRole("button", { name: "Enregistrer" })).toHaveCount(0);
+				await expect(page.getByRole("button", { name: "Supprimer" })).toHaveCount(0);
+				await expect(page.getByRole("button", { name: "Ajouter un contexte" })).toHaveCount(0);
+			});
+		});
+
+		for (const url of [
+			"/reading-book/list/add",
+			"/reading-book/history/2026/add",
+			`/reading-book/book/${alice.id}/edit`,
+			`/reading-book/book/${alice.id}/model`,
+			`/reading-book/book/${alice.id}/reading/${ALICE_READING_ID}/delete`,
+		]) {
+			test(`is sent back home from ${url}`, async ({ page }) => {
+				await page.goto(url);
+				await expect(page).toHaveURL("/");
+			});
+		}
+
+		test("reads the public endpoints but cannot write", async ({ request }) => {
+			expect((await request.get(`${API}/reading-book/books`)).status()).toBe(200);
+			expect((await request.get(`${API}/reading-book/books/${alice.id}`)).status()).toBe(200);
+			expect((await request.get(`${API}/reading-book/reports?from=2026-01-01&to=2026-12-31`)).status()).toBe(401);
+			expect((await request.post(`${API}/reading-book/save`, { data: { book: "Intrus" } })).status()).toBe(401);
+			expect((await request.post(`${API}/reading-book/books/${alice.id}/readings`)).status()).toBe(401);
+			expect(
+				(await request.delete(`${API}/reading-book/books/${alice.id}/readings/${ALICE_READING_ID}`)).status(),
+			).toBe(401);
 		});
 	});
 });

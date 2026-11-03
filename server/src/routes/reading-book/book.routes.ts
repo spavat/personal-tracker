@@ -40,6 +40,7 @@ const readingsBook: FastifyPluginAsyncZod = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/books",
 		{
+			config: { public: true },
 			schema: {
 				querystring: BookListRequestSchema,
 			},
@@ -49,6 +50,7 @@ const readingsBook: FastifyPluginAsyncZod = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/books/:id",
 		{
+			config: { public: true },
 			schema: {
 				params: BookDetailsParamsSchema,
 			},

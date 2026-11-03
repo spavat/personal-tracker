@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
 import { PendingContent } from "../../components/PendingContent";
+import { useIsOwner } from "../../hooks/use-is-owner";
 import { useSortTable } from "../../hooks/use-sort-table";
 import { formatDate } from "../../utils";
 import { bookListSort } from "./api";
@@ -8,6 +9,7 @@ import { bookListSort } from "./api";
 export default function List() {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const isOwner = useIsOwner();
 	const { query, headers, isPending } = useSortTable({
 		...bookListSort,
 		columnsList: [
@@ -20,7 +22,7 @@ export default function List() {
 			{ name: "Début", colName: "firstReadDate", isSortable: true },
 			{ name: "Fin", colName: "lastReadDate", isSortable: true },
 			{ name: "Pages", colName: "pages", isSortable: true },
-			{ name: "Actions", colName: "", isSortable: false },
+			...(isOwner ? [{ name: "Actions", colName: "", isSortable: false }] : []),
 		],
 	});
 
@@ -50,11 +52,13 @@ export default function List() {
 									<td>{formatDate(book.firstReadDate)}</td>
 									<td>{formatDate(book.lastReadDate)}</td>
 									<td>{book.pages !== null && `${book.pages} pages`}</td>
-									<td>
-										{/* <button key="edit" type="button" onClick={() => showPlayModal(game.id)}>
+									{isOwner && (
+										<td>
+											{/* <button key="edit" type="button" onClick={() => showPlayModal(game.id)}>
 									<i className="fa-regular fa-pen-to-square"></i>
 								</button> */}
-									</td>
+										</td>
+									)}
 								</tr>
 							);
 						})}
@@ -66,29 +70,31 @@ export default function List() {
 					</tfoot>
 				</table>
 			</PendingContent>
-			<div className="fab-container">
-				<button
-					type="button"
-					className="fab-main"
-					title="Ajouter un livre"
-					onClick={() =>
-						navigate({
-							to: "/reading-book/list/add",
-							search: { returnTo: location.pathname },
-							replace: true,
-							resetScroll: false,
-							mask: {
-								to: "/reading-book/list",
-							},
-						})
-					}
-				>
-					<div className="pulse"></div>
-					<div className="heart-line">
-						<i className="fa-solid fa-plus"></i>
-					</div>
-				</button>
-			</div>
+			{isOwner && (
+				<div className="fab-container">
+					<button
+						type="button"
+						className="fab-main"
+						title="Ajouter un livre"
+						onClick={() =>
+							navigate({
+								to: "/reading-book/list/add",
+								search: { returnTo: location.pathname },
+								replace: true,
+								resetScroll: false,
+								mask: {
+									to: "/reading-book/list",
+								},
+							})
+						}
+					>
+						<div className="pulse"></div>
+						<div className="heart-line">
+							<i className="fa-solid fa-plus"></i>
+						</div>
+					</button>
+				</div>
+			)}
 			<Outlet />
 		</>
 	);

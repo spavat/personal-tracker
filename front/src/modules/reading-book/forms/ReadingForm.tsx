@@ -10,6 +10,7 @@ import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { useIsOwner } from "../../../hooks/use-is-owner";
 import { saveReading } from "../api";
 import { ReadingFormItem } from "../ReadingFormItem";
 import { FrontReading } from "../types";
@@ -73,7 +74,8 @@ export function ReadingForm({
 
 	const [showQuickInput, setShowQuickInput] = useState(false);
 
-	const isEditable = reading.status === "in-progress";
+	const isOwner = useIsOwner();
+	const isEditable = isOwner && reading.status === "in-progress";
 	const mapReadingContext: FrontReading.MapReadingContext = new Map<string, Array<ReadingContextItem>>();
 	reading.details.forEach((item: ReadingDetails) => {
 		mapReadingContext.set(item.id, item.context);
@@ -123,29 +125,31 @@ export function ReadingForm({
 		<div className="card_item">
 			<form onSubmit={methods.handleSubmit(onSubmit)}>
 				<FormProvider {...methods}>
-					<div className="sticky-helper">
-						{showQuickInput && (
-							<>
-								<i className="fa-solid fa-crosshairs"></i> Saisie rapide&nbsp;
-								<input type="date" {...methods.register("quick.date")} />
-								<input
-									type="text"
-									{...methods.register("quick.contextTag")}
-									placeholder="Context tag"
-								/>
-								<button type="submit" title="Enregistrer" disabled={saveReadingMutation.isPending}>
-									<i className="fa-regular fa-floppy-disk"></i>
-								</button>
-							</>
-						)}
-						<button
-							type="button"
-							onClick={() => setShowQuickInput(!showQuickInput)}
-							title={showQuickInput ? "Masquer la saisie rapide" : "Activer la saisie rapide"}
-						>
-							<i className="fa-solid fa-crosshairs"></i>
-						</button>
-					</div>
+					{isOwner && (
+						<div className="sticky-helper">
+							{showQuickInput && (
+								<>
+									<i className="fa-solid fa-crosshairs"></i> Saisie rapide&nbsp;
+									<input type="date" {...methods.register("quick.date")} />
+									<input
+										type="text"
+										{...methods.register("quick.contextTag")}
+										placeholder="Context tag"
+									/>
+									<button type="submit" title="Enregistrer" disabled={saveReadingMutation.isPending}>
+										<i className="fa-regular fa-floppy-disk"></i>
+									</button>
+								</>
+							)}
+							<button
+								type="button"
+								onClick={() => setShowQuickInput(!showQuickInput)}
+								title={showQuickInput ? "Masquer la saisie rapide" : "Activer la saisie rapide"}
+							>
+								<i className="fa-solid fa-crosshairs"></i>
+							</button>
+						</div>
+					)}
 					<h3>
 						Lecture #{index + 1}{" "}
 						{isEditable && !showQuickInput && (

@@ -1,6 +1,7 @@
 import { ReadingModelItem } from "@personal-tracker/shared/reading-book";
 import { useFieldArray, useFormContext } from "react-hook-form";
 
+import { useIsOwner } from "../../hooks/use-is-owner";
 import { formatFullDate } from "../../utils";
 import { FrontReading } from "./types";
 import { getReadingDurationFromDates, getReadingIcons } from "./utils";
@@ -97,6 +98,7 @@ function ReadingFormItemLeaf({ modelItem, mapReadingContext, status, formValues,
 	const { control, getValues } = useFormContext();
 	const { fields, append, replace, remove } = useFieldArray({ control, name: contextKey });
 	const context = mapReadingContext.get(modelItem.id);
+	const isOwner = useIsOwner();
 
 	function applyQuickInput() {
 		replace({
@@ -106,7 +108,7 @@ function ReadingFormItemLeaf({ modelItem, mapReadingContext, status, formValues,
 	}
 
 	if (!context) {
-		if (status === "in-progress") {
+		if (status === "in-progress" && isOwner) {
 			return (
 				<li>
 					{showQuickInput && (
@@ -141,7 +143,8 @@ function ReadingFormItemLeaf({ modelItem, mapReadingContext, status, formValues,
 					<br />
 				</li>
 			);
-		} else if (status === "complete") {
+		} else if (status === "complete" || status === "in-progress") {
+			// in-progress only reaches here for a visitor: shown read only
 			return (
 				<li>
 					<span>{modelItem.title}</span> <br />

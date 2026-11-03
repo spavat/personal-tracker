@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
+import { useIsOwner } from "../../hooks/use-is-owner";
 import { addReading, bookDetailsQuery } from "./api";
 import { ReadingForm } from "./forms/ReadingForm";
 import { renderItemModel } from "./render-modele-fn";
@@ -9,6 +10,7 @@ export default function BookDetails({ bookId }: { bookId: string }) {
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 	const location = useLocation();
+	const isOwner = useIsOwner();
 	const addReadingMutation = useMutation({
 		mutationFn: addReading,
 		onSuccess: () => {
@@ -30,20 +32,22 @@ export default function BookDetails({ bookId }: { bookId: string }) {
 				<div className="title">
 					<h2>
 						{book.book}
-						<button
-							type="button"
-							title="Modifier"
-							onClick={() =>
-								navigate({
-									to: "/reading-book/book/$bookId/edit",
-									params: { bookId: book.id },
-									search: { returnTo: location.pathname },
-									mask: { to: "/reading-book/book/$bookId", params: { bookId: book.id } },
-								})
-							}
-						>
-							<i className="fa-regular fa-pen-to-square"></i>
-						</button>
+						{isOwner && (
+							<button
+								type="button"
+								title="Modifier"
+								onClick={() =>
+									navigate({
+										to: "/reading-book/book/$bookId/edit",
+										params: { bookId: book.id },
+										search: { returnTo: location.pathname },
+										mask: { to: "/reading-book/book/$bookId", params: { bookId: book.id } },
+									})
+								}
+							>
+								<i className="fa-regular fa-pen-to-square"></i>
+							</button>
+						)}
 					</h2>
 				</div>
 				<div className="general">
@@ -71,26 +75,30 @@ export default function BookDetails({ bookId }: { bookId: string }) {
 						model={book.model}
 					/>
 				))}
-				<button type="button" className="card_item new-reading" onClick={addNewReading}>
-					+ Commencer une lecture
-				</button>
+				{isOwner && (
+					<button type="button" className="card_item new-reading" onClick={addNewReading}>
+						+ Commencer une lecture
+					</button>
+				)}
 			</div>
 
 			<h2>
 				Modele
-				<button
-					type="button"
-					title="Modifier"
-					onClick={() =>
-						navigate({
-							to: "/reading-book/book/$bookId/model",
-							params: { bookId: book.id },
-							search: { returnTo: location.pathname },
-						})
-					}
-				>
-					<i className="fa-regular fa-pen-to-square"></i>
-				</button>
+				{isOwner && (
+					<button
+						type="button"
+						title="Modifier"
+						onClick={() =>
+							navigate({
+								to: "/reading-book/book/$bookId/model",
+								params: { bookId: book.id },
+								search: { returnTo: location.pathname },
+							})
+						}
+					>
+						<i className="fa-regular fa-pen-to-square"></i>
+					</button>
+				)}
 			</h2>
 			<div className="grid">
 				<div className="card_item">
