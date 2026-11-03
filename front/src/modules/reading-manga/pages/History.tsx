@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
 import { HeaderPortal } from "../../../components/HeaderPortal";
 import PeriodSelector from "../../../components/PeriodSelector";
+import { useIsOwner } from "../../../hooks/use-is-owner";
 import { useYearChanger } from "../../../hooks/use-year-changer";
 import { formatMonth } from "../../../utils";
 import { mangaHistory } from "../api";
@@ -13,6 +14,7 @@ import { mergeReadings } from "../utils";
 export default function History({ year }: { year: string }) {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const isOwner = useIsOwner();
 	const [period, listQuery, goPrevious, goNext, canGoPrevious, canGoNext] = useYearChanger({
 		...mangaHistory,
 		navigationIsDisabled: (period: string, delta: "previous" | "next") => {
@@ -73,31 +75,33 @@ export default function History({ year }: { year: string }) {
 					</div>
 				);
 			})}
-			<div className="fab-container">
-				<button
-					type="button"
-					className="fab-main"
-					title="Ajouter un manga"
-					onClick={() =>
-						navigate({
-							to: "/reading-manga/history/$year/add",
-							params: { year: period },
-							search: { returnTo: location.pathname },
-							replace: true,
-							resetScroll: false,
-							mask: {
-								to: "/reading-manga/history/$year",
+			{isOwner && (
+				<div className="fab-container">
+					<button
+						type="button"
+						className="fab-main"
+						title="Ajouter un manga"
+						onClick={() =>
+							navigate({
+								to: "/reading-manga/history/$year/add",
 								params: { year: period },
-							},
-						})
-					}
-				>
-					<div className="pulse"></div>
-					<div className="heart-line">
-						<i className="fa-solid fa-plus"></i>
-					</div>
-				</button>
-			</div>
+								search: { returnTo: location.pathname },
+								replace: true,
+								resetScroll: false,
+								mask: {
+									to: "/reading-manga/history/$year",
+									params: { year: period },
+								},
+							})
+						}
+					>
+						<div className="pulse"></div>
+						<div className="heart-line">
+							<i className="fa-solid fa-plus"></i>
+						</div>
+					</button>
+				</div>
+			)}
 			<Outlet />
 		</>
 	);

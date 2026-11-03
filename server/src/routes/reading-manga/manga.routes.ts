@@ -20,6 +20,7 @@ const readingsManga: FastifyPluginAsyncZod = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/mangas",
 		{
+			config: { public: true },
 			schema: {
 				querystring: MangaListRequestSchema,
 			},
@@ -29,6 +30,7 @@ const readingsManga: FastifyPluginAsyncZod = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/mangas/:id",
 		{
+			config: { public: true },
 			schema: { params: MangaDetailsParamsSchema },
 		},
 		async (request, reply) =>
