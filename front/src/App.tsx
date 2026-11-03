@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { mainNavItems, moneyNavItem } from "./components/nav-items";
 import PageTitle from "./components/PageTitle";
 import Sidebar from "./components/Sidebar";
+import { APP_VERSION, BUILD_DATE } from "./config";
 import { useHeaderSlot } from "./hooks/use-header-slot";
 
 const allNavItems = [...mainNavItems, moneyNavItem];
@@ -50,7 +51,19 @@ export default function App() {
 				<main>
 					<Outlet />
 				</main>
-				<footer className="footer">© 2026 isieibi</footer>
+				<footer className="footer">
+					© 2026 spavat
+					<small className="app-version">
+						{APP_VERSION ? (
+							<a href={`https://github.com/spavat/personal-tracker/commit/${APP_VERSION}`}>
+								{APP_VERSION.slice(0, 7)}
+							</a>
+						) : (
+							"dev"
+						)}
+						{BUILD_DATE && ` · ${new Date(BUILD_DATE).toLocaleDateString("fr-FR")}`}
+					</small>
+				</footer>
 			</div>
 		</div>
 	);

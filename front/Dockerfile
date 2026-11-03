@@ -12,6 +12,10 @@ COPY shared shared
 COPY front front
 # The API is served on the same origin under /api (Traefik strips the prefix before the server)
 ENV VITE_API_BASE_URL=/api
+# Shown in the footer; declared late so a new version doesn't invalidate the npm ci layer
+ARG APP_VERSION
+ARG BUILD_DATE
+ENV VITE_APP_VERSION=$APP_VERSION VITE_BUILD_DATE=$BUILD_DATE
 # front's tsc resolves @personal-tracker/shared types from shared/dist
 RUN npm run build --prefix shared && npm run build --prefix front
 

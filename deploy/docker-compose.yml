@@ -40,7 +40,8 @@ services:
             DATABASE_URL: postgresql://tracker:${POSTGRES_PASSWORD}@postgres:5432/personal_tracker
             MONGODB_URL: mongodb://mongo:27017/personal_tracker
             PORT: 3000
-            BETTER_AUTH_URL: https://tracker.spvt.fr/api
+            # no /api: Traefik strips it, and a path here would replace BetterAuth's basePath (/auth)
+            BETTER_AUTH_URL: https://tracker.spvt.fr
             BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?}
             FRONT_URL: https://tracker.spvt.fr
             S3_ENDPOINT: ${S3_ENDPOINT:?}
