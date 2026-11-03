@@ -1,4 +1,4 @@
-import type { SpectacleDetailsResponse, SpectacleListResponse } from "@shared/dist/schemas/show.schema";
+import type { SpectacleDetailsResponse, SpectacleListResponse } from "@personal-tracker/shared/show";
 import type { FastifyBaseLogger } from "fastify";
 
 import type { SaveSpectacleBody } from "./spectacle.entity";

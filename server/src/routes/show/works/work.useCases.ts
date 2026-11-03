@@ -1,4 +1,4 @@
-import type { WorkListResponse } from "@shared/dist/schemas/show.schema";
+import type { WorkListResponse } from "@personal-tracker/shared/show";
 import type { FastifyBaseLogger } from "fastify";
 
 import type { SaveWorkBody } from "./work.entity";

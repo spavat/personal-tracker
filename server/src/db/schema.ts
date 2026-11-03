@@ -1,4 +1,4 @@
-import type { SpectacleLink } from "@shared/dist/schemas/show.schema";
+import type { SpectacleLink } from "@personal-tracker/shared/show";
 
 import {
 	snakeCase,

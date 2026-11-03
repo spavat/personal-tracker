@@ -2,8 +2,8 @@ import type { FastifyPluginAsync } from "fastify";
 
 import { ZodTypeProvider } from "@marcalexiei/fastify-type-provider-zod";
 import "@fastify/mongodb";
-import { SearchQuerystringRequestSchema } from "@shared/dist/schemas/music.schema";
-import { GetReportQuerystringRequestSchema, GetReportResponseSchema } from "@shared/dist/schemas/show.schema";
+import { SearchQuerystringRequestSchema } from "@personal-tracker/shared/music";
+import { GetReportQuerystringRequestSchema, GetReportResponseSchema } from "@personal-tracker/shared/show";
 
 import { ArtistRepository } from "./artists/artist.repository";
 import { PerformanceRepository } from "./performances/performance.repository";

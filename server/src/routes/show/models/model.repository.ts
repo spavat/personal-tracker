@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 
-import { SaveModelBodyRequest } from "@shared/dist/schemas/show.schema";
+import { SaveModelBodyRequest } from "@personal-tracker/shared/show";
 import { eq } from "drizzle-orm";
 
 import { showArtist, showModel, showModelRole } from "../../../db/schema";

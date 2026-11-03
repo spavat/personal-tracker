@@ -7,7 +7,7 @@ import {
 	WorkDetailsParamsRequestSchema,
 	WorkGroupedListRequestSchema,
 	WorkSchema,
-} from "@shared/dist/schemas/show.schema";
+} from "@personal-tracker/shared/show";
 
 import { WorkRepository } from "./work.repository";
 import {

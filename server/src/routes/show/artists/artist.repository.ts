@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 
-import { SaveArtistBodyRequest } from "@shared/dist/schemas/show.schema";
+import { SaveArtistBodyRequest } from "@personal-tracker/shared/show";
 import { AnyColumn, asc, desc, eq, getColumns, sql, SQL } from "drizzle-orm";
 
 import { contains } from "../../../db/contains";

@@ -6,7 +6,7 @@ import {
 	SpectacleDetailsParamsRequestSchema,
 	SpectacleGroupedListRequestSchema,
 	SpectacleSchema,
-} from "@shared/dist/schemas/show.schema";
+} from "@personal-tracker/shared/show";
 
 import { SpectacleRepository } from "./spectacle.repository";
 import {

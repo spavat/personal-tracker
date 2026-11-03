@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/.env
+**/.env.local
+**/*.log
+# stale build info would make tsc skip emitting shared/dist
+**/*.tsbuildinfo
+.git
+.claude
+.husky
+.github
+# only the workspace manifest is needed (npm ci validates the lockfile against every workspace)
+e2e/*
+!e2e/package.json
