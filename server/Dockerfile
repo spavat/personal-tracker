@@ -22,7 +22,12 @@ COPY server/package.json server/
 COPY front/package.json front/
 COPY e2e/package.json e2e/
 # root "prepare" runs husky, a dev dependency not installed here
-RUN npm pkg delete scripts.prepare && npm ci --omit=dev -w server -w shared && npm cache clean --force
+# better-auth declares drizzle-kit/vitest/react-dom as optional peers: since they are in the lockfile
+# (as dev deps), npm marks them "devOptional" and --omit=dev keeps them, so remove them by hand (~170MB)
+RUN npm pkg delete scripts.prepare && npm ci --omit=dev -w server -w shared \
+	&& rm -rf node_modules/drizzle-kit node_modules/vitest node_modules/@vitest node_modules/vite \
+		node_modules/tsx node_modules/esbuild node_modules/@rolldown node_modules/@esbuild node_modules/lightningcss* node_modules/react-dom \
+	&& npm cache clean --force
 COPY --from=build /app/shared/dist shared/dist
 COPY --from=build /app/server/dist server/dist
 COPY server/drizzle server/drizzle
