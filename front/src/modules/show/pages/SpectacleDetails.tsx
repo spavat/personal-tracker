@@ -165,6 +165,7 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 												<Link
 													to="/shows/places/$placeId"
 													params={{ placeId: String(perf.place?.id) }}
+													viewTransition
 												>
 													{perf.place?.name}
 												</Link>

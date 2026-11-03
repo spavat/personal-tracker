@@ -138,26 +138,21 @@ export default function MediaGallery({
 								<i className="fa-regular fa-file-pdf"></i>
 							)}
 						</a>
+						{isOwner && onSetMain && item.contentType.startsWith("image/") && (
+							<button
+								type="button"
+								className="set-main"
+								title={item.id === mainPictureId ? "Retirer la photo principale" : "Photo principale"}
+								onClick={() => onSetMain(item.id === mainPictureId ? null : item.id)}
+							>
+								<i className={`${item.id === mainPictureId ? "fa-solid" : "fa-regular"} fa-star`}></i>
+							</button>
+						)}
 						<figcaption>
 							{"kind" in item && <span className="smalltext">{MEDIA_KIND_LABELS[item.kind]} </span>}
 							{item.label}
 							{isOwner && (
 								<span className="actions">
-									{onSetMain && item.contentType.startsWith("image/") && (
-										<button
-											type="button"
-											title={
-												item.id === mainPictureId
-													? "Retirer la photo principale"
-													: "Photo principale"
-											}
-											onClick={() => onSetMain(item.id === mainPictureId ? null : item.id)}
-										>
-											<i
-												className={`${item.id === mainPictureId ? "fa-solid" : "fa-regular"} fa-star`}
-											></i>
-										</button>
-									)}
 									<button
 										type="button"
 										title="Déplacer avant"

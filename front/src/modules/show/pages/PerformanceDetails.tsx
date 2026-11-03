@@ -47,6 +47,7 @@ export default function PerformanceDetails({ performanceId }: { performanceId: s
 							<Link
 								to="/shows/spectacles/$spectacleId"
 								params={{ spectacleId: String(details.spectacle.id) }}
+								viewTransition
 							>
 								{details.spectacle.name}
 							</Link>

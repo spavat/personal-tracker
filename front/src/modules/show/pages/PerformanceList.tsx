@@ -19,10 +19,10 @@ export default function PerformanceList() {
 	return (
 		<>
 			<PageTitle title={`${MODULE_NAME} > Représentations`} />
-			<h3>
+			<h2>
 				Représentations ({performances.filter((p) => !p.canceled).length})
 				<DisplaySelector value={display} onChange={changeDisplay} />
-			</h3>
+			</h2>
 
 			{display === "list" ? (
 				<table className="list performances alternate responsive">
@@ -47,6 +47,7 @@ export default function PerformanceList() {
 										<Link
 											to="/shows/performances/$performanceId"
 											params={{ performanceId: String(show.id) }}
+											viewTransition
 										>
 											{date}
 										</Link>{" "}
@@ -73,7 +74,11 @@ export default function PerformanceList() {
 										</b>
 									</td>
 									<td data-label="Lieu">
-										<Link to="/shows/places/$placeId" params={{ placeId: String(show.place?.id) }}>
+										<Link
+											to="/shows/places/$placeId"
+											params={{ placeId: String(show.place?.id) }}
+											viewTransition
+										>
 											{show.place?.name}
 										</Link>
 									</td>

@@ -10,7 +10,7 @@ import { useIsOwner } from "../../../hooks/use-is-owner";
 import { formatDate, getPeriodDifference } from "../../../utils";
 import { placeDetailsQuery } from "../api";
 import { MODULE_NAME } from "../constants";
-import { formatShowDate } from "../utils";
+import { formatShowDate, mediaSrc } from "../utils";
 
 export default function PlaceDetails({ placeId }: { placeId: string }) {
 	const navigate = useNavigate();
@@ -165,9 +165,19 @@ export default function PlaceDetails({ placeId }: { placeId: string }) {
 												{date} <span className="smalltext">{time}</span>
 											</td>
 											<td>
+												{perf.posterUrl && (
+													<img
+														src={mediaSrc(perf.posterUrl)}
+														alt=""
+														className="poster-thumb in-list"
+														style={{ viewTransitionName: `poster-${perf.id}` }}
+														loading="lazy"
+													/>
+												)}
 												<Link
 													to="/shows/spectacles/$spectacleId"
 													params={{ spectacleId: String(perf.spectacle.id) }}
+													viewTransition
 												>
 													{perf.spectacle.name}
 												</Link>

@@ -18,7 +18,13 @@ export default function Card({
 	return (
 		<div className="card_item artist">
 			{pictureUrl ? (
-				<img src={mediaSrc(pictureUrl)} alt="" className="portrait-card" loading="lazy" />
+				<img
+					src={mediaSrc(pictureUrl)}
+					alt=""
+					className="portrait-card"
+					loading="lazy"
+					style={{ viewTransitionName: `artist-portrait-${artist.id}` }}
+				/>
 			) : (
 				<div className="portrait-card">
 					<i className="fa-solid fa-user"></i>
@@ -26,7 +32,7 @@ export default function Card({
 			)}
 			<div>
 				<span className="title">
-					<Link to="/shows/artists/$artistId" params={{ artistId: String(artist.id) }}>
+					<Link to="/shows/artists/$artistId" params={{ artistId: String(artist.id) }} viewTransition>
 						{artist.name}
 					</Link>
 				</span>

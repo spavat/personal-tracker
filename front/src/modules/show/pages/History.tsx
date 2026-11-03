@@ -11,7 +11,7 @@ import { formatMonth } from "../../../utils";
 import { performanceHistory } from "../api";
 import { CastingIcon } from "../components/CastingIcon";
 import { MODULE_NAME } from "../constants";
-import { formatShowDate } from "../utils";
+import { formatShowDate, mediaSrc } from "../utils";
 
 export default function History({ year }: { year: string }) {
 	const navigate = useNavigate();
@@ -102,9 +102,19 @@ export default function History({ year }: { year: string }) {
 											</td>
 											<td>
 												<b>
+													{show.posterUrl && (
+														<img
+															src={mediaSrc(show.posterUrl)}
+															alt=""
+															className="poster-thumb in-list"
+															style={{ viewTransitionName: `poster-${show.id}` }}
+															loading="lazy"
+														/>
+													)}
 													<Link
 														to="/shows/spectacles/$spectacleId"
 														params={{ spectacleId: String(show.spectacle.id) }}
+														viewTransition
 													>
 														{show.spectacle.name}
 													</Link>
@@ -114,6 +124,7 @@ export default function History({ year }: { year: string }) {
 												<Link
 													to="/shows/places/$placeId"
 													params={{ placeId: String(show.place?.id) }}
+													viewTransition
 												>
 													{show.place?.name}
 												</Link>

@@ -45,7 +45,12 @@ export default function ArtistDetails({ artistId }: { artistId: string }) {
 			<div className="presentation-with-picture">
 				<div className="picture">
 					{details.pictureUrl ? (
-						<img src={mediaSrc(details.pictureUrl)} alt={details.name} className="artist-picture" />
+						<img
+							src={mediaSrc(details.pictureUrl)}
+							alt={details.name}
+							className="artist-picture"
+							style={{ viewTransitionName: `artist-portrait-${details.id}` }}
+						/>
 					) : (
 						<div className="portrait-card">
 							<i className="fa-solid fa-user"></i>
@@ -164,9 +169,19 @@ export default function ArtistDetails({ artistId }: { artistId: string }) {
 												{date} <span className="smalltext">{time}</span>
 											</td>
 											<td>
+												{perf.posterUrl && (
+													<img
+														src={mediaSrc(perf.posterUrl)}
+														alt=""
+														className="poster-thumb in-list"
+														style={{ viewTransitionName: `poster-${perf.id}` }}
+														loading="lazy"
+													/>
+												)}
 												<Link
 													to="/shows/spectacles/$spectacleId"
 													params={{ spectacleId: String(perf.spectacle.id) }}
+													viewTransition
 												>
 													{perf.spectacle.name}
 												</Link>
