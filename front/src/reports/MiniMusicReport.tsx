@@ -46,7 +46,7 @@ export default function MiniMusicReport({ year }: { year: string }) {
 									<td>
 										<b>{item.name}</b>
 									</td>
-									<td className="count">{getDurationString(item.duration)}</td>
+									<td className="count monospace">{getDurationString(item.duration)}</td>
 								</tr>
 							))}
 						</tbody>
@@ -65,7 +65,7 @@ export default function MiniMusicReport({ year }: { year: string }) {
 										<td>
 											<b>{item.name}</b>
 										</td>
-										<td className="count">{getDurationString(item.duration)}</td>
+										<td className="count monospace">{getDurationString(item.duration)}</td>
 									</tr>
 									<tr>
 										<td></td>
