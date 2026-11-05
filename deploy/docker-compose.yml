@@ -22,7 +22,7 @@ services:
             retries: 30
 
     mongo:
-        image: mongo:8.2
+        image: mongo:9.0
         restart: unless-stopped
         volumes:
             - mongo-data:/data/db
