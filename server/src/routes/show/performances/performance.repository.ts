@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import { and, asc, eq, gte, lt, notInArray, sql } from "drizzle-orm";
 
 import { showPerformance, showPlace, showRole, showSpectacle, showSpectacleMedia, showWork } from "../../../db/schema";
+import { visiblePerformanceWhere } from "../../../db/visible-performance";
 import { placeNameAt } from "../places/place.repository";
 
 export class PerformanceRepository {
@@ -62,7 +63,7 @@ export class PerformanceRepository {
 		}
 
 		return this.db.query.showPerformance.findMany({
-			where: { date },
+			where: { date, ...visiblePerformanceWhere() },
 			orderBy: { date: "asc" },
 			extras: { placeName: placeNameAt },
 			with: {
@@ -77,7 +78,7 @@ export class PerformanceRepository {
 
 	findByIdWithDetails(performanceId: number) {
 		return this.db.query.showPerformance.findFirst({
-			where: { id: performanceId },
+			where: { id: performanceId, ...visiblePerformanceWhere() },
 			extras: { placeName: placeNameAt },
 			with: {
 				spectacle: {

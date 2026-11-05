@@ -1,11 +1,12 @@
 import type { FastifyInstance } from "fastify";
 
-import { AnyColumn, asc, desc, eq, getColumns, sql, SQL } from "drizzle-orm";
+import { and, AnyColumn, asc, desc, eq, getColumns, sql, SQL } from "drizzle-orm";
 
 import type { SavePlaceBody } from "./place.entity";
 
 import { contains } from "../../../db/contains";
 import { showPerformance, showPlace, showPlaceFormerName } from "../../../db/schema";
+import { visiblePerformanceDate, visiblePerformanceWhere } from "../../../db/visible-performance";
 
 // Name of the place at the time of the performance:
 // the earliest former name still valid at that date, otherwise the latest name.
@@ -52,7 +53,10 @@ export class PlaceRepository {
 				nbSpectacles: colNbSpectacles.as("nbSpectacles"),
 			})
 			.from(showPlace)
-			.leftJoin(showPerformance, eq(showPerformance.placeId, showPlace.id))
+			.leftJoin(
+				showPerformance,
+				and(eq(showPerformance.placeId, showPlace.id), visiblePerformanceDate(showPerformance.date)),
+			)
 			.groupBy(showPlace.id)
 			.orderBy(sortFn(sql`${sortValue}`));
 	}
@@ -65,6 +69,7 @@ export class PlaceRepository {
 					orderBy: (formerName, { asc }) => [asc(formerName.untilDate)],
 				},
 				performance: {
+					where: visiblePerformanceWhere(),
 					orderBy: (performance, { asc }) => [asc(performance.date)],
 					extras: { placeName: placeNameAt },
 					with: {
@@ -86,6 +91,7 @@ export class PlaceRepository {
 			},
 			with: {
 				performance: {
+					where: visiblePerformanceWhere(),
 					with: {
 						place: true,
 					},

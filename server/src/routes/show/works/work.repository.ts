@@ -5,6 +5,8 @@ import { eq } from "drizzle-orm";
 import type { SaveWorkBody } from "./work.entity";
 
 import { showWork } from "../../../db/schema";
+import { hasVisiblePerformance, visiblePerformanceWhere } from "../../../db/visible-performance";
+import { viewerIsOwner } from "../../../request-context";
 import { placeNameAt } from "../places/place.repository";
 
 export class WorkRepository {
@@ -18,10 +20,13 @@ export class WorkRepository {
 
 	findAllWithSpectaclesPerformancesAndPlaces() {
 		return this.db.query.showWork.findMany({
+			where: viewerIsOwner() ? {} : { spectacle: hasVisiblePerformance() },
 			with: {
 				spectacle: {
+					where: hasVisiblePerformance(),
 					with: {
 						performance: {
+							where: visiblePerformanceWhere(),
 							extras: { placeName: placeNameAt },
 							with: {
 								place: true,

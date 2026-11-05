@@ -1,10 +1,11 @@
 import type { FastifyInstance } from "fastify";
 
 import { SaveArtistBodyRequest } from "@personal-tracker/shared/show";
-import { AnyColumn, asc, desc, eq, getColumns, sql, SQL } from "drizzle-orm";
+import { and, AnyColumn, asc, desc, eq, getColumns, sql, SQL } from "drizzle-orm";
 
 import { contains } from "../../../db/contains";
 import { showArtist, showPerformance, showRole } from "../../../db/schema";
+import { hasVisiblePerformance, visiblePerformanceDate } from "../../../db/visible-performance";
 import { placeNameAt } from "../places/place.repository";
 
 export class ArtistRepository {
@@ -34,7 +35,10 @@ export class ArtistRepository {
 			})
 			.from(showArtist)
 			.leftJoin(showRole, eq(showRole.artistId, showArtist.id))
-			.leftJoin(showPerformance, eq(showPerformance.id, showRole.performanceId))
+			.leftJoin(
+				showPerformance,
+				and(eq(showPerformance.id, showRole.performanceId), visiblePerformanceDate(showPerformance.date)),
+			)
 			.groupBy(showArtist.id)
 			.orderBy(sortFn(sql`${sortValue}`));
 	}
@@ -47,6 +51,7 @@ export class ArtistRepository {
 					with: { media: true },
 				},
 				role: {
+					where: hasVisiblePerformance(),
 					with: {
 						performance: {
 							orderBy: (performance, { asc }) => [asc(performance.date)],
@@ -73,6 +78,7 @@ export class ArtistRepository {
 			},
 			with: {
 				role: {
+					where: hasVisiblePerformance(),
 					with: {
 						performance: true,
 					},

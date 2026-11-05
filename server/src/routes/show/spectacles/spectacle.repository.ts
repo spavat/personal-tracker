@@ -6,6 +6,7 @@ import type { SaveSpectacleBody } from "./spectacle.entity";
 
 import { contains } from "../../../db/contains";
 import { showSpectacle } from "../../../db/schema";
+import { hasVisiblePerformance, visiblePerformanceWhere } from "../../../db/visible-performance";
 import { placeNameAt } from "../places/place.repository";
 
 export class SpectacleRepository {
@@ -19,8 +20,10 @@ export class SpectacleRepository {
 
 	findAllWithPerformancesAndPlaces() {
 		return this.db.query.showSpectacle.findMany({
+			where: hasVisiblePerformance(),
 			with: {
 				performance: {
+					where: visiblePerformanceWhere(),
 					orderBy: { date: "asc" },
 					extras: { placeName: placeNameAt },
 					with: {
@@ -33,9 +36,10 @@ export class SpectacleRepository {
 
 	findByIdWithDetails(id: number) {
 		return this.db.query.showSpectacle.findFirst({
-			where: { id },
+			where: { id, ...hasVisiblePerformance() },
 			with: {
 				performance: {
+					where: visiblePerformanceWhere(),
 					orderBy: { date: "asc" },
 					extras: { placeName: placeNameAt },
 					with: {
@@ -68,9 +72,11 @@ export class SpectacleRepository {
 		return this.db.query.showSpectacle.findMany({
 			where: {
 				RAW: (t) => contains(t.name, search),
+				...hasVisiblePerformance(),
 			},
 			with: {
 				performance: {
+					where: visiblePerformanceWhere(),
 					with: {
 						place: true,
 					},
