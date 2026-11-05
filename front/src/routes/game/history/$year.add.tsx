@@ -6,6 +6,7 @@ import AddPlayModalForm from "../../../modules/game/modals/AddPlayModalForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/game/history/$year/add")({
+	staticData: { modal: true },
 	loader: ({ context }) => context.queryClient.query({ ...gamesQuery(), staleTime: "static" }),
 	pendingComponent: ModalPending,
 	errorComponent: ModalError,

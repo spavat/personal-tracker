@@ -6,6 +6,7 @@ import EventModalForm from "../../../modules/lifespan/objects/modals/EventModalF
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/lifespan/list/_list/$objectId/event/$eventId/edit")({
+	staticData: { modal: true },
 	loader: async ({ context, params }) => {
 		const object = await context.queryClient.query({ ...objectDetailsQuery(params.objectId), staleTime: "static" });
 		if (!object.events.some((event) => event.id === params.eventId)) {

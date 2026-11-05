@@ -6,6 +6,7 @@ import EditListeningModalForm from "../../../modules/music/modals/EditListeningM
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/music/list/$period/$listeningId/edit")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...listeningDetailsQuery(params.listeningId), staleTime: "static" }),
 	pendingComponent: ModalPending,

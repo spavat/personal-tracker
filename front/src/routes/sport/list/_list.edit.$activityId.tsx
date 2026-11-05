@@ -6,6 +6,7 @@ import ActivityModalForm from "../../../modules/sport/modals/ActivityModalForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/sport/list/_list/edit/$activityId")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...activityDetailsQuery(params.activityId), staleTime: "static" }),
 	pendingComponent: ModalPending,

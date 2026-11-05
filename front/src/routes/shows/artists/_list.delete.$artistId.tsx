@@ -6,6 +6,7 @@ import DeleteArtistModalForm from "../../../modules/show/modals/DeleteArtistModa
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/shows/artists/_list/delete/$artistId")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...artistDetailsQuery(params.artistId, false), staleTime: "static" }),
 	pendingComponent: ModalPending,

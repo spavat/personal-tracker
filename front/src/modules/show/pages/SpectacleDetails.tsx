@@ -223,6 +223,7 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 			{isOwner && (
 				<MediaGallery
 					owner={{ spectacleId: details.id }}
+					cropAspect={2 / 3}
 					media={details.media}
 					invalidateKey={["shows", "spectacles", spectacleId]}
 				/>

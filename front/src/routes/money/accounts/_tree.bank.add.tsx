@@ -4,6 +4,7 @@ import NewBankForm from "../../../modules/money/accounts/NewBankForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/accounts/_tree/bank/add")({
+	staticData: { modal: true },
 	validateSearch: withReturnToSchema,
 	component: RouteComponent,
 });

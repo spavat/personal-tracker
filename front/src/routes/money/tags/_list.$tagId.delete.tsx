@@ -6,6 +6,7 @@ import DeleteTagForm from "../../../modules/money/tags/DeleteTagForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/tags/_list/$tagId/delete")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...tagQuery(parseInt(params.tagId, 10)), staleTime: "static" }),
 	pendingComponent: ModalPending,

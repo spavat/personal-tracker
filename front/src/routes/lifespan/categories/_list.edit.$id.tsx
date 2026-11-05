@@ -6,6 +6,7 @@ import CategoryModalForm from "../../../modules/lifespan/categories/modals/Categ
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/lifespan/categories/_list/edit/$id")({
+	staticData: { modal: true },
 	loader: async ({ context, params }) => {
 		const categories = await context.queryClient.query({ ...categoriesQuery(), staleTime: "static" });
 		if (!categories.some((category) => category.id === params.id)) {

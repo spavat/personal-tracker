@@ -4,6 +4,7 @@ import MangaModalForm from "../../../modules/reading-manga/modals/MangaModalForm
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/reading-manga/list/_list/add")({
+	staticData: { modal: true },
 	validateSearch: withReturnToSchema,
 	component: RouteComponent,
 });

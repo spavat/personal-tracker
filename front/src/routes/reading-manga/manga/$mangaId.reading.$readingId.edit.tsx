@@ -6,6 +6,7 @@ import EditReadingModalForm from "../../../modules/reading-manga/modals/EditRead
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/reading-manga/manga/$mangaId/reading/$readingId/edit")({
+	staticData: { modal: true },
 	loader: async ({ context, params }) => {
 		const manga = await context.queryClient.query({ ...mangaDetailsQuery(params.mangaId), staleTime: "static" });
 		if (!manga.readings.some((reading) => reading.id === params.readingId)) {

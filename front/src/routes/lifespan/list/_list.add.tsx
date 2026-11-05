@@ -6,6 +6,7 @@ import ObjectModalForm from "../../../modules/lifespan/objects/modals/ObjectModa
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/lifespan/list/_list/add")({
+	staticData: { modal: true },
 	loader: ({ context }) => context.queryClient.query({ ...categoriesQuery(), staleTime: "static" }),
 	pendingComponent: ModalPending,
 	errorComponent: ModalError,

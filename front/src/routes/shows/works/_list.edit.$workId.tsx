@@ -6,6 +6,7 @@ import WorkModalForm from "../../../modules/show/modals/WorkModalForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/shows/works/_list/edit/$workId")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...workDetailsQuery(params.workId), staleTime: "static" }),
 	pendingComponent: ModalPending,

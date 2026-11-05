@@ -6,6 +6,7 @@ import DeleteTransactionForm from "../../../modules/money/transactions/DeleteTra
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/transactions/$period/transaction/$transactionId/delete")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...transactionQuery(parseInt(params.transactionId, 10)), staleTime: "static" }),
 	pendingComponent: ModalPending,

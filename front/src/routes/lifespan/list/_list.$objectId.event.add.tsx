@@ -6,6 +6,7 @@ import EventModalForm from "../../../modules/lifespan/objects/modals/EventModalF
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/lifespan/list/_list/$objectId/event/add")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...objectDetailsQuery(params.objectId), staleTime: "static" }),
 	pendingComponent: ModalPending,

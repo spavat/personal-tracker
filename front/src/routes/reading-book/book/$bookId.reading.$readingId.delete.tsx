@@ -6,6 +6,7 @@ import DeleteReadingModalForm from "../../../modules/reading-book/modals/DeleteR
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/reading-book/book/$bookId/reading/$readingId/delete")({
+	staticData: { modal: true },
 	loader: async ({ context, params }) => {
 		const book = await context.queryClient.query({ ...bookDetailsQuery(params.bookId), staleTime: "static" });
 		if (!book.readings.some((reading) => reading.id === params.readingId)) {

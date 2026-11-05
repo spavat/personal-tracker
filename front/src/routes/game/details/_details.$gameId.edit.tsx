@@ -6,6 +6,7 @@ import GameModalForm from "../../../modules/game/modals/GameModalForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/game/details/_details/$gameId/edit")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...gameDetailsQuery(params.gameId), staleTime: "static" }),
 	pendingComponent: ModalPending,

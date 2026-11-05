@@ -6,6 +6,7 @@ import ContextTagModalForm from "../../modules/context-tags/modals/ContextTagMod
 import { withReturnToSchema } from "../../router/search-params";
 
 export const Route = createFileRoute("/context-tags/_list/edit/$id")({
+	staticData: { modal: true },
 	loader: async ({ context, params }) => {
 		const contextTags = await context.queryClient.query({ ...contextTagsQuery(), staleTime: "static" });
 		if (!contextTags.some((contextTag) => contextTag.id === params.id)) {

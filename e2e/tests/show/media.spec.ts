@@ -140,14 +140,13 @@ test.describe("Shows - Media", () => {
 		await dialog.locator("tfoot").getByRole("button", { name: "Ajouter" }).click();
 
 		const row = dialog.locator("tbody tr").first();
-		// a new artist has no photo: the first one becomes the main photo
+		// a new artist has no photo: the first one becomes the main photo, and is selected for the role
 		await row
 			.getByTitle("Ajouter la photo de l'artiste", { exact: true })
 			.locator("input")
 			.setInputFiles({ name: "denis.png", mimeType: "image/png", buffer: PNG });
 		await expect(row.locator(".media-picker img")).toHaveCount(1);
-		// the empty choice (hourglass: the main photo is used) stays selected
-		await expect(row.locator(".media-picker button.selected .fa-hourglass")).toHaveCount(1);
+		await expect(row.locator(".media-picker button.selected img")).toHaveCount(1);
 
 		// the next one is the portrait of this role, from a URL: the server downloads it
 		const url = await row.locator(".media-picker img").getAttribute("src");

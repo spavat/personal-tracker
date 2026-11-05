@@ -6,6 +6,7 @@ import PlaceModalForm from "../../../modules/show/modals/PlaceModalForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/shows/places/_list/edit/$placeId")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...placeDetailsQuery(params.placeId, false), staleTime: "static" }),
 	pendingComponent: ModalPending,

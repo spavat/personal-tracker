@@ -6,6 +6,7 @@ import { banksQuery } from "../../../modules/money/api";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/accounts/_tree/account/add")({
+	staticData: { modal: true },
 	loader: ({ context }) => context.queryClient.query({ ...banksQuery(), staleTime: "static" }),
 	pendingComponent: ModalPending,
 	errorComponent: ModalError,

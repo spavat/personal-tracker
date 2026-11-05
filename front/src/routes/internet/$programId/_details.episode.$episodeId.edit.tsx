@@ -6,6 +6,7 @@ import EditEpisodeModalForm from "../../../modules/internet/modals/EditEpisodeMo
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/internet/$programId/_details/episode/$episodeId/edit")({
+	staticData: { modal: true },
 	loader: async ({ context, params }) => {
 		const program = await context.queryClient.query({
 			...programDetailsQuery(params.programId),

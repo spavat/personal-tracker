@@ -1,7 +1,7 @@
 @layer modules {
 	.shows {
 		.grid.artists {
-			grid-template-columns: repeat(5, 1fr);
+			grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
 		}
 
 		/* SPECTACLE */
@@ -116,6 +116,25 @@
 		}
 		.list.artists :is(td, th):nth-of-type(2) /* Artist name */ {
 			text-align: left;
+		}
+		/* fixed layout (desktop only): widths come from the header, so they don't change as the
+		   virtualized rows come and go; the name column has no width and takes the rest */
+		@media (min-width: 769px) {
+			.list.artists {
+				table-layout: fixed;
+			}
+			.list.artists th:nth-of-type(1) /* Position */ {
+				width: 4rem;
+			}
+			.list.artists th:nth-of-type(3) /* Nb spectacles */ {
+				width: 9rem;
+			}
+			.list.artists th:nth-of-type(4) /* Nb performances */ {
+				width: 13rem;
+			}
+			.list.artists th:nth-of-type(5) /* Actions (owner only) */ {
+				width: 6rem;
+			}
 		}
 
 		/* PLACES */
@@ -348,10 +367,12 @@
 			border-radius: 50%;
 		}
 		.presentation .poster,
-		.presentation .artist-picture {
-			max-height: 220px;
-			max-width: 100%;
-			border-radius: 8px;
+		.presentation-with-picture .artist-picture {
+			display: block;
+			width: 200px;
+			height: 200px;
+			object-fit: cover;
+			border-radius: 50%;
 		}
 		/* the description slot is sized for text (4 lines, scrolling): let an image take its height */
 		.presentation .description:has(> img) {
@@ -447,6 +468,62 @@
 			}
 			input[type="file"] {
 				display: none;
+			}
+		}
+
+		.image-cropper {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+
+			/* react-easy-crop fills its positioned parent */
+			.crop-area {
+				position: relative;
+				height: 300px;
+				border-radius: 6px;
+				overflow: hidden;
+			}
+			.crop-controls {
+				display: flex;
+				flex-wrap: wrap;
+				align-items: center;
+				justify-content: space-between;
+				gap: 8px;
+			}
+			.error {
+				color: var(--error-color, red);
+			}
+		}
+
+		/* the dialog widens to keep room for the table next to the panel */
+		dialog:has(.crop-panel) {
+			width: 75%;
+		}
+		.with-crop-panel {
+			display: flex;
+			gap: 12px;
+			align-items: flex-start;
+
+			.crop-panel-main {
+				flex: 1 1 0;
+				min-width: 0;
+			}
+			.crop-panel {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+				flex: 0 0 340px;
+				position: sticky;
+				top: 0;
+			}
+			@media (max-width: 768px) {
+				flex-direction: column;
+				align-items: stretch;
+
+				.crop-panel {
+					flex-basis: auto;
+					position: static;
+				}
 			}
 		}
 

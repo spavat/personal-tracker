@@ -6,6 +6,7 @@ import CastingModalForm from "../../../modules/show/modals/CastingModalForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/shows/performances/$performanceId/casting")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		Promise.all([
 			context.queryClient.query({ ...performanceDetailsQuery(params.performanceId), staleTime: "static" }),

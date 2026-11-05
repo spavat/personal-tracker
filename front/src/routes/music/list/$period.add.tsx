@@ -5,6 +5,7 @@ import AddListeningModalForm from "../../../modules/music/modals/AddListeningMod
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/music/list/$period/add")({
+	staticData: { modal: true },
 	validateSearch: withReturnToSchema.extend({
 		copyObject: MusicListeningSchema.omit({ id: true }).optional(),
 	}),

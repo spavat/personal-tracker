@@ -6,6 +6,7 @@ import AddEpisodeModalForm from "../../../modules/internet/modals/AddEpisodeModa
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/internet/history/$period/add")({
+	staticData: { modal: true },
 	loader: ({ context }) => context.queryClient.query({ ...programsQuery(), staleTime: "static" }),
 	pendingComponent: ModalPending,
 	errorComponent: ModalError,

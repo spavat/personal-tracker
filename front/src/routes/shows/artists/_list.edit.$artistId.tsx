@@ -6,6 +6,7 @@ import ArtistModalForm from "../../../modules/show/modals/ArtistModalForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/shows/artists/_list/edit/$artistId")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...artistDetailsQuery(params.artistId, false), staleTime: "static" }),
 	pendingComponent: ModalPending,

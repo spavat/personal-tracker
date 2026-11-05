@@ -6,6 +6,7 @@ import DeleteReadingModalForm from "../../../modules/reading-manga/modals/Delete
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/reading-manga/manga/$mangaId/reading/$readingId/delete")({
+	staticData: { modal: true },
 	loader: async ({ context, params }) => {
 		const manga = await context.queryClient.query({ ...mangaDetailsQuery(params.mangaId), staleTime: "static" });
 		if (!manga.readings.some((reading) => reading.id === params.readingId)) {

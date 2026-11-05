@@ -6,6 +6,7 @@ import DeleteEventModalForm from "../../../modules/lifespan/objects/modals/Delet
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/lifespan/list/_list/$objectId/event/$eventId/delete")({
+	staticData: { modal: true },
 	loader: async ({ context, params }) => {
 		const object = await context.queryClient.query({ ...objectDetailsQuery(params.objectId), staleTime: "static" });
 		if (!object.events.some((event) => event.id === params.eventId)) {

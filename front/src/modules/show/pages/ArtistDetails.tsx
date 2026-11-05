@@ -114,6 +114,7 @@ export default function ArtistDetails({ artistId }: { artistId: string }) {
 				<>
 					<MediaGallery
 						owner={{ artistId: details.id }}
+						cropAspect={1}
 						media={details.media}
 						invalidateKey={["shows", "artists", artistId]}
 						mainPictureId={details.pictureId}

@@ -9,6 +9,13 @@
 		--default-cell-padding: 5px;
 	}
 
+	/* page changes are instant; only elements with a view-transition-name (portraits, posters) animate */
+	::view-transition-group(root),
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation: none;
+	}
+
 	#root {
 		margin: 0 auto;
 		text-align: center;

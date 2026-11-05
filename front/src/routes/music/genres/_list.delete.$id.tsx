@@ -6,6 +6,7 @@ import DeleteGenreModalForm from "../../../modules/music/modals/DeleteGenreModal
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/music/genres/_list/delete/$id")({
+	staticData: { modal: true },
 	loader: async ({ context, params }) => {
 		const genres = await context.queryClient.query({ ...genresQuery(), staleTime: "static" });
 		if (!genres.some((genre) => genre.id === params.id)) {

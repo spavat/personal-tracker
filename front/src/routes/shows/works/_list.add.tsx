@@ -4,6 +4,7 @@ import WorkModalForm from "../../../modules/show/modals/WorkModalForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/shows/works/_list/add")({
+	staticData: { modal: true },
 	validateSearch: withReturnToSchema,
 	component: RouteComponent,
 });

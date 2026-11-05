@@ -6,6 +6,7 @@ import DeleteObjectModalForm from "../../../modules/lifespan/objects/modals/Dele
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/lifespan/list/_list/$objectId/delete")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...objectDetailsQuery(params.objectId), staleTime: "static" }),
 	pendingComponent: ModalPending,

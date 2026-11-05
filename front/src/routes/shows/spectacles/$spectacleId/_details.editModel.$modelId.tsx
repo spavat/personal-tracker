@@ -6,6 +6,7 @@ import ModelModalForm from "../../../../modules/show/modals/ModelModalForm";
 import { withReturnToSchema } from "../../../../router/search-params";
 
 export const Route = createFileRoute("/shows/spectacles/$spectacleId/_details/editModel/$modelId")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		Promise.all([
 			context.queryClient.query({ ...modelDetailsQuery(params.modelId), staleTime: "static" }),

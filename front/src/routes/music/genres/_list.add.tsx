@@ -4,6 +4,7 @@ import GenreModalForm from "../../../modules/music/modals/GenreModalForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/music/genres/_list/add")({
+	staticData: { modal: true },
 	validateSearch: withReturnToSchema,
 	component: RouteComponent,
 });

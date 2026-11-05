@@ -4,6 +4,7 @@ import BookForm from "../../../modules/reading-book/forms/BookForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/reading-book/history/$year/add")({
+	staticData: { modal: true },
 	validateSearch: withReturnToSchema,
 	component: RouteComponent,
 });

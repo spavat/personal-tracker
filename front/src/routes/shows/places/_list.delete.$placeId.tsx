@@ -6,6 +6,7 @@ import DeletePlaceModalForm from "../../../modules/show/modals/DeletePlaceModalF
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/shows/places/_list/delete/$placeId")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...placeDetailsQuery(params.placeId, false), staleTime: "static" }),
 	pendingComponent: ModalPending,

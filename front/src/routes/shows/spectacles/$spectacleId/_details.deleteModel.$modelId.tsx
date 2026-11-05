@@ -6,6 +6,7 @@ import DeleteModelModalForm from "../../../../modules/show/modals/DeleteModelMod
 import { withReturnToSchema } from "../../../../router/search-params";
 
 export const Route = createFileRoute("/shows/spectacles/$spectacleId/_details/deleteModel/$modelId")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...modelDetailsQuery(params.modelId), staleTime: "static" }),
 	pendingComponent: ModalPending,

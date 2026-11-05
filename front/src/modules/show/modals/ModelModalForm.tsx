@@ -8,6 +8,7 @@ import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
 import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-query";
 import { modelDetailsQuery, saveModel } from "../api";
+import CropPanel from "../components/CropPanel";
 import ModelRoleFormComponent from "../forms/ModelRoleForm";
 import { ModelForm, onSubmitModel } from "../forms/ModelRoleForm.utils";
 
@@ -84,7 +85,9 @@ export default function ModelModalForm({
 						<h2 id="dialog-title">{modelId ? "Modifier le modèle" : "Ajouter un modèle"}</h2>
 					</div>
 					<div className="dialog-body single-panel">
-						<ModelRoleFormComponent />
+						<CropPanel>
+							<ModelRoleFormComponent />
+						</CropPanel>
 					</div>
 
 					<div className="dialog-footer">

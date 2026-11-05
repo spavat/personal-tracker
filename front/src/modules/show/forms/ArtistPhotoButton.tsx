@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { artistsQuery, saveArtist, uploadMedia } from "../api";
+import { useCropPanel } from "../components/CropPanel.utils";
 import { readFile } from "../utils";
 
-// Adds a photo to an artist from a role row, from a file or a URL: the artist's main photo
-// if it has none yet (a just-created artist), else the portrait of this role.
+// Adds a photo to an artist from a role row, from a file or a URL: the portrait of this role,
+// and also the artist's main photo if it has none yet (a just-created artist).
 export default function ArtistPhotoButton({
 	artistId,
 	spectacleId,
@@ -17,6 +18,7 @@ export default function ArtistPhotoButton({
 	onRolePortrait: (mediaId: string) => void;
 }) {
 	const queryClient = useQueryClient();
+	const openCropPanel = useCropPanel();
 	const { data: artists = [] } = useQuery(artistsQuery());
 	const artist = artists.find((item) => item.id === artistId);
 
@@ -26,9 +28,9 @@ export default function ArtistPhotoButton({
 			const media = await uploadMedia({ artistId }, { source, label, spectacleId });
 			if (artist && !artist.pictureId) {
 				await saveArtist({ id: artist.id, name: artist.name, pictureId: media.id });
-			} else {
-				onRolePortrait(media.id);
 			}
+			// selected in the row's picker either way
+			onRolePortrait(media.id);
 		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["shows", "artists"] });
@@ -75,6 +77,21 @@ export default function ArtistPhotoButton({
 			>
 				<i className="fa-solid fa-link"></i>
 			</button>
+			{openCropPanel && (
+				<button
+					type="button"
+					className={className}
+					title={uploadMutation.error?.message ?? `Ajouter ${target} recadrée`}
+					onClick={() =>
+						openCropPanel({
+							aspect: 1,
+							onConfirm: async (file) => uploadMutation.mutate(await readFile(file)),
+						})
+					}
+				>
+					<i className="fa-solid fa-crop-simple"></i>
+				</button>
+			)}
 		</>
 	);
 }

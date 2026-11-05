@@ -6,6 +6,7 @@ import NewTagForm from "../../../modules/money/tags/NewTagForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/tags/_list/add")({
+	staticData: { modal: true },
 	loader: ({ context }) => context.queryClient.query({ ...tagsQuery(), staleTime: "static" }),
 	pendingComponent: ModalPending,
 	errorComponent: ModalError,

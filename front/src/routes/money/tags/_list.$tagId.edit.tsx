@@ -6,6 +6,7 @@ import NewTagForm from "../../../modules/money/tags/NewTagForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/tags/_list/$tagId/edit")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		Promise.all([
 			context.queryClient.query({ ...tagQuery(parseInt(params.tagId, 10)), staleTime: "static" }),

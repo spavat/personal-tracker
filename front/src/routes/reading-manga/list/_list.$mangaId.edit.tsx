@@ -6,6 +6,7 @@ import MangaModalForm from "../../../modules/reading-manga/modals/MangaModalForm
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/reading-manga/list/_list/$mangaId/edit")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...mangaDetailsQuery(params.mangaId), staleTime: "static" }),
 	pendingComponent: ModalPending,

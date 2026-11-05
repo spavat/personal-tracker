@@ -6,6 +6,7 @@ import NewCategoryForm from "../../../modules/money/categories/NewCategorieForm"
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/categories/_list/add")({
+	staticData: { modal: true },
 	loader: ({ context }) => context.queryClient.query({ ...categoriesQuery(), staleTime: "static" }),
 	pendingComponent: ModalPending,
 	errorComponent: ModalError,

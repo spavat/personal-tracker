@@ -6,6 +6,7 @@ import DeleteContextTagModalForm from "../../modules/context-tags/modals/DeleteC
 import { withReturnToSchema } from "../../router/search-params";
 
 export const Route = createFileRoute("/context-tags/_list/delete/$id")({
+	staticData: { modal: true },
 	loader: async ({ context, params }) => {
 		const contextTags = await context.queryClient.query({ ...contextTagsQuery(), staleTime: "static" });
 		if (!contextTags.some((contextTag) => contextTag.id === params.id)) {

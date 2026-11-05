@@ -6,6 +6,7 @@ import SpectacleModalForm from "../../../../modules/show/modals/SpectacleModalFo
 import { withReturnToSchema } from "../../../../router/search-params";
 
 export const Route = createFileRoute("/shows/spectacles/$spectacleId/_details/edit")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...spectacleDetailsQuery(params.spectacleId), staleTime: "static" }),
 	pendingComponent: ModalPending,

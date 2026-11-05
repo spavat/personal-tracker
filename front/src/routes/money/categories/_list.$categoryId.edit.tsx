@@ -6,6 +6,7 @@ import NewCategoryForm from "../../../modules/money/categories/NewCategorieForm"
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/categories/_list/$categoryId/edit")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		Promise.all([
 			context.queryClient.query({ ...categoryQuery(parseInt(params.categoryId, 10)), staleTime: "static" }),

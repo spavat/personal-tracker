@@ -6,6 +6,7 @@ import NewTransactionForm from "../../../modules/money/NewTransactionForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/transactions/$period/transaction/add")({
+	staticData: { modal: true },
 	loader: ({ context }) =>
 		Promise.all([
 			context.queryClient.query({ ...categoriesQuery(), staleTime: "static" }),

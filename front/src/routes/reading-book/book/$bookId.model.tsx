@@ -6,6 +6,7 @@ import ModelForm from "../../../modules/reading-book/forms/ModelForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/reading-book/book/$bookId/model")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...bookDetailsQuery(params.bookId), staleTime: "static" }),
 	pendingComponent: ModalPending,

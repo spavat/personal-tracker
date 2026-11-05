@@ -6,6 +6,7 @@ import { bankQuery } from "../../../modules/money/api";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/accounts/_tree/bank/$bankId/delete")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...bankQuery(parseInt(params.bankId, 10)), staleTime: "static" }),
 	pendingComponent: ModalPending,

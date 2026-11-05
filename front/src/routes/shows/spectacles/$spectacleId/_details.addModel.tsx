@@ -6,6 +6,7 @@ import ModelModalForm from "../../../../modules/show/modals/ModelModalForm";
 import { withReturnToSchema } from "../../../../router/search-params";
 
 export const Route = createFileRoute("/shows/spectacles/$spectacleId/_details/addModel")({
+	staticData: { modal: true },
 	loader: ({ context }) => context.queryClient.query({ ...artistsQuery(), staleTime: "static" }),
 	pendingComponent: ModalPending,
 	errorComponent: ModalError,

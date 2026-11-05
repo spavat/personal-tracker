@@ -1,13 +1,14 @@
 import type { ArtistMedia, SpectacleMedia, SpectacleMediaKind } from "@personal-tracker/shared/show";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 
 import MutationError from "../../../components/MutationError";
 import { useIsOwner } from "../../../hooks/use-is-owner";
 import { deleteMedia, type MediaOwner, reorderMedia, spectaclesQuery, updateMedia, uploadMedia } from "../api";
 import { mediaSrc, readFile } from "../utils";
+import ImageCropper from "./ImageCropper";
 
 const MEDIA_KIND_LABELS: Record<SpectacleMediaKind, string> = {
 	poster: "Affiche",
@@ -29,8 +30,11 @@ export default function MediaGallery({
 	invalidateKey,
 	mainPictureId,
 	onSetMain,
+	cropAspect,
 }: {
 	owner: MediaOwner;
+	// width / height of the crop frame (1 = square)
+	cropAspect: number;
 	media: Array<SpectacleMedia | ArtistMedia>;
 	// details query to refresh after a change
 	invalidateKey: Array<unknown>;
@@ -50,9 +54,38 @@ export default function MediaGallery({
 
 	const [file, setFile] = useState<File | null>(null);
 	const [isDragOver, setIsDragOver] = useState(false);
-	const { register, handleSubmit, reset } = useForm<UploadInputs>({
+	const [cropSrc, setCropSrc] = useState<string | null>(null);
+	const { register, handleSubmit, reset, control, setValue } = useForm<UploadInputs>({
 		defaultValues: { url: "", label: "", kind: "poster", spectacleId: "" },
 	});
+	const url = useWatch({ control, name: "url" });
+
+	function openCropper(src: string) {
+		setCropSrc((previous) => {
+			if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous);
+			return src;
+		});
+	}
+
+	// a pasted image goes straight to the cropper; text pastes are left alone
+	useEffect(() => {
+		if (!isOwner) return;
+		function onPaste(e: ClipboardEvent) {
+			const image = Array.from(e.clipboardData?.files ?? []).find((f) => f.type.startsWith("image/"));
+			// a modal opened over the page handles its own pastes
+			if (!image || (e.target instanceof Element && e.target.closest("dialog"))) return;
+			e.preventDefault();
+			setFile(image);
+			openCropper(URL.createObjectURL(image));
+		}
+		window.addEventListener("paste", onPaste);
+		return () => window.removeEventListener("paste", onPaste);
+	}, [isOwner]);
+
+	function closeCropper() {
+		if (cropSrc?.startsWith("blob:")) URL.revokeObjectURL(cropSrc);
+		setCropSrc(null);
+	}
 	const uploadMutation = useMutation({
 		mutationFn: async (values: UploadInputs) => {
 			const source = file ? await readFile(file) : values.url;
@@ -182,36 +215,60 @@ export default function MediaGallery({
 				))}
 				{isOwner && (
 					<form className="media-upload" onSubmit={handleSubmit((values) => uploadMutation.mutate(values))}>
-						<div
-							className={dropZoneClass}
-							onDragOver={(e) => {
-								e.preventDefault();
-								setIsDragOver(true);
-							}}
-							onDragLeave={() => setIsDragOver(false)}
-							onDrop={onDrop}
-						>
-							{file ? (
-								<>
-									<i className="fa-solid fa-check"></i> {file.name}
-									&nbsp;
-									<button type="button" onClick={() => setFile(null)} title="Supprimer">
-										✕
-									</button>
-								</>
-							) : (
-								<>
-									<i className="fa-solid fa-file-import"></i>
-									&nbsp;Glisser-déposer une image ou un PDF
-									<br />
-									<label>
-										ou parcourir
-										<input type="file" accept="image/*,application/pdf" onChange={onFileChange} />
-									</label>
-								</>
-							)}
-						</div>
+						{cropSrc ? (
+							<ImageCropper
+								src={cropSrc}
+								aspect={cropAspect}
+								onCancel={closeCropper}
+								onConfirm={(cropped) => {
+									setFile(cropped);
+									setValue("url", "");
+									closeCropper();
+								}}
+							/>
+						) : (
+							<div
+								className={dropZoneClass}
+								onDragOver={(e) => {
+									e.preventDefault();
+									setIsDragOver(true);
+								}}
+								onDragLeave={() => setIsDragOver(false)}
+								onDrop={onDrop}
+							>
+								{file ? (
+									<>
+										<i className="fa-solid fa-check"></i> {file.name}
+										&nbsp;
+										<button type="button" onClick={() => setFile(null)} title="Supprimer">
+											✕
+										</button>
+									</>
+								) : (
+									<>
+										<i className="fa-solid fa-file-import"></i>
+										&nbsp;Glisser-déposer une image ou un PDF
+										<br />
+										<label>
+											ou parcourir
+											<input
+												type="file"
+												accept="image/*,application/pdf"
+												onChange={onFileChange}
+											/>
+										</label>
+										<br />
+										ou coller une image (Ctrl+V)
+									</>
+								)}
+							</div>
+						)}
 						<input type="text" placeholder="ou https://…" autoComplete="off" {...register("url")} />
+						{!cropSrc && (file?.type.startsWith("image/") || (!file && url)) && (
+							<button type="button" onClick={() => openCropper(file ? URL.createObjectURL(file) : url)}>
+								<i className="fa-solid fa-crop-simple"></i> Recadrer
+							</button>
+						)}
 						<input
 							type="text"
 							placeholder="Libellé (Saison 2…)"

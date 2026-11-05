@@ -4,6 +4,7 @@ import EditReadingModalForm from "../../../modules/reading-manga/modals/EditRead
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/reading-manga/manga/$mangaId/reading/add")({
+	staticData: { modal: true },
 	validateSearch: withReturnToSchema,
 	component: RouteComponent,
 });

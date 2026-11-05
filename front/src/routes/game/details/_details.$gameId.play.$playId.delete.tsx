@@ -6,6 +6,7 @@ import DeletePlayModalForm from "../../../modules/game/modals/DeletePlayModalFor
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/game/details/_details/$gameId/play/$playId/delete")({
+	staticData: { modal: true },
 	loader: async ({ context, params }) => {
 		const game = await context.queryClient.query({ ...gameDetailsQuery(params.gameId), staleTime: "static" });
 		if (!game.plays.some((play) => play.id === params.playId)) {

@@ -6,6 +6,7 @@ import PerformanceModalForm from "../../../../modules/show/modals/PerformanceMod
 import { withReturnToSchema } from "../../../../router/search-params";
 
 export const Route = createFileRoute("/shows/spectacles/$spectacleId/_details/addPerformance")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		Promise.all([
 			context.queryClient.query({ ...spectacleDetailsQuery(params.spectacleId), staleTime: "static" }),

@@ -7,6 +7,7 @@ import NewTransactionForm from "../../../modules/money/NewTransactionForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/transactions/search/transaction/$transactionId/edit")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		Promise.all([
 			context.queryClient.query({ ...transactionQuery(parseInt(params.transactionId, 10)), staleTime: "static" }),

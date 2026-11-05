@@ -4,6 +4,7 @@ import ContextTagModalForm from "../../modules/context-tags/modals/ContextTagMod
 import { withReturnToSchema } from "../../router/search-params";
 
 export const Route = createFileRoute("/context-tags/_list/add")({
+	staticData: { modal: true },
 	validateSearch: withReturnToSchema,
 	component: RouteComponent,
 });

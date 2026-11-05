@@ -6,6 +6,7 @@ import { accountQuery, banksQuery } from "../../../modules/money/api";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/accounts/_tree/account/$accountId/edit")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		Promise.all([
 			context.queryClient.query({ ...accountQuery(parseInt(params.accountId, 10)), staleTime: "static" }),

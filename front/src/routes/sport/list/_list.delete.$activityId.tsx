@@ -6,6 +6,7 @@ import DeleteActivityModalForm from "../../../modules/sport/modals/DeleteActivit
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/sport/list/_list/delete/$activityId")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...activityDetailsQuery(params.activityId), staleTime: "static" }),
 	pendingComponent: ModalPending,

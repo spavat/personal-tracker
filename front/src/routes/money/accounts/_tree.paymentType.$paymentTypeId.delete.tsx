@@ -6,6 +6,7 @@ import { paymentTypeDetailsQuery } from "../../../modules/money/api";
 import { withReturnToSchema } from "../../../router/search-params";
 
 export const Route = createFileRoute("/money/accounts/_tree/paymentType/$paymentTypeId/delete")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({
 			...paymentTypeDetailsQuery(parseInt(params.paymentTypeId, 10)),

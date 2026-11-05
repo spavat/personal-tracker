@@ -6,6 +6,7 @@ import DetailsDay from "../../modules/calendar/DetailsDay";
 import { withReturnToSchema } from "../../router/search-params";
 
 export const Route = createFileRoute("/calendar/$period/$date")({
+	staticData: { modal: true },
 	loader: ({ context, params }) =>
 		context.queryClient.query({ ...dailyCalendarQuery(params.date), staleTime: "static" }),
 	pendingComponent: ModalPending,
