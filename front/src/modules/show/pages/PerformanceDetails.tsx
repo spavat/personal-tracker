@@ -52,25 +52,46 @@ export default function PerformanceDetails({ performanceId }: { performanceId: s
 								{details.spectacle.name}
 							</Link>
 							{isOwner && (
-								<button
-									type="button"
-									title="Modifier"
-									onClick={() =>
-										navigate({
-											to: "/shows/performances/$performanceId/edit",
-											params: { performanceId },
-											search: { returnTo: location.pathname },
-											replace: true,
-											resetScroll: false,
-											mask: {
-												to: "/shows/performances/$performanceId",
+								<>
+									<button
+										type="button"
+										title="Modifier"
+										onClick={() =>
+											navigate({
+												to: "/shows/performances/$performanceId/edit",
 												params: { performanceId },
-											},
-										})
-									}
-								>
-									<i className="fa-regular fa-pen-to-square"></i>
-								</button>
+												search: { returnTo: location.pathname },
+												replace: true,
+												resetScroll: false,
+												mask: {
+													to: "/shows/performances/$performanceId",
+													params: { performanceId },
+												},
+											})
+										}
+									>
+										<i className="fa-regular fa-pen-to-square"></i>
+									</button>
+									<button
+										type="button"
+										title="Supprimer"
+										onClick={() =>
+											navigate({
+												to: "/shows/performances/$performanceId/delete",
+												params: { performanceId },
+												search: { returnTo: location.pathname },
+												replace: true,
+												resetScroll: false,
+												mask: {
+													to: "/shows/performances/$performanceId",
+													params: { performanceId },
+												},
+											})
+										}
+									>
+										<i className="fa-regular fa-trash-can"></i>
+									</button>
+								</>
 							)}
 						</h2>
 					</div>

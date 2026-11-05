@@ -3,7 +3,14 @@ import type { FastifyInstance } from "fastify";
 
 import { and, count, eq, max } from "drizzle-orm";
 
-import { showArtistMedia, showMedia, showSpectacleMedia } from "../../../db/schema";
+import {
+	showArtist,
+	showArtistMedia,
+	showMedia,
+	showModelRole,
+	showRole,
+	showSpectacleMedia,
+} from "../../../db/schema";
 import { isArtistOwner, type MediaOwner } from "./media.entity";
 
 export class MediaRepository {
@@ -141,6 +148,23 @@ export class MediaRepository {
 			.from(showArtistMedia)
 			.where(eq(showArtistMedia.mediaId, mediaId));
 		return (spectacles?.n ?? 0) + (artists?.n ?? 0);
+	}
+
+	// roles, model roles and the artist's main photo all point to the artist's link
+	async countPictureUses(tx: any, artistId: number, mediaId: string) {
+		const [roles] = await tx
+			.select({ n: count() })
+			.from(showRole)
+			.where(and(eq(showRole.artistId, artistId), eq(showRole.pictureId, mediaId)));
+		const [modelRoles] = await tx
+			.select({ n: count() })
+			.from(showModelRole)
+			.where(and(eq(showModelRole.artistId, artistId), eq(showModelRole.pictureId, mediaId)));
+		const [artists] = await tx
+			.select({ n: count() })
+			.from(showArtist)
+			.where(and(eq(showArtist.id, artistId), eq(showArtist.pictureId, mediaId)));
+		return (roles?.n ?? 0) + (modelRoles?.n ?? 0) + (artists?.n ?? 0);
 	}
 
 	deleteMedia(tx: any, id: string): Promise<{ key: string }[]> {

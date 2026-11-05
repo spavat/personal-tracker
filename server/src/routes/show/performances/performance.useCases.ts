@@ -3,6 +3,8 @@ import type { FastifyBaseLogger } from "fastify";
 
 import { httpErrors } from "@fastify/sensible";
 
+import type { MediaStorageRepository } from "../media/media-storage.repository";
+import type { MediaRepository } from "../media/media.repository";
 import type { SaveCastingBody, SavePerformanceBody } from "./performance.entity";
 import type { PerformanceRepository } from "./performance.repository";
 
@@ -86,6 +88,42 @@ export class SavePerformanceUseCase {
 			}
 			return saved;
 		});
+	}
+}
+
+export class DeletePerformanceUseCase {
+	constructor(
+		private repo: PerformanceRepository,
+		private mediaRepo: MediaRepository,
+		private storage: MediaStorageRepository,
+	) {}
+
+	async execute(id: number, log: FastifyBaseLogger) {
+		log.info("DeletePerformanceUseCase.execute");
+		const keys = await this.repo.runInTransaction(async (tx) => {
+			const pictures = await this.repo.findRolePictures(tx, id);
+			const [deleted] = await this.repo.delete(tx, id);
+			if (!deleted) {
+				throw httpErrors.notFound("Représentation introuvable");
+			}
+			// a role portrait lives in the artist's gallery: it goes too once nothing uses it anymore
+			const keys: string[] = [];
+			for (const { artistId, pictureId } of pictures) {
+				if ((await this.mediaRepo.countPictureUses(tx, artistId, pictureId)) > 0) {
+					continue;
+				}
+				await this.mediaRepo.deleteLink(tx, { artistId }, pictureId);
+				if ((await this.mediaRepo.countLinks(tx, pictureId)) === 0) {
+					const [media] = await this.mediaRepo.deleteMedia(tx, pictureId);
+					if (media) keys.push(media.key);
+				}
+			}
+			return keys;
+		});
+		// after the commit: a failed S3 delete only leaves an unreferenced file
+		for (const key of keys) {
+			await this.storage.deleteObject(key).catch((error) => log.warn(error, "S3 media delete failed"));
+		}
 	}
 }
 

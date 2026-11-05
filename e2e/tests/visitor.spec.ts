@@ -65,6 +65,7 @@ test.describe("anonymous visitor", () => {
 			`/shows/artists/edit/${artists.alice.id}`,
 			`/shows/artists/${artists.alice.id}/edit`,
 			`/shows/performances/${performances.paris2025}/casting`,
+			`/shows/performances/${performances.paris2025}/delete`,
 			"/shows/history/2026/add",
 		]) {
 			test(`is sent back home from ${url}`, async ({ page }) => {
@@ -79,6 +80,7 @@ test.describe("anonymous visitor", () => {
 			expect((await request.get(`${API}/show/reports?from=2026-01-01&to=2026-12-31`)).status()).toBe(401);
 			expect((await request.post(`${API}/show/artists/save`, { data: { name: "Intrus" } })).status()).toBe(401);
 			expect((await request.delete(`${API}/show/artists/${artists.alice.id}`)).status()).toBe(401);
+			expect((await request.delete(`${API}/show/performances/${performances.paris2025}`)).status()).toBe(401);
 		});
 	});
 

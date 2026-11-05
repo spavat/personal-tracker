@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 
 import { ZodTypeProvider } from "@marcalexiei/fastify-type-provider-zod";
 import {
+	DeletePerformanceParamsRequestSchema,
 	PerformanceDetailsParamsRequestSchema,
 	PerformanceListQuerystringRequestSchema,
 	SaveCastingBodyRequestSchema,
@@ -9,8 +10,11 @@ import {
 	SavePerformanceResponseSchema,
 } from "@personal-tracker/shared/show";
 
+import { MediaStorageRepository } from "../media/media-storage.repository";
+import { MediaRepository } from "../media/media.repository";
 import { PerformanceRepository } from "./performance.repository";
 import {
+	DeletePerformanceUseCase,
 	GetPerformanceUseCase,
 	ListPerformancesUseCase,
 	SaveCastingUseCase,
@@ -23,6 +27,11 @@ const performancesRoutes: FastifyPluginAsync = async (fastify): Promise<void> =>
 	const getPerformance = new GetPerformanceUseCase(repository);
 	const savePerformance = new SavePerformanceUseCase(repository);
 	const saveCasting = new SaveCastingUseCase(repository);
+	const deletePerformance = new DeletePerformanceUseCase(
+		repository,
+		new MediaRepository(fastify.db),
+		new MediaStorageRepository(),
+	);
 
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/",
@@ -64,6 +73,14 @@ const performancesRoutes: FastifyPluginAsync = async (fastify): Promise<void> =>
 		.withTypeProvider<ZodTypeProvider>()
 		.post("/saveCasting", { schema: { body: SaveCastingBodyRequestSchema } }, async (request, reply) => {
 			await saveCasting.execute(request.body, request.log);
+			return reply.code(204).send();
+		});
+
+	// the casting roles, and their portraits used nowhere else, are deleted along with the performance
+	fastify
+		.withTypeProvider<ZodTypeProvider>()
+		.delete("/:id", { schema: { params: DeletePerformanceParamsRequestSchema } }, async (request, reply) => {
+			await deletePerformance.execute(request.params.id, request.log);
 			return reply.code(204).send();
 		});
 };

@@ -4,6 +4,7 @@ import type { PerformanceRepository } from "./performance.repository";
 
 import { asLog, makeLog } from "../../../test-support/fake-log";
 import {
+	DeletePerformanceUseCase,
 	GetPerformanceUseCase,
 	ListPerformancesUseCase,
 	SaveCastingUseCase,
@@ -23,6 +24,7 @@ function fakeRepo() {
 		insertRoles: vi.fn().mockResolvedValue([{ id: 50 }]),
 		upsertRoles: vi.fn().mockResolvedValue(undefined),
 		deleteRolesExcept: vi.fn().mockResolvedValue(undefined),
+		delete: vi.fn().mockResolvedValue([{ id: 10 }]),
 		findSpectacleMediaKind: vi.fn().mockResolvedValue("poster"),
 		tx,
 	};
@@ -206,5 +208,79 @@ describe("SaveCastingUseCase", () => {
 		expect(repo.insertRoles).toHaveBeenCalledWith(repo.tx, [{ name: "New", performanceId: 10 }]);
 		expect(repo.upsertRoles).toHaveBeenCalledWith(repo.tx, [{ id: 2, name: "Existing", performanceId: 10 }]);
 		expect(repo.deleteRolesExcept).toHaveBeenCalledWith(repo.tx, 10, [2], [50]);
+	});
+});
+
+describe("DeletePerformanceUseCase", () => {
+	const KEY = "personal-tracker/show/media/p1.avif";
+
+	function fakeMediaRepo() {
+		return {
+			countPictureUses: vi.fn().mockResolvedValue(0),
+			deleteLink: vi.fn().mockResolvedValue([{ mediaId: "p1" }]),
+			countLinks: vi.fn().mockResolvedValue(0),
+			deleteMedia: vi.fn().mockResolvedValue([{ key: KEY }]),
+		};
+	}
+	function fakeStorage() {
+		return { deleteObject: vi.fn().mockResolvedValue(undefined) };
+	}
+	function build(pictures: { artistId: number; pictureId: string }[] = []) {
+		const repo = { ...fakeRepo(), findRolePictures: vi.fn().mockResolvedValue(pictures) };
+		const mediaRepo = fakeMediaRepo();
+		const storage = fakeStorage();
+		const useCase = new DeletePerformanceUseCase(asRepo(repo), mediaRepo as any, storage as any);
+		return { repo, mediaRepo, storage, useCase };
+	}
+
+	it("deletes the performance inside a transaction", async () => {
+		const { repo, mediaRepo, storage, useCase } = build();
+		await useCase.execute(10, asLog(makeLog()));
+		expect(repo.findRolePictures).toHaveBeenCalledWith(repo.tx, 10);
+		expect(repo.delete).toHaveBeenCalledWith(repo.tx, 10);
+		expect(mediaRepo.deleteLink).not.toHaveBeenCalled();
+		expect(storage.deleteObject).not.toHaveBeenCalled();
+	});
+
+	it("throws a 404 when nothing was deleted, without touching the pictures", async () => {
+		const { repo, mediaRepo, storage, useCase } = build([{ artistId: 1, pictureId: "p1" }]);
+		repo.delete.mockResolvedValue([]);
+		await expect(useCase.execute(10, asLog(makeLog()))).rejects.toMatchObject({ statusCode: 404 });
+		expect(mediaRepo.countPictureUses).not.toHaveBeenCalled();
+		expect(storage.deleteObject).not.toHaveBeenCalled();
+	});
+
+	it("removes a portrait used by no one else, then its file", async () => {
+		const { repo, mediaRepo, storage, useCase } = build([{ artistId: 1, pictureId: "p1" }]);
+		await useCase.execute(10, asLog(makeLog()));
+		expect(mediaRepo.countPictureUses).toHaveBeenCalledWith(repo.tx, 1, "p1");
+		expect(mediaRepo.deleteLink).toHaveBeenCalledWith(repo.tx, { artistId: 1 }, "p1");
+		expect(mediaRepo.deleteMedia).toHaveBeenCalledWith(repo.tx, "p1");
+		expect(storage.deleteObject).toHaveBeenCalledWith(KEY);
+	});
+
+	it("keeps a portrait still used by another role or as the artist photo", async () => {
+		const { mediaRepo, storage, useCase } = build([{ artistId: 1, pictureId: "p1" }]);
+		mediaRepo.countPictureUses.mockResolvedValue(1);
+		await useCase.execute(10, asLog(makeLog()));
+		expect(mediaRepo.deleteLink).not.toHaveBeenCalled();
+		expect(storage.deleteObject).not.toHaveBeenCalled();
+	});
+
+	it("keeps the media and its file while another gallery still links it", async () => {
+		const { mediaRepo, storage, useCase } = build([{ artistId: 1, pictureId: "p1" }]);
+		mediaRepo.countLinks.mockResolvedValue(1);
+		await useCase.execute(10, asLog(makeLog()));
+		expect(mediaRepo.deleteLink).toHaveBeenCalled();
+		expect(mediaRepo.deleteMedia).not.toHaveBeenCalled();
+		expect(storage.deleteObject).not.toHaveBeenCalled();
+	});
+
+	it("only logs a failed S3 delete", async () => {
+		const { storage, useCase } = build([{ artistId: 1, pictureId: "p1" }]);
+		storage.deleteObject.mockRejectedValue(new Error("S3 down"));
+		const log = makeLog();
+		await useCase.execute(10, asLog(log));
+		expect(log.warn).toHaveBeenCalled();
 	});
 });

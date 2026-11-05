@@ -181,6 +181,11 @@ export const PerformanceDetailsResponseSchema = PerformanceViewSchema.extend({
 });
 export type PerformanceDetailsResponse = z.infer<typeof PerformanceDetailsResponseSchema>;
 
+//
+// PERFORMANCE: DELETE
+//
+export const DeletePerformanceParamsRequestSchema = NumberIdParamsSchema;
+
 type ItemOverview = {
 	nbPerformances: number;
 	nbSpectacles: number;

@@ -6,7 +6,7 @@ import { vi } from "vitest";
  * lets the query-builder chains resolve so a handler runs end to end.
  *
  * - `db.query.<table>.findMany/findFirst` are `vi.fn()`s, stable per table name.
- * - `db.select()/insert()/update()/delete()` return a chainable thenable that
+ * - `db.select()/selectDistinct()/insert()/update()/delete()` return a chainable thenable that
  *   awaits to `[]` (override per builder via `results`).
  * - `db.transaction(fn)` calls `fn` with the same fake.
  */
@@ -56,6 +56,7 @@ export function makeFakeDrizzle(options: FakeDrizzleOptions = {}) {
 	const db = {
 		query,
 		select: vi.fn(() => makeChain(builderResult)),
+		selectDistinct: vi.fn(() => makeChain(builderResult)),
 		insert: vi.fn(() => makeChain(builderResult)),
 		update: vi.fn(() => makeChain(builderResult)),
 		delete: vi.fn(() => makeChain(builderResult)),

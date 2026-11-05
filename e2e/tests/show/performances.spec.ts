@@ -121,6 +121,32 @@ test.describe("Shows - Performances", () => {
 		await expect(performanceRows(page).nth(5)).toHaveClass(/canceled/);
 	});
 
+	test("cancel the deletion of a performance", async ({ page }) => {
+		await openPerformance(page, performances.paris2025, spectacles.miserablesParis.name);
+		await page.locator(".presentation-with-picture").getByRole("button", { name: "Supprimer" }).click();
+		const dialog = page.getByRole("dialog", { name: "Supprimer représentation" });
+		await expect(dialog).toContainText(`${spectacles.miserablesParis.name} du 20/03/25 à 20:00`);
+		await dialog.getByRole("button", { name: "Annuler" }).click();
+
+		await expect(dialog).not.toBeVisible();
+		await expect(page).toHaveURL(`/shows/performances/${performances.paris2025}`);
+		await expect(castingRows(page)).toHaveCount(2);
+	});
+
+	test("delete a performance with its casting", async ({ page }) => {
+		await openPerformance(page, performances.paris2025, spectacles.miserablesParis.name);
+		await page.locator(".presentation-with-picture").getByRole("button", { name: "Supprimer" }).click();
+		const dialog = page.getByRole("dialog", { name: "Supprimer représentation" });
+		await dialog.getByRole("button", { name: "Supprimer" }).click();
+
+		await expect(dialog).not.toBeVisible();
+		await expect(page).toHaveURL(`/shows/spectacles/${spectacles.miserablesParis.id}`);
+		await expect(page.getByRole("heading", { name: "Représentations (2)" })).toBeVisible();
+
+		await page.goto("/shows/performances");
+		await expect(performanceRows(page)).toHaveCount(6);
+	});
+
 	test("add the casting of a performance", async ({ page }) => {
 		await openPerformance(page, performances.hamletSept, spectacles.hamlet.name);
 		await expect(page.getByText("Aucun casting")).toBeVisible();

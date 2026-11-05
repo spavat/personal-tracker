@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 
-import { and, asc, eq, gte, lt, notInArray, sql } from "drizzle-orm";
+import { and, asc, eq, gte, isNotNull, lt, notInArray, sql } from "drizzle-orm";
 
 import { showPerformance, showPlace, showRole, showSpectacle, showSpectacleMedia, showWork } from "../../../db/schema";
 import { visiblePerformanceWhere } from "../../../db/visible-performance";
@@ -149,6 +149,19 @@ export class PerformanceRepository {
 					pictureId: sql`excluded.picture_id`,
 				},
 			});
+	}
+
+	findRolePictures(tx: any, performanceId: number): Promise<{ artistId: number; pictureId: string }[]> {
+		return tx
+			.selectDistinct({ artistId: showRole.artistId, pictureId: showRole.pictureId })
+			.from(showRole)
+			.where(and(eq(showRole.performanceId, performanceId), isNotNull(showRole.pictureId)));
+	}
+
+	// the casting roles reference the performance: they go first
+	async delete(tx: any, performanceId: number) {
+		await tx.delete(showRole).where(eq(showRole.performanceId, performanceId));
+		return tx.delete(showPerformance).where(eq(showPerformance.id, performanceId)).returning();
 	}
 
 	deleteRolesExcept(tx: any, performanceId: number, incomingIds: number[], insertedIds: number[]) {

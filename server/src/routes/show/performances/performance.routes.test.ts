@@ -1,8 +1,15 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { makeFakeDrizzle } from "../../../test-support/fake-drizzle";
 import { buildRouteApp } from "../../../test-support/route-harness";
 import performanceRoutes from "./performance.routes";
+
+// no real S3 call when a deleted performance takes role portraits with it
+vi.mock("../media/media-storage.repository", () => ({
+	MediaStorageRepository: class {
+		deleteObject = vi.fn().mockResolvedValue(undefined);
+	},
+}));
 
 async function buildApp(builderResult?: unknown) {
 	const { db, table } = makeFakeDrizzle({ builderResult });
@@ -79,5 +86,23 @@ describe("show/performances routes", () => {
 		});
 		expect(res.statusCode).toBe(204);
 		expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
+	});
+
+	it("DELETE /:id deletes inside a transaction: 204", async () => {
+		await ctx.app.close();
+		ctx = await buildApp([{ id: 10 }]);
+		const res = await ctx.app.inject({ method: "DELETE", url: "/10" });
+		expect(res.statusCode).toBe(204);
+		expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
+	});
+
+	it("DELETE /:id 404s when the performance is unknown", async () => {
+		await ctx.app.close();
+		ctx = await buildApp([]);
+		expect((await ctx.app.inject({ method: "DELETE", url: "/10" })).statusCode).toBe(404);
+	});
+
+	it("DELETE /:id rejects a non-numeric id", async () => {
+		expect((await ctx.app.inject({ method: "DELETE", url: "/abc" })).statusCode).toBe(400);
 	});
 });

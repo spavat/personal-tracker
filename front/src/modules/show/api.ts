@@ -222,6 +222,9 @@ export async function savePerformance(data: any) {
 	const sentData = SavePerformanceBodyRequestSchema.parse(data);
 	return sendJson(`${API_BASE_URL}/show/performances/save`, "POST", sentData);
 }
+export async function deletePerformance(id: string) {
+	return sendJson(`${API_BASE_URL}/show/performances/${id}`, "DELETE");
+}
 
 // MEDIA
 export type MediaOwner = { spectacleId: number } | { artistId: number };

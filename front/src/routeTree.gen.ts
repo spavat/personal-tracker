@@ -126,6 +126,7 @@ import { Route as ShowsArtistsListIndexRouteImport } from './routes/shows/artist
 import { Route as ShowsArtistsListAddRouteImport } from './routes/shows/artists/_list.add'
 import { Route as ShowsHistoryYearAddRouteImport } from './routes/shows/history/$year.add'
 import { Route as ShowsPerformancesPerformanceIdCastingRouteImport } from './routes/shows/performances/$performanceId.casting'
+import { Route as ShowsPerformancesPerformanceIdDeleteRouteImport } from './routes/shows/performances/$performanceId.delete'
 import { Route as ShowsPerformancesPerformanceIdEditRouteImport } from './routes/shows/performances/$performanceId.edit'
 import { Route as ShowsPlacesPlaceIdDetailsRouteImport } from './routes/shows/places/$placeId/_details'
 import { Route as ShowsPlacesListIndexRouteImport } from './routes/shows/places/_list.index'
@@ -804,6 +805,12 @@ const ShowsPerformancesPerformanceIdCastingRoute =
     path: '/casting',
     getParentRoute: () => ShowsPerformancesPerformanceIdRoute,
   } as any)
+const ShowsPerformancesPerformanceIdDeleteRoute =
+  ShowsPerformancesPerformanceIdDeleteRouteImport.update({
+    id: '/delete',
+    path: '/delete',
+    getParentRoute: () => ShowsPerformancesPerformanceIdRoute,
+  } as any)
 const ShowsPerformancesPerformanceIdEditRoute =
   ShowsPerformancesPerformanceIdEditRouteImport.update({
     id: '/edit',
@@ -1330,6 +1337,7 @@ export interface FileRoutesByFullPath {
   '/shows/artists/add': typeof ShowsArtistsListAddRoute
   '/shows/history/$year/add': typeof ShowsHistoryYearAddRoute
   '/shows/performances/$performanceId/casting': typeof ShowsPerformancesPerformanceIdCastingRoute
+  '/shows/performances/$performanceId/delete': typeof ShowsPerformancesPerformanceIdDeleteRoute
   '/shows/performances/$performanceId/edit': typeof ShowsPerformancesPerformanceIdEditRoute
   '/shows/places/$placeId': typeof ShowsPlacesPlaceIdDetailsRouteWithChildren
   '/shows/places/add': typeof ShowsPlacesListAddRoute
@@ -1496,6 +1504,7 @@ export interface FileRoutesByTo {
   '/shows/artists/add': typeof ShowsArtistsListAddRoute
   '/shows/history/$year/add': typeof ShowsHistoryYearAddRoute
   '/shows/performances/$performanceId/casting': typeof ShowsPerformancesPerformanceIdCastingRoute
+  '/shows/performances/$performanceId/delete': typeof ShowsPerformancesPerformanceIdDeleteRoute
   '/shows/performances/$performanceId/edit': typeof ShowsPerformancesPerformanceIdEditRoute
   '/shows/places/add': typeof ShowsPlacesListAddRoute
   '/shows/works/add': typeof ShowsWorksListAddRoute
@@ -1685,6 +1694,7 @@ export interface FileRoutesById {
   '/shows/artists/_list/add': typeof ShowsArtistsListAddRoute
   '/shows/history/$year/add': typeof ShowsHistoryYearAddRoute
   '/shows/performances/$performanceId/casting': typeof ShowsPerformancesPerformanceIdCastingRoute
+  '/shows/performances/$performanceId/delete': typeof ShowsPerformancesPerformanceIdDeleteRoute
   '/shows/performances/$performanceId/edit': typeof ShowsPerformancesPerformanceIdEditRoute
   '/shows/places/$placeId/_details': typeof ShowsPlacesPlaceIdDetailsRouteWithChildren
   '/shows/places/_list/add': typeof ShowsPlacesListAddRoute
@@ -1876,6 +1886,7 @@ export interface FileRouteTypes {
     | '/shows/artists/add'
     | '/shows/history/$year/add'
     | '/shows/performances/$performanceId/casting'
+    | '/shows/performances/$performanceId/delete'
     | '/shows/performances/$performanceId/edit'
     | '/shows/places/$placeId'
     | '/shows/places/add'
@@ -2042,6 +2053,7 @@ export interface FileRouteTypes {
     | '/shows/artists/add'
     | '/shows/history/$year/add'
     | '/shows/performances/$performanceId/casting'
+    | '/shows/performances/$performanceId/delete'
     | '/shows/performances/$performanceId/edit'
     | '/shows/places/add'
     | '/shows/works/add'
@@ -2230,6 +2242,7 @@ export interface FileRouteTypes {
     | '/shows/artists/_list/add'
     | '/shows/history/$year/add'
     | '/shows/performances/$performanceId/casting'
+    | '/shows/performances/$performanceId/delete'
     | '/shows/performances/$performanceId/edit'
     | '/shows/places/$placeId/_details'
     | '/shows/places/_list/add'
@@ -3146,6 +3159,13 @@ declare module '@tanstack/react-router' {
       path: '/casting'
       fullPath: '/shows/performances/$performanceId/casting'
       preLoaderRoute: typeof ShowsPerformancesPerformanceIdCastingRouteImport
+      parentRoute: typeof ShowsPerformancesPerformanceIdRoute
+    }
+    '/shows/performances/$performanceId/delete': {
+      id: '/shows/performances/$performanceId/delete'
+      path: '/delete'
+      fullPath: '/shows/performances/$performanceId/delete'
+      preLoaderRoute: typeof ShowsPerformancesPerformanceIdDeleteRouteImport
       parentRoute: typeof ShowsPerformancesPerformanceIdRoute
     }
     '/shows/performances/$performanceId/edit': {
@@ -4304,6 +4324,7 @@ const ShowsHistoryYearRouteWithChildren =
 
 interface ShowsPerformancesPerformanceIdRouteChildren {
   ShowsPerformancesPerformanceIdCastingRoute: typeof ShowsPerformancesPerformanceIdCastingRoute
+  ShowsPerformancesPerformanceIdDeleteRoute: typeof ShowsPerformancesPerformanceIdDeleteRoute
   ShowsPerformancesPerformanceIdEditRoute: typeof ShowsPerformancesPerformanceIdEditRoute
 }
 
@@ -4311,6 +4332,8 @@ const ShowsPerformancesPerformanceIdRouteChildren: ShowsPerformancesPerformanceI
   {
     ShowsPerformancesPerformanceIdCastingRoute:
       ShowsPerformancesPerformanceIdCastingRoute,
+    ShowsPerformancesPerformanceIdDeleteRoute:
+      ShowsPerformancesPerformanceIdDeleteRoute,
     ShowsPerformancesPerformanceIdEditRoute:
       ShowsPerformancesPerformanceIdEditRoute,
   }
