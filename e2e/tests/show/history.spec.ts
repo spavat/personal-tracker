@@ -26,19 +26,19 @@ test.describe("Shows - History", () => {
 
 	test("performances are grouped by month", async ({ page }) => {
 		await page.goto("/shows/history/2026");
-		await expect(monthTitles(page)).toHaveText(["février 2026", "avril 2026", "septembre 2026"]);
-		await expect(page.locator("table.performances tbody tr td[colspan]").first()).toContainText("(2)");
+		await expect(monthTitles(page)).toHaveText(["septembre 2026", "avril 2026", "février 2026"]);
+		await expect(page.locator("table.performances tbody tr td[colspan]").last()).toContainText("(2)");
 		await expect(performanceRows(page)).toHaveCount(4);
 		// The canceled performance has no number
-		await expect(performanceRows(page).locator("td:first-child")).toHaveText(["#1", "", "#2", "#3"]);
+		await expect(performanceRows(page).locator("td:first-child")).toHaveText(["#3", "#2", "", "#1"]);
 	});
 
 	test("navigate between years", async ({ page }) => {
 		await page.goto("/shows/history/2026");
 		await page.getByRole("button", { name: "Go to previous" }).click();
 		await expect(page).toHaveURL("/shows/history/2025");
-		await expect(monthTitles(page)).toHaveText(["mars 2025", "novembre 2025"]);
-		await expect(performanceRows(page).nth(0)).toContainText(places.chatelet.formerName);
+		await expect(monthTitles(page)).toHaveText(["novembre 2025", "mars 2025"]);
+		await expect(performanceRows(page).last()).toContainText(places.chatelet.formerName);
 
 		await page.getByRole("button", { name: "Go to next" }).click();
 		await page.getByRole("button", { name: "Go to next" }).click();
@@ -69,8 +69,8 @@ test.describe("Shows - History", () => {
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(dialog).not.toBeVisible();
-		await expect(monthTitles(page)).toHaveText(["février 2026", "avril 2026", "juin 2026", "septembre 2026"]);
-		const row = performanceRows(page).nth(3);
+		await expect(monthTitles(page)).toHaveText(["septembre 2026", "juin 2026", "avril 2026", "février 2026"]);
+		const row = performanceRows(page).nth(1);
 		await expect(row.locator("td")).toHaveText([
 			"#3",
 			"12/06/26 19:00",

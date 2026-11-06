@@ -91,8 +91,10 @@ export async function saveSpectacle(data: any) {
 }
 
 // PERFORMANCES
-export async function getPerformances(from?: string, to?: string) {
-	return fetchJson<Array<PerformanceView>>(withQuery(`${API_BASE_URL}/show/performances/`, { from, to }));
+export async function getPerformances(from?: string, to?: string, direction?: "asc" | "desc") {
+	return fetchJson<Array<PerformanceView>>(
+		withQuery(`${API_BASE_URL}/show/performances/`, { from, to, sort: direction && ["date", direction] }),
+	);
 }
 export const performancesQuery = () =>
 	queryOptions({
@@ -101,7 +103,7 @@ export const performancesQuery = () =>
 	});
 export const performanceHistory: YearQueryConfig<Array<PerformanceView>> = {
 	queryKey: ["shows", "performances"],
-	queryFn: getPerformances,
+	queryFn: (from, to) => getPerformances(from, to, "desc"),
 };
 async function getPerformanceDetails(id: string) {
 	return fetchJson<PerformanceDetailsResponse>(`${API_BASE_URL}/show/performances/${id}`);
@@ -125,7 +127,7 @@ export const artistsQuery = () =>
 		queryFn: () => getArtists("name", "asc"),
 	});
 export const artistListSort: SortListConfig<ArtistListResponse> = {
-	sortOptions: { localKey: "show_artist_list", defaultField: "name", defaultDirection: "asc" },
+	sortOptions: { localKey: "show_artist_list", defaultField: "nbPerformances", defaultDirection: "desc" },
 	queryKey: ["shows", "artists"],
 	queryFn: getArtists,
 };
@@ -158,7 +160,7 @@ export const placesQuery = () =>
 		queryFn: () => getPlaces("name", "asc"),
 	});
 export const placeListSort: SortListConfig<PlaceListResponse> = {
-	sortOptions: { localKey: "show_place_list", defaultField: "name", defaultDirection: "asc" },
+	sortOptions: { localKey: "show_place_list", defaultField: "nbPerformances", defaultDirection: "desc" },
 	queryKey: ["shows", "places"],
 	queryFn: getPlaces,
 };

@@ -184,7 +184,7 @@ test.describe("Shows - Performances", () => {
 		await expect(dialog).not.toBeVisible();
 		await expect(castingRows(page).first()).toContainText("Denis Laurent");
 		await page.goto("/shows/artists");
-		await expect(page.locator("table.artists tbody tr")).toHaveCount(4);
+		await expect(page.locator(".card_item.artist")).toHaveCount(4);
 	});
 
 	test("edit the casting: apply the model and remove a role", async ({ page }) => {

@@ -38,7 +38,17 @@ describe("ListPerformancesUseCase", () => {
 			{ from: "2024-01-01", to: "2024-12-31" },
 			asLog(makeLog()),
 		);
-		expect(repo.findAllWithDetails).toHaveBeenCalledWith({ from: "2024-01-01", to: "2024-12-31" });
+		expect(repo.findAllWithDetails).toHaveBeenCalledWith({
+			from: "2024-01-01",
+			to: "2024-12-31",
+			sortDirection: "asc",
+		});
+	});
+
+	it("forwards the sort direction", async () => {
+		const repo = fakeRepo();
+		await new ListPerformancesUseCase(asRepo(repo)).execute({ sort: ["date", "desc"] }, asLog(makeLog()));
+		expect(repo.findAllWithDetails).toHaveBeenCalledWith({ sortDirection: "desc" });
 	});
 
 	it("adds the poster url", async () => {

@@ -29,13 +29,13 @@ async function openPlace(page: Page, place: { id: number; name: string }) {
 test.describe("Shows - Places", () => {
 	test.afterEach(resetDb);
 
-	test("list shows the places sorted by name", async ({ page }) => {
+	test("list shows the places sorted by number of performances", async ({ page }) => {
 		await page.goto("/shows/places");
 		await expect(placeNames(page)).toHaveText([
+			places.chatelet.name,
+			places.sondheim.name,
 			places.comedie.name,
 			places.empty.name,
-			places.sondheim.name,
-			places.chatelet.name,
 		]);
 		await expect(placeRow(page, places.sondheim.name).locator(".fi-gb")).toBeAttached();
 		// Canceled performances aren't counted, as in the details page
@@ -46,10 +46,10 @@ test.describe("Shows - Places", () => {
 		await page.goto("/shows/places");
 		await page.getByRole("columnheader", { name: "Nom" }).getByText("Nom").click();
 		await expect(placeNames(page)).toHaveText([
-			places.chatelet.name,
-			places.sondheim.name,
-			places.empty.name,
 			places.comedie.name,
+			places.empty.name,
+			places.sondheim.name,
+			places.chatelet.name,
 		]);
 	});
 
@@ -107,11 +107,11 @@ test.describe("Shows - Places", () => {
 
 		await expect(dialog).not.toBeVisible();
 		await expect(placeNames(page)).toHaveText([
-			places.comedie.name,
-			"Opéra Garnier",
-			places.empty.name,
-			places.sondheim.name,
 			places.chatelet.name,
+			places.sondheim.name,
+			places.comedie.name,
+			places.empty.name,
+			"Opéra Garnier",
 		]);
 	});
 

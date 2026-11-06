@@ -21,6 +21,12 @@ function performanceRows(page: Page) {
 	return page.locator("table.performancesWithRole tbody tr").filter({ has: page.locator("td:nth-child(2)") });
 }
 
+// cards are the default display: the table is one select away
+async function openList(page: Page) {
+	await page.goto("/shows/artists");
+	await page.getByLabel("Affichage").selectOption("list");
+}
+
 async function openArtist(page: Page, artist: { id: number; name: string }) {
 	await page.goto(`/shows/artists/${artist.id}`);
 	await expect(page.getByRole("heading", { name: artist.name })).toBeVisible();
@@ -29,8 +35,16 @@ async function openArtist(page: Page, artist: { id: number; name: string }) {
 test.describe("Shows - Artists", () => {
 	test.afterEach(resetDb);
 
-	test("list shows the artists sorted by name", async ({ page }) => {
+	test("list shows the artists as cards, then as a table", async ({ page }) => {
 		await page.goto("/shows/artists");
+		await expect(page.locator(".card_item.artist .title")).toHaveText([
+			artists.alice.name,
+			artists.bob.name,
+			artists.claire.name,
+		]);
+		await expect(artistRows(page)).toHaveCount(0);
+
+		await page.getByLabel("Affichage").selectOption("list");
 		await expect(artistNames(page)).toHaveText([artists.alice.name, artists.bob.name, artists.claire.name]);
 		await expect(artistRow(page, artists.bob.name).locator("td")).toHaveText([
 			"#2",
@@ -42,7 +56,7 @@ test.describe("Shows - Artists", () => {
 	});
 
 	test("sort the list", async ({ page }) => {
-		await page.goto("/shows/artists");
+		await openList(page);
 		const header = page.getByRole("columnheader", { name: "Spectacle(s)" });
 		await header.getByText("Spectacle(s)").click();
 		await expect(header.locator(".fa-sort-up")).toBeVisible();
@@ -57,14 +71,14 @@ test.describe("Shows - Artists", () => {
 	});
 
 	test("an artist with performances can't be deleted", async ({ page }) => {
-		await page.goto("/shows/artists");
+		await openList(page);
 		await expect(artistRow(page, artists.alice.name).getByRole("button", { name: "Supprimer" })).toBeDisabled();
 		await expect(artistRow(page, artists.bob.name).getByRole("button", { name: "Supprimer" })).toBeDisabled();
 		await expect(artistRow(page, artists.claire.name).getByRole("button", { name: "Supprimer" })).toBeEnabled();
 	});
 
 	test("delete an artist", async ({ page }) => {
-		await page.goto("/shows/artists");
+		await openList(page);
 		await artistRow(page, artists.claire.name).getByRole("button", { name: "Supprimer" }).click();
 		const dialog = page.getByRole("dialog", { name: "Supprimer artiste" });
 		await expect(dialog).toContainText(`Nom : ${artists.claire.name}`);
@@ -80,7 +94,7 @@ test.describe("Shows - Artists", () => {
 	});
 
 	test("add an artist", async ({ page }) => {
-		await page.goto("/shows/artists");
+		await openList(page);
 		await page.getByRole("button", { name: "Ajouter un artiste" }).click();
 		const dialog = page.getByRole("dialog", { name: "Ajouter un artiste" });
 		await dialog.getByRole("textbox", { name: "Nom *" }).fill("Bernard Durand");
@@ -89,14 +103,14 @@ test.describe("Shows - Artists", () => {
 		await expect(dialog).not.toBeVisible();
 		await expect(artistNames(page)).toHaveText([
 			artists.alice.name,
-			"Bernard Durand",
 			artists.bob.name,
 			artists.claire.name,
+			"Bernard Durand",
 		]);
 	});
 
 	test("edit an artist from the list", async ({ page }) => {
-		await page.goto("/shows/artists");
+		await openList(page);
 		await artistRow(page, artists.bob.name).getByRole("button", { name: "Modifier" }).click();
 		const dialog = page.getByRole("dialog", { name: "Modifier l'artiste" });
 		await expect(dialog.getByRole("textbox", { name: "Nom *" })).toHaveValue(artists.bob.name);
@@ -104,7 +118,7 @@ test.describe("Shows - Artists", () => {
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(dialog).not.toBeVisible();
-		await expect(artistNames(page)).toHaveText([artists.alice.name, artists.claire.name, "Robert Smith"]);
+		await expect(artistNames(page)).toHaveText([artists.alice.name, "Robert Smith", artists.claire.name]);
 	});
 
 	test("details page shows the artist performances", async ({ page }) => {
@@ -150,7 +164,7 @@ test.describe("Shows - Artists", () => {
 	});
 
 	test("the artist name is required", async ({ page }) => {
-		await page.goto("/shows/artists");
+		await openList(page);
 		await page.getByRole("button", { name: "Ajouter un artiste" }).click();
 		const dialog = page.getByRole("dialog", { name: "Ajouter un artiste" });
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();

@@ -42,9 +42,10 @@ export default function History({ year }: { year: string }) {
 		}
 		groups[month].performances.push(perf);
 	});
-	const sortedMonths = Object.keys(groups).toSorted((a, b) => a.localeCompare(b));
+	const sortedMonths = Object.keys(groups).toSorted((a, b) => b.localeCompare(a));
 
-	let index = 1;
+	// newest first: count down so #1 stays the first performance of the year
+	let index = listQuery.data.filter((perf) => !perf.canceled).length;
 	return (
 		<>
 			<HeaderPortal>
@@ -90,7 +91,7 @@ export default function History({ year }: { year: string }) {
 									const [date, time] = formatShowDate(show.date).split(" ");
 									return (
 										<tr key={show.id} className={show.canceled ? "canceled" : ""}>
-											<td className="smalltext">{!show.canceled && <>#{index++}</>}</td>
+											<td className="smalltext">{!show.canceled && <>#{index--}</>}</td>
 											<td data-label="Date">
 												<Link
 													to="/shows/performances/$performanceId"

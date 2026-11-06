@@ -43,6 +43,7 @@ test.describe("anonymous visitor", () => {
 	test.describe("shows (read only)", () => {
 		test("lists without add, edit or delete buttons", async ({ page }) => {
 			await page.goto("/shows/artists");
+			await page.getByLabel("Affichage").selectOption("list");
 			await expect(page.getByRole("link", { name: artists.alice.name })).toBeVisible();
 			await expect(page.getByRole("columnheader", { name: "Actions" })).toHaveCount(0);
 			await expect(page.getByRole("button", { name: "Ajouter un artiste" })).toHaveCount(0);

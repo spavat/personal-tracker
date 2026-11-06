@@ -26,7 +26,7 @@ export default function ArtistList() {
 		],
 	});
 
-	const [display, changeDisplay] = useDisplay("show_artist_list_display");
+	const [display, changeDisplay] = useDisplay("show_artist_list_display", "card");
 
 	return (
 		<>

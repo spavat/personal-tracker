@@ -167,7 +167,14 @@ export default function ArtistDetails({ artistId }: { artistId: string }) {
 										<tr key={perf.id} className={perf.canceled ? "canceled" : ""}>
 											<td className="smalltext">{!perf.canceled && <>#{index++}</>}</td>
 											<td data-label="Date">
-												{date} <span className="smalltext">{time}</span>
+												<Link
+													to="/shows/performances/$performanceId"
+													params={{ performanceId: String(perf.id) }}
+													viewTransition
+												>
+													{date}
+												</Link>{" "}
+												<span className="smalltext">{time}</span>
 											</td>
 											<td>
 												{perf.posterUrl && (
@@ -188,7 +195,17 @@ export default function ArtistDetails({ artistId }: { artistId: string }) {
 												</Link>
 											</td>
 											<td data-label="Rôle">{perf.role}</td>
-											<td data-label="Lieu">{perf.place?.name}</td>
+											<td data-label="Lieu">
+												{perf.place && (
+													<Link
+														to="/shows/places/$placeId"
+														params={{ placeId: String(perf.place.id) }}
+														viewTransition
+													>
+														{perf.place.name}
+													</Link>
+												)}
+											</td>
 											<td data-label="Pays">
 												<span className={`fi fi-${perf.place?.country}`}></span>
 											</td>

@@ -15,11 +15,17 @@ export class ListPerformancesUseCase {
 	constructor(private repo: PerformanceRepository) {}
 
 	async execute(
-		{ from, to }: { from?: string; to?: string },
+		{ from, to, sort }: { from?: string; to?: string; sort?: string[] },
 		log: FastifyBaseLogger,
 	): Promise<Array<PerformanceView>> {
 		log.info("ListPerformancesUseCase.execute");
-		const performances = await this.repo.findAllWithDetails({ from, to });
+		// only the date is sortable
+		const [, sortDirection] = sort ?? ["date", "asc"];
+		const performances = await this.repo.findAllWithDetails({
+			from,
+			to,
+			sortDirection: sortDirection === "desc" ? "desc" : "asc",
+		});
 		return performances.map(toPerformanceView);
 	}
 }

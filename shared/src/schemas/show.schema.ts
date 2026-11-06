@@ -166,7 +166,7 @@ export type ModelView = z.infer<typeof ModelViewSchema>;
 // PERFORMANCE LIST
 //
 // Request
-export const PerformanceListQuerystringRequestSchema = OptionalPeriodQSSchema;
+export const PerformanceListQuerystringRequestSchema = OptionalPeriodQSSchema.extend(SortQSSchema.shape);
 
 //
 // PERFORMANCE DETAILS

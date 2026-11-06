@@ -51,7 +51,11 @@ export class PerformanceRepository {
 			.orderBy(asc(showPerformance.date));
 	}
 
-	findAllWithDetails({ from, to }: { from?: string; to?: string } = {}) {
+	findAllWithDetails({
+		from,
+		to,
+		sortDirection = "asc",
+	}: { from?: string; to?: string; sortDirection?: "asc" | "desc" } = {}) {
 		const date: { gte?: string; lt?: string } = {};
 		if (from) {
 			const fromDate = Temporal.PlainDate.from(from);
@@ -64,7 +68,7 @@ export class PerformanceRepository {
 
 		return this.db.query.showPerformance.findMany({
 			where: { date, ...visiblePerformanceWhere() },
-			orderBy: { date: "asc" },
+			orderBy: { date: sortDirection },
 			extras: { placeName: placeNameAt },
 			with: {
 				place: true,
