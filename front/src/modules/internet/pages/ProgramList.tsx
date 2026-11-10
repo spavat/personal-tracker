@@ -43,7 +43,7 @@ export default function ProgramList() {
 							console.log("program.profile ko", program.profile);
 							return (
 								<tr key={program.id}>
-									<td>{i + 1}</td>
+									<td className="smalltext">#{i + 1}</td>
 									<td>
 										<Link
 											to="/internet/$programId"
