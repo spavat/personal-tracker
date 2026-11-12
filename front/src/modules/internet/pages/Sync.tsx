@@ -41,6 +41,7 @@ export default function Sync() {
 	const queryClient = useQueryClient();
 	const { data } = useSuspenseQuery(syncQuery());
 	const { data: programs } = useSuspenseQuery(programsQuery());
+	const [displayForm, setDisplayForm] = useState(false);
 
 	const reprocessMutation = useMutation({
 		mutationFn: reprocessSync,
@@ -58,7 +59,13 @@ export default function Sync() {
 
 	return (
 		<>
-			<h2>Sync ({data.length})</h2>
+			<h2>
+				Sync ({data.length})
+				<label>
+					<input type="checkbox" checked={displayForm} onChange={(e) => setDisplayForm(e.target.checked)} />{" "}
+					Afficher formulaire
+				</label>
+			</h2>
 			<div className="sync-list">
 				{data.map((item) => {
 					const program = programs.find((p) => p.id === item.proposition?.programId);
@@ -122,12 +129,14 @@ export default function Sync() {
 									)}
 								</div>
 							</div>
-							<div className="panel sync-item">
-								<SyncItemForm
-									item={item}
-									onDone={() => queryClient.invalidateQueries({ queryKey: ["sync"] })}
-								/>
-							</div>
+							{displayForm && (
+								<div className="panel sync-item">
+									<SyncItemForm
+										item={item}
+										onDone={() => queryClient.invalidateQueries({ queryKey: ["sync"] })}
+									/>
+								</div>
+							)}
 						</Fragment>
 					);
 				})}
