@@ -5,10 +5,6 @@
 			font-weight: normal;
 		}
 
-		h3 input {
-			width: 50%;
-		}
-
 		.tooltip {
 			position: relative;
 			display: inline-block;
@@ -127,9 +123,6 @@
 					border-radius: 5px;
 					white-space: nowrap;
 				}
-			}
-			input {
-				width: 50%;
 			}
 			.loading {
 				height: 7lh;
