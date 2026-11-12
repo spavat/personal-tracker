@@ -20,6 +20,7 @@ import {
 	SyncLinkFeedBodyRequestSchema,
 	SyncFeedBodyRequest,
 	SyncFeedBodyRequestSchema,
+	ReviewEpisodesResponse,
 } from "@personal-tracker/shared/internet";
 import { queryOptions } from "@tanstack/react-query";
 
@@ -85,6 +86,16 @@ export const internetStats: YearQueryConfig<StatsArrayResponse> = {
 	queryKey: ["programs", "stats"],
 	queryFn: getStatsYear,
 };
+
+// Episodes without any tag (key under ["programs"]: refreshed on every save)
+async function getReview() {
+	return fetchJson<ReviewEpisodesResponse>(`${API_BASE_URL}/internet/review`);
+}
+export const reviewQuery = () =>
+	queryOptions({
+		queryKey: ["programs", "review"],
+		queryFn: () => getReview(),
+	});
 
 export async function save(data: SaveBodyRequestType) {
 	const sentData = SaveBodyRequestSchema.parse(data);

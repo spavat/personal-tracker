@@ -318,7 +318,7 @@
 		line-height: 24px;
 		input {
 			height: 15px;
-			background-color: green;
+			background-color: inherit;
 			border: none;
 			outline: none;
 			field-sizing: content; /* input shrinks/grows with content */

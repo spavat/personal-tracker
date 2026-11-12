@@ -91,6 +91,7 @@ test.describe("anonymous visitor", () => {
 			await page.getByRole("link", { name: "Internet" }).click();
 			await expect(page).toHaveURL(/\/internet\/history\/\d{4}-\d{2}$/);
 			await expect(page.getByRole("link", { name: "Sync Podcast" })).toHaveCount(0);
+			await expect(page.getByRole("link", { name: "Review Tag" })).toHaveCount(0);
 
 			await page.goto("/internet/list");
 			await expect(page.getByRole("link", { name: mockPodcast.name })).toBeVisible();
@@ -122,6 +123,7 @@ test.describe("anonymous visitor", () => {
 
 		for (const url of [
 			"/internet/sync",
+			"/internet/review",
 			"/internet/list/add",
 			`/internet/list/edit/${mockPodcast.id}`,
 			`/internet/${mockPodcast.id}/edit`,
@@ -139,6 +141,7 @@ test.describe("anonymous visitor", () => {
 			expect((await request.get(`${API}/internet/id/${mockPodcast.id}`)).status()).toBe(200);
 			expect((await request.get(`${API}/internet/stats?from=2026-01-01&to=2026-12-31`)).status()).toBe(200);
 			expect((await request.get(`${API}/internet/sync`)).status()).toBe(401);
+			expect((await request.get(`${API}/internet/review`)).status()).toBe(401);
 			expect((await request.get(`${API}/internet/latest/${mockPodcast.id}`)).status()).toBe(401);
 			expect((await request.get(`${API}/internet/extract?url=https://example.com`)).status()).toBe(401);
 			expect(

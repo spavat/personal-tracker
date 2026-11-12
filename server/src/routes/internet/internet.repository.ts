@@ -6,7 +6,7 @@ import { privacyMatch } from "../../request-context";
 
 const MONGO_INTERNET_COLLECTION = "internet";
 // Not sent by the episode form when empty (see onSubmitEpisode and cleanEpisode)
-const CLEARABLE_EPISODE_FIELDS = ["durationReal", "tags", "contextTags"];
+const CLEARABLE_EPISODE_FIELDS = ["durationReal", "tags", "contextTags", "ignoredTags"];
 
 interface ProgramListFilters {
 	search: string;
@@ -126,6 +126,20 @@ export class InternetRepository {
 				},
 			},
 		]);
+		return cursor?.toArray();
+	}
+
+	findAllWithEpisodes() {
+		const cursor = this.collection
+			?.find({ ...privacyMatch() })
+			.project<Pick<ProgramMongo, "id" | "name" | "shortName" | "tags" | "episodes">>({
+				_id: 0,
+				id: 1,
+				name: 1,
+				shortName: 1,
+				tags: 1,
+				episodes: 1,
+			});
 		return cursor?.toArray();
 	}
 

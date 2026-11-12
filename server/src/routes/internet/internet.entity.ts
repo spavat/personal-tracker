@@ -11,6 +11,7 @@ export interface EpisodeMongo {
 	link?: string;
 	tags?: Array<string>;
 	contextTags?: Array<string>;
+	ignoredTags?: Array<string>;
 	created?: string;
 	externalId?: string;
 }
@@ -47,10 +48,22 @@ export function cleanEpisode(episode: any) {
 	if (!episode.contextTags || episode.contextTags.length === 0) {
 		delete episode.contextTags;
 	}
+	if (!episode.ignoredTags || episode.ignoredTags.length === 0) {
+		delete episode.ignoredTags;
+	}
 	if (!episode.links || episode.links.length === 0) {
 		delete episode.links;
 	}
 	return episode;
+}
+
+// Tags of an episode: the program tags it does not ignore, plus its own (each once)
+export function getEpisodeTags(
+	programTags: Array<string> | undefined,
+	episode: Pick<EpisodeMongo, "tags" | "ignoredTags">,
+): Array<string> {
+	const ignored = episode.ignoredTags ?? [];
+	return [...new Set([...(programTags ?? []).filter((tag) => !ignored.includes(tag)), ...(episode.tags ?? [])])];
 }
 
 export function sortEpisodesDesc(a: EpisodeMongo, b: EpisodeMongo) {

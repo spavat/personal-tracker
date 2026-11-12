@@ -8,6 +8,7 @@ import { API_BASE_URL } from "../../../config";
 import { useIsOwner } from "../../../hooks/use-is-owner";
 import { formatDate, formatDateTime, formatDay, getDurationString, getPeriodDifference } from "../../../utils";
 import { programDetailsQuery } from "../api";
+import IgnoredTagBadge from "../components/IgnoredTagBadge";
 import { getIconType } from "../search-fn";
 
 function getDomain(url: string) {
@@ -248,6 +249,9 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 												color="white"
 												backgroundColor="green"
 											></Badge>
+										))}
+										{(episode.ignoredTags ?? []).map((c: string) => (
+											<IgnoredTagBadge key={c} name={c} />
 										))}
 										{(episode.contextTags ?? []).map((c: string) => (
 											<Badge

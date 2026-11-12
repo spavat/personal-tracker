@@ -4,7 +4,7 @@ import type { z } from "zod";
 
 import type { InternetRepository } from "../internet.repository";
 
-import { sortByDuration } from "../internet.entity";
+import { getEpisodeTags, sortByDuration } from "../internet.entity";
 
 type StatsQuery = z.infer<typeof StatsRequestSchema>;
 
@@ -28,21 +28,7 @@ export class GetStatsUseCase {
 					const duration = ep.durationReal ?? ep.duration;
 					acc.programs[program.id].duration += duration;
 					acc.summary.total += duration;
-					(program.tags ?? []).forEach((tag: string) => {
-						if (!acc.tags[tag]) {
-							acc.tags[tag] = {
-								name: tag,
-								duration: 0,
-								details: {},
-							};
-						}
-						acc.tags[tag].duration += duration;
-						if (!acc.tags[tag].details[program.id]) {
-							acc.tags[tag].details[program.id] = { name: program.name, duration: 0 };
-						}
-						acc.tags[tag].details[program.id].duration += duration;
-					});
-					(ep.tags ?? []).forEach((tag: string) => {
+					getEpisodeTags(program.tags, ep).forEach((tag: string) => {
 						if (!acc.tags[tag]) {
 							acc.tags[tag] = {
 								name: tag,

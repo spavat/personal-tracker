@@ -46,6 +46,7 @@ import { Route as InternetProgramIdDetailsRouteImport } from './routes/internet/
 import { Route as InternetHistoryIndexRouteImport } from './routes/internet/history/index'
 import { Route as InternetHistoryPeriodRouteImport } from './routes/internet/history/$period'
 import { Route as InternetListListRouteImport } from './routes/internet/list/_list'
+import { Route as InternetReviewReviewRouteImport } from './routes/internet/review/_review'
 import { Route as InternetStatsIndexRouteImport } from './routes/internet/stats/index'
 import { Route as InternetStatsYearRouteImport } from './routes/internet/stats/$year'
 import { Route as InternetSyncIndexRouteImport } from './routes/internet/sync/index'
@@ -100,6 +101,7 @@ import { Route as InternetProgramIdDetailsEditRouteImport } from './routes/inter
 import { Route as InternetHistoryPeriodAddRouteImport } from './routes/internet/history/$period.add'
 import { Route as InternetListListIndexRouteImport } from './routes/internet/list/_list.index'
 import { Route as InternetListListAddRouteImport } from './routes/internet/list/_list.add'
+import { Route as InternetReviewReviewIndexRouteImport } from './routes/internet/review/_review.index'
 import { Route as LifespanCategoriesListIndexRouteImport } from './routes/lifespan/categories/_list.index'
 import { Route as LifespanCategoriesListAddRouteImport } from './routes/lifespan/categories/_list.add'
 import { Route as LifespanListListIndexRouteImport } from './routes/lifespan/list/_list.index'
@@ -196,6 +198,7 @@ import { Route as ShowsSpectaclesSpectacleIdDetailsDeleteModelModelIdRouteImport
 import { Route as ShowsSpectaclesSpectacleIdDetailsEditModelModelIdRouteImport } from './routes/shows/spectacles/$spectacleId/_details.editModel.$modelId'
 import { Route as GameDetailsDetailsGameIdPlayPlayIdDeleteRouteImport } from './routes/game/details/_details.$gameId.play.$playId.delete'
 import { Route as GameDetailsDetailsGameIdPlayPlayIdEditRouteImport } from './routes/game/details/_details.$gameId.play.$playId.edit'
+import { Route as InternetReviewReviewEpisodeProgramIdEpisodeIdEditRouteImport } from './routes/internet/review/_review.episode.$programId.$episodeId.edit'
 import { Route as LifespanListListObjectIdEventEventIdDeleteRouteImport } from './routes/lifespan/list/_list.$objectId.event.$eventId.delete'
 import { Route as LifespanListListObjectIdEventEventIdEditRouteImport } from './routes/lifespan/list/_list.$objectId.event.$eventId.edit'
 
@@ -382,6 +385,11 @@ const InternetHistoryPeriodRoute = InternetHistoryPeriodRouteImport.update({
 const InternetListListRoute = InternetListListRouteImport.update({
   id: '/list/_list',
   path: '/list',
+  getParentRoute: () => InternetRoute,
+} as any)
+const InternetReviewReviewRoute = InternetReviewReviewRouteImport.update({
+  id: '/review/_review',
+  path: '/review',
   getParentRoute: () => InternetRoute,
 } as any)
 const InternetStatsIndexRoute = InternetStatsIndexRouteImport.update({
@@ -664,6 +672,12 @@ const InternetListListAddRoute = InternetListListAddRouteImport.update({
   path: '/add',
   getParentRoute: () => InternetListListRoute,
 } as any)
+const InternetReviewReviewIndexRoute =
+  InternetReviewReviewIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => InternetReviewReviewRoute,
+  } as any)
 const LifespanCategoriesListIndexRoute =
   LifespanCategoriesListIndexRouteImport.update({
     id: '/',
@@ -1214,6 +1228,12 @@ const GameDetailsDetailsGameIdPlayPlayIdEditRoute =
     path: '/play/$playId/edit',
     getParentRoute: () => GameDetailsDetailsGameIdRoute,
   } as any)
+const InternetReviewReviewEpisodeProgramIdEpisodeIdEditRoute =
+  InternetReviewReviewEpisodeProgramIdEpisodeIdEditRouteImport.update({
+    id: '/episode/$programId/$episodeId/edit',
+    path: '/episode/$programId/$episodeId/edit',
+    getParentRoute: () => InternetReviewReviewRoute,
+  } as any)
 const LifespanListListObjectIdEventEventIdDeleteRoute =
   LifespanListListObjectIdEventEventIdDeleteRouteImport.update({
     id: '/$objectId/event/$eventId/delete',
@@ -1261,6 +1281,7 @@ export interface FileRoutesByFullPath {
   '/internet/$programId': typeof InternetProgramIdDetailsRouteWithChildren
   '/internet/history/$period': typeof InternetHistoryPeriodRouteWithChildren
   '/internet/list': typeof InternetListListRouteWithChildren
+  '/internet/review': typeof InternetReviewReviewRouteWithChildren
   '/internet/stats/$year': typeof InternetStatsYearRoute
   '/lifespan/categories': typeof LifespanCategoriesListRouteWithChildren
   '/lifespan/list': typeof LifespanListListRouteWithChildren
@@ -1349,6 +1370,7 @@ export interface FileRoutesByFullPath {
   '/sport/list/add': typeof SportListListAddRoute
   '/internet/$programId/': typeof InternetProgramIdDetailsIndexRoute
   '/internet/list/': typeof InternetListListIndexRoute
+  '/internet/review/': typeof InternetReviewReviewIndexRoute
   '/lifespan/categories/': typeof LifespanCategoriesListIndexRoute
   '/lifespan/list/': typeof LifespanListListIndexRoute
   '/lifespan/timeline/': typeof LifespanTimelineTimelineIndexRoute
@@ -1414,6 +1436,7 @@ export interface FileRoutesByFullPath {
   '/shows/spectacles/$spectacleId/editModel/$modelId': typeof ShowsSpectaclesSpectacleIdDetailsEditModelModelIdRoute
   '/game/details/$gameId/play/$playId/delete': typeof GameDetailsDetailsGameIdPlayPlayIdDeleteRoute
   '/game/details/$gameId/play/$playId/edit': typeof GameDetailsDetailsGameIdPlayPlayIdEditRoute
+  '/internet/review/episode/$programId/$episodeId/edit': typeof InternetReviewReviewEpisodeProgramIdEpisodeIdEditRoute
   '/lifespan/list/$objectId/event/$eventId/delete': typeof LifespanListListObjectIdEventEventIdDeleteRoute
   '/lifespan/list/$objectId/event/$eventId/edit': typeof LifespanListListObjectIdEventEventIdEditRoute
 }
@@ -1514,6 +1537,7 @@ export interface FileRoutesByTo {
   '/sport/list/add': typeof SportListListAddRoute
   '/internet/$programId': typeof InternetProgramIdDetailsIndexRoute
   '/internet/list': typeof InternetListListIndexRoute
+  '/internet/review': typeof InternetReviewReviewIndexRoute
   '/lifespan/categories': typeof LifespanCategoriesListIndexRoute
   '/lifespan/list': typeof LifespanListListIndexRoute
   '/lifespan/timeline': typeof LifespanTimelineTimelineIndexRoute
@@ -1579,6 +1603,7 @@ export interface FileRoutesByTo {
   '/shows/spectacles/$spectacleId/editModel/$modelId': typeof ShowsSpectaclesSpectacleIdDetailsEditModelModelIdRoute
   '/game/details/$gameId/play/$playId/delete': typeof GameDetailsDetailsGameIdPlayPlayIdDeleteRoute
   '/game/details/$gameId/play/$playId/edit': typeof GameDetailsDetailsGameIdPlayPlayIdEditRoute
+  '/internet/review/episode/$programId/$episodeId/edit': typeof InternetReviewReviewEpisodeProgramIdEpisodeIdEditRoute
   '/lifespan/list/$objectId/event/$eventId/delete': typeof LifespanListListObjectIdEventEventIdDeleteRoute
   '/lifespan/list/$objectId/event/$eventId/edit': typeof LifespanListListObjectIdEventEventIdEditRoute
 }
@@ -1618,6 +1643,7 @@ export interface FileRoutesById {
   '/internet/$programId/_details': typeof InternetProgramIdDetailsRouteWithChildren
   '/internet/history/$period': typeof InternetHistoryPeriodRouteWithChildren
   '/internet/list/_list': typeof InternetListListRouteWithChildren
+  '/internet/review/_review': typeof InternetReviewReviewRouteWithChildren
   '/internet/stats/$year': typeof InternetStatsYearRoute
   '/lifespan/categories/_list': typeof LifespanCategoriesListRouteWithChildren
   '/lifespan/list/_list': typeof LifespanListListRouteWithChildren
@@ -1706,6 +1732,7 @@ export interface FileRoutesById {
   '/sport/list/_list/add': typeof SportListListAddRoute
   '/internet/$programId/_details/': typeof InternetProgramIdDetailsIndexRoute
   '/internet/list/_list/': typeof InternetListListIndexRoute
+  '/internet/review/_review/': typeof InternetReviewReviewIndexRoute
   '/lifespan/categories/_list/': typeof LifespanCategoriesListIndexRoute
   '/lifespan/list/_list/': typeof LifespanListListIndexRoute
   '/lifespan/timeline/_timeline/': typeof LifespanTimelineTimelineIndexRoute
@@ -1771,6 +1798,7 @@ export interface FileRoutesById {
   '/shows/spectacles/$spectacleId/_details/editModel/$modelId': typeof ShowsSpectaclesSpectacleIdDetailsEditModelModelIdRoute
   '/game/details/_details/$gameId/play/$playId/delete': typeof GameDetailsDetailsGameIdPlayPlayIdDeleteRoute
   '/game/details/_details/$gameId/play/$playId/edit': typeof GameDetailsDetailsGameIdPlayPlayIdEditRoute
+  '/internet/review/_review/episode/$programId/$episodeId/edit': typeof InternetReviewReviewEpisodeProgramIdEpisodeIdEditRoute
   '/lifespan/list/_list/$objectId/event/$eventId/delete': typeof LifespanListListObjectIdEventEventIdDeleteRoute
   '/lifespan/list/_list/$objectId/event/$eventId/edit': typeof LifespanListListObjectIdEventEventIdEditRoute
 }
@@ -1810,6 +1838,7 @@ export interface FileRouteTypes {
     | '/internet/$programId'
     | '/internet/history/$period'
     | '/internet/list'
+    | '/internet/review'
     | '/internet/stats/$year'
     | '/lifespan/categories'
     | '/lifespan/list'
@@ -1898,6 +1927,7 @@ export interface FileRouteTypes {
     | '/sport/list/add'
     | '/internet/$programId/'
     | '/internet/list/'
+    | '/internet/review/'
     | '/lifespan/categories/'
     | '/lifespan/list/'
     | '/lifespan/timeline/'
@@ -1963,6 +1993,7 @@ export interface FileRouteTypes {
     | '/shows/spectacles/$spectacleId/editModel/$modelId'
     | '/game/details/$gameId/play/$playId/delete'
     | '/game/details/$gameId/play/$playId/edit'
+    | '/internet/review/episode/$programId/$episodeId/edit'
     | '/lifespan/list/$objectId/event/$eventId/delete'
     | '/lifespan/list/$objectId/event/$eventId/edit'
   fileRoutesByTo: FileRoutesByTo
@@ -2063,6 +2094,7 @@ export interface FileRouteTypes {
     | '/sport/list/add'
     | '/internet/$programId'
     | '/internet/list'
+    | '/internet/review'
     | '/lifespan/categories'
     | '/lifespan/list'
     | '/lifespan/timeline'
@@ -2128,6 +2160,7 @@ export interface FileRouteTypes {
     | '/shows/spectacles/$spectacleId/editModel/$modelId'
     | '/game/details/$gameId/play/$playId/delete'
     | '/game/details/$gameId/play/$playId/edit'
+    | '/internet/review/episode/$programId/$episodeId/edit'
     | '/lifespan/list/$objectId/event/$eventId/delete'
     | '/lifespan/list/$objectId/event/$eventId/edit'
   id:
@@ -2166,6 +2199,7 @@ export interface FileRouteTypes {
     | '/internet/$programId/_details'
     | '/internet/history/$period'
     | '/internet/list/_list'
+    | '/internet/review/_review'
     | '/internet/stats/$year'
     | '/lifespan/categories/_list'
     | '/lifespan/list/_list'
@@ -2254,6 +2288,7 @@ export interface FileRouteTypes {
     | '/sport/list/_list/add'
     | '/internet/$programId/_details/'
     | '/internet/list/_list/'
+    | '/internet/review/_review/'
     | '/lifespan/categories/_list/'
     | '/lifespan/list/_list/'
     | '/lifespan/timeline/_timeline/'
@@ -2319,6 +2354,7 @@ export interface FileRouteTypes {
     | '/shows/spectacles/$spectacleId/_details/editModel/$modelId'
     | '/game/details/_details/$gameId/play/$playId/delete'
     | '/game/details/_details/$gameId/play/$playId/edit'
+    | '/internet/review/_review/episode/$programId/$episodeId/edit'
     | '/lifespan/list/_list/$objectId/event/$eventId/delete'
     | '/lifespan/list/_list/$objectId/event/$eventId/edit'
   fileRoutesById: FileRoutesById
@@ -2599,6 +2635,13 @@ declare module '@tanstack/react-router' {
       path: '/list'
       fullPath: '/internet/list'
       preLoaderRoute: typeof InternetListListRouteImport
+      parentRoute: typeof InternetRoute
+    }
+    '/internet/review/_review': {
+      id: '/internet/review/_review'
+      path: '/review'
+      fullPath: '/internet/review'
+      preLoaderRoute: typeof InternetReviewReviewRouteImport
       parentRoute: typeof InternetRoute
     }
     '/internet/stats/': {
@@ -2978,6 +3021,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/internet/list/add'
       preLoaderRoute: typeof InternetListListAddRouteImport
       parentRoute: typeof InternetListListRoute
+    }
+    '/internet/review/_review/': {
+      id: '/internet/review/_review/'
+      path: '/'
+      fullPath: '/internet/review/'
+      preLoaderRoute: typeof InternetReviewReviewIndexRouteImport
+      parentRoute: typeof InternetReviewReviewRoute
     }
     '/lifespan/categories/_list/': {
       id: '/lifespan/categories/_list/'
@@ -3651,6 +3701,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GameDetailsDetailsGameIdPlayPlayIdEditRouteImport
       parentRoute: typeof GameDetailsDetailsGameIdRoute
     }
+    '/internet/review/_review/episode/$programId/$episodeId/edit': {
+      id: '/internet/review/_review/episode/$programId/$episodeId/edit'
+      path: '/episode/$programId/$episodeId/edit'
+      fullPath: '/internet/review/episode/$programId/$episodeId/edit'
+      preLoaderRoute: typeof InternetReviewReviewEpisodeProgramIdEpisodeIdEditRouteImport
+      parentRoute: typeof InternetReviewReviewRoute
+    }
     '/lifespan/list/_list/$objectId/event/$eventId/delete': {
       id: '/lifespan/list/_list/$objectId/event/$eventId/delete'
       path: '/$objectId/event/$eventId/delete'
@@ -3842,11 +3899,26 @@ const InternetListListRouteChildren: InternetListListRouteChildren = {
 const InternetListListRouteWithChildren =
   InternetListListRoute._addFileChildren(InternetListListRouteChildren)
 
+interface InternetReviewReviewRouteChildren {
+  InternetReviewReviewIndexRoute: typeof InternetReviewReviewIndexRoute
+  InternetReviewReviewEpisodeProgramIdEpisodeIdEditRoute: typeof InternetReviewReviewEpisodeProgramIdEpisodeIdEditRoute
+}
+
+const InternetReviewReviewRouteChildren: InternetReviewReviewRouteChildren = {
+  InternetReviewReviewIndexRoute: InternetReviewReviewIndexRoute,
+  InternetReviewReviewEpisodeProgramIdEpisodeIdEditRoute:
+    InternetReviewReviewEpisodeProgramIdEpisodeIdEditRoute,
+}
+
+const InternetReviewReviewRouteWithChildren =
+  InternetReviewReviewRoute._addFileChildren(InternetReviewReviewRouteChildren)
+
 interface InternetRouteChildren {
   InternetIndexRoute: typeof InternetIndexRoute
   InternetProgramIdDetailsRoute: typeof InternetProgramIdDetailsRouteWithChildren
   InternetHistoryPeriodRoute: typeof InternetHistoryPeriodRouteWithChildren
   InternetListListRoute: typeof InternetListListRouteWithChildren
+  InternetReviewReviewRoute: typeof InternetReviewReviewRouteWithChildren
   InternetStatsYearRoute: typeof InternetStatsYearRoute
   InternetHistoryIndexRoute: typeof InternetHistoryIndexRoute
   InternetStatsIndexRoute: typeof InternetStatsIndexRoute
@@ -3858,6 +3930,7 @@ const InternetRouteChildren: InternetRouteChildren = {
   InternetProgramIdDetailsRoute: InternetProgramIdDetailsRouteWithChildren,
   InternetHistoryPeriodRoute: InternetHistoryPeriodRouteWithChildren,
   InternetListListRoute: InternetListListRouteWithChildren,
+  InternetReviewReviewRoute: InternetReviewReviewRouteWithChildren,
   InternetStatsYearRoute: InternetStatsYearRoute,
   InternetHistoryIndexRoute: InternetHistoryIndexRoute,
   InternetStatsIndexRoute: InternetStatsIndexRoute,

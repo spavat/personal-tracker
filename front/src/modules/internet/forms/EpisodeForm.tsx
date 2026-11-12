@@ -1,11 +1,15 @@
-import { useFieldArray, useFormContext } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import Badge from "../../../components/Badge";
 import BadgeEdit from "../../../components/BadgeEdit";
+import { programsQuery } from "../api";
 import { type EpisodeInputs } from "./EpisodeForm.utils";
 
 export default function EpisodeForm() {
-	const { control, register } = useFormContext<EpisodeInputs>();
+	const { control, register } = useFormContext<EpisodeInputs & { programId?: string }>();
+	const [showParentTags, setShowParentTags] = useState(false);
 
 	const {
 		fields: fieldsTags,
@@ -23,6 +27,32 @@ export default function EpisodeForm() {
 		control: control,
 		name: "episode.contextTags",
 	});
+	const {
+		fields: fieldsIgnoredTags,
+		append: appendIgnoredTag,
+		remove: removeIgnoredTag,
+		replace: replaceIgnoredTags,
+	} = useFieldArray({
+		control: control,
+		name: "episode.ignoredTags",
+	});
+
+	// Tags of the selected program: the episode inherits them, unless ignored
+	const programId = useWatch({ control, name: "programId" });
+	const { data: programs } = useQuery(programsQuery());
+	const parentTags = programs?.find((p) => p.id === programId)?.tags ?? [];
+	const ignorableTags = parentTags.filter((tag) => !fieldsIgnoredTags.some((field) => field.value === tag));
+
+	// Ignored tags of another program mean nothing for the new one
+	const previousProgramId = useRef(programId);
+	useEffect(() => {
+		if (previousProgramId.current !== programId) {
+			previousProgramId.current = programId;
+			replaceIgnoredTags([]);
+			setShowParentTags(false);
+		}
+	}, [programId, replaceIgnoredTags]);
+
 	return (
 		<>
 			<div className="panel">
@@ -114,6 +144,19 @@ export default function EpisodeForm() {
 							<input type="text" {...register(`episode.tags.${index}.value` as const)} />
 						</BadgeEdit>
 					))}
+					{fieldsIgnoredTags.map((field, index) => (
+						<BadgeEdit
+							key={field.id}
+							icon="fa-solid fa-ban"
+							color="white"
+							backgroundColor="red"
+							className="badge-edit"
+							title="Tag du programme ignoré"
+							onClickRemove={() => removeIgnoredTag(index)}
+						>
+							{field.value}
+						</BadgeEdit>
+					))}
 					<Badge
 						icon="fa-solid fa-plus"
 						name="Ajouter un tag"
@@ -122,7 +165,35 @@ export default function EpisodeForm() {
 						onClick={() => appendTag({ value: "" })}
 						className="badge-add"
 					></Badge>
+					{ignorableTags.length > 0 && (
+						<Badge
+							icon="fa-solid fa-ban"
+							name="Ignorer un tag parent"
+							color="white"
+							backgroundColor="unset"
+							onClick={() => setShowParentTags((b) => !b)}
+							className="badge-add"
+						></Badge>
+					)}
 				</div>
+				{showParentTags && ignorableTags.length > 0 && (
+					<div>
+						{ignorableTags.map((tag) => (
+							<Badge
+								key={tag}
+								icon="fa-solid fa-tag"
+								name={tag}
+								color="white"
+								backgroundColor="green"
+								className="badge-add"
+								onClick={() => {
+									appendIgnoredTag({ value: tag });
+									setShowParentTags(false);
+								}}
+							></Badge>
+						))}
+					</div>
+				)}
 			</div>
 			<div className="panel">
 				<h3>Contexte Tags</h3>
@@ -132,7 +203,7 @@ export default function EpisodeForm() {
 							key={field.id}
 							icon="fa-solid fa-tag"
 							color="white"
-							backgroundColor="green"
+							backgroundColor="darkgrey"
 							className="badge-edit"
 							onClickRemove={() => removeContextTag(index)}
 						>

@@ -23,6 +23,8 @@ export const EpisodeSchema = z.object({
 	link: z.url().optional().or(z.literal("")),
 	tags: z.array(z.string()).optional(),
 	contextTags: z.array(z.string()).optional(),
+	// Program tags not applied to this episode
+	ignoredTags: z.array(z.string()).optional(),
 	created: z.iso.datetime({ local: true }).optional(),
 	comment: z.string().optional(),
 	externalId: z.string().optional(),
@@ -222,6 +224,19 @@ export const StatsArrayResponseSchema = z.object({
 	),
 });
 export type StatsArrayResponse = z.infer<typeof StatsArrayResponseSchema>;
+
+//
+// REVIEW (episodes without any tag)
+//
+// Response
+export const ReviewEpisodesResponseSchema = z.array(
+	z.object({
+		programId: z.uuid(),
+		programName: z.string(),
+		episode: EpisodeSchema,
+	}),
+);
+export type ReviewEpisodesResponse = z.infer<typeof ReviewEpisodesResponseSchema>;
 
 //
 // FORTNIGHT STATS

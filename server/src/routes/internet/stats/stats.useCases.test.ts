@@ -43,4 +43,30 @@ describe("GetStatsUseCase", () => {
 			],
 		});
 	});
+
+	it("leaves out ignored program tags and counts a tag shared with the program once", async () => {
+		const repo = fakeRepo();
+		repo.findStatsRaw.mockResolvedValue([
+			{
+				id: "p1",
+				name: "Prog",
+				tags: ["news", "tech"],
+				episodes: [
+					{ duration: 60, tags: ["news"] },
+					{ duration: 30, tags: ["special"], ignoredTags: ["news"] },
+				],
+			},
+		]);
+
+		const result = await new GetStatsUseCase(asRepo(repo)).execute(
+			{ from: "2020-01-01", to: "2020-01-10" } as any,
+			asLog(makeLog()),
+		);
+
+		expect(result.tags).toEqual([
+			{ name: "tech", duration: 90, details: [{ name: "Prog", duration: 90 }] },
+			{ name: "news", duration: 60, details: [{ name: "Prog", duration: 60 }] },
+			{ name: "special", duration: 30, details: [{ name: "Prog", duration: 30 }] },
+		]);
+	});
 });

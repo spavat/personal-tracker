@@ -45,6 +45,7 @@ export default function EditEpisodeModalForm({
 				...episode,
 				tags: episode.tags?.map((t) => ({ value: t })) ?? [],
 				contextTags: episode.contextTags?.map((t) => ({ value: t })) ?? [],
+				ignoredTags: episode.ignoredTags?.map((t) => ({ value: t })) ?? [],
 			} as any,
 		},
 	});
