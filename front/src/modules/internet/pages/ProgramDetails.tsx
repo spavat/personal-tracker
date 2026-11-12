@@ -3,7 +3,8 @@ import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { Fragment, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 
-import Badge from "../../../components/Badge";
+import ContextTagBadge from "../../../components/ContextTagBadge";
+import TagBadge from "../../../components/TagBadge";
 import { API_BASE_URL } from "../../../config";
 import { useIsOwner } from "../../../hooks/use-is-owner";
 import { formatDate, formatDateTime, formatDay, getDurationString, getPeriodDifference } from "../../../utils";
@@ -153,13 +154,7 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 								<span>
 									Tags :{" "}
 									{program.tags?.map((t) => (
-										<Badge
-											key={t}
-											icon="fa-solid fa-tag"
-											name={t}
-											color="white"
-											backgroundColor="green"
-										></Badge>
+										<TagBadge key={t} name={t} />
 									))}
 								</span>
 							</>
@@ -242,25 +237,13 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 									</td>
 									<td data-label="Tags">
 										{(episode.tags ?? []).map((c: string) => (
-											<Badge
-												key={c}
-												icon="fa-solid fa-tag"
-												name={c}
-												color="white"
-												backgroundColor="green"
-											></Badge>
+											<TagBadge key={c} name={c} />
 										))}
 										{(episode.ignoredTags ?? []).map((c: string) => (
 											<IgnoredTagBadge key={c} name={c} />
 										))}
 										{(episode.contextTags ?? []).map((c: string) => (
-											<Badge
-												key={c}
-												icon="fa-solid fa-tag"
-												name={c}
-												color="white"
-												backgroundColor="darkgrey"
-											></Badge>
+											<ContextTagBadge key={c} name={c} />
 										))}
 									</td>
 									<td data-label="Durée">

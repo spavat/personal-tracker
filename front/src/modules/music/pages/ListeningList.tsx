@@ -1,6 +1,6 @@
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
-import Badge from "../../../components/Badge";
+import ContextTagBadge from "../../../components/ContextTagBadge";
 import { HeaderPortal } from "../../../components/HeaderPortal";
 import PeriodSelector from "../../../components/PeriodSelector";
 import { useIsOwner } from "../../../hooks/use-is-owner";
@@ -80,13 +80,7 @@ export default function ListeningList({ period }: { period: string }) {
 								<td data-label="Genre">{listening.genre}</td>
 								<td data-label="Contexte tag">
 									{listening.contextTags?.map((contextTag) => (
-										<Badge
-											key={contextTag}
-											icon="fa-solid fa-tag"
-											name={contextTag}
-											color="white"
-											backgroundColor="darkgrey"
-										></Badge>
+										<ContextTagBadge key={contextTag} name={contextTag} />
 									))}
 								</td>
 								{isOwner && (

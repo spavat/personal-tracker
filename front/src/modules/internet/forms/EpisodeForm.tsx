@@ -4,6 +4,7 @@ import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import Badge from "../../../components/Badge";
 import BadgeEdit from "../../../components/BadgeEdit";
+import TagBadge from "../../../components/TagBadge";
 import { programsQuery } from "../api";
 import { type EpisodeInputs } from "./EpisodeForm.utils";
 
@@ -179,18 +180,15 @@ export default function EpisodeForm() {
 				{showParentTags && ignorableTags.length > 0 && (
 					<div>
 						{ignorableTags.map((tag) => (
-							<Badge
+							<TagBadge
 								key={tag}
-								icon="fa-solid fa-tag"
 								name={tag}
-								color="white"
-								backgroundColor="green"
 								className="badge-add"
 								onClick={() => {
 									appendIgnoredTag({ value: tag });
 									setShowParentTags(false);
 								}}
-							></Badge>
+							/>
 						))}
 					</div>
 				)}

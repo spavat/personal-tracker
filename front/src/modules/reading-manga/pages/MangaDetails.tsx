@@ -4,7 +4,7 @@ import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Fragment } from "react/jsx-runtime";
 
-import Badge from "../../../components/Badge";
+import ContextTagBadge from "../../../components/ContextTagBadge";
 import MutationError from "../../../components/MutationError";
 import { useStoredValue } from "../../../hooks/stored-value";
 import { useIsOwner } from "../../../hooks/use-is-owner";
@@ -173,13 +173,7 @@ export default function MangaDetails({ mangaId }: { mangaId: string }) {
 									{reading.name}
 									{reading.title ? ` - ${reading.title}` : ""}
 									{(reading.contextTags ?? []).map((c: string) => (
-										<Badge
-											key={c}
-											icon="fa-solid fa-tag"
-											name={c}
-											color="white"
-											backgroundColor="darkgrey"
-										></Badge>
+										<ContextTagBadge key={c} name={c} />
 									))}
 								</td>
 								<td data-label="Edition">{reading.edition}</td>

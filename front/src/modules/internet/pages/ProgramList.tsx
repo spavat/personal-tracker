@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
-import Badge from "../../../components/Badge";
 import { PendingContent } from "../../../components/PendingContent";
+import TagBadge from "../../../components/TagBadge";
 import { useIsOwner } from "../../../hooks/use-is-owner";
 import { useSortTable } from "../../../hooks/use-sort-table";
 import { formatFullDate, getDurationString } from "../../../utils";
@@ -118,13 +118,7 @@ export default function ProgramList() {
 									<td data-label="Durée">{getDurationString(program.totalDuration)}</td>
 									<td data-label="Tags">
 										{program.tags?.map((t) => (
-											<Badge
-												key={t}
-												icon="fa-solid fa-tag"
-												name={t}
-												color="white"
-												backgroundColor="green"
-											></Badge>
+											<TagBadge key={t} name={t} />
 										))}
 									</td>
 									<td data-label="Art">

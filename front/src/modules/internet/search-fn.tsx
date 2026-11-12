@@ -1,4 +1,4 @@
-import Badge from "../../components/Badge";
+import TagBadge from "../../components/TagBadge";
 
 export function renderInternetResultItem(item: any, selected: boolean, clickFn: (item: any) => void) {
 	const icon = getIconType(item);
@@ -13,13 +13,7 @@ export function renderInternetResultItem(item: any, selected: boolean, clickFn: 
 					<>
 						<span>
 							{item.tags?.map((t: string) => (
-								<Badge
-									key={t}
-									icon="fa-solid fa-tag"
-									name={t}
-									color="white"
-									backgroundColor="green"
-								></Badge>
+								<TagBadge key={t} name={t} />
 							))}
 						</span>
 					</>
