@@ -11,3 +11,6 @@ export class LatestEpisodesCacheRepository {
 		this.cache.set(programId, value);
 	}
 }
+
+// One instance for the whole app: the latest-episodes routes and the podcast sync share what they fetched
+export const latestEpisodesCache = new LatestEpisodesCacheRepository();

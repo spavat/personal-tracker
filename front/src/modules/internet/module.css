@@ -323,6 +323,34 @@
 			gap: 16px;
 		}
 
+		/* same look as the sport GPX / show media drop zones */
+		.sync-drop-zone {
+			border: 2px dashed #555;
+			border-radius: 6px;
+			padding: 16px;
+			text-align: center;
+			transition:
+				border-color 0.2s,
+				background 0.2s;
+
+			&.drag-over {
+				border-color: var(--accent-color, #4a9eff);
+				background: color-mix(in srgb, var(--accent-color, #4a9eff) 10%, transparent);
+			}
+			&.has-file {
+				border-color: #4caf50;
+				color: #4caf50;
+				overflow-wrap: anywhere;
+			}
+			label {
+				cursor: pointer;
+				text-decoration: underline;
+			}
+			input[type="file"] {
+				display: none;
+			}
+		}
+
 		.sync-feed {
 			.title {
 				display: flex;

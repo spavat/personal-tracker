@@ -4,13 +4,22 @@ import { Fragment, SubmitEvent, useState } from "react";
 
 import { API_BASE_URL } from "../../../config";
 import { formatDate, formatDateTime } from "../../../utils";
-import { programsQuery, reprocessSync, syncGopodder, syncQuery, unknownFeedsQuery, uploadSync } from "../api";
+import {
+	gopodderStatusQuery,
+	programsQuery,
+	reprocessSync,
+	syncGopodder,
+	syncQuery,
+	unknownFeedsQuery,
+	uploadSync,
+} from "../api";
 import SyncFeedForm from "../forms/SyncFeedForm";
 import SyncItemForm from "../forms/SyncItemForm";
 
 function SyncUploadForm() {
 	const queryClient = useQueryClient();
 	const [file, setFile] = useState<File | null>(null);
+	const [isDragOver, setIsDragOver] = useState(false);
 
 	const uploadMutation = useMutation({
 		mutationFn: uploadSync,
@@ -24,11 +33,46 @@ function SyncUploadForm() {
 
 	return (
 		<form className="form panel sync-upload" onSubmit={onSubmit}>
-			<h3>Sauvegarde AntennaPod</h3>
-			<label>
-				Sauvegarde AntennaPod (.db)
-				<input type="file" accept=".db" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-			</label>
+			<h3>AntennaPod</h3>
+			<p>Récupération manuelle des écoutes avec un backup de l'application AntennaPod</p>
+			<div
+				className={["sync-drop-zone", isDragOver ? "drag-over" : "", file ? "has-file" : ""].join(" ").trim()}
+				onDragOver={(e) => {
+					e.preventDefault();
+					setIsDragOver(true);
+				}}
+				onDragLeave={() => setIsDragOver(false)}
+				onDrop={(e) => {
+					e.preventDefault();
+					setIsDragOver(false);
+					setFile(e.dataTransfer.files[0] ?? null);
+				}}
+			>
+				{file ? (
+					<>
+						<i className="fa-solid fa-check"></i> {file.name}
+						&nbsp;
+						<button type="button" onClick={() => setFile(null)} title="Supprimer">
+							✕
+						</button>
+					</>
+				) : (
+					<>
+						<i className="fa-solid fa-file-import"></i>
+						&nbsp;Glisser-déposer une sauvegarde AntennaPod (.db)
+						<br />
+						<label>
+							ou parcourir
+							<input
+								type="file"
+								accept=".db"
+								aria-label="Sauvegarde AntennaPod (.db)"
+								onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+							/>
+						</label>
+					</>
+				)}
+			</div>
 			{uploadMutation.error && <div>Erreur : {uploadMutation.error.message}</div>}
 			{uploadMutation.data?.count === 0 && <p>Aucun épisode écouté dans cette sauvegarde</p>}
 			<div className="form-footer">
@@ -42,6 +86,7 @@ function SyncUploadForm() {
 
 function SyncGopodderPanel() {
 	const queryClient = useQueryClient();
+	const { data: status } = useSuspenseQuery(gopodderStatusQuery());
 
 	const syncMutation = useMutation({
 		mutationFn: syncGopodder,
@@ -58,7 +103,13 @@ function SyncGopodderPanel() {
 	return (
 		<div className="form panel sync-upload">
 			<h3>gopodder</h3>
-			<p>Récupère les écoutes synchronisées par AntennaPod depuis la dernière synchronisation.</p>
+			<p>
+				Récupèration des écoutes synchronisées sur gopodder par AntennaPod depuis la dernière synchronisation.
+			</p>
+			<p className="sync-last">
+				Dernière synchronisation :{" "}
+				{status.lastSync ? formatDateTime(status.lastSync, { withWeekday: true }) : "jamais"}
+			</p>
 			{syncMutation.error && <div>Erreur : {syncMutation.error.message}</div>}
 			{message && <p>{message}</p>}
 			<div className="form-footer">

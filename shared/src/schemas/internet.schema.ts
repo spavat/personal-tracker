@@ -314,6 +314,12 @@ export const SyncCreateResponseSchema = z.object({
 });
 export type SyncCreateResponse = z.infer<typeof SyncCreateResponseSchema>;
 
+export const SyncGopodderStatusResponseSchema = z.object({
+	// Paris local time of the last gopodder sync, null before the first one
+	lastSync: z.iso.datetime({ local: true }).nullable(),
+});
+export type SyncGopodderStatusResponse = z.infer<typeof SyncGopodderStatusResponseSchema>;
+
 export const SyncUnknownFeedsResponseSchema = z.array(
 	z.object({
 		rssUrl: z.string(),

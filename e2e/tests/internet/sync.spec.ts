@@ -17,12 +17,12 @@ function syncForm(page: Page, index: number) {
 // Lands on step 1: the backup holds a listening of Third Podcast, a feed no program uses
 async function uploadBackup(page: Page, path: string) {
 	await page.goto("/internet/sync");
-	await expect(page.getByRole("heading", { name: "Sync", exact: true })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Synchronisation", exact: true })).toBeVisible();
 	const send = page.getByRole("button", { name: "Envoyer" });
 	await expect(send).toBeDisabled();
 	await page.getByLabel("Sauvegarde AntennaPod (.db)").setInputFiles(createAntennaPodBackup(path));
 	await send.click();
-	await expect(page.getByRole("heading", { name: "Sync — Étape 1 : podcasts inconnus (1)" })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Étape 1 : podcasts inconnus (1)" })).toBeVisible();
 }
 
 function feedCard(page: Page, title: string) {
@@ -30,7 +30,7 @@ function feedCard(page: Page, title: string) {
 }
 
 async function showForms(page: Page, count: number) {
-	await expect(page.getByRole("heading", { name: `Sync — Étape 2 : épisodes (${count})` })).toBeVisible();
+	await expect(page.getByRole("heading", { name: `Étape 2 : épisodes (${count})` })).toBeVisible();
 	// The forms are hidden by default
 	await expect(page.locator(".sync-list .sync-item")).toHaveCount(0);
 	await page.getByRole("checkbox", { name: "Afficher formulaire" }).check();
@@ -47,9 +47,11 @@ test.describe("Internet - Sync", () => {
 
 	test("both sources are offered while no sync is in progress", async ({ page }) => {
 		await page.goto("/internet/sync");
-		await expect(page.getByRole("heading", { name: "Sauvegarde AntennaPod" })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "AntennaPod", exact: true })).toBeVisible();
 		await expect(page.getByRole("heading", { name: "gopodder" })).toBeVisible();
 		await expect(page.getByRole("button", { name: "Synchroniser" })).toBeEnabled();
+		// Seeded sync state (since = 1794400000)
+		await expect(page.locator(".sync-last")).toHaveText("Dernière synchronisation : mercredi 11/11/2026 13:26:40");
 	});
 
 	test("upload an AntennaPod backup creates the proposals", async ({ page }, testInfo) => {
@@ -90,7 +92,7 @@ test.describe("Internet - Sync", () => {
 		await uploadBackup(page, testInfo.outputPath("antennapod.db"));
 		await ignoreThirdPodcast(page, 3);
 		await syncForm(page, 0).getByRole("button", { name: "Enregistrer" }).click();
-		await expect(page.getByRole("heading", { name: "Sync — Étape 2 : épisodes (2)" })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "Étape 2 : épisodes (2)" })).toBeVisible();
 
 		await page.goto(`/internet/${mockPodcast.id}`);
 		await expect(page.locator("table.episodes")).toContainText("Podcast épisode 3");
@@ -107,7 +109,7 @@ test.describe("Internet - Sync", () => {
 		await third.getByRole("button", { name: "Associer" }).click();
 
 		// A program has a single feed: its previous one (also listened in this backup) is now unknown
-		await expect(page.getByRole("heading", { name: "Sync — Étape 1 : podcasts inconnus (1)" })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "Étape 1 : podcasts inconnus (1)" })).toBeVisible();
 		await feedCard(page, "Second Podcast").getByRole("button", { name: "Ignorer" }).click();
 		await showForms(page, 3);
 
@@ -117,7 +119,7 @@ test.describe("Internet - Sync", () => {
 		await expect(card).toContainText("Third épisode 1");
 		await expect(card).toContainText("Durée : 30");
 		await syncForm(page, 2).getByRole("button", { name: "Enregistrer" }).click();
-		await expect(page.getByRole("heading", { name: "Sync — Étape 2 : épisodes (2)" })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "Étape 2 : épisodes (2)" })).toBeVisible();
 
 		await page.goto(`/internet/${secondPodcast.id}`);
 		await expect(page.locator("table.episodes")).toContainText("Third épisode 1");
@@ -139,7 +141,7 @@ test.describe("Internet - Sync", () => {
 		const card = syncCards(page).nth(2);
 		await expect(card.getByRole("link", { name: "Third Podcast" })).toBeVisible();
 		await syncForm(page, 2).getByRole("button", { name: "Enregistrer" }).click();
-		await expect(page.getByRole("heading", { name: "Sync — Étape 2 : épisodes (3)" })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "Étape 2 : épisodes (3)" })).toBeVisible();
 
 		await page.goto("/internet/list");
 		await page.getByRole("link", { name: "Third Podcast" }).click();
@@ -150,7 +152,7 @@ test.describe("Internet - Sync", () => {
 		await uploadBackup(page, testInfo.outputPath("antennapod.db"));
 		await ignoreThirdPodcast(page, 3);
 		await syncForm(page, 2).getByRole("button", { name: "Supprimer" }).click();
-		await expect(page.getByRole("heading", { name: "Sync — Étape 2 : épisodes (2)" })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "Étape 2 : épisodes (2)" })).toBeVisible();
 		await expect(syncCards(page).locator(".info")).not.toContainText(["Second épisode manquant"]);
 	});
 
@@ -170,7 +172,7 @@ test.describe("Internet - Sync", () => {
 
 		// The feed is known again: straight to step 2, the proposal not rebuilt yet
 		await page.getByRole("link", { name: "Sync Podcast" }).click();
-		await expect(page.getByRole("heading", { name: "Sync — Étape 2 : épisodes (4)" })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "Étape 2 : épisodes (4)" })).toBeVisible();
 		await expect(syncCards(page).nth(2).locator(".proposition-details")).toBeEmpty();
 		await page.getByRole("button", { name: "Recalculer les propositions" }).click();
 		const third = syncCards(page).nth(2);
@@ -183,7 +185,7 @@ test.describe("Internet - Sync", () => {
 		await page.getByRole("button", { name: "Synchroniser" }).click();
 
 		// Step 1: the feed title is read from the RSS feed
-		await expect(page.getByRole("heading", { name: "Sync — Étape 1 : podcasts inconnus (1)" })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "Étape 1 : podcasts inconnus (1)" })).toBeVisible();
 		const third = feedCard(page, "Third Podcast");
 		await third
 			.getByRole("combobox", { name: "Programme pour Third Podcast" })

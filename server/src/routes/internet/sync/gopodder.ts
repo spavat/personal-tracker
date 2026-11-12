@@ -1,6 +1,6 @@
 import { GopodderEpisodeActionsResponseSchema } from "@personal-tracker/shared/internet";
 
-import { GOPODDER_ENABLED, GOPODDER_PASSWORD, GOPODDER_URL, GOPODDER_USERNAME } from "../../config/gopodder";
+import { GOPODDER_ENABLED, GOPODDER_PASSWORD, GOPODDER_URL, GOPODDER_USERNAME } from "../../../config/gopodder";
 
 export async function fetchEpisodeActions(since: number) {
 	if (!GOPODDER_ENABLED) {

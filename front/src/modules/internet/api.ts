@@ -14,6 +14,7 @@ import {
 	SyncDeleteParamsRequest,
 	SyncDeleteParamsRequestSchema,
 	SyncCreateResponse,
+	SyncGopodderStatusResponse,
 	SyncUnknownFeedsResponse,
 	SyncLinkFeedBodyRequest,
 	SyncLinkFeedBodyRequestSchema,
@@ -96,7 +97,7 @@ export async function deleteItem(data: DeleteParamsRequest) {
 }
 
 export async function getFortnightStats() {
-	return fetchJson<FortnightStatsRespons>(`${API_BASE_URL}/internet/fortnight-stats`);
+	return fetchJson<FortnightStatsRespons>(`${API_BASE_URL}/internet/stats/fortnight`);
 }
 
 async function getSync() {
@@ -117,6 +118,16 @@ export async function uploadSync(file: File) {
 		body: file,
 	});
 }
+
+// Date of the last gopodder sync (key under ["sync"]: refreshed with the proposals)
+async function getGopodderStatus() {
+	return fetchJson<SyncGopodderStatusResponse>(`${API_BASE_URL}/internet/sync/gopodder`);
+}
+export const gopodderStatusQuery = () =>
+	queryOptions({
+		queryKey: ["sync", "gopodder"],
+		queryFn: () => getGopodderStatus(),
+	});
 
 export async function syncGopodder() {
 	return sendJson<SyncCreateResponse>(`${API_BASE_URL}/internet/sync/gopodder`, "POST");
