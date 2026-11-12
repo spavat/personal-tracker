@@ -316,7 +316,29 @@
 			container-type: inline-size;
 		}
 
+		/* no sync in progress: the two sources side by side, stacked on narrow screens */
+		.sync-sources {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+			gap: 16px;
+		}
+
+		.sync-feed {
+			.title {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				gap: 10px;
+			}
+			.sync-feed-url {
+				overflow-wrap: anywhere;
+				opacity: 0.7;
+				font-size: 0.9em;
+			}
+		}
+
 		.sync-item .form-footer,
+		.sync-feed .form-footer,
 		.sync-upload .form-footer {
 			display: flex;
 			justify-content: center;

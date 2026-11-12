@@ -260,6 +260,36 @@ export const SyncDeleteParamsRequestSchema = z.object({
 });
 export type SyncDeleteParamsRequest = z.infer<typeof SyncDeleteParamsRequestSchema>;
 
+export const SyncFeedBodyRequestSchema = z.object({
+	rssUrl: z.string().min(1),
+});
+export type SyncFeedBodyRequest = z.infer<typeof SyncFeedBodyRequestSchema>;
+
+export const SyncReprocessBodyRequestSchema = SyncFeedBodyRequestSchema.partial().nullish();
+
+export const SyncLinkFeedBodyRequestSchema = SyncFeedBodyRequestSchema.extend({
+	programId: z.uuid(),
+});
+export type SyncLinkFeedBodyRequest = z.infer<typeof SyncLinkFeedBodyRequestSchema>;
+
+// gopodder (gpodder.net API) episode actions: GET /api/2/episodes/{user}.json?since=
+export const GopodderEpisodeActionSchema = z.object({
+	podcast: z.string(),
+	episode: z.string(),
+	guid: z.string().optional(),
+	action: z.string(),
+	// UTC, without zone suffix
+	timestamp: z.string(),
+	started: z.number().optional(),
+	position: z.number().optional(),
+	total: z.number().optional(),
+});
+export type GopodderEpisodeAction = z.infer<typeof GopodderEpisodeActionSchema>;
+export const GopodderEpisodeActionsResponseSchema = z.object({
+	actions: z.array(GopodderEpisodeActionSchema),
+	timestamp: z.number(),
+});
+
 // Response
 export const SyncResponseSchema = z.array(
 	z.object({
@@ -271,6 +301,24 @@ export const SyncResponseSchema = z.array(
 				programProfile: z.string().optional(),
 			})
 			.optional(),
+		// The matched episode is already saved in the program (relistening?): date of the saved one
+		alreadySaved: z.object({ date: z.iso.date() }).optional(),
 	}),
 );
 export type SyncResponse = z.infer<typeof SyncResponseSchema>;
+
+export const SyncCreateResponseSchema = z.object({
+	count: z.number(),
+	// First gopodder sync: only the starting point is recorded
+	initialized: z.boolean().optional(),
+});
+export type SyncCreateResponse = z.infer<typeof SyncCreateResponseSchema>;
+
+export const SyncUnknownFeedsResponseSchema = z.array(
+	z.object({
+		rssUrl: z.string(),
+		title: z.string(),
+		count: z.number(),
+	}),
+);
+export type SyncUnknownFeedsResponse = z.infer<typeof SyncUnknownFeedsResponseSchema>;

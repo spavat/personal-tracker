@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { programsQuery, syncQuery } from "../../../modules/internet/api";
+import { programsQuery, syncQuery, unknownFeedsQuery } from "../../../modules/internet/api";
 import Sync from "../../../modules/internet/pages/Sync";
 
 export const Route = createFileRoute("/internet/sync/")({
 	loader: ({ context }) =>
 		Promise.all([
 			context.queryClient.query({ ...syncQuery(), staleTime: "static" }),
+			context.queryClient.query({ ...unknownFeedsQuery(), staleTime: "static" }),
 			context.queryClient.query({ ...programsQuery(), staleTime: "static" }),
 		]),
 	component: RouteComponent,

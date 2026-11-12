@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { makeFakeMongo } from "../../test-support/fake-mongo";
+import { makeCursor, makeFakeMongo } from "../../test-support/fake-mongo";
 import { buildRouteApp } from "../../test-support/route-harness";
 import internetRoutes from "./internet.routes";
 
@@ -113,6 +113,69 @@ describe("internet routes", () => {
 				{ $push: { episodes: expect.objectContaining({ name: "Ep" }) } },
 			);
 			expect(ctx.sync.deleteOne).toHaveBeenCalledWith({ id: PROPOSAL_UUID });
+		});
+
+		it("POST /sync/gopodder refuses while a sync is in progress", async () => {
+			ctx.sync.countDocuments.mockResolvedValue(1);
+			const res = await ctx.app.inject({ method: "POST", url: "/sync/gopodder" });
+			expect(res.statusCode).toBe(500);
+			expect(res.json().message).toBe("Une synchronisation est déjà en cours");
+		});
+
+		it("GET /sync/feeds lists the feeds of the proposals without proposition", async () => {
+			ctx.sync.find.mockReturnValue(
+				makeCursor([{ id: PROPOSAL_UUID, listened: { podcastUrl: "http://unknown", podcastTitle: "Zeta" } }]),
+			);
+			const res = await ctx.app.inject({ method: "GET", url: "/sync/feeds" });
+			expect(res.statusCode).toBe(200);
+			expect(ctx.sync.find).toHaveBeenCalledWith({ proposition: { $exists: false } });
+			expect(res.json()).toEqual([{ rssUrl: "http://unknown", title: "Zeta", count: 1 }]);
+		});
+
+		it("POST /sync/feeds/link sets the program rss ref", async () => {
+			ctx.programs.findOne.mockResolvedValue({ id: PROGRAM_UUID });
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: "/sync/feeds/link",
+				payload: { rssUrl: "http://unknown", programId: PROGRAM_UUID },
+			});
+			expect(res.statusCode).toBe(200);
+			expect(ctx.programs.updateOne).toHaveBeenCalledWith(
+				{ id: PROGRAM_UUID },
+				{ $set: { "refs.rss": "http://unknown" } },
+			);
+			expect(ctx.sync.find).toHaveBeenCalledWith({ "listened.podcastUrl": "http://unknown" });
+		});
+
+		it("POST /sync/feeds/link rejects a non-uuid program id", async () => {
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: "/sync/feeds/link",
+				payload: { rssUrl: "http://unknown", programId: "nope" },
+			});
+			expect(res.statusCode).toBe(400);
+		});
+
+		it("POST /sync/feeds/ignore deletes the feed's proposals", async () => {
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: "/sync/feeds/ignore",
+				payload: { rssUrl: "http://unknown" },
+			});
+			expect(res.statusCode).toBe(200);
+			expect(ctx.sync.deleteMany).toHaveBeenCalledWith({ "listened.podcastUrl": "http://unknown" });
+		});
+
+		it("POST /sync/reprocess works with and without a feed", async () => {
+			expect((await ctx.app.inject({ method: "POST", url: "/sync/reprocess" })).statusCode).toBe(200);
+			expect(ctx.sync.find).toHaveBeenLastCalledWith({});
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: "/sync/reprocess",
+				payload: { rssUrl: "http://unknown" },
+			});
+			expect(res.statusCode).toBe(200);
+			expect(ctx.sync.find).toHaveBeenLastCalledWith({ "listened.podcastUrl": "http://unknown" });
 		});
 	});
 });

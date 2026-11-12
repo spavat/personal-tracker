@@ -1,5 +1,5 @@
 // Preloaded in the e2e server (see playwright.config.ts): replaces the external calls made with the global fetch
-// (Youtube, RSS feeds, france.tv, images) by the fixtures in ./responses, so the tests never hit the network.
+// (Youtube, RSS feeds, gopodder, france.tv, images) by the fixtures in ./responses, so the tests never hit the network.
 // Any external URL missing from ROUTES throws, so a forgotten mock is visible in the server logs.
 import { readFileSync } from "node:fs";
 
@@ -28,6 +28,8 @@ const ROUTES = {
 	"https://feeds.example.com/mock-podcast.xml": ["podcast-mock.xml", XML],
 	"https://feeds.example.com/second-podcast.xml": ["podcast-second.xml", XML],
 	"https://feeds.example.com/third-podcast.xml": ["podcast-third.xml", XML],
+	// gopodder (GOPODDER_URL set in playwright.config.ts)
+	"https://gopodder.example.com/api/2/episodes/tracker.json": ["gopodder-episodes.json", "application/json"],
 	// france.tv
 	"https://www.france.tv/sport/cyclisme/tour-de-france/7000001-etape-15.html": ["francetv-etape-15.html", HTML],
 	// Images
@@ -47,7 +49,9 @@ globalThis.fetch = async (input, init) => {
 		return realFetch(input, init);
 	}
 
-	const route = ROUTES[url];
+	// gopodder episode actions: the `since` query changes with the sync state, match the path only
+	const { origin, pathname } = new URL(url);
+	const route = ROUTES[url] ?? ROUTES[`${origin}${pathname}`];
 	if (!route) {
 		console.error(`[fetch-mock] Unmocked external request: ${url}`);
 		throw new Error(`Unmocked external request: ${url}`);

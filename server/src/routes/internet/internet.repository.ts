@@ -178,6 +178,10 @@ export class InternetRepository {
 		return this.collection?.updateOne({ id }, { $set: program as any }, { upsert: false });
 	}
 
+	setRssRef(programId: string, rssUrl: string) {
+		return this.collection?.updateOne({ id: programId }, { $set: { "refs.rss": rssUrl } } as any);
+	}
+
 	pushEpisode(programId: string, episode: Record<string, unknown>) {
 		return this.collection?.updateOne({ id: programId }, { $push: { episodes: episode } } as any);
 	}

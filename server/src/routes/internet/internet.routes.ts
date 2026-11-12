@@ -19,6 +19,11 @@ import {
 	SyncUploadBodyRequestSchema,
 	SyncProposalParamsRequestSchema,
 	SyncDeleteParamsRequestSchema,
+	SyncCreateResponseSchema,
+	SyncUnknownFeedsResponseSchema,
+	SyncFeedBodyRequestSchema,
+	SyncLinkFeedBodyRequestSchema,
+	SyncReprocessBodyRequestSchema,
 } from "@personal-tracker/shared/internet";
 import "@fastify/mongodb";
 
@@ -33,16 +38,21 @@ import {
 	GetLatestEpisodesUseCase,
 	GetProgramUseCase,
 	GetStatsUseCase,
+	IgnoreFeedUseCase,
+	LinkFeedToProgramUseCase,
 	ListEpisodesUseCase,
 	ListProgramsUseCase,
 	ListSyncProposalsUseCase,
+	ListUnknownFeedsUseCase,
 	ReprocessSyncProposalsUseCase,
 	SaveProgramUseCase,
 	SyncCoversUseCase,
+	SyncGopodderUseCase,
 	UploadAntennaPodUseCase,
 	ValidateSyncProposalUseCase,
 } from "./internet.useCases";
 import { LatestEpisodesCacheRepository } from "./latest-episodes-cache.repository";
+import { SyncStateRepository } from "./sync-state.repository";
 import { SyncRepository } from "./sync.repository";
 
 const internet: FastifyPluginAsync = async (fastify): Promise<void> => {
@@ -50,6 +60,7 @@ const internet: FastifyPluginAsync = async (fastify): Promise<void> => {
 	const latestEpisodesCache = new LatestEpisodesCacheRepository();
 	const imageStorage = new ImageStorageRepository();
 	const syncRepository = new SyncRepository(fastify.mongo);
+	const syncStateRepository = new SyncStateRepository(fastify.mongo);
 
 	const listPrograms = new ListProgramsUseCase(repository, imageStorage);
 	const listEpisodes = new ListEpisodesUseCase(repository, imageStorage);
@@ -68,6 +79,16 @@ const internet: FastifyPluginAsync = async (fastify): Promise<void> => {
 		latestEpisodesCache,
 		imageStorage,
 	);
+	const syncGopodder = new SyncGopodderUseCase(
+		repository,
+		syncRepository,
+		syncStateRepository,
+		latestEpisodesCache,
+		imageStorage,
+	);
+	const listUnknownFeeds = new ListUnknownFeedsUseCase(repository, syncRepository);
+	const linkFeedToProgram = new LinkFeedToProgramUseCase(repository, reprocessSyncProposals);
+	const ignoreFeed = new IgnoreFeedUseCase(syncRepository);
 	const validateSyncProposal = new ValidateSyncProposalUseCase(syncRepository, saveProgram);
 	const deleteSyncProposal = new DeleteSyncProposalUseCase(syncRepository);
 	const getStats = new GetStatsUseCase(repository);
@@ -180,7 +201,34 @@ const internet: FastifyPluginAsync = async (fastify): Promise<void> => {
 
 	fastify
 		.withTypeProvider<ZodTypeProvider>()
-		.post("/sync/reprocess", async (request) => reprocessSyncProposals.execute(request.log));
+		.post("/sync/gopodder", { schema: { response: { 200: SyncCreateResponseSchema } } }, async (request) =>
+			syncGopodder.execute(request.log),
+		);
+
+	fastify
+		.withTypeProvider<ZodTypeProvider>()
+		.get("/sync/feeds", { schema: { response: { 200: SyncUnknownFeedsResponseSchema } } }, async (request) =>
+			listUnknownFeeds.execute(request.log),
+		);
+
+	fastify
+		.withTypeProvider<ZodTypeProvider>()
+		.post("/sync/feeds/link", { schema: { body: SyncLinkFeedBodyRequestSchema } }, async (request) =>
+			linkFeedToProgram.execute(request.body, request.log),
+		);
+
+	// POST with a body (not DELETE /:id): the key is a feed URL
+	fastify
+		.withTypeProvider<ZodTypeProvider>()
+		.post("/sync/feeds/ignore", { schema: { body: SyncFeedBodyRequestSchema } }, async (request) =>
+			ignoreFeed.execute(request.body, request.log),
+		);
+
+	fastify
+		.withTypeProvider<ZodTypeProvider>()
+		.post("/sync/reprocess", { schema: { body: SyncReprocessBodyRequestSchema } }, async (request) =>
+			reprocessSyncProposals.execute(request.body?.rssUrl, request.log),
+		);
 
 	fastify.withTypeProvider<ZodTypeProvider>().post(
 		"/sync/validate/:id",

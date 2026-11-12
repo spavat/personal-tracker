@@ -39,6 +39,10 @@ export default defineConfig({
 				"S3_BUCKET=personal-tracker",
 				"S3_ACCESS_KEY_ID=GK000000000000000000000000",
 				"S3_SECRET_ACCESS_KEY=0000000000000000000000000000000000000000000000000000000000000000",
+				// served by fetch-mock from e2e/mocks/responses/gopodder-episodes.json
+				"GOPODDER_URL=https://gopodder.example.com",
+				"GOPODDER_USERNAME=tracker",
+				"GOPODDER_PASSWORD=e2e-password",
 				// UI mode doesn't show webServer output: follow it with `tail -f e2e/server.log`
 				// fetch-mock serves the external calls (Youtube, RSS, france.tv, images) from e2e/mocks/responses
 				`npx tsx --import ../e2e/mocks/fetch-mock.mjs src/server.ts > ../e2e/server.log`,
