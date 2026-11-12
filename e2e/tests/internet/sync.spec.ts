@@ -22,6 +22,10 @@ async function uploadBackup(page: Page, path: string) {
 	await page.getByLabel("Sauvegarde AntennaPod (.db)").setInputFiles(createAntennaPodBackup(path));
 	await send.click();
 	await expect(page.getByRole("heading", { name: "Sync (4)" })).toBeVisible();
+	// The forms are hidden by default
+	await expect(page.locator(".sync-list .sync-item")).toHaveCount(0);
+	await page.getByRole("checkbox", { name: "Afficher formulaire" }).check();
+	await expect(page.locator(".sync-list .sync-item")).toHaveCount(4);
 }
 
 test.describe("Internet - Sync", () => {
