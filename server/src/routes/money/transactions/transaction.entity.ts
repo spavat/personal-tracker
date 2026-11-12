@@ -15,6 +15,9 @@ export interface TransactionBody {
 	recurrent: boolean;
 	informative: boolean;
 	tags: Array<typeof moneyTag.$inferSelect>;
+	// set by the bank sync only (banking.useCases.ts)
+	externalId?: string | null;
+	bankLabel?: string | null;
 }
 
 export function normalizeTransactionRefs<T extends { categoryId: number; paymentTypeId: number }>(data: T) {

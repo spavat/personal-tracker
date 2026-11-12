@@ -17,6 +17,7 @@ namespace Money {
 		icon: string;
 		backgroundColor: string;
 		textColor: string;
+		iban?: string | null;
 		paymentTypes: Array<PaymentType>;
 	}
 
@@ -113,5 +114,51 @@ namespace Money {
 		id: number;
 		name: string;
 		accounts: Array<AccounWithHistory>;
+	}
+
+	// BANKING (Enable Banking sync)
+	interface Aspsp {
+		name: string;
+		country: string;
+		logo: string | null;
+	}
+
+	interface BankConnectionAccount {
+		id: number;
+		identificationHash: string;
+		iban: string | null;
+		name: string | null;
+		currency: string | null;
+		accountId: number | null;
+		syncFrom: string;
+		enabled: boolean;
+	}
+
+	interface BankConnection {
+		id: number;
+		aspspName: string;
+		aspspCountry: string;
+		status: "pending" | "authorized" | "expired" | "revoked" | "error";
+		validUntil: string | null;
+		lastSyncAt: string | null;
+		lastSyncSuccessAt: string | null;
+		lastError: string | null;
+		accounts: Array<BankConnectionAccount>;
+	}
+
+	interface BankTransaction {
+		id: number;
+		externalId: string;
+		transactionDate: string | null;
+		bookingDate: string;
+		valueDate: string | null;
+		amount: number;
+		currency: string | null;
+		label: string;
+		counterparty: string | null;
+		account: { id: number; name: string } | null;
+		paymentTypeIds: Array<number>;
+		suggestedPaymentTypeId: number | null;
+		candidates: Array<{ id: number; name: string; date: string; amount: number; paymentType: string | null }>;
 	}
 }

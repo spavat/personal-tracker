@@ -6,6 +6,7 @@ import Badge from "../../components/Badge";
 import { useStoredValue } from "../../hooks/stored-value";
 import AccountBadge from "./AccountBadge";
 import { banksOverviewQuery } from "./api";
+import BankingAlerts from "./banking/BankingAlerts";
 import { normalizeZero } from "./utils";
 
 export default function MoneyOverview() {
@@ -20,13 +21,17 @@ export default function MoneyOverview() {
 
 	return (
 		<>
-			<h2>Vue d'ensemble</h2>
-			<p>
-				<label>
-					<input type="checkbox" checked={hideEmptyAccounts} onChange={changeHideEmpty} /> Cacher les comptes
-					vides
-				</label>
-			</p>
+			<BankingAlerts />
+			<h2>
+				Vue d'ensemble
+				<p>
+					<label>
+						<input type="checkbox" checked={hideEmptyAccounts} onChange={changeHideEmpty} /> Cacher les
+						comptes vides
+					</label>
+				</p>
+			</h2>
+
 			{banks.map((bank) => {
 				let accounts = bank.accounts ?? [];
 				if (hideEmptyAccounts) {

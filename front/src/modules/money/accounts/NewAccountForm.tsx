@@ -14,6 +14,7 @@ type Inputs = {
 	textColor: string;
 	backgroundColor: string;
 	bankId: number;
+	iban: string;
 };
 
 interface Form {
@@ -27,6 +28,7 @@ const defaultValues: Inputs = {
 	textColor: "#000000",
 	backgroundColor: "#000000",
 	bankId: 0,
+	iban: "",
 };
 
 export default function NewBankForm({ accountId, returnTo }: Form) {
@@ -46,7 +48,7 @@ export default function NewBankForm({ accountId, returnTo }: Form) {
 
 	const { register, handleSubmit, reset, control } = useForm<Inputs>({
 		// data is loaded before the modal opens: applied once, never overwritten by a background refetch
-		defaultValues: accountData ? (accountData as any) : defaultValues,
+		defaultValues: accountData ? { ...(accountData as any), iban: (accountData as any).iban ?? "" } : defaultValues,
 	});
 	const [name, icon, backgroundColor, textColor] = useWatch({
 		control,
@@ -100,6 +102,10 @@ export default function NewBankForm({ accountId, returnTo }: Form) {
 									</option>
 								))}
 							</select>
+						</label>
+						<label className="form-field full-width">
+							<span>IBAN (synchronisation bancaire)</span>
+							<input {...register("iban")} autoComplete="off" placeholder="FR76 …" />
 						</label>
 					</div>
 

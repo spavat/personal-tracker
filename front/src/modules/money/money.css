@@ -74,6 +74,10 @@
 				color: white;
 			}
 
+			.description {
+				font-size: 0.8rem;
+			}
+
 			.threshold {
 				background-color: pink;
 			}
@@ -123,23 +127,18 @@
 			width: 5%;
 		}
 
-		.transactions .tags {
-			/* Montant */
-			width: 40%;
-		}
-
 		.transactions .category {
-			/* Montant */
+			/* Category */
 			width: 20%;
 		}
 
 		.transactions .paiement {
-			/* Montant */
+			/* Paiement */
 			width: 20%;
 		}
 
 		.transactions .right-actions {
-			/* Montant */
+			/* Actions */
 			width: 10%;
 		}
 
@@ -179,6 +178,7 @@
 		.debit {
 			color: red;
 			font-weight: bold;
+			font-variant-numeric: tabular-nums;
 
 			input {
 				width: 50px;
@@ -188,6 +188,7 @@
 		.credit {
 			color: green;
 			font-weight: bold;
+			font-variant-numeric: tabular-nums;
 
 			input {
 				width: 50px;
@@ -321,6 +322,74 @@
 			td:nth-of-type(1) {
 				text-align: left;
 			}
+		}
+		/* bank sync */
+		.banking-alerts p {
+			margin: 4px 0;
+		}
+		.banking-actions button,
+		.bank-connection button,
+		.bank-inbox-actions button {
+			margin-right: 6px;
+		}
+		.bank-connection {
+			border: 1px solid var(--light-border-color);
+			border-radius: 6px;
+			padding: 8px 0px;
+			margin-bottom: 12px;
+			overflow-x: auto;
+		}
+		.connection-status,
+		.banking-alerts .ok,
+		.banking-alerts .warning,
+		.banking-alerts .danger {
+			font-size: 0.8em;
+		}
+		.connection-status {
+			padding: 2px 8px;
+			border-radius: 10px;
+			&.ok {
+				background: #1f6f3f;
+			}
+			&.warning {
+				background: #8a6d1a;
+			}
+			&.danger {
+				background: #8a2a2a;
+			}
+		}
+		.banking-alerts .warning a {
+			color: #e0b84a;
+		}
+		.banking-alerts .danger a {
+			color: #e06a6a;
+		}
+		.bank-connection-accounts,
+		.bank-inbox {
+			border-collapse: collapse;
+			td,
+			th {
+				text-align: left;
+			}
+			.amount {
+				text-align: right;
+				white-space: nowrap;
+			}
+		}
+		.bank-inbox {
+			.counterparty {
+				font-size: 0.85em;
+				opacity: 0.7;
+			}
+			.bank-inbox-actions {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 4px;
+			}
+		}
+		.bank-label {
+			opacity: 0.8;
+			font-family: monospace;
 		}
 	}
 }

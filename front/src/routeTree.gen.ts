@@ -53,6 +53,7 @@ import { Route as LifespanCategoriesListRouteImport } from './routes/lifespan/ca
 import { Route as LifespanListListRouteImport } from './routes/lifespan/list/_list'
 import { Route as LifespanTimelineTimelineRouteImport } from './routes/lifespan/timeline/_timeline'
 import { Route as MoneyAccountsTreeRouteImport } from './routes/money/accounts/_tree'
+import { Route as MoneyBankingCallbackRouteImport } from './routes/money/banking/callback'
 import { Route as MoneyCategoriesListRouteImport } from './routes/money/categories/_list'
 import { Route as MoneyReportsIndexRouteImport } from './routes/money/reports/index'
 import { Route as MoneyReportsYearRouteImport } from './routes/money/reports/$year'
@@ -106,6 +107,8 @@ import { Route as LifespanListListIndexRouteImport } from './routes/lifespan/lis
 import { Route as LifespanListListAddRouteImport } from './routes/lifespan/list/_list.add'
 import { Route as LifespanTimelineTimelineIndexRouteImport } from './routes/lifespan/timeline/_timeline.index'
 import { Route as LifespanTimelineTimelineAddRouteImport } from './routes/lifespan/timeline/_timeline.add'
+import { Route as MoneyBankingConnectionsListRouteImport } from './routes/money/banking/connections/_list'
+import { Route as MoneyBankingInboxListRouteImport } from './routes/money/banking/inbox/_list'
 import { Route as MoneyCategoriesListAddRouteImport } from './routes/money/categories/_list.add'
 import { Route as MoneyTagsListAddRouteImport } from './routes/money/tags/_list.add'
 import { Route as MoneyTransactionsTypeIdRouteImport } from './routes/money/transactions/$type.$id'
@@ -150,6 +153,7 @@ import { Route as LifespanListListObjectIdEditRouteImport } from './routes/lifes
 import { Route as MoneyAccountsTreeAccountAddRouteImport } from './routes/money/accounts/_tree.account.add'
 import { Route as MoneyAccountsTreeBankAddRouteImport } from './routes/money/accounts/_tree.bank.add'
 import { Route as MoneyAccountsTreePaymentTypeAddRouteImport } from './routes/money/accounts/_tree.paymentType.add'
+import { Route as MoneyBankingConnectionsListAddRouteImport } from './routes/money/banking/connections/_list.add'
 import { Route as MoneyCategoriesListCategoryIdDeleteRouteImport } from './routes/money/categories/_list.$categoryId.delete'
 import { Route as MoneyCategoriesListCategoryIdEditRouteImport } from './routes/money/categories/_list.$categoryId.edit'
 import { Route as MoneyTagsListTagIdDeleteRouteImport } from './routes/money/tags/_list.$tagId.delete'
@@ -186,6 +190,7 @@ import { Route as MoneyAccountsTreeBankBankIdDeleteRouteImport } from './routes/
 import { Route as MoneyAccountsTreeBankBankIdEditRouteImport } from './routes/money/accounts/_tree.bank.$bankId.edit'
 import { Route as MoneyAccountsTreePaymentTypePaymentTypeIdDeleteRouteImport } from './routes/money/accounts/_tree.paymentType.$paymentTypeId.delete'
 import { Route as MoneyAccountsTreePaymentTypePaymentTypeIdEditRouteImport } from './routes/money/accounts/_tree.paymentType.$paymentTypeId.edit'
+import { Route as MoneyBankingInboxListBankTransactionIdAcceptRouteImport } from './routes/money/banking/inbox/_list.$bankTransactionId.accept'
 import { Route as MoneyTransactionsPeriodTransactionTransactionIdDeleteRouteImport } from './routes/money/transactions/$period.transaction.$transactionId.delete'
 import { Route as MoneyTransactionsPeriodTransactionTransactionIdEditRouteImport } from './routes/money/transactions/$period.transaction.$transactionId.edit'
 import { Route as MoneyTransactionsSearchTransactionTransactionIdEditRouteImport } from './routes/money/transactions/search.transaction.$transactionId.edit'
@@ -418,6 +423,11 @@ const LifespanTimelineTimelineRoute =
 const MoneyAccountsTreeRoute = MoneyAccountsTreeRouteImport.update({
   id: '/accounts/_tree',
   path: '/accounts',
+  getParentRoute: () => MoneyRoute,
+} as any)
+const MoneyBankingCallbackRoute = MoneyBankingCallbackRouteImport.update({
+  id: '/banking/callback',
+  path: '/banking/callback',
   getParentRoute: () => MoneyRoute,
 } as any)
 const MoneyCategoriesListRoute = MoneyCategoriesListRouteImport.update({
@@ -698,6 +708,17 @@ const LifespanTimelineTimelineAddRoute =
     path: '/add',
     getParentRoute: () => LifespanTimelineTimelineRoute,
   } as any)
+const MoneyBankingConnectionsListRoute =
+  MoneyBankingConnectionsListRouteImport.update({
+    id: '/banking/connections/_list',
+    path: '/banking/connections',
+    getParentRoute: () => MoneyRoute,
+  } as any)
+const MoneyBankingInboxListRoute = MoneyBankingInboxListRouteImport.update({
+  id: '/banking/inbox/_list',
+  path: '/banking/inbox',
+  getParentRoute: () => MoneyRoute,
+} as any)
 const MoneyCategoriesListAddRoute = MoneyCategoriesListAddRouteImport.update({
   id: '/add',
   path: '/add',
@@ -941,6 +962,12 @@ const MoneyAccountsTreePaymentTypeAddRoute =
     path: '/paymentType/add',
     getParentRoute: () => MoneyAccountsTreeRoute,
   } as any)
+const MoneyBankingConnectionsListAddRoute =
+  MoneyBankingConnectionsListAddRouteImport.update({
+    id: '/add',
+    path: '/add',
+    getParentRoute: () => MoneyBankingConnectionsListRoute,
+  } as any)
 const MoneyCategoriesListCategoryIdDeleteRoute =
   MoneyCategoriesListCategoryIdDeleteRouteImport.update({
     id: '/$categoryId/delete',
@@ -1154,6 +1181,12 @@ const MoneyAccountsTreePaymentTypePaymentTypeIdEditRoute =
     path: '/paymentType/$paymentTypeId/edit',
     getParentRoute: () => MoneyAccountsTreeRoute,
   } as any)
+const MoneyBankingInboxListBankTransactionIdAcceptRoute =
+  MoneyBankingInboxListBankTransactionIdAcceptRouteImport.update({
+    id: '/$bankTransactionId/accept',
+    path: '/$bankTransactionId/accept',
+    getParentRoute: () => MoneyBankingInboxListRoute,
+  } as any)
 const MoneyTransactionsPeriodTransactionTransactionIdDeleteRoute =
   MoneyTransactionsPeriodTransactionTransactionIdDeleteRouteImport.update({
     id: '/transaction/$transactionId/delete',
@@ -1266,6 +1299,7 @@ export interface FileRoutesByFullPath {
   '/lifespan/list': typeof LifespanListListRouteWithChildren
   '/lifespan/timeline': typeof LifespanTimelineTimelineRouteWithChildren
   '/money/accounts': typeof MoneyAccountsTreeRouteWithChildren
+  '/money/banking/callback': typeof MoneyBankingCallbackRoute
   '/money/categories': typeof MoneyCategoriesListRouteWithChildren
   '/money/reports/$year': typeof MoneyReportsYearRoute
   '/money/tags': typeof MoneyTagsListRouteWithChildren
@@ -1319,6 +1353,8 @@ export interface FileRoutesByFullPath {
   '/lifespan/categories/add': typeof LifespanCategoriesListAddRoute
   '/lifespan/list/add': typeof LifespanListListAddRoute
   '/lifespan/timeline/add': typeof LifespanTimelineTimelineAddRoute
+  '/money/banking/connections': typeof MoneyBankingConnectionsListRouteWithChildren
+  '/money/banking/inbox': typeof MoneyBankingInboxListRouteWithChildren
   '/money/categories/add': typeof MoneyCategoriesListAddRoute
   '/money/tags/add': typeof MoneyTagsListAddRoute
   '/money/transactions/$type/$id': typeof MoneyTransactionsTypeIdRoute
@@ -1368,6 +1404,7 @@ export interface FileRoutesByFullPath {
   '/money/accounts/account/add': typeof MoneyAccountsTreeAccountAddRoute
   '/money/accounts/bank/add': typeof MoneyAccountsTreeBankAddRoute
   '/money/accounts/paymentType/add': typeof MoneyAccountsTreePaymentTypeAddRoute
+  '/money/banking/connections/add': typeof MoneyBankingConnectionsListAddRoute
   '/money/categories/$categoryId/delete': typeof MoneyCategoriesListCategoryIdDeleteRoute
   '/money/categories/$categoryId/edit': typeof MoneyCategoriesListCategoryIdEditRoute
   '/money/tags/$tagId/delete': typeof MoneyTagsListTagIdDeleteRoute
@@ -1404,6 +1441,7 @@ export interface FileRoutesByFullPath {
   '/money/accounts/bank/$bankId/edit': typeof MoneyAccountsTreeBankBankIdEditRoute
   '/money/accounts/paymentType/$paymentTypeId/delete': typeof MoneyAccountsTreePaymentTypePaymentTypeIdDeleteRoute
   '/money/accounts/paymentType/$paymentTypeId/edit': typeof MoneyAccountsTreePaymentTypePaymentTypeIdEditRoute
+  '/money/banking/inbox/$bankTransactionId/accept': typeof MoneyBankingInboxListBankTransactionIdAcceptRoute
   '/money/transactions/$period/transaction/$transactionId/delete': typeof MoneyTransactionsPeriodTransactionTransactionIdDeleteRoute
   '/money/transactions/$period/transaction/$transactionId/edit': typeof MoneyTransactionsPeriodTransactionTransactionIdEditRoute
   '/money/transactions/search/transaction/$transactionId/edit': typeof MoneyTransactionsSearchTransactionTransactionIdEditRoute
@@ -1441,6 +1479,7 @@ export interface FileRoutesByTo {
   '/internet/history/$period': typeof InternetHistoryPeriodRouteWithChildren
   '/internet/stats/$year': typeof InternetStatsYearRoute
   '/money/accounts': typeof MoneyAccountsTreeRouteWithChildren
+  '/money/banking/callback': typeof MoneyBankingCallbackRoute
   '/money/categories': typeof MoneyCategoriesListRouteWithChildren
   '/money/reports/$year': typeof MoneyReportsYearRoute
   '/money/tags': typeof MoneyTagsListRouteWithChildren
@@ -1487,6 +1526,8 @@ export interface FileRoutesByTo {
   '/lifespan/categories/add': typeof LifespanCategoriesListAddRoute
   '/lifespan/list/add': typeof LifespanListListAddRoute
   '/lifespan/timeline/add': typeof LifespanTimelineTimelineAddRoute
+  '/money/banking/connections': typeof MoneyBankingConnectionsListRouteWithChildren
+  '/money/banking/inbox': typeof MoneyBankingInboxListRouteWithChildren
   '/money/categories/add': typeof MoneyCategoriesListAddRoute
   '/money/tags/add': typeof MoneyTagsListAddRoute
   '/money/transactions/$type/$id': typeof MoneyTransactionsTypeIdRoute
@@ -1533,6 +1574,7 @@ export interface FileRoutesByTo {
   '/money/accounts/account/add': typeof MoneyAccountsTreeAccountAddRoute
   '/money/accounts/bank/add': typeof MoneyAccountsTreeBankAddRoute
   '/money/accounts/paymentType/add': typeof MoneyAccountsTreePaymentTypeAddRoute
+  '/money/banking/connections/add': typeof MoneyBankingConnectionsListAddRoute
   '/money/categories/$categoryId/delete': typeof MoneyCategoriesListCategoryIdDeleteRoute
   '/money/categories/$categoryId/edit': typeof MoneyCategoriesListCategoryIdEditRoute
   '/money/tags/$tagId/delete': typeof MoneyTagsListTagIdDeleteRoute
@@ -1569,6 +1611,7 @@ export interface FileRoutesByTo {
   '/money/accounts/bank/$bankId/edit': typeof MoneyAccountsTreeBankBankIdEditRoute
   '/money/accounts/paymentType/$paymentTypeId/delete': typeof MoneyAccountsTreePaymentTypePaymentTypeIdDeleteRoute
   '/money/accounts/paymentType/$paymentTypeId/edit': typeof MoneyAccountsTreePaymentTypePaymentTypeIdEditRoute
+  '/money/banking/inbox/$bankTransactionId/accept': typeof MoneyBankingInboxListBankTransactionIdAcceptRoute
   '/money/transactions/$period/transaction/$transactionId/delete': typeof MoneyTransactionsPeriodTransactionTransactionIdDeleteRoute
   '/money/transactions/$period/transaction/$transactionId/edit': typeof MoneyTransactionsPeriodTransactionTransactionIdEditRoute
   '/money/transactions/search/transaction/$transactionId/edit': typeof MoneyTransactionsSearchTransactionTransactionIdEditRoute
@@ -1623,6 +1666,7 @@ export interface FileRoutesById {
   '/lifespan/list/_list': typeof LifespanListListRouteWithChildren
   '/lifespan/timeline/_timeline': typeof LifespanTimelineTimelineRouteWithChildren
   '/money/accounts/_tree': typeof MoneyAccountsTreeRouteWithChildren
+  '/money/banking/callback': typeof MoneyBankingCallbackRoute
   '/money/categories/_list': typeof MoneyCategoriesListRouteWithChildren
   '/money/reports/$year': typeof MoneyReportsYearRoute
   '/money/tags/_list': typeof MoneyTagsListRouteWithChildren
@@ -1676,6 +1720,8 @@ export interface FileRoutesById {
   '/lifespan/categories/_list/add': typeof LifespanCategoriesListAddRoute
   '/lifespan/list/_list/add': typeof LifespanListListAddRoute
   '/lifespan/timeline/_timeline/add': typeof LifespanTimelineTimelineAddRoute
+  '/money/banking/connections/_list': typeof MoneyBankingConnectionsListRouteWithChildren
+  '/money/banking/inbox/_list': typeof MoneyBankingInboxListRouteWithChildren
   '/money/categories/_list/add': typeof MoneyCategoriesListAddRoute
   '/money/tags/_list/add': typeof MoneyTagsListAddRoute
   '/money/transactions/$type/$id': typeof MoneyTransactionsTypeIdRoute
@@ -1725,6 +1771,7 @@ export interface FileRoutesById {
   '/money/accounts/_tree/account/add': typeof MoneyAccountsTreeAccountAddRoute
   '/money/accounts/_tree/bank/add': typeof MoneyAccountsTreeBankAddRoute
   '/money/accounts/_tree/paymentType/add': typeof MoneyAccountsTreePaymentTypeAddRoute
+  '/money/banking/connections/_list/add': typeof MoneyBankingConnectionsListAddRoute
   '/money/categories/_list/$categoryId/delete': typeof MoneyCategoriesListCategoryIdDeleteRoute
   '/money/categories/_list/$categoryId/edit': typeof MoneyCategoriesListCategoryIdEditRoute
   '/money/tags/_list/$tagId/delete': typeof MoneyTagsListTagIdDeleteRoute
@@ -1761,6 +1808,7 @@ export interface FileRoutesById {
   '/money/accounts/_tree/bank/$bankId/edit': typeof MoneyAccountsTreeBankBankIdEditRoute
   '/money/accounts/_tree/paymentType/$paymentTypeId/delete': typeof MoneyAccountsTreePaymentTypePaymentTypeIdDeleteRoute
   '/money/accounts/_tree/paymentType/$paymentTypeId/edit': typeof MoneyAccountsTreePaymentTypePaymentTypeIdEditRoute
+  '/money/banking/inbox/_list/$bankTransactionId/accept': typeof MoneyBankingInboxListBankTransactionIdAcceptRoute
   '/money/transactions/$period/transaction/$transactionId/delete': typeof MoneyTransactionsPeriodTransactionTransactionIdDeleteRoute
   '/money/transactions/$period/transaction/$transactionId/edit': typeof MoneyTransactionsPeriodTransactionTransactionIdEditRoute
   '/money/transactions/search/transaction/$transactionId/edit': typeof MoneyTransactionsSearchTransactionTransactionIdEditRoute
@@ -1815,6 +1863,7 @@ export interface FileRouteTypes {
     | '/lifespan/list'
     | '/lifespan/timeline'
     | '/money/accounts'
+    | '/money/banking/callback'
     | '/money/categories'
     | '/money/reports/$year'
     | '/money/tags'
@@ -1868,6 +1917,8 @@ export interface FileRouteTypes {
     | '/lifespan/categories/add'
     | '/lifespan/list/add'
     | '/lifespan/timeline/add'
+    | '/money/banking/connections'
+    | '/money/banking/inbox'
     | '/money/categories/add'
     | '/money/tags/add'
     | '/money/transactions/$type/$id'
@@ -1917,6 +1968,7 @@ export interface FileRouteTypes {
     | '/money/accounts/account/add'
     | '/money/accounts/bank/add'
     | '/money/accounts/paymentType/add'
+    | '/money/banking/connections/add'
     | '/money/categories/$categoryId/delete'
     | '/money/categories/$categoryId/edit'
     | '/money/tags/$tagId/delete'
@@ -1953,6 +2005,7 @@ export interface FileRouteTypes {
     | '/money/accounts/bank/$bankId/edit'
     | '/money/accounts/paymentType/$paymentTypeId/delete'
     | '/money/accounts/paymentType/$paymentTypeId/edit'
+    | '/money/banking/inbox/$bankTransactionId/accept'
     | '/money/transactions/$period/transaction/$transactionId/delete'
     | '/money/transactions/$period/transaction/$transactionId/edit'
     | '/money/transactions/search/transaction/$transactionId/edit'
@@ -1990,6 +2043,7 @@ export interface FileRouteTypes {
     | '/internet/history/$period'
     | '/internet/stats/$year'
     | '/money/accounts'
+    | '/money/banking/callback'
     | '/money/categories'
     | '/money/reports/$year'
     | '/money/tags'
@@ -2036,6 +2090,8 @@ export interface FileRouteTypes {
     | '/lifespan/categories/add'
     | '/lifespan/list/add'
     | '/lifespan/timeline/add'
+    | '/money/banking/connections'
+    | '/money/banking/inbox'
     | '/money/categories/add'
     | '/money/tags/add'
     | '/money/transactions/$type/$id'
@@ -2082,6 +2138,7 @@ export interface FileRouteTypes {
     | '/money/accounts/account/add'
     | '/money/accounts/bank/add'
     | '/money/accounts/paymentType/add'
+    | '/money/banking/connections/add'
     | '/money/categories/$categoryId/delete'
     | '/money/categories/$categoryId/edit'
     | '/money/tags/$tagId/delete'
@@ -2118,6 +2175,7 @@ export interface FileRouteTypes {
     | '/money/accounts/bank/$bankId/edit'
     | '/money/accounts/paymentType/$paymentTypeId/delete'
     | '/money/accounts/paymentType/$paymentTypeId/edit'
+    | '/money/banking/inbox/$bankTransactionId/accept'
     | '/money/transactions/$period/transaction/$transactionId/delete'
     | '/money/transactions/$period/transaction/$transactionId/edit'
     | '/money/transactions/search/transaction/$transactionId/edit'
@@ -2171,6 +2229,7 @@ export interface FileRouteTypes {
     | '/lifespan/list/_list'
     | '/lifespan/timeline/_timeline'
     | '/money/accounts/_tree'
+    | '/money/banking/callback'
     | '/money/categories/_list'
     | '/money/reports/$year'
     | '/money/tags/_list'
@@ -2224,6 +2283,8 @@ export interface FileRouteTypes {
     | '/lifespan/categories/_list/add'
     | '/lifespan/list/_list/add'
     | '/lifespan/timeline/_timeline/add'
+    | '/money/banking/connections/_list'
+    | '/money/banking/inbox/_list'
     | '/money/categories/_list/add'
     | '/money/tags/_list/add'
     | '/money/transactions/$type/$id'
@@ -2273,6 +2334,7 @@ export interface FileRouteTypes {
     | '/money/accounts/_tree/account/add'
     | '/money/accounts/_tree/bank/add'
     | '/money/accounts/_tree/paymentType/add'
+    | '/money/banking/connections/_list/add'
     | '/money/categories/_list/$categoryId/delete'
     | '/money/categories/_list/$categoryId/edit'
     | '/money/tags/_list/$tagId/delete'
@@ -2309,6 +2371,7 @@ export interface FileRouteTypes {
     | '/money/accounts/_tree/bank/$bankId/edit'
     | '/money/accounts/_tree/paymentType/$paymentTypeId/delete'
     | '/money/accounts/_tree/paymentType/$paymentTypeId/edit'
+    | '/money/banking/inbox/_list/$bankTransactionId/accept'
     | '/money/transactions/$period/transaction/$transactionId/delete'
     | '/money/transactions/$period/transaction/$transactionId/edit'
     | '/money/transactions/search/transaction/$transactionId/edit'
@@ -2648,6 +2711,13 @@ declare module '@tanstack/react-router' {
       path: '/accounts'
       fullPath: '/money/accounts'
       preLoaderRoute: typeof MoneyAccountsTreeRouteImport
+      parentRoute: typeof MoneyRoute
+    }
+    '/money/banking/callback': {
+      id: '/money/banking/callback'
+      path: '/banking/callback'
+      fullPath: '/money/banking/callback'
+      preLoaderRoute: typeof MoneyBankingCallbackRouteImport
       parentRoute: typeof MoneyRoute
     }
     '/money/categories/_list': {
@@ -3021,6 +3091,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LifespanTimelineTimelineAddRouteImport
       parentRoute: typeof LifespanTimelineTimelineRoute
     }
+    '/money/banking/connections/_list': {
+      id: '/money/banking/connections/_list'
+      path: '/banking/connections'
+      fullPath: '/money/banking/connections'
+      preLoaderRoute: typeof MoneyBankingConnectionsListRouteImport
+      parentRoute: typeof MoneyRoute
+    }
+    '/money/banking/inbox/_list': {
+      id: '/money/banking/inbox/_list'
+      path: '/banking/inbox'
+      fullPath: '/money/banking/inbox'
+      preLoaderRoute: typeof MoneyBankingInboxListRouteImport
+      parentRoute: typeof MoneyRoute
+    }
     '/money/categories/_list/add': {
       id: '/money/categories/_list/add'
       path: '/add'
@@ -3329,6 +3413,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MoneyAccountsTreePaymentTypeAddRouteImport
       parentRoute: typeof MoneyAccountsTreeRoute
     }
+    '/money/banking/connections/_list/add': {
+      id: '/money/banking/connections/_list/add'
+      path: '/add'
+      fullPath: '/money/banking/connections/add'
+      preLoaderRoute: typeof MoneyBankingConnectionsListAddRouteImport
+      parentRoute: typeof MoneyBankingConnectionsListRoute
+    }
     '/money/categories/_list/$categoryId/delete': {
       id: '/money/categories/_list/$categoryId/delete'
       path: '/$categoryId/delete'
@@ -3580,6 +3671,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/money/accounts/paymentType/$paymentTypeId/edit'
       preLoaderRoute: typeof MoneyAccountsTreePaymentTypePaymentTypeIdEditRouteImport
       parentRoute: typeof MoneyAccountsTreeRoute
+    }
+    '/money/banking/inbox/_list/$bankTransactionId/accept': {
+      id: '/money/banking/inbox/_list/$bankTransactionId/accept'
+      path: '/$bankTransactionId/accept'
+      fullPath: '/money/banking/inbox/$bankTransactionId/accept'
+      preLoaderRoute: typeof MoneyBankingInboxListBankTransactionIdAcceptRouteImport
+      parentRoute: typeof MoneyBankingInboxListRoute
     }
     '/money/transactions/$period/transaction/$transactionId/delete': {
       id: '/money/transactions/$period/transaction/$transactionId/delete'
@@ -4048,10 +4146,39 @@ const MoneyTransactionsSearchRouteWithChildren =
     MoneyTransactionsSearchRouteChildren,
   )
 
+interface MoneyBankingConnectionsListRouteChildren {
+  MoneyBankingConnectionsListAddRoute: typeof MoneyBankingConnectionsListAddRoute
+}
+
+const MoneyBankingConnectionsListRouteChildren: MoneyBankingConnectionsListRouteChildren =
+  {
+    MoneyBankingConnectionsListAddRoute: MoneyBankingConnectionsListAddRoute,
+  }
+
+const MoneyBankingConnectionsListRouteWithChildren =
+  MoneyBankingConnectionsListRoute._addFileChildren(
+    MoneyBankingConnectionsListRouteChildren,
+  )
+
+interface MoneyBankingInboxListRouteChildren {
+  MoneyBankingInboxListBankTransactionIdAcceptRoute: typeof MoneyBankingInboxListBankTransactionIdAcceptRoute
+}
+
+const MoneyBankingInboxListRouteChildren: MoneyBankingInboxListRouteChildren = {
+  MoneyBankingInboxListBankTransactionIdAcceptRoute:
+    MoneyBankingInboxListBankTransactionIdAcceptRoute,
+}
+
+const MoneyBankingInboxListRouteWithChildren =
+  MoneyBankingInboxListRoute._addFileChildren(
+    MoneyBankingInboxListRouteChildren,
+  )
+
 interface MoneyRouteChildren {
   MoneyAnalyticsRoute: typeof MoneyAnalyticsRoute
   MoneyIndexRoute: typeof MoneyIndexRoute
   MoneyAccountsTreeRoute: typeof MoneyAccountsTreeRouteWithChildren
+  MoneyBankingCallbackRoute: typeof MoneyBankingCallbackRoute
   MoneyCategoriesListRoute: typeof MoneyCategoriesListRouteWithChildren
   MoneyReportsYearRoute: typeof MoneyReportsYearRoute
   MoneyTagsListRoute: typeof MoneyTagsListRouteWithChildren
@@ -4060,6 +4187,8 @@ interface MoneyRouteChildren {
   MoneyTransactionsSearchRoute: typeof MoneyTransactionsSearchRouteWithChildren
   MoneyReportsIndexRoute: typeof MoneyReportsIndexRoute
   MoneyTransactionsIndexRoute: typeof MoneyTransactionsIndexRoute
+  MoneyBankingConnectionsListRoute: typeof MoneyBankingConnectionsListRouteWithChildren
+  MoneyBankingInboxListRoute: typeof MoneyBankingInboxListRouteWithChildren
   MoneyTransactionsTypeIdRoute: typeof MoneyTransactionsTypeIdRoute
 }
 
@@ -4067,6 +4196,7 @@ const MoneyRouteChildren: MoneyRouteChildren = {
   MoneyAnalyticsRoute: MoneyAnalyticsRoute,
   MoneyIndexRoute: MoneyIndexRoute,
   MoneyAccountsTreeRoute: MoneyAccountsTreeRouteWithChildren,
+  MoneyBankingCallbackRoute: MoneyBankingCallbackRoute,
   MoneyCategoriesListRoute: MoneyCategoriesListRouteWithChildren,
   MoneyReportsYearRoute: MoneyReportsYearRoute,
   MoneyTagsListRoute: MoneyTagsListRouteWithChildren,
@@ -4075,6 +4205,9 @@ const MoneyRouteChildren: MoneyRouteChildren = {
   MoneyTransactionsSearchRoute: MoneyTransactionsSearchRouteWithChildren,
   MoneyReportsIndexRoute: MoneyReportsIndexRoute,
   MoneyTransactionsIndexRoute: MoneyTransactionsIndexRoute,
+  MoneyBankingConnectionsListRoute:
+    MoneyBankingConnectionsListRouteWithChildren,
+  MoneyBankingInboxListRoute: MoneyBankingInboxListRouteWithChildren,
   MoneyTransactionsTypeIdRoute: MoneyTransactionsTypeIdRoute,
 }
 

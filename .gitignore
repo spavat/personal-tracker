@@ -10,6 +10,8 @@ lerna-debug.log*
 .env
 .env.local
 .env.*.local
+# Enable Banking application private key
+*.pem
 
 node_modules
 dist

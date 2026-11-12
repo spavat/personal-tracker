@@ -26,6 +26,7 @@ type Inputs = {
 	categoryId: number;
 	paymentTypeId: number;
 	tags: Array<Money.Tag>;
+	bankLabel?: string;
 };
 
 type SubTransaction = {
@@ -41,6 +42,13 @@ interface Form {
 	transactionId?: number;
 	returnTo: string;
 	returnToSearch?: any;
+	// validation of a bank line (inbox): pre-filled values, fixed amount, payment types of the linked account
+	bankLine?: {
+		label: string;
+		defaults: Partial<Inputs>;
+		paymentTypeIds: Array<number>;
+		save: (data: Inputs) => Promise<unknown>;
+	};
 }
 
 const defaultValues = {
@@ -60,15 +68,16 @@ const defaultValues = {
 	tags: [],
 };
 
-export default function NewTransactionForm({ transactionId, returnTo, returnToSearch }: Form) {
+export default function NewTransactionForm({ transactionId, returnTo, returnToSearch, bankLine }: Form) {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const selectTagRef = useRef<HTMLSelectElement | null>(null);
 	const transaction = useOptionalSuspenseQuery(transactionId ? transactionQuery(transactionId) : undefined);
 	const updateMutation = useMutation({
-		mutationFn: saveTransaction,
+		mutationFn: (data: Inputs) => (bankLine ? bankLine.save(data) : saveTransaction({ transactionId, data })),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["money", "transactions"] }); // TODO invalidate only period of the transaction
+			if (bankLine) queryClient.invalidateQueries({ queryKey: ["money", "banking", "inbox"] });
 			formMethods.reset(defaultValues);
 			closeModal();
 		},
@@ -82,7 +91,7 @@ export default function NewTransactionForm({ transactionId, returnTo, returnToSe
 					paymentType: transaction.paymentTypeId,
 					withChildren: Boolean(transaction.children?.length),
 				}
-			: defaultValues,
+			: { ...defaultValues, ...bankLine?.defaults },
 	});
 	const [categoryId, paymentTypeId, withChildren] = useWatch({
 		control: formMethods.control,
@@ -105,7 +114,7 @@ export default function NewTransactionForm({ transactionId, returnTo, returnToSe
 	});
 
 	const onSubmit: SubmitHandler<Inputs> = (data) => {
-		updateMutation.mutate({ transactionId, data });
+		updateMutation.mutate(data);
 	};
 
 	function changeDate(e: React.ChangeEvent<HTMLInputElement>) {
@@ -122,9 +131,12 @@ export default function NewTransactionForm({ transactionId, returnTo, returnToSe
 	}
 
 	// parallel: separate useSuspenseQuery calls would load one after the other (when not preloaded)
-	const [{ data: categories }, { data: paymentTypes }, { data: tags }] = useSuspenseQueries({
+	const [{ data: categories }, { data: allPaymentTypes }, { data: tags }] = useSuspenseQueries({
 		queries: [categoriesQuery(), paymentTypesQuery(), tagsQuery()],
 	});
+	const paymentTypes = bankLine
+		? allPaymentTypes.filter((pt) => bankLine.paymentTypeIds.includes(pt.id))
+		: allPaymentTypes;
 
 	const selectedCategorie = categories.find((c) => c.id === categoryId);
 	const selectedPaymentType = paymentTypes.find((pt) => pt.id === paymentTypeId);
@@ -171,11 +183,20 @@ export default function NewTransactionForm({ transactionId, returnTo, returnToSe
 			<form onSubmit={formMethods.handleSubmit(onSubmit)}>
 				<Modal className="modal form dialog-extralarge" isOpen={true} onClose={closeModal}>
 					<div className="dialog-header">
-						<h2 id="dialog-title">{transactionId ? "Modifier" : "Ajouter"} une transaction</h2>
+						<h2 id="dialog-title">
+							{bankLine
+								? "Valider une opération bancaire"
+								: `${transactionId ? "Modifier" : "Ajouter"} une transaction`}
+						</h2>
 					</div>
 					<div className="dialog-body single-panel">
 						<div className="panel">
 							<h3>Transaction</h3>
+							{bankLine && (
+								<p className="bank-label">
+									<i className="fa-solid fa-building-columns"></i> {bankLine.label}
+								</p>
+							)}
 							<div className="form-grid">
 								<label className="form-field">
 									<span>
@@ -195,9 +216,14 @@ export default function NewTransactionForm({ transactionId, returnTo, returnToSe
 										{...formMethods.register("amount", { required: true, valueAsNumber: true })}
 										type="number"
 										step=".01"
+										// the amount of a bank line is the bank's
+										readOnly={Boolean(bankLine)}
 									/>
 								</label>
-								<span></span>
+								<label className="form-field">
+									<span>Label Bancaire</span>
+									<input {...formMethods.register("bankLabel")} readOnly={true} />
+								</label>
 								<span>
 									<div className="form-field">
 										<label htmlFor="transaction-date">

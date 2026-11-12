@@ -121,7 +121,7 @@ export default function TransactionRow({
 					)}
 				</td>
 				<td>{formatDay(transaction.date)}</td>
-				<td>{formatDate(transaction.date)}</td>
+				<td className="monospace">{formatDate(transaction.date)}</td>
 				<td>
 					{recurrent && (
 						<>

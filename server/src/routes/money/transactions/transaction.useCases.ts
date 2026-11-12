@@ -2,7 +2,7 @@ import type { FastifyBaseLogger } from "fastify";
 
 import { httpErrors } from "@fastify/sensible";
 
-import type { TransactionRepository } from "./transaction.repository";
+import type { TransactionRepository, Tx } from "./transaction.repository";
 
 import { mergeAndSortTransactions, normalizeTransactionRefs, type TransactionBody } from "./transaction.entity";
 
@@ -38,28 +38,32 @@ export class GetTransactionUseCase {
 export class CreateTransactionUseCase {
 	constructor(private repo: TransactionRepository) {}
 
-	async execute(body: TransactionBody, log: FastifyBaseLogger) {
+	async execute(body: TransactionBody, log: FastifyBaseLogger, options?: { transaction: Tx }) {
 		log.info("CreateTransactionUseCase.execute");
 		console.log("creation transaction", body);
 
 		// Save transaction
-		const transaction = await this.repo.create(normalizeTransactionRefs(body));
+		const transaction = await this.repo.create(normalizeTransactionRefs(body), options);
 
 		if (body.children?.length) {
 			// Creation of subtransaction
 			await body.children.reduce(async (acc, child) => {
 				const wait = await acc;
-				const createdChild = await this.repo.create({
-					...normalizeTransactionRefs(child),
-					date: transaction.date,
-					parentId: transaction.id,
-				});
+				const createdChild = await this.repo.create(
+					{
+						...normalizeTransactionRefs(child),
+						date: transaction.date,
+						parentId: transaction.id,
+					},
+					options,
+				);
 				if (child.tags?.length) {
 					await this.repo.bulkCreateTags(
 						child.tags.map((t) => ({
 							transactionId: createdChild.id,
 							tagId: t.id,
 						})),
+						options,
 					);
 				}
 
@@ -72,6 +76,7 @@ export class CreateTransactionUseCase {
 					transactionId: transaction.id,
 					tagId: t.id,
 				})),
+				options,
 			);
 		}
 		console.log("transaction créée !!!!");

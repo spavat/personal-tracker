@@ -26,6 +26,15 @@ const links = [
 		label: "Analytique",
 	},
 	{
+		link: "/money/banking/inbox",
+		label: "À valider",
+	},
+	{
+		link: "/money/banking/connections",
+		label: "Synchronisation",
+		icon: "fa-solid fa-gears",
+	},
+	{
 		link: "/money/categories",
 		label: "Catégories",
 		icon: "fa-solid fa-gears",

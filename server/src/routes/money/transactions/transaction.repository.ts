@@ -6,7 +6,7 @@ import { contains } from "../../../db/contains";
 import { moneyTransaction, moneyTransactionTag } from "../../../db/schema";
 
 type Db = FastifyInstance["db"];
-type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
+export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 type Transaction = typeof moneyTransaction.$inferSelect;
 
 interface ListFilters {
