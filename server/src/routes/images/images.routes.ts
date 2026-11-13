@@ -1,10 +1,12 @@
 import type { FastifyPluginAsync } from "fastify";
 
+import { ZodTypeProvider } from "@marcalexiei/fastify-type-provider-zod";
+import { GameImageParamsSchema } from "@personal-tracker/shared/game";
 import "@fastify/mongodb";
 import * as z from "zod";
 
 import { GameRepository } from "../game/game.repository";
-import { GAME_IMAGE_FIELDS, type GameImageField, GameImageStorageRepository } from "../game/image-storage.repository";
+import { GameImageStorageRepository } from "../game/image-storage.repository";
 import { ImageStorageRepository } from "../internet/image-storage.repository";
 import { InternetRepository } from "../internet/internet.repository";
 import { MediaStorageRepository } from "../show/media/media-storage.repository";
@@ -68,31 +70,24 @@ const images: FastifyPluginAsync = async (fastify): Promise<void> => {
 	});
 
 	// not public, like the game module: the session cookie is sent with the <img> request
-	fastify.get("/game/:key", async (request, reply) => {
-		const { key } = request.params as { key: string };
-		const separatorIndex = key.lastIndexOf(".");
-		const gameId = key.slice(0, separatorIndex);
-		const field = key.slice(separatorIndex + 1);
+	fastify
+		.withTypeProvider<ZodTypeProvider>()
+		.get("/game/:id/:field", { schema: { params: GameImageParamsSchema } }, async (request, reply) => {
+			const { id, field } = request.params;
+			const s3Key = (await gameRepository.findById(id))?.[field];
+			if (!s3Key) {
+				return reply.notFound();
+			}
 
-		if (!(GAME_IMAGE_FIELDS as readonly string[]).includes(field) || !z.uuid().safeParse(gameId).success) {
-			return reply.notFound();
-		}
-
-		const game = await gameRepository.findById(gameId);
-		const s3Key = game?.[field as GameImageField];
-		if (!s3Key) {
-			return reply.notFound();
-		}
-
-		try {
-			const object = await gameImageStorage.getObject(s3Key);
-			reply.header("Content-Type", object.ContentType ?? "image/avif");
-			reply.header("Cache-Control", "public, max-age=86400");
-			return reply.send(object.Body);
-		} catch {
-			return reply.notFound();
-		}
-	});
+			try {
+				const object = await gameImageStorage.getObject(s3Key);
+				reply.header("Content-Type", object.ContentType ?? "image/avif");
+				reply.header("Cache-Control", "public, max-age=86400");
+				return reply.send(object.Body);
+			} catch {
+				return reply.notFound();
+			}
+		});
 
 	// public: show media (posters, portraits, programmes...) are visible like the rest of the show module
 	fastify.get("/show/:id", { config: { public: true } }, async (request, reply) => {

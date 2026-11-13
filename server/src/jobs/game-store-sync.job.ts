@@ -14,7 +14,7 @@ export default fp(async (fastify) => {
 
 	const { connectors, games, snapshots, enrichment } = buildSyncContext(fastify.mongo);
 	const runSync = new RunDailySyncUseCase(connectors, games, snapshots, { enrichment });
-	const log = fastify.log.child({ module: "game-sync-scheduler" });
+	const log = fastify.log.child({ job: "game-store-sync" });
 	let timer: NodeJS.Timeout | undefined;
 
 	async function run() {

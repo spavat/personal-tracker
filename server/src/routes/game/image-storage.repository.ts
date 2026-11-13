@@ -6,7 +6,7 @@ import { fetchImageBuffer, processImage } from "../internet/image-storage.reposi
 export const GAME_IMAGE_FIELDS = ["capsule", "header"] as const;
 export type GameImageField = (typeof GAME_IMAGE_FIELDS)[number];
 
-// Only the S3 key is kept on the game; images are served by the /images/game/:id.field proxy route
+// Only the S3 key is kept on the game; images are served by the /images/game/:id/:field proxy route
 // (routes/images/images.routes.ts), like internet programs.
 export class GameImageStorageRepository {
 	/** True if `value` is one of the proxy URLs handed out for an already uploaded image. */
@@ -33,8 +33,8 @@ export class GameImageStorageRepository {
 		if (!game.id) return game;
 		return {
 			...game,
-			...(game.capsule ? { capsule: `/images/game/${game.id}.capsule` } : {}),
-			...(game.header ? { header: `/images/game/${game.id}.header` } : {}),
+			...(game.capsule ? { capsule: `/images/game/${game.id}/capsule` } : {}),
+			...(game.header ? { header: `/images/game/${game.id}/header` } : {}),
 		};
 	}
 }

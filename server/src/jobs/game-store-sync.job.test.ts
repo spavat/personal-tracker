@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RunDailySyncUseCase } from "../routes/game/sync/sync.useCases";
 import { makeFakeMongo } from "../test-support/fake-mongo";
 import { buildRouteApp } from "../test-support/route-harness";
-import scheduler from "./game-sync-scheduler";
+import scheduler from "./game-store-sync.job";
 
 vi.mock("../config/game-stores", () => ({ STEAM_API_KEY: "", STEAM_ID: "", GOG_USERNAME: "" }));
 

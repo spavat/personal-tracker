@@ -5,6 +5,7 @@ import {
 	GameImportPreviewResponseSchema,
 	GameImportResponseSchema,
 	GameMergeBodySchema,
+	GameMergeResponseSchema,
 	GameReplayResponseSchema,
 	GameSyncReplayParamsSchema,
 	GameSyncRunBodySchema,
@@ -24,7 +25,7 @@ import {
 	RunDailySyncUseCase,
 } from "./sync.useCases";
 
-// Store playtime sync (/game/sync); the daily run is also started by plugins/game-sync-scheduler.ts
+// Store playtime sync (/game/sync); the daily run is also started by jobs/game-store-sync.job.ts
 const sync: FastifyPluginAsync = async (fastify): Promise<void> => {
 	const context = buildSyncContext(fastify.mongo);
 	const { connectors, games, snapshots } = context;
@@ -76,9 +77,13 @@ const sync: FastifyPluginAsync = async (fastify): Promise<void> => {
 
 	fastify
 		.withTypeProvider<ZodTypeProvider>()
-		.post("/merge", { schema: { body: GameMergeBodySchema } }, async (request, reply) => {
-			return (await mergeGames.execute(request.body, request.log)) ?? reply.notFound("Jeu introuvable");
-		});
+		.post(
+			"/merge",
+			{ schema: { body: GameMergeBodySchema, response: { 200: GameMergeResponseSchema } } },
+			async (request, reply) => {
+				return (await mergeGames.execute(request.body, request.log)) ?? reply.notFound("Jeu introuvable");
+			},
+		);
 };
 
 export default sync;

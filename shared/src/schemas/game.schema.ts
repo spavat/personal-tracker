@@ -130,6 +130,10 @@ export const GameSyncReplayParamsSchema = z.object({ store: GameStoreSchema, day
 export const GameSyncRunBodySchema = z.object({ store: GameStoreSchema.optional() }).nullish();
 export const GameMergeBodySchema = z.object({ keepId: z.uuid(), removeId: z.uuid() });
 export type GameMergeBody = z.infer<typeof GameMergeBodySchema>;
+export const GameMergeResponseSchema = z.object({ id: z.string() });
+
+// game picture served by /images/game/:id/:field
+export const GameImageParamsSchema = z.object({ id: z.uuid(), field: z.enum(["capsule", "header"]) });
 
 // a store game in the initial import preview; no game = it will be created
 export const GameImportRowSchema = z.object({

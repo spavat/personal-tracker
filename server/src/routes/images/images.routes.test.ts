@@ -40,23 +40,19 @@ describe("images routes", () => {
 		expect(ctx.internet.findOne).toHaveBeenCalledWith({ private: { $ne: true }, id: "prog-1" });
 	});
 
-	it("404s for an unknown game image field or a malformed game id, without a lookup", async () => {
-		expect(
-			(await ctx.app.inject({ method: "GET", url: "/game/11111111-1111-4111-8111-111111111111.poster" }))
-				.statusCode,
-		).toBe(404);
-		expect((await ctx.app.inject({ method: "GET", url: "/game/not-an-id.capsule" })).statusCode).toBe(404);
+	it("rejects an unknown game picture field or a malformed game id, without a lookup", async () => {
+		const id = "11111111-1111-4111-8111-111111111111";
+		expect((await ctx.app.inject({ method: "GET", url: `/game/${id}/poster` })).statusCode).toBe(400);
+		expect((await ctx.app.inject({ method: "GET", url: "/game/not-an-id/capsule" })).statusCode).toBe(400);
 		expect(ctx.game.findOne).not.toHaveBeenCalled();
 	});
 
 	it("404s when the game has no picture of that kind", async () => {
-		ctx.game.findOne.mockResolvedValue({
-			id: "11111111-1111-4111-8111-111111111111",
-			header: "personal-tracker/game/x.header.avif",
-		});
-		const res = await ctx.app.inject({ method: "GET", url: "/game/11111111-1111-4111-8111-111111111111.capsule" });
+		const id = "11111111-1111-4111-8111-111111111111";
+		ctx.game.findOne.mockResolvedValue({ id, header: "personal-tracker/game/x.header.avif" });
+		const res = await ctx.app.inject({ method: "GET", url: `/game/${id}/capsule` });
 		expect(res.statusCode).toBe(404);
-		expect(ctx.game.findOne).toHaveBeenCalledWith({ id: "11111111-1111-4111-8111-111111111111" });
+		expect(ctx.game.findOne).toHaveBeenCalledWith({ id });
 	});
 
 	it("404s when the activity has no thumbnail key", async () => {

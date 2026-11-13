@@ -13,7 +13,15 @@ import type { SteamStore } from "./steam-store";
 
 import { buildPlay } from "../game.entity";
 import { GameEnricher } from "./game-enricher";
-import { attributeDay, computeCatchUp, diffTotals, normalizeName, playDay } from "./sync.entity";
+import {
+	attributeDay,
+	buildImportRows,
+	diffTotals,
+	findGame,
+	normalizeName,
+	playDay,
+	type SyncGame,
+} from "./sync.entity";
 
 type SyncGameRepository = Pick<
 	GameRepository,
@@ -48,8 +56,6 @@ const SNAPSHOT_RETENTION = { hours: 30 * 24 };
 // developer / editor are required on a game
 const UNKNOWN = "Inconnu";
 
-type SyncGame = Awaited<ReturnType<GameRepository["findAllForSync"]>>[number];
-
 // Two writers diffing against the same baseline would count the time twice: imports, runs and replays
 // (scheduler or manual) run one at a time in the process.
 let syncInProgress = false;
@@ -73,7 +79,7 @@ async function withSyncLock<T>(task: () => Promise<T>): Promise<T> {
 class GameMatcher {
 	private constructor(
 		private repo: SyncGameRepository,
-		private games: SyncGame[],
+		readonly games: SyncGame[],
 		private enricher?: GameEnricher,
 	) {}
 
@@ -81,16 +87,8 @@ class GameMatcher {
 		return new GameMatcher(repo, await repo.findAllForSync(), enricher);
 	}
 
-	find(store: GameStore, storeGame: StoreGame): SyncGame | undefined {
-		const byStoreId = this.games.find((game) => game.storeIds?.[store] === storeGame.storeGameId);
-		if (byStoreId || !storeGame.name) return byStoreId;
-		const name = normalizeName(storeGame.name);
-		// a game already linked to another id of this store is another game
-		return this.games.find((game) => !game.storeIds?.[store] && normalizeName(game.name) === name);
-	}
-
 	async findOrCreate(store: GameStore, storeGame: StoreGame): Promise<string> {
-		let existing = this.find(store, storeGame);
+		let existing = findGame(store, storeGame, this.games);
 		let steamId = store === "steam" ? storeGame.storeGameId : existing?.storeIds?.steam;
 		if (!existing && store !== "steam" && this.enricher) {
 			steamId = await this.enricher.findSteamId(storeGame);
@@ -147,51 +145,6 @@ async function fetchConfigured(connector: StoreConnector) {
 	return connector.fetchRaw();
 }
 
-export interface ImportRow {
-	storeGameId: string;
-	origin: GameOrigin;
-	name: string;
-	storeMinutes: number;
-	// playtime already on the game: manual plays, and this origin's synced plays
-	recordedMinutes: number;
-	catchUp: number;
-	// existing game it is matched with, none when it will be created
-	game?: { id: string; name: string };
-}
-
-/**
- * Catch-up of each played store game: the store total minus what the game already records for it, i.e. the
- * synced plays of that origin and the manual plays. Manual time is used up by the game's first origins first, so
- * a game played on Steam and Steam Deck doesn't subtract it twice. Another store's catch-up is not subtracted.
- */
-function buildImportRows(store: GameStore, storeGames: StoreGame[], matcher: GameMatcher): ImportRow[] {
-	const manualLeft = new Map<string, number>();
-	return storeGames.map((storeGame) => {
-		const game = matcher.find(store, storeGame);
-		const storeMinutes = Math.floor(storeGame.seconds / 60);
-		const plays = game?.plays ?? [];
-		const synced = plays
-			.filter((p) => p.auto && p.origin === storeGame.origin && p.date !== CATCH_UP_DATE)
-			.reduce((sum, p) => sum + (p.duration ?? 0), 0);
-		const manual =
-			(game && manualLeft.get(game.id)) ??
-			plays.filter((p) => !p.auto).reduce((sum, p) => sum + (p.duration ?? 0), 0);
-		const catchUp = computeCatchUp(Math.max(0, storeMinutes - synced), [{ duration: manual }]);
-		if (game) {
-			manualLeft.set(game.id, manual - (Math.max(0, storeMinutes - synced) - catchUp));
-		}
-		return {
-			storeGameId: storeGame.storeGameId,
-			origin: storeGame.origin,
-			name: storeGame.name ?? storeGame.storeGameId,
-			storeMinutes,
-			recordedMinutes: storeMinutes - catchUp,
-			catchUp,
-			...(game ? { game: { id: game.id, name: game.name } } : {}),
-		};
-	});
-}
-
 /** What the initial import of a store would write, without writing anything. */
 export class PreviewImportUseCase {
 	constructor(
@@ -203,7 +156,7 @@ export class PreviewImportUseCase {
 		log.info("PreviewImportUseCase.execute");
 		const connector = getConnector(this.connectors, store);
 		const storeGames = connector.parse(await fetchConfigured(connector));
-		return buildImportRows(store, storeGames, await GameMatcher.load(this.games));
+		return buildImportRows(store, storeGames, await this.games.findAllForSync());
 	}
 }
 
@@ -230,7 +183,7 @@ export class ConfirmImportUseCase {
 		const raw = await fetchConfigured(connector);
 		const storeGames = connector.parse(raw);
 		const matcher = await GameMatcher.load(this.games, enricherOf(this.options, log));
-		const rows = buildImportRows(store, storeGames, matcher);
+		const rows = buildImportRows(store, storeGames, matcher.games);
 
 		let created = 0;
 		for (const [index, row] of rows.entries()) {

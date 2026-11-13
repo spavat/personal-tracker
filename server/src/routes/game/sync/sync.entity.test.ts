@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
 	attributeDay,
+	buildImportRows,
 	computeCatchUp,
 	diffTotals,
+	findGame,
 	isRunDue,
 	lastRunSlot,
 	nextRunSlot,
@@ -151,5 +153,52 @@ describe("run slots", () => {
 		expect(isRunDue(now, "2026-11-13T03:00:00Z")).toBe(true);
 		expect(isRunDue(now, "2026-11-14T03:00:00Z")).toBe(false);
 		expect(isRunDue(now, "2026-11-14T08:00:00Z")).toBe(false);
+	});
+});
+
+describe("findGame", () => {
+	const game = (id: string, name: string, storeIds?: Record<string, string>) => ({ id, name, storeIds, plays: [] });
+	const brotato = { storeGameId: "1942280", name: "Brotato", origin: "steam" as const, seconds: 60 };
+
+	it("matches the store id first, then the normalized name", () => {
+		expect(findGame("steam", brotato, [game("a", "Other", { steam: "1942280" })])?.id).toBe("a");
+		expect(findGame("steam", brotato, [game("b", "brotato™")])?.id).toBe("b");
+	});
+
+	it("doesn't match by name a game that has another id in this store", () => {
+		expect(findGame("steam", brotato, [game("c", "Brotato", { steam: "999" })])).toBeUndefined();
+	});
+});
+
+describe("buildImportRows", () => {
+	it("subtracts the manual plays, not another store's catch-up nor this origin's synced plays twice", () => {
+		const games = [
+			{
+				id: "g",
+				name: "Brotato",
+				storeIds: { steam: "1942280" },
+				plays: [
+					{ id: "1", date: "2026-01-01", duration: 30 },
+					{ id: "2", date: "1900-01-01", origin: "epic" as const, duration: 500, auto: true },
+					{ id: "3", date: "2026-11-14", origin: "steam" as const, duration: 20, auto: true },
+				],
+			},
+		];
+		const rows = buildImportRows(
+			"steam",
+			[{ storeGameId: "1942280", name: "Brotato", origin: "steam", seconds: 100 * 60 }],
+			games,
+		);
+		expect(rows).toEqual([
+			{
+				storeGameId: "1942280",
+				origin: "steam",
+				name: "Brotato",
+				storeMinutes: 100,
+				recordedMinutes: 50,
+				catchUp: 50,
+				game: { id: "g", name: "Brotato" },
+			},
+		]);
 	});
 });

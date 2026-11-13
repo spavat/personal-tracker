@@ -1,4 +1,6 @@
-import type { GameOrigin } from "@personal-tracker/shared/game";
+import { CATCH_UP_DATE, type GameOrigin, type GameStore } from "@personal-tracker/shared/game";
+
+import type { GameMongo } from "../game.entity";
 
 const SYNC_TIME_ZONE = "Europe/Paris";
 // a play day D runs from D 04:00 to D+1 04:00 (Europe/Paris)
@@ -109,4 +111,60 @@ export function nextRunSlot(now: Temporal.Instant): Temporal.Instant {
 /** True when no fetch happened since the latest slot (server down at 04:00): the run is due now. */
 export function isRunDue(now: Temporal.Instant, lastFetchedAt?: string): boolean {
 	return !lastFetchedAt || Temporal.Instant.compare(Temporal.Instant.from(lastFetchedAt), lastRunSlot(now)) < 0;
+}
+
+/** A game as the sync sees it: what matching, catch-up and missing pictures need. */
+export type SyncGame = Pick<GameMongo, "id" | "name" | "storeIds" | "plays" | "capsule" | "header">;
+
+/** The game a store game belongs to: same store id, else same name unless that game has another id in this store. */
+export function findGame(store: GameStore, storeGame: StoreTotal, games: SyncGame[]): SyncGame | undefined {
+	const byStoreId = games.find((game) => game.storeIds?.[store] === storeGame.storeGameId);
+	if (byStoreId || !storeGame.name) return byStoreId;
+	const name = normalizeName(storeGame.name);
+	return games.find((game) => !game.storeIds?.[store] && normalizeName(game.name) === name);
+}
+
+export interface ImportRow {
+	storeGameId: string;
+	origin: GameOrigin;
+	name: string;
+	storeMinutes: number;
+	// playtime already on the game: manual plays, and this origin's synced plays
+	recordedMinutes: number;
+	catchUp: number;
+	// existing game it is matched with, none when it will be created
+	game?: { id: string; name: string };
+}
+
+/**
+ * Catch-up of each played store game: the store total minus what the game already records for it, i.e. the
+ * synced plays of that origin and the manual plays. Manual time is used up by the game's first origins first, so
+ * a game played on Steam and Steam Deck doesn't subtract it twice. Another store's catch-up is not subtracted.
+ */
+export function buildImportRows(store: GameStore, storeGames: StoreTotal[], games: SyncGame[]): ImportRow[] {
+	const manualLeft = new Map<string, number>();
+	return storeGames.map((storeGame) => {
+		const game = findGame(store, storeGame, games);
+		const storeMinutes = Math.floor(storeGame.seconds / 60);
+		const plays = game?.plays ?? [];
+		const synced = plays
+			.filter((p) => p.auto && p.origin === storeGame.origin && p.date !== CATCH_UP_DATE)
+			.reduce((sum, p) => sum + (p.duration ?? 0), 0);
+		const manual =
+			(game && manualLeft.get(game.id)) ??
+			plays.filter((p) => !p.auto).reduce((sum, p) => sum + (p.duration ?? 0), 0);
+		const catchUp = computeCatchUp(Math.max(0, storeMinutes - synced), [{ duration: manual }]);
+		if (game) {
+			manualLeft.set(game.id, manual - (Math.max(0, storeMinutes - synced) - catchUp));
+		}
+		return {
+			storeGameId: storeGame.storeGameId,
+			origin: storeGame.origin,
+			name: storeGame.name ?? storeGame.storeGameId,
+			storeMinutes,
+			recordedMinutes: storeMinutes - catchUp,
+			catchUp,
+			...(game ? { game: { id: game.id, name: game.name } } : {}),
+		};
+	});
 }
