@@ -182,6 +182,8 @@ export const GameSyncSnapshotSchema = z.object({
 	day: z.iso.date(),
 	status: z.enum(["ok", "error"]),
 	error: z.string().optional(),
+	// its day can be rebuilt from the kept snapshots
+	replayable: z.boolean(),
 });
 export type GameSyncSnapshot = z.infer<typeof GameSyncSnapshotSchema>;
 

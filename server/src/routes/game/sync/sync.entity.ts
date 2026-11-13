@@ -163,10 +163,15 @@ export function catchUpDate(storeGame: Pick<StoreTotal, "lastPlayed" | "acquired
  * synced plays of that origin and the manual plays. Manual time is used up by the game's first origins first, so
  * a game played on Steam and Steam Deck doesn't subtract it twice. Another store's catch-up is not subtracted.
  */
-export function buildImportRows(store: GameStore, storeGames: StoreTotal[], games: SyncGame[]): ImportRow[] {
+export function buildImportRows<T extends StoreTotal>(
+	store: GameStore,
+	storeGames: T[],
+	// the game a store game belongs to (findGame, or the import's matcher which also knows the Steam ids)
+	match: (storeGame: T) => SyncGame | undefined,
+): ImportRow[] {
 	const manualLeft = new Map<string, number>();
 	return storeGames.map((storeGame) => {
-		const game = findGame(store, storeGame, games);
+		const game = match(storeGame);
 		const storeMinutes = Math.floor(storeGame.seconds / 60);
 		const plays = game?.plays ?? [];
 		const synced = plays
@@ -190,4 +195,22 @@ export function buildImportRows(store: GameStore, storeGames: StoreTotal[], game
 			...(game ? { game: { id: game.id, name: game.name } } : {}),
 		};
 	});
+}
+
+/** Start of a play day: 04:00 Europe/Paris. */
+export function playDayStart(day: string): Temporal.Instant {
+	return Temporal.PlainDate.from(day)
+		.toZonedDateTime({ timeZone: SYNC_TIME_ZONE, plainTime: Temporal.PlainTime.from({ hour: DAY_START_HOUR }) })
+		.toInstant();
+}
+
+/**
+ * Can a day be rebuilt from the kept snapshots? Only when they cover it from its start: the earliest kept one is
+ * an import (the time before it is in the catch-up) or was fetched at or before the day's 04:00. Otherwise the
+ * snapshot that opened the day was deleted (30 days kept), and a replay would lose the day's first part.
+ */
+export function canReplay(day: string, earliestOk?: { kind: "import" | "run"; fetchedAt: string }): boolean {
+	if (!earliestOk) return false;
+	if (earliestOk.kind === "import") return true;
+	return Temporal.Instant.compare(Temporal.Instant.from(earliestOk.fetchedAt), playDayStart(day)) <= 0;
 }

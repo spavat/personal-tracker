@@ -140,7 +140,7 @@ function StorePanel({ status }: { status: GameSyncStatus["stores"][number] }) {
 										)}
 									</td>
 									<td data-label="Actions">
-										{snapshot.kind === "run" && snapshot.status === "ok" && (
+										{snapshot.replayable && (
 											<button
 												type="button"
 												title="Recalcule les parties de ce jour à partir des récupérations gardées"

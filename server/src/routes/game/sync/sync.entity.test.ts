@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
 	attributeDay,
 	buildImportRows,
+	canReplay,
 	catchUpDate,
 	computeCatchUp,
 	diffTotals,
@@ -221,7 +222,7 @@ describe("buildImportRows", () => {
 					lastPlayed: "2026-07-14T20:09:57Z",
 				},
 			],
-			games,
+			(storeGame) => findGame("steam", storeGame, games),
 		);
 		expect(rows).toEqual([
 			{
@@ -236,5 +237,20 @@ describe("buildImportRows", () => {
 				game: { id: "g", name: "Brotato" },
 			},
 		]);
+	});
+});
+
+describe("canReplay", () => {
+	it("needs the kept snapshots to cover the day from its 04:00 start", () => {
+		const earliest = { kind: "run" as const, fetchedAt: "2026-10-15T03:00:00Z" }; // 15 Oct, 05:00 Paris
+		expect(canReplay("2026-10-16", earliest)).toBe(true);
+		// the snapshot that opened the 15th (its 04:00 run, or earlier) was deleted
+		expect(canReplay("2026-10-15", earliest)).toBe(false);
+		expect(canReplay("2026-10-14", { kind: "run", fetchedAt: "2026-10-14T02:00:00Z" })).toBe(true);
+	});
+
+	it("can always replay after an import, never without a snapshot", () => {
+		expect(canReplay("2026-10-15", { kind: "import", fetchedAt: "2026-10-15T12:00:00Z" })).toBe(true);
+		expect(canReplay("2026-10-15")).toBe(false);
 	});
 });

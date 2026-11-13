@@ -81,8 +81,15 @@ const images: FastifyPluginAsync = async (fastify): Promise<void> => {
 
 			try {
 				const object = await gameImageStorage.getObject(s3Key);
+				// a picture replaced in the form keeps its URL: the browser revalidates (304 while unchanged)
+				reply.header("Cache-Control", "private, no-cache");
+				if (object.ETag) {
+					reply.header("ETag", object.ETag);
+					if (request.headers["if-none-match"] === object.ETag) {
+						return reply.code(304).send();
+					}
+				}
 				reply.header("Content-Type", object.ContentType ?? "image/avif");
-				reply.header("Cache-Control", "public, max-age=86400");
 				return reply.send(object.Body);
 			} catch {
 				return reply.notFound();

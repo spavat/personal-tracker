@@ -30,7 +30,7 @@ const sync: FastifyPluginAsync = async (fastify): Promise<void> => {
 	const context = buildSyncContext(fastify.mongo);
 	const { connectors, games, snapshots } = context;
 	const getStatus = new GetSyncStatusUseCase(context);
-	const previewImport = new PreviewImportUseCase(connectors, games);
+	const previewImport = new PreviewImportUseCase(connectors, games, { enrichment: context.enrichment });
 	const confirmImport = new ConfirmImportUseCase(connectors, games, snapshots, { enrichment: context.enrichment });
 	const runSync = new RunDailySyncUseCase(connectors, games, snapshots, { enrichment: context.enrichment });
 	const replay = new ReplayUseCase(connectors, games, snapshots);

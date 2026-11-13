@@ -404,6 +404,44 @@ describe("ReplayUseCase", () => {
 	});
 });
 
+describe("ReplayUseCase on the oldest kept day", () => {
+	it("refuses a day whose opening snapshot was deleted, and keeps its plays", async () => {
+		const games = memoryGames([
+			{
+				...manualGame("hades", "Hades II", [{ date: "2026-10-15", origin: "steam", duration: 50, auto: true }]),
+				storeIds: { steam: "1145350" },
+			},
+		]);
+		const snapshots = memorySnapshots();
+		// retention left the 15th's 15:00 run as the earliest one: the 15th's 04:00 snapshot is gone
+		snapshots.snapshots.push(
+			{
+				id: "a",
+				store: "steam",
+				kind: "run",
+				fetchedAt: "2026-10-15T13:00:00Z",
+				day: "2026-10-15",
+				status: "ok",
+				raw: [steamGame("1145350", "Hades II", 100)],
+			},
+			{
+				id: "b",
+				store: "steam",
+				kind: "run",
+				fetchedAt: "2026-10-16T02:00:00Z",
+				day: "2026-10-15",
+				status: "ok",
+				raw: [steamGame("1145350", "Hades II", 120)],
+			},
+		);
+
+		await expect(
+			new ReplayUseCase([steam], games, snapshots).execute("steam", "2026-10-15", log()),
+		).rejects.toThrow(/trop ancien/);
+		expect(playsOf(games, "Hades II")).toEqual([{ date: "2026-10-15", origin: "steam", duration: 50, auto: true }]);
+	});
+});
+
 describe("MergeGamesUseCase", () => {
 	it("moves the plays and store ids into the kept game and deletes the duplicate", async () => {
 		const games = memoryGames([
@@ -623,5 +661,86 @@ describe("dated catch-ups", () => {
 		expect(catchUpsOf(games, "Hades II")).toEqual([
 			{ date: "2026-11-14", origin: "steam", duration: 100, catchUp: "last-session" },
 		]);
+	});
+});
+
+describe("import preview matches like the import", () => {
+	const enrichment = (details: Record<string, any>, appIds: Record<string, string>) => ({
+		steam: {
+			details: async (appId: string) => details[appId] ?? null,
+			findAppId: async (name: string) => appIds[name],
+		},
+		images: {
+			uploadFromSource: async (gameId: string, field: string) => `personal-tracker/game/${gameId}.${field}.avif`,
+		},
+	});
+
+	it("shows a GOG / Epic game linked through its Steam app, with that game's manual plays subtracted", async () => {
+		const games = memoryGames([
+			{ ...manualGame("hades", "Hades™ Supergiant Edition", [{ duration: 60 }]), storeIds: { steam: "1145360" } },
+		]);
+		epic.push([{ storeGameId: "Min", name: "Hades", origin: "epic", seconds: 100 * 60 }]);
+
+		const [row] = await new PreviewImportUseCase([epic], games, {
+			enrichment: enrichment({}, { Hades: "1145360" }),
+		}).execute("epic", log());
+
+		expect(row).toMatchObject({ game: { id: "hades" }, recordedMinutes: 60, catchUp: 40 });
+	});
+
+	it("counts a new game once, even with a Steam and a Steam Deck total", async () => {
+		steam.push([
+			steamGame("1942280", "Brotato", 60),
+			steamGame("1942280", "Brotato", 30, { origin: "steam-deck" }),
+		]);
+		const result = await new ConfirmImportUseCase([steam], memoryGames(), memorySnapshots(), { now }).execute(
+			"steam",
+			log(),
+		);
+		expect(result.created).toBe(1);
+	});
+
+	it("gives a game matched by name its Steam app and the Steam pictures", async () => {
+		const games = memoryGames([manualGame("w3", "Hollow Knight")]);
+		const deps = enrichment(
+			{ "367520": { capsule: "https://steam/hk-capsule.jpg" } },
+			{ "Hollow Knight": "367520" },
+		);
+		const gog = fakeConnector("gog", ["gog"]);
+		gog.push([
+			{
+				storeGameId: "1308320804",
+				name: "Hollow Knight",
+				origin: "gog",
+				seconds: 60,
+				image: "https://gog/hk.jpg",
+			},
+		]);
+
+		await new ConfirmImportUseCase([gog], games, memorySnapshots(), { now, enrichment: deps }).execute(
+			"gog",
+			log(),
+		);
+
+		expect(games.games[0]).toMatchObject({
+			storeIds: { gog: "1308320804", steam: "367520" },
+			capsule: "personal-tracker/game/w3.capsule.avif",
+		});
+	});
+
+	it("doesn't give a name-matched game a Steam app another game already has", async () => {
+		const games = memoryGames([
+			{ ...manualGame("owner", "Hollow Knight (Steam)"), storeIds: { steam: "367520" } },
+			manualGame("w3", "Hollow Knight"),
+		]);
+		const gog = fakeConnector("gog", ["gog"]);
+		gog.push([{ storeGameId: "1308320804", name: "Hollow Knight", origin: "gog", seconds: 60 }]);
+
+		await new ConfirmImportUseCase([gog], games, memorySnapshots(), {
+			now,
+			enrichment: enrichment({}, { "Hollow Knight": "367520" }),
+		}).execute("gog", log());
+
+		expect(games.games.find((g) => g.id === "w3")!.storeIds).toEqual({ gog: "1308320804" });
 	});
 });

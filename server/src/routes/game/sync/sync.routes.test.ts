@@ -89,6 +89,50 @@ describe("game sync routes", () => {
 		}
 	});
 
+	it("GET /status still reports a failed run followed by an import, and which days can be replayed", async () => {
+		ctx.games.find.mockReturnValue(makeCursor([]));
+		ctx.credentials.findOne.mockResolvedValue({
+			_id: "epic",
+			accountId: "a",
+			refreshToken: "r",
+			refreshExpiresAt: "2027-11-13T15:40:27.755Z",
+		});
+		const snapshot = (id: string, kind: string, fetchedAt: string, day: string, status = "ok") => ({
+			id,
+			store: "epic",
+			kind,
+			fetchedAt,
+			day,
+			status,
+		});
+		ctx.snapshots.find.mockImplementation(((query: { store: string }) =>
+			makeCursor(
+				query.store === "epic"
+					? [
+							snapshot("i", "import", "2026-11-14T10:00:00Z", "2026-11-14"),
+							{
+								...snapshot("r2", "run", "2026-11-14T03:00:00Z", "2026-11-13", "error"),
+								error: "Epic : erreur 401",
+							},
+							snapshot("r1", "run", "2026-11-13T03:00:00Z", "2026-11-12"),
+							snapshot("r0", "run", "2026-11-12T02:00:00Z", "2026-11-11"),
+						]
+					: [],
+			)) as never);
+
+		const body = (await ctx.app.inject({ method: "GET", url: "/status" })).json();
+
+		expect(body.lastRunFailed).toBe(true);
+		// r0, the earliest kept, was fetched before the 12th's 04:00: the 12th can be rebuilt, not the 11th;
+		// an import or a failure is never replayed
+		expect(body.stores[2].snapshots.map((s: any) => [s.id, s.replayable])).toEqual([
+			["i", false],
+			["r2", false],
+			["r1", true],
+			["r0", false],
+		]);
+	});
+
 	it("POST /run runs nothing when no store is configured", async () => {
 		const res = await ctx.app.inject({ method: "POST", url: "/run" });
 		expect(res.statusCode).toBe(200);

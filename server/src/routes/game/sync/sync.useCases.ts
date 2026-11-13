@@ -16,6 +16,7 @@ import { GameEnricher } from "./game-enricher";
 import {
 	attributeDay,
 	buildImportRows,
+	canReplay,
 	diffTotals,
 	findGame,
 	normalizeName,
@@ -77,6 +78,11 @@ async function withSyncLock<T>(task: () => Promise<T>): Promise<T> {
  * Steam info and pictures, and a game linked to a store for the first time gets the pictures it lacks.
  */
 class GameMatcher {
+	// Steam app id of a GOG / Epic store game (exact-name search), null when Steam has none; searched once
+	private steamIds = new Map<string, string | null>();
+	// games created by this matcher
+	created = 0;
+
 	private constructor(
 		private repo: SyncGameRepository,
 		readonly games: SyncGame[],
@@ -87,18 +93,35 @@ class GameMatcher {
 		return new GameMatcher(repo, await repo.findAllForSync(), enricher);
 	}
 
-	async findOrCreate(store: GameStore, storeGame: StoreGame): Promise<string> {
-		let existing = findGame(store, storeGame, this.games);
-		let steamId = store === "steam" ? storeGame.storeGameId : existing?.storeIds?.steam;
-		if (!existing && store !== "steam" && this.enricher) {
-			steamId = await this.enricher.findSteamId(storeGame);
-			existing = steamId ? this.games.find((game) => game.storeIds?.steam === steamId) : undefined;
+	/** Searches the Steam ids `match` needs: the preview then shows what the import will do. */
+	async prepare(store: GameStore, storeGames: StoreGame[]) {
+		for (const storeGame of storeGames) {
+			await this.resolveSteamId(store, storeGame);
 		}
+	}
+
+	/**
+	 * The game a store game belongs to (store id, then name, then for a GOG / Epic game the game owning the Steam
+	 * app of the same name), and the store game's Steam app id. Needs `prepare` (or `resolveSteamId`) first.
+	 */
+	match(store: GameStore, storeGame: StoreGame): { game?: SyncGame; steamId?: string } {
+		const game = findGame(store, storeGame, this.games);
+		if (store === "steam") return { game, steamId: storeGame.storeGameId };
+		const steamId = game?.storeIds?.steam ?? this.steamIds.get(storeGame.storeGameId) ?? undefined;
+		return { game: game ?? (steamId ? this.gameWithSteamId(steamId) : undefined), steamId };
+	}
+
+	async findOrCreate(store: GameStore, storeGame: StoreGame): Promise<string> {
+		await this.resolveSteamId(store, storeGame);
+		const { game: existing, steamId } = this.match(store, storeGame);
 
 		if (existing) {
 			if (existing.storeIds?.[store] !== storeGame.storeGameId) {
-				await this.repo.setStoreId(existing.id, store, storeGame.storeGameId);
-				existing.storeIds = { ...existing.storeIds, [store]: storeGame.storeGameId };
+				await this.link(existing, store, storeGame.storeGameId);
+				// a game matched by name gets the Steam app too, unless another game has it
+				if (steamId && !existing.storeIds?.steam && !this.gameWithSteamId(steamId)) {
+					await this.link(existing, "steam", steamId);
+				}
 				const pictures = (await this.enricher?.missingPictures(existing, storeGame, steamId)) ?? {};
 				if (Object.keys(pictures).length > 0) {
 					await this.repo.updateFields(existing.id, pictures);
@@ -121,7 +144,24 @@ class GameMatcher {
 		};
 		await this.repo.insert(game as unknown as Record<string, unknown>);
 		this.games.push(game);
+		this.created++;
 		return game.id;
+	}
+
+	/** A GOG / Epic store game whose match has no Steam app yet: search Steam for its exact name (once). */
+	private async resolveSteamId(store: GameStore, storeGame: StoreGame) {
+		if (store === "steam" || !this.enricher || this.steamIds.has(storeGame.storeGameId)) return;
+		if (findGame(store, storeGame, this.games)?.storeIds?.steam) return;
+		this.steamIds.set(storeGame.storeGameId, (await this.enricher.findSteamId(storeGame)) ?? null);
+	}
+
+	private gameWithSteamId(steamId: string) {
+		return this.games.find((game) => game.storeIds?.steam === steamId);
+	}
+
+	private async link(game: SyncGame, store: GameStore, storeGameId: string) {
+		await this.repo.setStoreId(game.id, store, storeGameId);
+		game.storeIds = { ...game.storeIds, [store]: storeGameId };
 	}
 }
 
@@ -150,13 +190,17 @@ export class PreviewImportUseCase {
 	constructor(
 		private connectors: StoreConnector[],
 		private games: SyncGameRepository,
+		private options: SyncOptions = {},
 	) {}
 
 	async execute(store: GameStore, log: FastifyBaseLogger) {
 		log.info("PreviewImportUseCase.execute");
 		const connector = getConnector(this.connectors, store);
 		const storeGames = connector.parse(await fetchConfigured(connector));
-		return buildImportRows(store, storeGames, await this.games.findAllForSync());
+		// the same matching as the import, Steam search included
+		const matcher = await GameMatcher.load(this.games, enricherOf(this.options, log));
+		await matcher.prepare(store, storeGames);
+		return buildImportRows(store, storeGames, (storeGame) => matcher.match(store, storeGame).game);
 	}
 }
 
@@ -183,12 +227,11 @@ export class ConfirmImportUseCase {
 		const raw = await fetchConfigured(connector);
 		const storeGames = connector.parse(raw);
 		const matcher = await GameMatcher.load(this.games, enricherOf(this.options, log));
-		const rows = buildImportRows(store, storeGames, matcher.games);
+		await matcher.prepare(store, storeGames);
+		const rows = buildImportRows(store, storeGames, (storeGame) => matcher.match(store, storeGame).game);
 
-		let created = 0;
 		for (const [index, row] of rows.entries()) {
 			const gameId = await matcher.findOrCreate(store, storeGames[index]);
-			if (!row.game) created++;
 			// replaced, or removed when the store's time is now all recorded on the game
 			await this.games.replaceCatchUp(
 				gameId,
@@ -200,7 +243,7 @@ export class ConfirmImportUseCase {
 
 		return {
 			games: new Set(rows.map((r) => r.storeGameId)).size,
-			created,
+			created: matcher.created,
 			catchUpMinutes: rows.reduce((sum, r) => sum + r.catchUp, 0),
 		};
 	}
@@ -316,6 +359,9 @@ export class ReplayUseCase {
 		log.info("ReplayUseCase.execute");
 		const connector = getConnector(this.connectors, store);
 		const snapshots = await this.snapshots.findOk(store);
+		if (!canReplay(day, snapshots[0])) {
+			throw new Error("Jour trop ancien : la récupération qui l'ouvrait n'est plus gardée (30 jours)");
+		}
 
 		await this.games.deleteAutoPlays(day, connector.origins);
 		const matcher = await GameMatcher.load(this.games);
@@ -386,11 +432,17 @@ export class GetSyncStatusUseCase {
 		const stores = await Promise.all(
 			connectors.map(async (connector) => {
 				const epic = connector.store === "epic" ? await credentials.getEpic() : null;
+				const recent = await snapshots.findRecent(connector.store);
+				const earliestOk = recent.findLast((snapshot) => snapshot.status === "ok");
 				return {
 					store: connector.store,
 					configured: await connector.isConfigured(),
 					linkedGames: allGames.filter((game) => game.storeIds?.[connector.store]).length,
-					snapshots: await snapshots.findRecent(connector.store),
+					snapshots: recent.map((snapshot) => ({
+						...snapshot,
+						replayable:
+							snapshot.kind === "run" && snapshot.status === "ok" && canReplay(snapshot.day, earliestOk),
+					})),
 					...(epic ? { tokenExpiresAt: epic.refreshExpiresAt } : {}),
 				};
 			}),
@@ -404,7 +456,10 @@ export class GetSyncStatusUseCase {
 		return {
 			stores,
 			duplicates,
-			lastRunFailed: stores.some((s) => s.configured && s.snapshots[0]?.status === "error"),
+			// the latest run, not an import (always ok) made after it
+			lastRunFailed: stores.some(
+				(s) => s.configured && s.snapshots.find((snapshot) => snapshot.kind === "run")?.status === "error",
+			),
 		};
 	}
 }

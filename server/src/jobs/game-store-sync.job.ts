@@ -35,7 +35,7 @@ export default fp(async (fastify) => {
 	}
 
 	fastify.addHook("onReady", async () => {
-		const latest = await snapshots.findLatest().catch(() => null);
+		const latest = await snapshots.findLatestRun().catch(() => null);
 		if (isRunDue(Temporal.Now.instant(), latest?.fetchedAt)) {
 			// not awaited: the server starts without waiting for the stores
 			void run();

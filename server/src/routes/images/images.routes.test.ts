@@ -1,8 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { makeFakeDrizzle } from "../../test-support/fake-drizzle";
 import { makeFakeMongo } from "../../test-support/fake-mongo";
 import { buildRouteApp } from "../../test-support/route-harness";
+import { GameImageStorageRepository } from "../game/image-storage.repository";
 import imagesRoutes from "./images.routes";
 
 async function buildApp() {
@@ -53,6 +54,35 @@ describe("images routes", () => {
 		const res = await ctx.app.inject({ method: "GET", url: `/game/${id}/capsule` });
 		expect(res.statusCode).toBe(404);
 		expect(ctx.game.findOne).toHaveBeenCalledWith({ id });
+	});
+
+	it("serves a game picture for revalidation, 304 while it is unchanged", async () => {
+		const id = "11111111-1111-4111-8111-111111111111";
+		ctx.game.findOne.mockResolvedValue({ id, capsule: "personal-tracker/game/x.capsule.avif" });
+		const getObject = vi
+			.spyOn(GameImageStorageRepository.prototype, "getObject")
+			.mockResolvedValue({ ETag: '"v1"', ContentType: "image/avif", Body: Buffer.from("avif") } as any);
+
+		const first = await ctx.app.inject({ method: "GET", url: `/game/${id}/capsule` });
+		expect(first.statusCode).toBe(200);
+		expect(first.headers).toMatchObject({ etag: '"v1"', "cache-control": "private, no-cache" });
+
+		const again = await ctx.app.inject({
+			method: "GET",
+			url: `/game/${id}/capsule`,
+			headers: { "if-none-match": '"v1"' },
+		});
+		expect(again.statusCode).toBe(304);
+
+		// replaced in the form: new ETag, sent again
+		getObject.mockResolvedValue({ ETag: '"v2"', ContentType: "image/avif", Body: Buffer.from("new") } as any);
+		const replaced = await ctx.app.inject({
+			method: "GET",
+			url: `/game/${id}/capsule`,
+			headers: { "if-none-match": '"v1"' },
+		});
+		expect(replaced.statusCode).toBe(200);
+		getObject.mockRestore();
 	});
 
 	it("404s when the activity has no thumbnail key", async () => {

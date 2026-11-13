@@ -60,10 +60,13 @@ export class SnapshotRepository {
 		);
 	}
 
-	/** Most recent fetch of any store (has the 04:00 run been missed?). */
-	async findLatest(): Promise<Omit<Snapshot, "raw"> | null> {
+	/** Most recent run of any store, an import doesn't count (has the 04:00 run been missed?). */
+	async findLatestRun(): Promise<Omit<Snapshot, "raw"> | null> {
 		return (
-			(await this.collection?.findOne({}, { sort: { fetchedAt: -1 }, projection: { _id: 0, raw: 0 } })) ?? null
+			(await this.collection?.findOne(
+				{ kind: "run" },
+				{ sort: { fetchedAt: -1 }, projection: { _id: 0, raw: 0 } },
+			)) ?? null
 		);
 	}
 
