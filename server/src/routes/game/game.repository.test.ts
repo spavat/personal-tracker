@@ -47,7 +47,10 @@ describe("GameRepository store sync", () => {
 
 		expect(updateOne).toHaveBeenCalledTimes(1);
 		expect(updateOne).toHaveBeenCalledWith(
-			{ id: "g1", plays: { $elemMatch: { date: "2026-11-14", origin: "steam", auto: true } } },
+			{
+				id: "g1",
+				plays: { $elemMatch: { date: "2026-11-14", origin: "steam", auto: true, catchUp: { $exists: false } } },
+			},
 			{ $inc: { "plays.$.duration": 30 } },
 		);
 	});
@@ -61,6 +64,35 @@ describe("GameRepository store sync", () => {
 		expect(updateOne).toHaveBeenLastCalledWith({ id: "g1" }, { $push: { plays: play } });
 	});
 
+	it("replaces the origin's catch-up whatever its date, or only removes it", async () => {
+		const updateOne = vi.fn().mockResolvedValue({ matchedCount: 1 });
+		const repo = new GameRepository({ db: { collection: () => ({ updateOne }) } } as any);
+		const catchUp = { ...play, date: "2021-12-11", catchUp: "last-session" as const };
+
+		await repo.replaceCatchUp("g1", "steam", catchUp);
+		expect(updateOne).toHaveBeenNthCalledWith(
+			1,
+			{ id: "g1" },
+			{ $pull: { plays: { origin: "steam", auto: true, catchUp: { $exists: true } } } },
+		);
+		expect(updateOne).toHaveBeenNthCalledWith(2, { id: "g1" }, { $push: { plays: catchUp } });
+
+		updateOne.mockClear();
+		await repo.replaceCatchUp("g1", "steam");
+		expect(updateOne).toHaveBeenCalledTimes(1);
+	});
+
+	it("leaves the catch-ups out of the period views", async () => {
+		const aggregate = vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) }));
+		const repo = new GameRepository({ db: { collection: () => ({ aggregate }) } } as any);
+
+		await repo.findPlaysInRange({ from: "2021-01-01", to: "2021-12-31" });
+
+		const [match, filter] = (aggregate.mock.calls[0] as any)[0];
+		expect(match.$match.plays.$elemMatch.catchUp).toEqual({ $exists: false });
+		expect(filter.$set.plays.$filter.cond.$and).toContainEqual({ $eq: [{ $type: "$$play.catchUp" }, "missing"] });
+	});
+
 	it("removes only the auto plays of that day and those origins", async () => {
 		const updateMany = vi.fn();
 		const repo = new GameRepository({ db: { collection: () => ({ updateMany }) } } as any);
@@ -69,7 +101,16 @@ describe("GameRepository store sync", () => {
 
 		expect(updateMany).toHaveBeenCalledWith(
 			{},
-			{ $pull: { plays: { date: "2026-11-14", origin: { $in: ["steam", "steam-deck"] }, auto: true } } },
+			{
+				$pull: {
+					plays: {
+						date: "2026-11-14",
+						origin: { $in: ["steam", "steam-deck"] },
+						auto: true,
+						catchUp: { $exists: false },
+					},
+				},
+			},
 		);
 	});
 });

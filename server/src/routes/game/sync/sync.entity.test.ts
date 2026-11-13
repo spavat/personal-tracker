@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
 	attributeDay,
 	buildImportRows,
+	catchUpDate,
 	computeCatchUp,
 	diffTotals,
 	findGame,
@@ -156,6 +157,24 @@ describe("run slots", () => {
 	});
 });
 
+describe("catchUpDate", () => {
+	it("dates the catch-up by the last session's play day", () => {
+		// 01:30 in Paris: still the previous play day
+		expect(catchUpDate({ lastPlayed: "2021-12-12T00:30:00Z" })).toEqual({
+			date: "2021-12-11",
+			dateKind: "last-session",
+		});
+	});
+
+	it("falls back on the acquisition (Epic), then on the placeholder", () => {
+		expect(catchUpDate({ acquiredAt: "2020-10-25T20:52:00.526Z" })).toEqual({
+			date: "2020-10-25",
+			dateKind: "acquired",
+		});
+		expect(catchUpDate({})).toEqual({ date: "1900-01-01", dateKind: "unknown" });
+	});
+});
+
 describe("findGame", () => {
 	const game = (id: string, name: string, storeIds?: Record<string, string>) => ({ id, name, storeIds, plays: [] });
 	const brotato = { storeGameId: "1942280", name: "Brotato", origin: "steam" as const, seconds: 60 };
@@ -179,14 +198,29 @@ describe("buildImportRows", () => {
 				storeIds: { steam: "1942280" },
 				plays: [
 					{ id: "1", date: "2026-01-01", duration: 30 },
-					{ id: "2", date: "1900-01-01", origin: "epic" as const, duration: 500, auto: true },
+					{
+						id: "2",
+						date: "2024-11-28",
+						origin: "epic" as const,
+						duration: 500,
+						auto: true,
+						catchUp: "acquired" as const,
+					},
 					{ id: "3", date: "2026-11-14", origin: "steam" as const, duration: 20, auto: true },
 				],
 			},
 		];
 		const rows = buildImportRows(
 			"steam",
-			[{ storeGameId: "1942280", name: "Brotato", origin: "steam", seconds: 100 * 60 }],
+			[
+				{
+					storeGameId: "1942280",
+					name: "Brotato",
+					origin: "steam",
+					seconds: 100 * 60,
+					lastPlayed: "2026-07-14T20:09:57Z",
+				},
+			],
 			games,
 		);
 		expect(rows).toEqual([
@@ -197,6 +231,8 @@ describe("buildImportRows", () => {
 				storeMinutes: 100,
 				recordedMinutes: 50,
 				catchUp: 50,
+				date: "2026-07-14",
+				dateKind: "last-session",
 				game: { id: "g", name: "Brotato" },
 			},
 		]);

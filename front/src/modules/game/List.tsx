@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { PendingContent } from "../../components/PendingContent";
 import { useSortTable } from "../../hooks/use-sort-table";
 import { gameListSort } from "./api";
-import { formatPlayDate } from "./origins";
+import { formatLastPlayDate } from "./origins";
 
 export default function GameList() {
 	const navigate = useNavigate();
@@ -49,7 +49,7 @@ export default function GameList() {
 										</Link>
 									))}
 								</td>
-								<td data-label="Dernière date">{formatPlayDate(game.latestPlayDate)}</td>
+								<td data-label="Dernière date">{formatLastPlayDate(game.latestPlayDate)}</td>
 								<td data-label="Nombre">{game.playCount}</td>
 								<td data-label="Actions">
 									<button

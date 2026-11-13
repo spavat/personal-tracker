@@ -1,6 +1,6 @@
+import type { GameOrigin, GameStore } from "@personal-tracker/shared/game";
 import type { FastifyBaseLogger } from "fastify";
 
-import { CATCH_UP_DATE, type GameOrigin, type GameStore } from "@personal-tracker/shared/game";
 import { randomUUID } from "crypto";
 
 import type { GameMongo } from "../game.entity";
@@ -30,7 +30,7 @@ type SyncGameRepository = Pick<
 	| "insert"
 	| "setStoreId"
 	| "addToAutoPlay"
-	| "replaceAutoPlay"
+	| "replaceCatchUp"
 	| "deleteAutoPlays"
 	| "mergeInto"
 	| "updateFields"
@@ -189,9 +189,12 @@ export class ConfirmImportUseCase {
 		for (const [index, row] of rows.entries()) {
 			const gameId = await matcher.findOrCreate(store, storeGames[index]);
 			if (!row.game) created++;
-			if (row.catchUp > 0) {
-				await this.games.replaceAutoPlay(gameId, autoPlay(CATCH_UP_DATE, row.origin, row.catchUp));
-			}
+			// replaced, or removed when the store's time is now all recorded on the game
+			await this.games.replaceCatchUp(
+				gameId,
+				row.origin,
+				row.catchUp > 0 ? { ...autoPlay(row.date, row.origin, row.catchUp), catchUp: row.dateKind } : undefined,
+			);
 		}
 		await this.snapshots.insert(snapshot(store, "import", fetchedAt, { status: "ok", raw }));
 
@@ -311,9 +314,6 @@ export class ReplayUseCase {
 
 	private async replay(store: GameStore, day: string, log: FastifyBaseLogger) {
 		log.info("ReplayUseCase.execute");
-		if (day === CATCH_UP_DATE) {
-			throw new Error("Le rattrapage se refait par l'import initial");
-		}
 		const connector = getConnector(this.connectors, store);
 		const snapshots = await this.snapshots.findOk(store);
 

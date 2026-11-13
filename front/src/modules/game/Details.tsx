@@ -95,8 +95,8 @@ export default function GameDetails({ gameId }: { gameId: string }) {
 					{gameData.plays.map((play, i) => (
 						<tr key={play.id}>
 							<td className="smalltext">#{i + 1}</td>
-							<td data-label="Date">{formatPlayDay(play.date)}</td>
-							<td data-label="Date">{formatPlayDate(play.date)}</td>
+							<td data-label="Date">{formatPlayDay(play)}</td>
+							<td data-label="Date">{formatPlayDate(play)}</td>
 							<td data-label="Durée">{getDurationString(play.duration ?? 0)}</td>
 							<td data-label="Origine">{play.origin && <GameOriginBadge origin={play.origin} />}</td>
 							<td data-label="Commentaire" style={{ whiteSpace: "pre-line" }}>

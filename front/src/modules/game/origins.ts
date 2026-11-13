@@ -1,4 +1,4 @@
-import { CATCH_UP_DATE, type GameOrigin } from "@personal-tracker/shared/game";
+import { CATCH_UP_DATE, type GameOrigin, type GamePlay } from "@personal-tracker/shared/game";
 
 import { formatDay, formatFullDate } from "../../utils";
 
@@ -17,6 +17,17 @@ export const GAME_ORIGINS: Record<GameOrigin, { label: string; icon: string }> =
 	other: { label: "Autre", icon: "fa-solid fa-gamepad" },
 };
 
-// The catch-up play holds the playtime recorded by a store before the first sync: its date isn't real
-export const formatPlayDate = (date: string) => (date === CATCH_UP_DATE ? "Rattrapage" : formatFullDate(date));
-export const formatPlayDay = (date: string) => (date === CATCH_UP_DATE ? "" : formatDay(date));
+// A catch-up holds the playtime a store recorded before the import: its date is the last session, or the
+// acquisition (Epic), or a placeholder when the store knows neither
+const CATCH_UP_DATE_LABELS = { "last-session": "dernière session le", acquired: "acquis le" } as const;
+
+export function formatPlayDate({ date, catchUp }: Pick<GamePlay, "date" | "catchUp">) {
+	if (!catchUp) return formatFullDate(date);
+	if (catchUp === "unknown") return "Rattrapage";
+	return `Rattrapage (${CATCH_UP_DATE_LABELS[catchUp]} ${formatFullDate(date)})`;
+}
+export const formatPlayDay = ({ date, catchUp }: Pick<GamePlay, "date" | "catchUp">) =>
+	catchUp ? "" : formatDay(date);
+
+/** A game's last play date: the placeholder of a catch-up without a known date reads "Rattrapage". */
+export const formatLastPlayDate = (date: string) => (date === CATCH_UP_DATE ? "Rattrapage" : formatFullDate(date));

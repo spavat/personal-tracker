@@ -34,6 +34,8 @@ const OWNED_GAMES = {
 				rtime_last_played: 1768761600,
 			},
 			{ appid: 1942280, name: "Brotato", playtime_forever: 4620, playtime_deck_forever: 600 },
+			// last played before Steam recorded it
+			{ appid: 400, name: "Portal", playtime_forever: 253, rtime_last_played: 86400 },
 		],
 	},
 };
@@ -52,6 +54,7 @@ describe("SteamConnector.parse", () => {
 			["1145350", "steam", 6720 * 60],
 			["1942280", "steam", (4620 - 600) * 60],
 			["1942280", "steam-deck", 600 * 60],
+			["400", "steam", 253 * 60],
 		]);
 	});
 
@@ -59,6 +62,14 @@ describe("SteamConnector.parse", () => {
 		const [halfLife2, hades] = connector().parse(OWNED_GAMES);
 		expect(halfLife2).toEqual({ storeGameId: "220", name: "Half-Life 2", origin: "steam", seconds: 3900 });
 		expect(hades.lastPlayed).toBe("2026-01-18T18:40:00Z");
+	});
+
+	it("reads Steam's 1970-01-02 placeholder as no last session", () => {
+		expect(
+			connector()
+				.parse(OWNED_GAMES)
+				.find((t) => t.storeGameId === "400"),
+		).not.toHaveProperty("lastPlayed");
 	});
 
 	it("returns nothing for an empty library", () => {

@@ -1,4 +1,4 @@
-import type { Game, GameOrigin, GamePlay } from "@personal-tracker/shared/game";
+import type { Game, GameCatchUp, GameOrigin, GamePlay } from "@personal-tracker/shared/game";
 
 import { randomUUID } from "crypto";
 
@@ -10,6 +10,7 @@ export interface PlayMongo {
 	created?: string;
 	origin?: GameOrigin;
 	auto?: boolean;
+	catchUp?: GameCatchUp;
 }
 
 export interface GameMongo {

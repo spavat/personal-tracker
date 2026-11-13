@@ -7,7 +7,7 @@ import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
 import { getDurationString } from "../../../utils";
 import { confirmImport, importPreviewQuery } from "../api";
-import { GAME_ORIGINS } from "../origins";
+import { formatPlayDate, GAME_ORIGINS } from "../origins";
 import { STORE_LABELS } from "../stores";
 
 const duration = (minutes: number) => getDurationString(minutes) || "0min";
@@ -48,6 +48,7 @@ export default function ImportPreviewModal({ store, returnTo }: { store: GameSto
 							<th>Jeu du magasin</th>
 							<th>Origine</th>
 							<th>Jeu</th>
+							<th>Date</th>
 							<th>Magasin</th>
 							<th>Déjà enregistré</th>
 							<th>Rattrapage</th>
@@ -59,6 +60,7 @@ export default function ImportPreviewModal({ store, returnTo }: { store: GameSto
 								<td data-label="Jeu du magasin">{row.name}</td>
 								<td data-label="Origine">{GAME_ORIGINS[row.origin].label}</td>
 								<td data-label="Jeu">{row.game ? row.game.name : <i>nouveau</i>}</td>
+								<td data-label="Date">{formatPlayDate({ date: row.date, catchUp: row.dateKind })}</td>
 								<td data-label="Magasin">{duration(row.storeMinutes)}</td>
 								<td data-label="Déjà enregistré">
 									{row.recordedMinutes > 0 ? duration(row.recordedMinutes) : ""}

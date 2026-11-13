@@ -1,4 +1,4 @@
-import { CATCH_UP_DATE, type GameOrigin, type GameStore } from "@personal-tracker/shared/game";
+import { CATCH_UP_DATE, type GameCatchUp, type GameOrigin, type GameStore } from "@personal-tracker/shared/game";
 
 import type { GameMongo } from "../game.entity";
 
@@ -14,6 +14,8 @@ export interface StoreTotal {
 	seconds: number;
 	// end of the last session, ISO instant
 	lastPlayed?: string;
+	// when the account got the game, ISO instant (Epic, which has no session date)
+	acquiredAt?: string;
 }
 
 export interface PlaytimeDiff {
@@ -132,8 +134,28 @@ export interface ImportRow {
 	// playtime already on the game: manual plays, and this origin's synced plays
 	recordedMinutes: number;
 	catchUp: number;
+	// date the catch-up play gets, and where it comes from
+	date: string;
+	dateKind: GameCatchUp;
 	// existing game it is matched with, none when it will be created
 	game?: { id: string; name: string };
+}
+
+/**
+ * Date of a store game's catch-up play: the day of its last session, else of its acquisition (Epic), else
+ * CATCH_UP_DATE. It dates the game (sort, last play); the catch-up stays out of the period views.
+ */
+export function catchUpDate(storeGame: Pick<StoreTotal, "lastPlayed" | "acquiredAt">): {
+	date: string;
+	dateKind: GameCatchUp;
+} {
+	if (storeGame.lastPlayed) {
+		return { date: playDay(Temporal.Instant.from(storeGame.lastPlayed)), dateKind: "last-session" };
+	}
+	if (storeGame.acquiredAt) {
+		return { date: playDay(Temporal.Instant.from(storeGame.acquiredAt)), dateKind: "acquired" };
+	}
+	return { date: CATCH_UP_DATE, dateKind: "unknown" };
 }
 
 /**
@@ -148,7 +170,7 @@ export function buildImportRows(store: GameStore, storeGames: StoreTotal[], game
 		const storeMinutes = Math.floor(storeGame.seconds / 60);
 		const plays = game?.plays ?? [];
 		const synced = plays
-			.filter((p) => p.auto && p.origin === storeGame.origin && p.date !== CATCH_UP_DATE)
+			.filter((p) => p.auto && p.origin === storeGame.origin && !p.catchUp)
 			.reduce((sum, p) => sum + (p.duration ?? 0), 0);
 		const manual =
 			(game && manualLeft.get(game.id)) ??
@@ -164,6 +186,7 @@ export function buildImportRows(store: GameStore, storeGames: StoreTotal[], game
 			storeMinutes,
 			recordedMinutes: storeMinutes - catchUp,
 			catchUp,
+			...catchUpDate(storeGame),
 			...(game ? { game: { id: game.id, name: game.name } } : {}),
 		};
 	});

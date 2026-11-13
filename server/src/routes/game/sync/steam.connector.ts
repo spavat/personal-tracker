@@ -8,7 +8,9 @@ import { fetchStoreJson } from "./connector";
 
 const OWNED_GAMES_URL = "https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/";
 
-// playtimes in minutes; rtime_last_played in unix seconds, 0 when unknown
+// playtimes in minutes; rtime_last_played in unix seconds
+// 0 or 86400 (1970-01-02) when unknown: the latter on games last played before Steam recorded it
+const UNKNOWN_LAST_PLAYED = 86400;
 const SteamOwnedGamesSchema = z.object({
 	response: z.object({
 		games: z.array(
@@ -60,7 +62,7 @@ export class SteamConnector implements StoreConnector {
 			const base = {
 				storeGameId: String(game.appid),
 				...(game.name ? { name: game.name } : {}),
-				...(game.rtime_last_played
+				...(game.rtime_last_played && game.rtime_last_played > UNKNOWN_LAST_PLAYED
 					? { lastPlayed: Temporal.Instant.fromEpochMilliseconds(game.rtime_last_played * 1000).toString() }
 					: {}),
 			};

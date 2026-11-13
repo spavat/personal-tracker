@@ -74,6 +74,14 @@ function stubEpic(handlers: { oauth?: () => Response } = {}) {
 		if (url.pathname === "/catalog/api/shared/namespace/ns-hades/bulk/items") {
 			return json({ "cat-hades": { title: "Hades" } });
 		}
+		if (url.pathname === "/entitlement/api/account/account-1/entitlements") {
+			return json([
+				{ namespace: "ns-plague", grantDate: "2021-08-09T18:53:10.801Z" },
+				// a DLC got later: the game's date is the earliest
+				{ namespace: "ns-plague", grantDate: "2023-01-01T00:00:00.000Z" },
+				{ namespace: "ns-other", grantDate: "2019-01-01T00:00:00.000Z" },
+			]);
+		}
 		throw new Error(`unexpected ${input}`);
 	});
 	vi.stubGlobal("fetch", fetch);
@@ -93,6 +101,7 @@ describe("EpicConnector.fetchRaw", () => {
 			// only the fields used are kept
 			playtime: PLAYTIME.map(({ artifactId, totalTime }) => ({ artifactId, totalTime })),
 			catalog: { e0fa47ae79514345823bff209ae29451: PLAGUE_TALE, Min: { title: "Hades" } },
+			acquired: { e0fa47ae79514345823bff209ae29451: "2021-08-09T18:53:10.801Z" },
 		});
 		const paths = fetch.mock.calls.map(([url]) => new URL(url).pathname);
 		expect(paths).toContain("/library/api/public/playtime/account/account-1/all");
@@ -167,6 +176,7 @@ describe("EpicConnector.parse", () => {
 		const games = new EpicConnector(fakeCredentials(null)).parse({
 			playtime: PLAYTIME,
 			catalog: { e0fa47ae79514345823bff209ae29451: PLAGUE_TALE, Min: { title: "Hades" } },
+			acquired: { e0fa47ae79514345823bff209ae29451: "2021-08-09T18:53:10.801Z" },
 		});
 		expect(games).toEqual([
 			{ storeGameId: "Min", origin: "epic", seconds: 383571, name: "Hades" },
@@ -177,8 +187,17 @@ describe("EpicConnector.parse", () => {
 				name: "A Plague Tale: Innocence",
 				developer: "Focus Entertainment Publishing",
 				image: "https://cdn1.epicgames.com/wide.jpg",
+				acquiredAt: "2021-08-09T18:53:10.801Z",
 			},
 		]);
+	});
+
+	it("reads the snapshots taken before the acquisition dates", () => {
+		const games = new EpicConnector(fakeCredentials(null)).parse({
+			playtime: [PLAYTIME[0]],
+			catalog: { Min: { title: "Hades" } },
+		});
+		expect(games).toEqual([{ storeGameId: "Min", origin: "epic", seconds: 383571, name: "Hades" }]);
 	});
 
 	it("keeps a game missing from the catalog, without a name", () => {

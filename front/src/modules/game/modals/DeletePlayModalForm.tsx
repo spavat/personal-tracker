@@ -1,4 +1,3 @@
-import { CATCH_UP_DATE } from "@personal-tracker/shared/game";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -6,6 +5,7 @@ import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
 import { formatDate, getDurationString } from "../../../utils";
 import { deleteItem, gameDetailsQuery } from "../api";
+import { formatPlayDate } from "../origins";
 
 export default function DeletePlayModalForm({
 	gameId,
@@ -56,7 +56,7 @@ export default function DeletePlayModalForm({
 				<p>
 					Êtes-vous sûr de vouloir supprimer la partie suivante ?
 					<br />
-					Date : <strong>{play.date === CATCH_UP_DATE ? "Rattrapage" : formatDate(play.date)}</strong>
+					Date : <strong>{play.catchUp ? formatPlayDate(play) : formatDate(play.date)}</strong>
 					<br />
 					Durée : <strong>{getDurationString(play.duration ?? 0)}</strong>
 				</p>

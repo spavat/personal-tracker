@@ -11,7 +11,7 @@ export default function GameCardGame({ game }: { game: Game }) {
 	let lastPlayString = "";
 	if (Array.isArray(game.plays) && game.plays.length > 0) {
 		const lastPlay = game.plays[game.plays.length - 1];
-		lastPlayString = `📅 ${formatPlayDate(lastPlay.date)}`;
+		lastPlayString = `📅 ${formatPlayDate(lastPlay)}`;
 	}
 	let totalDuration = "";
 	if (Array.isArray(game.plays) && game.plays.length > 0) {
@@ -48,8 +48,8 @@ export default function GameCardGame({ game }: { game: Game }) {
 						return (
 							<li key={play.id}>
 								<span className="monospace">
-									📅 <span className="fixed_day">{formatPlayDay(play.date)}</span>{" "}
-									{formatPlayDate(play.date)} : ⏱️{getDurationString(play.duration ?? 0)}
+									📅 <span className="fixed_day">{formatPlayDay(play)}</span> {formatPlayDate(play)} :
+									⏱️{getDurationString(play.duration ?? 0)}
 								</span>{" "}
 								{play.origin && <GameOriginBadge origin={play.origin} />}
 								{play.comment && (

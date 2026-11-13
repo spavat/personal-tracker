@@ -68,6 +68,8 @@ export class GameRepository {
 								$gte: from,
 								$lte: to,
 							},
+							// a catch-up is a lifetime total, not that day's play: it only dates the game
+							catchUp: { $exists: false },
 						},
 					},
 				},
@@ -79,7 +81,11 @@ export class GameRepository {
 							input: "$plays",
 							as: "play",
 							cond: {
-								$and: [{ $gte: ["$$play.date", from] }, { $lte: ["$$play.date", to] }],
+								$and: [
+									{ $gte: ["$$play.date", from] },
+									{ $lte: ["$$play.date", to] },
+									{ $eq: [{ $type: "$$play.catchUp" }, "missing"] },
+								],
 							},
 						},
 					},
@@ -170,10 +176,18 @@ export class GameRepository {
 		return this.collection?.updateOne({ id: gameId }, { $set: { [`storeIds.${store}`]: storeGameId } });
 	}
 
-	/** Adds the play's minutes to the game's auto play of that day and origin, or adds the play when there is none. */
+	/**
+	 * Adds the play's minutes to the game's synced play of that day and origin (never to a catch-up), or adds the
+	 * play when there is none.
+	 */
 	async addToAutoPlay(gameId: string, play: AutoPlayMongo) {
 		const result = await this.collection?.updateOne(
-			{ id: gameId, plays: { $elemMatch: { date: play.date, origin: play.origin, auto: true } } },
+			{
+				id: gameId,
+				plays: {
+					$elemMatch: { date: play.date, origin: play.origin, auto: true, catchUp: { $exists: false } },
+				},
+			},
 			{ $inc: { "plays.$.duration": play.duration } },
 		);
 		if (!result?.matchedCount) {
@@ -181,18 +195,23 @@ export class GameRepository {
 		}
 	}
 
-	/** Puts the play in place of the game's auto play of that day and origin (a catch-up is replaced, not added to). */
-	async replaceAutoPlay(gameId: string, play: AutoPlayMongo) {
+	/**
+	 * Replaces the game's catch-up of that origin (whatever its date) by `play`; without a play, removes it. A
+	 * catch-up edited by hand is a manual play: left alone (the new catch-up already subtracts it).
+	 */
+	async replaceCatchUp(gameId: string, origin: GameOrigin, play?: AutoPlayMongo) {
 		await this.collection?.updateOne({ id: gameId }, {
-			$pull: { plays: { date: play.date, origin: play.origin, auto: true } },
+			$pull: { plays: { origin, auto: true, catchUp: { $exists: true } } },
 		} as any);
-		await this.pushPlay(gameId, { ...play });
+		if (play) {
+			await this.pushPlay(gameId, { ...play });
+		}
 	}
 
-	/** Removes the auto plays of a day for these origins, on every game (replay). */
+	/** Removes the synced plays of a day for these origins, on every game (replay); catch-ups stay. */
 	deleteAutoPlays(date: string, origins: GameOrigin[]) {
 		return this.collection?.updateMany({}, {
-			$pull: { plays: { date, origin: { $in: origins }, auto: true } },
+			$pull: { plays: { date, origin: { $in: origins }, auto: true, catchUp: { $exists: false } } },
 		} as any);
 	}
 

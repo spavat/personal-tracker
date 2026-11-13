@@ -29,18 +29,22 @@ function memoryGames(initial: GameMongo[] = []) {
 			get(id).storeIds = { ...get(id).storeIds, [store]: storeGameId };
 		},
 		addToAutoPlay: async (id: string, play: any) => {
-			const existing = get(id).plays.find((p) => p.auto && p.date === play.date && p.origin === play.origin);
+			const existing = get(id).plays.find(
+				(p) => p.auto && !p.catchUp && p.date === play.date && p.origin === play.origin,
+			);
 			if (existing) existing.duration = (existing.duration ?? 0) + play.duration;
 			else get(id).plays.push(play);
 		},
-		replaceAutoPlay: async (id: string, play: any) => {
+		replaceCatchUp: async (id: string, origin: GameOrigin, play?: any) => {
 			const game = get(id);
-			game.plays = game.plays.filter((p) => !(p.auto && p.date === play.date && p.origin === play.origin));
-			game.plays.push(play);
+			game.plays = game.plays.filter((p) => !(p.auto && p.catchUp && p.origin === origin));
+			if (play) game.plays.push(play);
 		},
 		deleteAutoPlays: async (date: string, origins: GameOrigin[]) => {
 			for (const game of games) {
-				game.plays = game.plays.filter((p) => !(p.auto && p.date === date && origins.includes(p.origin!)));
+				game.plays = game.plays.filter(
+					(p) => !(p.auto && !p.catchUp && p.date === date && origins.includes(p.origin!)),
+				);
 			}
 		},
 		mergeInto: async (id: string, fields: Partial<GameMongo>) => void Object.assign(get(id), fields),
@@ -133,6 +137,8 @@ describe("PreviewImportUseCase", () => {
 				storeMinutes: 4651,
 				recordedMinutes: 90,
 				catchUp: 4561,
+				date: CATCH_UP_DATE,
+				dateKind: "unknown",
 				game: { id: "brotato", name: "Brotato" },
 			},
 			{
@@ -142,6 +148,8 @@ describe("PreviewImportUseCase", () => {
 				storeMinutes: 6755,
 				recordedMinutes: 0,
 				catchUp: 6755,
+				date: CATCH_UP_DATE,
+				dateKind: "unknown",
 			},
 		]);
 		expect(games.games).toHaveLength(1);
@@ -394,12 +402,6 @@ describe("ReplayUseCase", () => {
 			gs.map((g) => g.plays.map(({ date, origin, duration, auto }) => ({ date, origin, duration, auto })));
 		expect(strip(games.games)).toEqual(strip(afterRuns));
 	});
-
-	it("refuses to replay the catch-up day", async () => {
-		await expect(
-			new ReplayUseCase([steam], memoryGames(), memorySnapshots()).execute("steam", CATCH_UP_DATE, log()),
-		).rejects.toThrow(/import initial/);
-	});
 });
 
 describe("MergeGamesUseCase", () => {
@@ -548,5 +550,78 @@ describe("store sync with Steam enrichment", () => {
 
 		expect(games.games[0]).toMatchObject({ name: "Half-Life", developper: "Inconnu", editor: "Inconnu" });
 		expect(games.games[0].capsule).toBeUndefined();
+	});
+});
+
+describe("dated catch-ups", () => {
+	const catchUpsOf = (repo: ReturnType<typeof memoryGames>, name: string) =>
+		repo.games
+			.find((g) => g.name === name)!
+			.plays.filter((p) => p.catchUp)
+			.map(({ date, origin, duration, catchUp }) => ({ date, origin, duration, catchUp }));
+
+	it("dates the catch-up by the game's last session", async () => {
+		const games = memoryGames();
+		steam.push([steamGame("1942280", "Brotato", 4651, { lastPlayed: "2026-07-14T20:09:57Z" })]);
+
+		await new ConfirmImportUseCase([steam], games, memorySnapshots(), { now }).execute("steam", log());
+
+		expect(catchUpsOf(games, "Brotato")).toEqual([
+			{ date: "2026-07-14", origin: "steam", duration: 4651, catchUp: "last-session" },
+		]);
+	});
+
+	it("keeps a catch-up edited by hand and counts it as recorded time", async () => {
+		const games = memoryGames();
+		const confirm = new ConfirmImportUseCase([steam], games, memorySnapshots(), { now });
+		steam.push([steamGame("1145350", "Hades II", 100)]);
+		await confirm.execute("steam", log());
+		// edited in the form: 80 min, now a manual play
+		Object.assign(games.games[0].plays[0], { duration: 80, auto: false });
+
+		steam.push([steamGame("1145350", "Hades II", 100)]);
+		await confirm.execute("steam", log());
+
+		expect(catchUpsOf(games, "Hades II")).toEqual([
+			{ date: CATCH_UP_DATE, origin: "steam", duration: 80, catchUp: "unknown" },
+			{ date: CATCH_UP_DATE, origin: "steam", duration: 20, catchUp: "unknown" },
+		]);
+	});
+
+	it("removes a catch-up that manual plays now cover, on a new import", async () => {
+		const games = memoryGames();
+		const confirm = new ConfirmImportUseCase([steam], games, memorySnapshots(), { now });
+		steam.push([steamGame("1145350", "Hades II", 100)]);
+		await confirm.execute("steam", log());
+		games.games[0].plays.push({ id: "m", date: "2026-01-01", duration: 120 });
+
+		steam.push([steamGame("1145350", "Hades II", 100)]);
+		await confirm.execute("steam", log());
+
+		expect(catchUpsOf(games, "Hades II")).toEqual([]);
+	});
+
+	it("never adds a run's time to a catch-up of the same day, nor replays it away", async () => {
+		const games = memoryGames();
+		const snapshots = memorySnapshots();
+		// imported at 10:00 after a session at 09:00: the catch-up is dated 2026-11-14, like the 15:00 run's time
+		clock = Temporal.Instant.from("2026-11-14T10:00:00+01:00");
+		steam.push([steamGame("1145350", "Hades II", 100, { lastPlayed: "2026-11-14T08:00:00Z" })]);
+		await new ConfirmImportUseCase([steam], games, snapshots, { now }).execute("steam", log());
+		clock = Temporal.Instant.from("2026-11-14T15:00:00+01:00");
+		steam.push([steamGame("1145350", "Hades II", 130)]);
+		await new RunDailySyncUseCase([steam], games, snapshots, { now }).execute(undefined, log());
+
+		const expected = [
+			{ date: "2026-11-14", origin: "steam", duration: 100, auto: true },
+			{ date: "2026-11-14", origin: "steam", duration: 30, auto: true },
+		];
+		expect(playsOf(games, "Hades II")).toEqual(expected);
+
+		await new ReplayUseCase([steam], games, snapshots).execute("steam", "2026-11-14", log());
+		expect(playsOf(games, "Hades II")).toEqual(expected);
+		expect(catchUpsOf(games, "Hades II")).toEqual([
+			{ date: "2026-11-14", origin: "steam", duration: 100, catchUp: "last-session" },
+		]);
 	});
 });

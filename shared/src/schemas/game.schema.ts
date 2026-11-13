@@ -26,7 +26,11 @@ export type GameOrigin = z.infer<typeof GameOriginSchema>;
 export const GameStoreSchema = z.enum(["steam", "gog", "epic"]);
 export type GameStore = z.infer<typeof GameStoreSchema>;
 
-// Date of the catch-up play holding the playtime recorded by a store before the first sync: not a real date
+// A catch-up play holds the playtime a store recorded before the import. It is dated by the game's last session
+// (Steam, GOG), else its acquisition (Epic gives no session date), else CATCH_UP_DATE when the store knows neither.
+// It only dates the game (sort, last play): the period views (history, calendar, stats) leave it out.
+export const GameCatchUpSchema = z.enum(["last-session", "acquired", "unknown"]);
+export type GameCatchUp = z.infer<typeof GameCatchUpSchema>;
 export const CATCH_UP_DATE = "1900-01-01";
 
 export const GamePlaySchema = z.object({
@@ -38,6 +42,8 @@ export const GamePlaySchema = z.object({
 	origin: GameOriginSchema.optional(),
 	// written by the store sync; a manual edit turns it into a manual play
 	auto: z.boolean().optional(),
+	// the import's catch-up of a store: what its date is
+	catchUp: GameCatchUpSchema.optional(),
 });
 export type GamePlay = z.infer<typeof GamePlaySchema>;
 
@@ -143,6 +149,9 @@ export const GameImportRowSchema = z.object({
 	storeMinutes: z.number(),
 	recordedMinutes: z.number(),
 	catchUp: z.number(),
+	// date the catch-up will have, and where it comes from
+	date: z.iso.date(),
+	dateKind: GameCatchUpSchema,
 	game: z.object({ id: z.string(), name: z.string() }).optional(),
 });
 export type GameImportRow = z.infer<typeof GameImportRowSchema>;
