@@ -1,43 +1,14 @@
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import sharp from "sharp";
 
 import { S3_BUCKET, s3Client } from "../../config/s3";
+import { fetchImageBuffer, type ImageSize, processImage } from "../images/image-processing";
 
-const IMAGE_TARGET_SIZE = {
+const INTERNET_IMAGE_SIZE = {
 	profile: { width: 200, height: 200 },
 	banner: { width: 2500, height: 400 },
-	poster: { width: 600, height: 900 },
-	portrait: { width: 400, height: 400 },
-	photo: { width: 1600, height: 1600 },
-	// games: small banner and title image (Steam capsule / header sizes)
-	capsule: { width: 184, height: 69 },
-	header: { width: 460, height: 215 },
-} as const;
+} satisfies Record<string, ImageSize>;
 
-export type ImageKind = keyof typeof IMAGE_TARGET_SIZE;
-
-export async function fetchImageBuffer(source: string): Promise<Buffer> {
-	const dataUriMatch = source.match(/^data:([^;]+);base64,(.*)$/);
-	if (dataUriMatch) {
-		return Buffer.from(dataUriMatch[2], "base64");
-	}
-
-	const response = await fetch(source);
-	if (!response.ok) {
-		throw new Error(`Impossible de récupérer l'image depuis ${source}`);
-	}
-	return Buffer.from(await response.arrayBuffer());
-}
-
-export function processImage(buffer: Buffer, kind: ImageKind): Promise<Buffer> {
-	const { width, height } = IMAGE_TARGET_SIZE[kind];
-	// fit "outside" + withoutEnlargement: resize down to cover the target box while
-	// keeping the aspect ratio, but never upscale an image smaller than the target.
-	return sharp(buffer)
-		.resize(width, height, { fit: "outside", withoutEnlargement: true })
-		.avif({ quality: 80 })
-		.toBuffer();
-}
+type InternetImageKind = keyof typeof INTERNET_IMAGE_SIZE;
 
 // Anonymous/public reads aren't supported by the S3 provider (unsigned GET returns
 // NoSuchBucket even with ACL public-read on the object), and generating a signed URL
@@ -50,9 +21,9 @@ export class ImageStorageRepository {
 		return value.startsWith("/images/internet/");
 	}
 
-	async uploadFromSource(keyWithoutExtension: string, source: string, kind: ImageKind): Promise<string> {
+	async uploadFromSource(keyWithoutExtension: string, source: string, kind: InternetImageKind): Promise<string> {
 		const original = await fetchImageBuffer(source);
-		const processed = await processImage(original, kind);
+		const processed = await processImage(original, INTERNET_IMAGE_SIZE[kind]);
 		const key = `${keyWithoutExtension}.avif`;
 
 		await s3Client.send(

@@ -1,10 +1,16 @@
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 
 import { S3_BUCKET, s3Client } from "../../config/s3";
-import { fetchImageBuffer, processImage } from "../internet/image-storage.repository";
+import { fetchImageBuffer, type ImageSize, processImage } from "../images/image-processing";
 
 export const GAME_IMAGE_FIELDS = ["capsule", "header"] as const;
 export type GameImageField = (typeof GAME_IMAGE_FIELDS)[number];
+
+// small banner and title image (Steam capsule / header sizes)
+const GAME_IMAGE_SIZE: Record<GameImageField, ImageSize> = {
+	capsule: { width: 184, height: 69 },
+	header: { width: 460, height: 215 },
+};
 
 // Only the S3 key is kept on the game; images are served by the /images/game/:id/:field proxy route
 // (routes/images/images.routes.ts), like internet programs.
@@ -16,7 +22,7 @@ export class GameImageStorageRepository {
 
 	/** Downloads (or decodes a data URI), resizes to the field's size and stores the image; returns its S3 key. */
 	async uploadFromSource(gameId: string, field: GameImageField, source: string): Promise<string> {
-		const processed = await processImage(await fetchImageBuffer(source), field);
+		const processed = await processImage(await fetchImageBuffer(source), GAME_IMAGE_SIZE[field]);
 		const key = `personal-tracker/game/${gameId}.${field}.avif`;
 		await s3Client.send(
 			new PutObjectCommand({ Bucket: S3_BUCKET, Key: key, Body: processed, ContentType: "image/avif" }),
