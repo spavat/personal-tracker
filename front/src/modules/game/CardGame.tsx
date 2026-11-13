@@ -2,13 +2,15 @@ import { Game } from "@personal-tracker/shared/game";
 import { Link } from "@tanstack/react-router";
 import React from "react";
 
-import { formatDay, formatFullDate, getDurationString } from "../../utils";
+import { getDurationString } from "../../utils";
+import GameOriginBadge from "./GameOriginBadge";
+import { formatPlayDate, formatPlayDay } from "./origins";
 
 export default function GameCardGame({ game }: { game: Game }) {
 	let lastPlayString = "";
 	if (Array.isArray(game.plays) && game.plays.length > 0) {
 		const lastPlay = game.plays[game.plays.length - 1];
-		lastPlayString = `📅 ${formatFullDate(lastPlay.date)}`;
+		lastPlayString = `📅 ${formatPlayDate(lastPlay.date)}`;
 	}
 	let totalDuration = "";
 	if (Array.isArray(game.plays) && game.plays.length > 0) {
@@ -44,9 +46,10 @@ export default function GameCardGame({ game }: { game: Game }) {
 						return (
 							<li key={play.id}>
 								<span className="monospace">
-									📅 <span className="fixed_day">{formatDay(play.date)}</span>{" "}
-									{formatFullDate(play.date)} : ⏱️{getDurationString(play.duration ?? 0)}
-								</span>
+									📅 <span className="fixed_day">{formatPlayDay(play.date)}</span>{" "}
+									{formatPlayDate(play.date)} : ⏱️{getDurationString(play.duration ?? 0)}
+								</span>{" "}
+								{play.origin && <GameOriginBadge origin={play.origin} />}
 								{play.comment && (
 									<>
 										<br />

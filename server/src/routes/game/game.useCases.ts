@@ -12,7 +12,7 @@ import { randomUUID } from "crypto";
 
 import type { GameRepository } from "./game.repository";
 
-import { buildPlay, cleanGame, sortPlaysDesc } from "./game.entity";
+import { buildPlay, cleanGame, sortPlaysDesc, toManualPlay } from "./game.entity";
 
 type GameListQuery = z.infer<typeof GameListQuerystringRequestSchema>;
 type PlayListQuery = z.infer<typeof PlayListQuerystringRequestSchema>;
@@ -61,7 +61,7 @@ export class SaveGameUseCase {
 		if (play && gameId) {
 			if (play.id) {
 				// Update existing play
-				return this.repo.updatePlay(gameId, play as GamePlay);
+				return this.repo.updatePlay(gameId, toManualPlay(play as GamePlay));
 			}
 			// Add new play to existing game
 			return this.repo.pushPlay(gameId, buildPlay(play));

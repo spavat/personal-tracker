@@ -5,12 +5,39 @@ import { OptionalPeriodQSSchema, SearchQSSchema, SortQSSchema } from "./common.s
 //
 // OBJECTS
 //
+// Where a play happened (store launcher, console, device…)
+export const GameOriginSchema = z.enum([
+	"steam",
+	"steam-deck",
+	"gog",
+	"epic",
+	"battle-net",
+	"ubisoft-connect",
+	"riot",
+	"itch-io",
+	"executable",
+	"ps5",
+	"switch",
+	"other",
+]);
+export type GameOrigin = z.infer<typeof GameOriginSchema>;
+
+// Stores with a playtime connector
+export const GameStoreSchema = z.enum(["steam", "gog", "epic"]);
+export type GameStore = z.infer<typeof GameStoreSchema>;
+
+// Date of the catch-up play holding the playtime recorded by a store before the first sync: not a real date
+export const CATCH_UP_DATE = "1900-01-01";
+
 export const GamePlaySchema = z.object({
 	id: z.uuidv4(),
 	date: z.iso.date(),
 	duration: z.number().optional(),
 	comment: z.string().optional(),
 	created: z.iso.datetime({ local: true }).optional(),
+	origin: GameOriginSchema.optional(),
+	// written by the store sync; a manual edit turns it into a manual play
+	auto: z.boolean().optional(),
 });
 export type GamePlay = z.infer<typeof GamePlaySchema>;
 
@@ -22,6 +49,20 @@ export const GameSchema = z.object({
 	complete: z.boolean().optional(),
 	comment: z.string().optional(),
 	links: z.array(z.object({ name: z.string(), link: z.url() })).optional(),
+	// the game's id in each store it is owned on
+	storeIds: z
+		.object({
+			steam: z.string(),
+			gog: z.string(),
+			epic: z.string(),
+			battleNet: z.string(),
+			ubisoftConnect: z.string(),
+		})
+		.partial()
+		.optional(),
+	// small banner (184x69) and title image (460x215)
+	capsule: z.string().optional(),
+	header: z.string().optional(),
 	plays: z.array(GamePlaySchema),
 });
 export type Game = z.infer<typeof GameSchema>;

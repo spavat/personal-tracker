@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPlay, cleanGame, sortPlaysDesc as sortPlaysDescStrict } from "./game.entity";
+import { buildPlay, cleanGame, sortPlaysDesc as sortPlaysDescStrict, toManualPlay } from "./game.entity";
 
 // the fixtures below only carry the fields sortPlaysDesc actually reads
 const sortPlaysDesc = sortPlaysDescStrict as (
@@ -39,6 +39,32 @@ describe("cleanGame", () => {
 
 	it("is a no-op when links is absent", () => {
 		expect(cleanGame({ name: "Celeste" })).toEqual({ name: "Celeste" });
+	});
+
+	it("drops empty store ids and keeps the filled ones", () => {
+		expect(cleanGame({ name: "Brotato", storeIds: { steam: "1942280", gog: "", epic: undefined } })).toEqual({
+			name: "Brotato",
+			storeIds: { steam: "1942280" },
+		});
+	});
+
+	it("drops storeIds when no id is filled", () => {
+		expect(cleanGame({ name: "Celeste", storeIds: { steam: "", gog: undefined } })).toEqual({ name: "Celeste" });
+	});
+});
+
+describe("toManualPlay", () => {
+	it("turns an auto play into a manual one", () => {
+		expect(toManualPlay({ id: "p1", auto: true, origin: "steam" })).toEqual({
+			id: "p1",
+			auto: false,
+			origin: "steam",
+		});
+	});
+
+	it("leaves a manual play untouched", () => {
+		const play: { id: string; origin: string; auto?: boolean } = { id: "p1", origin: "ps5" };
+		expect(toManualPlay(play)).toBe(play);
 	});
 });
 

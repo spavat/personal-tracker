@@ -9,14 +9,14 @@ function buildRepo() {
 }
 
 describe("GameRepository.update", () => {
-	it("removes the links missing from the payload", async () => {
+	it("removes the links and store ids missing from the payload", async () => {
 		const { repo, updateOne } = buildRepo();
 
 		await repo.update("g1", { name: "X" });
 
 		expect(updateOne).toHaveBeenCalledWith(
 			{ id: "g1" },
-			{ $set: { name: "X" }, $unset: { links: "" } },
+			{ $set: { name: "X" }, $unset: { links: "", storeIds: "" } },
 			{ upsert: false },
 		);
 	});
@@ -24,7 +24,11 @@ describe("GameRepository.update", () => {
 	it("doesn't unset the lists sent", async () => {
 		const { repo, updateOne } = buildRepo();
 
-		await repo.update("g1", { name: "X", links: [{ name: "l", link: "https://l.example.com" }] });
+		await repo.update("g1", {
+			name: "X",
+			links: [{ name: "l", link: "https://l.example.com" }],
+			storeIds: { steam: "1942280" },
+		});
 
 		expect(updateOne.mock.calls[0][1]).not.toHaveProperty("$unset");
 	});

@@ -1,3 +1,4 @@
+import { CATCH_UP_DATE } from "@personal-tracker/shared/game";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -55,7 +56,7 @@ export default function DeletePlayModalForm({
 				<p>
 					Êtes-vous sûr de vouloir supprimer la partie suivante ?
 					<br />
-					Date : <strong>{formatDate(play.date)}</strong>
+					Date : <strong>{play.date === CATCH_UP_DATE ? "Rattrapage" : formatDate(play.date)}</strong>
 					<br />
 					Durée : <strong>{getDurationString(play.duration ?? 0)}</strong>
 				</p>

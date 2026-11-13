@@ -1,6 +1,6 @@
 import { useFieldArray, useFormContext } from "react-hook-form";
 
-import { type GameInputs } from "./GameForm.utils";
+import { STORE_ID_LABELS, type GameInputs } from "./GameForm.utils";
 
 export default function GameForm() {
 	const {
@@ -15,6 +15,14 @@ export default function GameForm() {
 	} = useFieldArray({
 		control: control,
 		name: "game.links",
+	});
+	const {
+		fields: fieldsStoreIds,
+		append: appendStoreId,
+		remove: removeStoreId,
+	} = useFieldArray({
+		control: control,
+		name: "game.storeIds",
 	});
 
 	return (
@@ -47,6 +55,35 @@ export default function GameForm() {
 						<span>Commentaire</span>
 						<textarea {...register("game.comment")} />
 					</label>
+				</div>
+			</div>
+
+			<div className="panel">
+				<h3>Magasins</h3>
+				<div>
+					{fieldsStoreIds.map((field, index) => (
+						<div key={field.id} className="full-fields-row">
+							<select {...register(`game.storeIds.${index}.key` as const)}>
+								{Object.entries(STORE_ID_LABELS).map(([key, label]) => (
+									<option key={key} value={key}>
+										{label}
+									</option>
+								))}
+							</select>
+							<input
+								type="text"
+								{...register(`game.storeIds.${index}.value` as const)}
+								autoComplete="off"
+								className="flex"
+							/>
+							<button type="button" onClick={() => removeStoreId(index)} title="Supprimer">
+								<i className="fa-regular fa-trash-can"></i>
+							</button>
+						</div>
+					))}
+					<button type="button" onClick={() => appendStoreId({ key: "steam", value: "" })}>
+						<i className="fa-regular fa-plus"></i> Ajouter un magasin
+					</button>
 				</div>
 			</div>
 

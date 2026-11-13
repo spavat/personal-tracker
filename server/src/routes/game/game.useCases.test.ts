@@ -152,6 +152,22 @@ describe("SaveGameUseCase", () => {
 		expect(repo.updatePlay).toHaveBeenCalledWith("g1", play);
 	});
 
+	it("turns an edited auto play into a manual one, keeping its origin", () => {
+		const repo = fakeRepo();
+		const play = { id: "p1", date: "2024-06-01", duration: 30, origin: "steam", auto: true };
+		new SaveGameUseCase(asRepo(repo)).execute({ gameId: "g1", play } as any, asLog(makeLog()));
+		expect(repo.updatePlay).toHaveBeenCalledWith("g1", { ...play, auto: false });
+	});
+
+	it("keeps the origin of a new play", () => {
+		const repo = fakeRepo();
+		new SaveGameUseCase(asRepo(repo)).execute(
+			{ gameId: "g1", play: { date: "2024-06-01", origin: "ps5" } } as any,
+			asLog(makeLog()),
+		);
+		expect(repo.pushPlay.mock.calls[0][1]).toMatchObject({ date: "2024-06-01", origin: "ps5" });
+	});
+
 	it("pushes a freshly built play when the play has no id", () => {
 		const repo = fakeRepo();
 		new SaveGameUseCase(asRepo(repo)).execute(

@@ -1,5 +1,6 @@
 import { useFormContext } from "react-hook-form";
 
+import { GAME_ORIGINS } from "../origins";
 import { type PlayInputs } from "./PlayForm.utils";
 
 export default function PlayForm() {
@@ -28,6 +29,17 @@ export default function PlayForm() {
 						type="number"
 						min={0}
 					/>
+				</label>
+				<label className="form-field">
+					<span>Origine</span>
+					<select {...register("play.origin", { setValueAs: (value) => value || undefined })}>
+						<option value=""></option>
+						{Object.entries(GAME_ORIGINS).map(([origin, { label }]) => (
+							<option key={origin} value={origin}>
+								{label}
+							</option>
+						))}
+					</select>
 				</label>
 
 				<label className="form-field full-width">

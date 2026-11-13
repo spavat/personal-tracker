@@ -10,7 +10,7 @@ interface GameListFilters {
 	sortDirection: string;
 }
 
-const CLEARABLE_GAME_FIELDS = ["links"];
+const CLEARABLE_GAME_FIELDS = ["links", "storeIds"];
 
 export class GameRepository {
 	constructor(private mongo: FastifyInstance["mongo"]) {}
