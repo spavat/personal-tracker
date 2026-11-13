@@ -2,13 +2,16 @@ import { Game } from "@personal-tracker/shared/game";
 import { Link } from "@tanstack/react-router";
 import React from "react";
 
-import { formatDay, formatFullDate, getDurationString } from "../../utils";
+import { API_BASE_URL } from "../../config";
+import { getDurationString } from "../../utils";
+import GameOriginBadge from "./GameOriginBadge";
+import { formatPlayDate, formatPlayDay } from "./origins";
 
 export default function GameCardGame({ game }: { game: Game }) {
 	let lastPlayString = "";
 	if (Array.isArray(game.plays) && game.plays.length > 0) {
 		const lastPlay = game.plays[game.plays.length - 1];
-		lastPlayString = `📅 ${formatFullDate(lastPlay.date)}`;
+		lastPlayString = `📅 ${formatPlayDate(lastPlay)}`;
 	}
 	let totalDuration = "";
 	if (Array.isArray(game.plays) && game.plays.length > 0) {
@@ -20,6 +23,7 @@ export default function GameCardGame({ game }: { game: Game }) {
 	return (
 		<div key={`${game.name}`} className="card_item">
 			{game.complete && <span className="status complete"></span>}
+			{game.capsule && <img src={`${API_BASE_URL}${game.capsule}`} alt="" className="game-capsule" />}
 			<span className="title">
 				<Link to="/game/details/$gameId" params={{ gameId: game.id }}>
 					{game.name}
@@ -44,9 +48,10 @@ export default function GameCardGame({ game }: { game: Game }) {
 						return (
 							<li key={play.id}>
 								<span className="monospace">
-									📅 <span className="fixed_day">{formatDay(play.date)}</span>{" "}
-									{formatFullDate(play.date)} : ⏱️{getDurationString(play.duration ?? 0)}
-								</span>
+									📅 <span className="fixed_day">{formatPlayDay(play)}</span> {formatPlayDate(play)} :
+									⏱️{getDurationString(play.duration ?? 0)}
+								</span>{" "}
+								{play.origin && <GameOriginBadge origin={play.origin} />}
 								{play.comment && (
 									<>
 										<br />

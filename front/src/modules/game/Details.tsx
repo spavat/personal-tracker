@@ -1,8 +1,11 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
-import { formatDay, formatFullDate, getDurationString } from "../../utils";
+import { API_BASE_URL } from "../../config";
+import { getDurationString } from "../../utils";
 import { gameDetailsQuery } from "./api";
+import GameOriginBadge from "./GameOriginBadge";
+import { formatPlayDate, formatPlayDay } from "./origins";
 
 export default function GameDetails({ gameId }: { gameId: string }) {
 	const navigate = useNavigate();
@@ -35,6 +38,9 @@ export default function GameDetails({ gameId }: { gameId: string }) {
 					</h2>
 				</div>
 				<div className="general">
+					{gameData.header && (
+						<img src={`${API_BASE_URL}${gameData.header}`} alt="" className="game-header" />
+					)}
 					<div>
 						{gameData.developper && (
 							<>
@@ -80,6 +86,7 @@ export default function GameDetails({ gameId }: { gameId: string }) {
 						<th></th>
 						<th>Date</th>
 						<th>Durée</th>
+						<th>Origine</th>
 						<th>Commentaire</th>
 						<th>Actions</th>
 					</tr>
@@ -88,9 +95,10 @@ export default function GameDetails({ gameId }: { gameId: string }) {
 					{gameData.plays.map((play, i) => (
 						<tr key={play.id}>
 							<td className="smalltext">#{i + 1}</td>
-							<td data-label="Date">{formatDay(play.date)}</td>
-							<td data-label="Date">{formatFullDate(play.date)}</td>
+							<td data-label="Date">{formatPlayDay(play)}</td>
+							<td data-label="Date">{formatPlayDate(play)}</td>
 							<td data-label="Durée">{getDurationString(play.duration ?? 0)}</td>
+							<td data-label="Origine">{play.origin && <GameOriginBadge origin={play.origin} />}</td>
 							<td data-label="Commentaire" style={{ whiteSpace: "pre-line" }}>
 								{play.comment}
 							</td>

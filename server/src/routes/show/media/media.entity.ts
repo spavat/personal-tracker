@@ -1,6 +1,14 @@
 import type { ArtistMedia, SpectacleMedia, SpectacleMediaKind } from "@personal-tracker/shared/show";
 
-import type { ImageKind } from "../../internet/image-storage.repository";
+import type { ImageSize } from "../../images/image-processing";
+
+export const SHOW_IMAGE_SIZE = {
+	poster: { width: 600, height: 900 },
+	portrait: { width: 400, height: 400 },
+	photo: { width: 1600, height: 1600 },
+} satisfies Record<string, ImageSize>;
+
+export type ShowImageKind = keyof typeof SHOW_IMAGE_SIZE;
 
 /** A media is attached to exactly one kind of owner through its link table. */
 export type MediaOwner = { spectacleId: number } | { artistId: number };
@@ -10,7 +18,7 @@ export function isArtistOwner(owner: MediaOwner): owner is { artistId: number } 
 }
 
 /** Target size when the uploaded file is an image. */
-export function imageKindFor(owner: MediaOwner, kind: SpectacleMediaKind): ImageKind {
+export function imageKindFor(owner: MediaOwner, kind: SpectacleMediaKind): ShowImageKind {
 	if (isArtistOwner(owner)) return "portrait";
 	return kind === "poster" ? "poster" : "photo";
 }

@@ -41,6 +41,7 @@ import { Route as ContextTagsListIndexRouteImport } from './routes/context-tags/
 import { Route as ContextTagsListAddRouteImport } from './routes/context-tags/_list.add'
 import { Route as GameHistoryIndexRouteImport } from './routes/game/history/index'
 import { Route as GameHistoryYearRouteImport } from './routes/game/history/$year'
+import { Route as GameIntegrationsIntegrationsRouteImport } from './routes/game/integrations/_integrations'
 import { Route as GameListListRouteImport } from './routes/game/list/_list'
 import { Route as InternetProgramIdDetailsRouteImport } from './routes/internet/$programId/_details'
 import { Route as InternetHistoryIndexRouteImport } from './routes/internet/history/index'
@@ -143,6 +144,7 @@ import { Route as SportHistoryPeriodAddRouteImport } from './routes/sport/histor
 import { Route as SportListListIndexRouteImport } from './routes/sport/list/_list.index'
 import { Route as SportListListAddRouteImport } from './routes/sport/list/_list.add'
 import { Route as GameDetailsDetailsGameIdEditRouteImport } from './routes/game/details/_details.$gameId.edit'
+import { Route as GameIntegrationsIntegrationsImportStoreRouteImport } from './routes/game/integrations/_integrations.import.$store'
 import { Route as GameListListGameIdEditRouteImport } from './routes/game/list/_list.$gameId.edit'
 import { Route as InternetListListEditProgramIdRouteImport } from './routes/internet/list/_list.edit.$programId'
 import { Route as LifespanCategoriesListDeleteIdRouteImport } from './routes/lifespan/categories/_list.delete.$id'
@@ -179,6 +181,7 @@ import { Route as ShowsWorksListEditWorkIdRouteImport } from './routes/shows/wor
 import { Route as SportListListDeleteActivityIdRouteImport } from './routes/sport/list/_list.delete.$activityId'
 import { Route as SportListListEditActivityIdRouteImport } from './routes/sport/list/_list.edit.$activityId'
 import { Route as GameDetailsDetailsGameIdPlayAddRouteImport } from './routes/game/details/_details.$gameId.play.add'
+import { Route as GameIntegrationsIntegrationsMergeKeepIdRemoveIdRouteImport } from './routes/game/integrations/_integrations.merge.$keepId.$removeId'
 import { Route as InternetProgramIdDetailsEpisodeEpisodeIdDeleteRouteImport } from './routes/internet/$programId/_details.episode.$episodeId.delete'
 import { Route as InternetProgramIdDetailsEpisodeEpisodeIdEditRouteImport } from './routes/internet/$programId/_details.episode.$episodeId.edit'
 import { Route as LifespanListListObjectIdEventAddRouteImport } from './routes/lifespan/list/_list.$objectId.event.add'
@@ -361,6 +364,12 @@ const GameHistoryYearRoute = GameHistoryYearRouteImport.update({
   path: '/history/$year',
   getParentRoute: () => GameRoute,
 } as any)
+const GameIntegrationsIntegrationsRoute =
+  GameIntegrationsIntegrationsRouteImport.update({
+    id: '/integrations/_integrations',
+    path: '/integrations',
+    getParentRoute: () => GameRoute,
+  } as any)
 const GameListListRoute = GameListListRouteImport.update({
   id: '/list/_list',
   path: '/list',
@@ -902,6 +911,12 @@ const GameDetailsDetailsGameIdEditRoute =
     path: '/edit',
     getParentRoute: () => GameDetailsDetailsGameIdRoute,
   } as any)
+const GameIntegrationsIntegrationsImportStoreRoute =
+  GameIntegrationsIntegrationsImportStoreRouteImport.update({
+    id: '/import/$store',
+    path: '/import/$store',
+    getParentRoute: () => GameIntegrationsIntegrationsRoute,
+  } as any)
 const GameListListGameIdEditRoute = GameListListGameIdEditRouteImport.update({
   id: '/$gameId/edit',
   path: '/$gameId/edit',
@@ -1114,6 +1129,12 @@ const GameDetailsDetailsGameIdPlayAddRoute =
     path: '/play/add',
     getParentRoute: () => GameDetailsDetailsGameIdRoute,
   } as any)
+const GameIntegrationsIntegrationsMergeKeepIdRemoveIdRoute =
+  GameIntegrationsIntegrationsMergeKeepIdRemoveIdRouteImport.update({
+    id: '/merge/$keepId/$removeId',
+    path: '/merge/$keepId/$removeId',
+    getParentRoute: () => GameIntegrationsIntegrationsRoute,
+  } as any)
 const InternetProgramIdDetailsEpisodeEpisodeIdDeleteRoute =
   InternetProgramIdDetailsEpisodeEpisodeIdDeleteRouteImport.update({
     id: '/episode/$episodeId/delete',
@@ -1277,6 +1298,7 @@ export interface FileRoutesByFullPath {
   '/calendar/$period/$date': typeof CalendarPeriodDateRoute
   '/context-tags/add': typeof ContextTagsListAddRoute
   '/game/history/$year': typeof GameHistoryYearRouteWithChildren
+  '/game/integrations': typeof GameIntegrationsIntegrationsRouteWithChildren
   '/game/list': typeof GameListListRouteWithChildren
   '/internet/$programId': typeof InternetProgramIdDetailsRouteWithChildren
   '/internet/history/$period': typeof InternetHistoryPeriodRouteWithChildren
@@ -1381,6 +1403,7 @@ export interface FileRoutesByFullPath {
   '/sport/$activityId/': typeof SportActivityIdDetailsIndexRoute
   '/sport/list/': typeof SportListListIndexRoute
   '/game/details/$gameId/edit': typeof GameDetailsDetailsGameIdEditRoute
+  '/game/integrations/import/$store': typeof GameIntegrationsIntegrationsImportStoreRoute
   '/game/list/$gameId/edit': typeof GameListListGameIdEditRoute
   '/internet/list/edit/$programId': typeof InternetListListEditProgramIdRoute
   '/lifespan/categories/delete/$id': typeof LifespanCategoriesListDeleteIdRoute
@@ -1417,6 +1440,7 @@ export interface FileRoutesByFullPath {
   '/shows/places/$placeId/': typeof ShowsPlacesPlaceIdDetailsIndexRoute
   '/shows/spectacles/$spectacleId/': typeof ShowsSpectaclesSpectacleIdDetailsIndexRoute
   '/game/details/$gameId/play/add': typeof GameDetailsDetailsGameIdPlayAddRoute
+  '/game/integrations/merge/$keepId/$removeId': typeof GameIntegrationsIntegrationsMergeKeepIdRemoveIdRoute
   '/internet/$programId/episode/$episodeId/delete': typeof InternetProgramIdDetailsEpisodeEpisodeIdDeleteRoute
   '/internet/$programId/episode/$episodeId/edit': typeof InternetProgramIdDetailsEpisodeEpisodeIdEditRoute
   '/lifespan/list/$objectId/event/add': typeof LifespanListListObjectIdEventAddRoute
@@ -1460,6 +1484,7 @@ export interface FileRoutesByTo {
   '/calendar/$period/$date': typeof CalendarPeriodDateRoute
   '/context-tags/add': typeof ContextTagsListAddRoute
   '/game/history/$year': typeof GameHistoryYearRouteWithChildren
+  '/game/integrations': typeof GameIntegrationsIntegrationsRouteWithChildren
   '/game/list': typeof GameListListRouteWithChildren
   '/internet/history/$period': typeof InternetHistoryPeriodRouteWithChildren
   '/internet/stats/$year': typeof InternetStatsYearRoute
@@ -1548,6 +1573,7 @@ export interface FileRoutesByTo {
   '/sport/$activityId': typeof SportActivityIdDetailsIndexRoute
   '/sport/list': typeof SportListListIndexRoute
   '/game/details/$gameId/edit': typeof GameDetailsDetailsGameIdEditRoute
+  '/game/integrations/import/$store': typeof GameIntegrationsIntegrationsImportStoreRoute
   '/game/list/$gameId/edit': typeof GameListListGameIdEditRoute
   '/internet/list/edit/$programId': typeof InternetListListEditProgramIdRoute
   '/lifespan/categories/delete/$id': typeof LifespanCategoriesListDeleteIdRoute
@@ -1584,6 +1610,7 @@ export interface FileRoutesByTo {
   '/shows/places/$placeId': typeof ShowsPlacesPlaceIdDetailsIndexRoute
   '/shows/spectacles/$spectacleId': typeof ShowsSpectaclesSpectacleIdDetailsIndexRoute
   '/game/details/$gameId/play/add': typeof GameDetailsDetailsGameIdPlayAddRoute
+  '/game/integrations/merge/$keepId/$removeId': typeof GameIntegrationsIntegrationsMergeKeepIdRemoveIdRoute
   '/internet/$programId/episode/$episodeId/delete': typeof InternetProgramIdDetailsEpisodeEpisodeIdDeleteRoute
   '/internet/$programId/episode/$episodeId/edit': typeof InternetProgramIdDetailsEpisodeEpisodeIdEditRoute
   '/lifespan/list/$objectId/event/add': typeof LifespanListListObjectIdEventAddRoute
@@ -1639,6 +1666,7 @@ export interface FileRoutesById {
   '/calendar/$period/$date': typeof CalendarPeriodDateRoute
   '/context-tags/_list/add': typeof ContextTagsListAddRoute
   '/game/history/$year': typeof GameHistoryYearRouteWithChildren
+  '/game/integrations/_integrations': typeof GameIntegrationsIntegrationsRouteWithChildren
   '/game/list/_list': typeof GameListListRouteWithChildren
   '/internet/$programId/_details': typeof InternetProgramIdDetailsRouteWithChildren
   '/internet/history/$period': typeof InternetHistoryPeriodRouteWithChildren
@@ -1743,6 +1771,7 @@ export interface FileRoutesById {
   '/sport/$activityId/_details/': typeof SportActivityIdDetailsIndexRoute
   '/sport/list/_list/': typeof SportListListIndexRoute
   '/game/details/_details/$gameId/edit': typeof GameDetailsDetailsGameIdEditRoute
+  '/game/integrations/_integrations/import/$store': typeof GameIntegrationsIntegrationsImportStoreRoute
   '/game/list/_list/$gameId/edit': typeof GameListListGameIdEditRoute
   '/internet/list/_list/edit/$programId': typeof InternetListListEditProgramIdRoute
   '/lifespan/categories/_list/delete/$id': typeof LifespanCategoriesListDeleteIdRoute
@@ -1779,6 +1808,7 @@ export interface FileRoutesById {
   '/shows/places/$placeId/_details/': typeof ShowsPlacesPlaceIdDetailsIndexRoute
   '/shows/spectacles/$spectacleId/_details/': typeof ShowsSpectaclesSpectacleIdDetailsIndexRoute
   '/game/details/_details/$gameId/play/add': typeof GameDetailsDetailsGameIdPlayAddRoute
+  '/game/integrations/_integrations/merge/$keepId/$removeId': typeof GameIntegrationsIntegrationsMergeKeepIdRemoveIdRoute
   '/internet/$programId/_details/episode/$episodeId/delete': typeof InternetProgramIdDetailsEpisodeEpisodeIdDeleteRoute
   '/internet/$programId/_details/episode/$episodeId/edit': typeof InternetProgramIdDetailsEpisodeEpisodeIdEditRoute
   '/lifespan/list/_list/$objectId/event/add': typeof LifespanListListObjectIdEventAddRoute
@@ -1834,6 +1864,7 @@ export interface FileRouteTypes {
     | '/calendar/$period/$date'
     | '/context-tags/add'
     | '/game/history/$year'
+    | '/game/integrations'
     | '/game/list'
     | '/internet/$programId'
     | '/internet/history/$period'
@@ -1938,6 +1969,7 @@ export interface FileRouteTypes {
     | '/sport/$activityId/'
     | '/sport/list/'
     | '/game/details/$gameId/edit'
+    | '/game/integrations/import/$store'
     | '/game/list/$gameId/edit'
     | '/internet/list/edit/$programId'
     | '/lifespan/categories/delete/$id'
@@ -1974,6 +2006,7 @@ export interface FileRouteTypes {
     | '/shows/places/$placeId/'
     | '/shows/spectacles/$spectacleId/'
     | '/game/details/$gameId/play/add'
+    | '/game/integrations/merge/$keepId/$removeId'
     | '/internet/$programId/episode/$episodeId/delete'
     | '/internet/$programId/episode/$episodeId/edit'
     | '/lifespan/list/$objectId/event/add'
@@ -2017,6 +2050,7 @@ export interface FileRouteTypes {
     | '/calendar/$period/$date'
     | '/context-tags/add'
     | '/game/history/$year'
+    | '/game/integrations'
     | '/game/list'
     | '/internet/history/$period'
     | '/internet/stats/$year'
@@ -2105,6 +2139,7 @@ export interface FileRouteTypes {
     | '/sport/$activityId'
     | '/sport/list'
     | '/game/details/$gameId/edit'
+    | '/game/integrations/import/$store'
     | '/game/list/$gameId/edit'
     | '/internet/list/edit/$programId'
     | '/lifespan/categories/delete/$id'
@@ -2141,6 +2176,7 @@ export interface FileRouteTypes {
     | '/shows/places/$placeId'
     | '/shows/spectacles/$spectacleId'
     | '/game/details/$gameId/play/add'
+    | '/game/integrations/merge/$keepId/$removeId'
     | '/internet/$programId/episode/$episodeId/delete'
     | '/internet/$programId/episode/$episodeId/edit'
     | '/lifespan/list/$objectId/event/add'
@@ -2195,6 +2231,7 @@ export interface FileRouteTypes {
     | '/calendar/$period/$date'
     | '/context-tags/_list/add'
     | '/game/history/$year'
+    | '/game/integrations/_integrations'
     | '/game/list/_list'
     | '/internet/$programId/_details'
     | '/internet/history/$period'
@@ -2299,6 +2336,7 @@ export interface FileRouteTypes {
     | '/sport/$activityId/_details/'
     | '/sport/list/_list/'
     | '/game/details/_details/$gameId/edit'
+    | '/game/integrations/_integrations/import/$store'
     | '/game/list/_list/$gameId/edit'
     | '/internet/list/_list/edit/$programId'
     | '/lifespan/categories/_list/delete/$id'
@@ -2335,6 +2373,7 @@ export interface FileRouteTypes {
     | '/shows/places/$placeId/_details/'
     | '/shows/spectacles/$spectacleId/_details/'
     | '/game/details/_details/$gameId/play/add'
+    | '/game/integrations/_integrations/merge/$keepId/$removeId'
     | '/internet/$programId/_details/episode/$episodeId/delete'
     | '/internet/$programId/_details/episode/$episodeId/edit'
     | '/lifespan/list/_list/$objectId/event/add'
@@ -2600,6 +2639,13 @@ declare module '@tanstack/react-router' {
       path: '/history/$year'
       fullPath: '/game/history/$year'
       preLoaderRoute: typeof GameHistoryYearRouteImport
+      parentRoute: typeof GameRoute
+    }
+    '/game/integrations/_integrations': {
+      id: '/game/integrations/_integrations'
+      path: '/integrations'
+      fullPath: '/game/integrations'
+      preLoaderRoute: typeof GameIntegrationsIntegrationsRouteImport
       parentRoute: typeof GameRoute
     }
     '/game/list/_list': {
@@ -3316,6 +3362,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GameDetailsDetailsGameIdEditRouteImport
       parentRoute: typeof GameDetailsDetailsGameIdRoute
     }
+    '/game/integrations/_integrations/import/$store': {
+      id: '/game/integrations/_integrations/import/$store'
+      path: '/import/$store'
+      fullPath: '/game/integrations/import/$store'
+      preLoaderRoute: typeof GameIntegrationsIntegrationsImportStoreRouteImport
+      parentRoute: typeof GameIntegrationsIntegrationsRoute
+    }
     '/game/list/_list/$gameId/edit': {
       id: '/game/list/_list/$gameId/edit'
       path: '/$gameId/edit'
@@ -3568,6 +3621,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GameDetailsDetailsGameIdPlayAddRouteImport
       parentRoute: typeof GameDetailsDetailsGameIdRoute
     }
+    '/game/integrations/_integrations/merge/$keepId/$removeId': {
+      id: '/game/integrations/_integrations/merge/$keepId/$removeId'
+      path: '/merge/$keepId/$removeId'
+      fullPath: '/game/integrations/merge/$keepId/$removeId'
+      preLoaderRoute: typeof GameIntegrationsIntegrationsMergeKeepIdRemoveIdRouteImport
+      parentRoute: typeof GameIntegrationsIntegrationsRoute
+    }
     '/internet/$programId/_details/episode/$episodeId/delete': {
       id: '/internet/$programId/_details/episode/$episodeId/delete'
       path: '/episode/$episodeId/delete'
@@ -3793,6 +3853,24 @@ const GameHistoryYearRouteWithChildren = GameHistoryYearRoute._addFileChildren(
   GameHistoryYearRouteChildren,
 )
 
+interface GameIntegrationsIntegrationsRouteChildren {
+  GameIntegrationsIntegrationsImportStoreRoute: typeof GameIntegrationsIntegrationsImportStoreRoute
+  GameIntegrationsIntegrationsMergeKeepIdRemoveIdRoute: typeof GameIntegrationsIntegrationsMergeKeepIdRemoveIdRoute
+}
+
+const GameIntegrationsIntegrationsRouteChildren: GameIntegrationsIntegrationsRouteChildren =
+  {
+    GameIntegrationsIntegrationsImportStoreRoute:
+      GameIntegrationsIntegrationsImportStoreRoute,
+    GameIntegrationsIntegrationsMergeKeepIdRemoveIdRoute:
+      GameIntegrationsIntegrationsMergeKeepIdRemoveIdRoute,
+  }
+
+const GameIntegrationsIntegrationsRouteWithChildren =
+  GameIntegrationsIntegrationsRoute._addFileChildren(
+    GameIntegrationsIntegrationsRouteChildren,
+  )
+
 interface GameListListRouteChildren {
   GameListListAddRoute: typeof GameListListAddRoute
   GameListListGameIdEditRoute: typeof GameListListGameIdEditRoute
@@ -3832,6 +3910,7 @@ const GameDetailsDetailsGameIdRouteWithChildren =
 interface GameRouteChildren {
   GameIndexRoute: typeof GameIndexRoute
   GameHistoryYearRoute: typeof GameHistoryYearRouteWithChildren
+  GameIntegrationsIntegrationsRoute: typeof GameIntegrationsIntegrationsRouteWithChildren
   GameListListRoute: typeof GameListListRouteWithChildren
   GameHistoryIndexRoute: typeof GameHistoryIndexRoute
   GameDetailsDetailsGameIdRoute: typeof GameDetailsDetailsGameIdRouteWithChildren
@@ -3840,6 +3919,8 @@ interface GameRouteChildren {
 const GameRouteChildren: GameRouteChildren = {
   GameIndexRoute: GameIndexRoute,
   GameHistoryYearRoute: GameHistoryYearRouteWithChildren,
+  GameIntegrationsIntegrationsRoute:
+    GameIntegrationsIntegrationsRouteWithChildren,
   GameListListRoute: GameListListRouteWithChildren,
   GameHistoryIndexRoute: GameHistoryIndexRoute,
   GameDetailsDetailsGameIdRoute: GameDetailsDetailsGameIdRouteWithChildren,
