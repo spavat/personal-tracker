@@ -67,7 +67,8 @@ export class GogConnector implements StoreConnector {
 						origin: "gog" as const,
 						seconds: stat.playtime * 60,
 						...(stat.lastSession ? { lastPlayed: Temporal.Instant.from(stat.lastSession).toString() } : {}),
-						...(game.image ? { image: game.image } : {}),
+						// the image URL has no extension: .jpg is the 1600x740 banner
+						...(game.image ? { image: `${game.image}.jpg` } : {}),
 					},
 				];
 			});

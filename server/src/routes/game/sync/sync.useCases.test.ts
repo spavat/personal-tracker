@@ -44,6 +44,7 @@ function memoryGames(initial: GameMongo[] = []) {
 			}
 		},
 		mergeInto: async (id: string, fields: Partial<GameMongo>) => void Object.assign(get(id), fields),
+		updateFields: async (id: string, fields: Partial<GameMongo>) => void Object.assign(get(id), fields),
 		deleteGame: async (id: string) => void games.splice(games.indexOf(get(id)), 1),
 	};
 	return repo as typeof repo & GameRepository;
@@ -175,7 +176,7 @@ describe("ConfirmImportUseCase", () => {
 		const snapshots = memorySnapshots();
 		steam.push([steamGame("1942280", "Brotato", 4651), steamGame("1145350", "Hades II", 6755)]);
 
-		const result = await new ConfirmImportUseCase([steam], games, snapshots, now).execute("steam", log());
+		const result = await new ConfirmImportUseCase([steam], games, snapshots, { now }).execute("steam", log());
 
 		expect(result).toEqual({ games: 2, created: 1, catchUpMinutes: 4561 + 6755 });
 		expect(games.games[0].storeIds).toEqual({ steam: "1942280" });
@@ -202,7 +203,7 @@ describe("ConfirmImportUseCase", () => {
 	it("is idempotent: importing again replaces the catch-up", async () => {
 		const games = memoryGames();
 		const snapshots = memorySnapshots();
-		const confirm = new ConfirmImportUseCase([steam], games, snapshots, now);
+		const confirm = new ConfirmImportUseCase([steam], games, snapshots, { now });
 		steam.push([steamGame("1145350", "Hades II", 6755)]);
 		steam.push([steamGame("1145350", "Hades II", 6755)]);
 
@@ -221,8 +222,8 @@ describe("ConfirmImportUseCase", () => {
 		steam.push([steamGame("1942280", "Brotato", 4651)]);
 		epic.push([{ storeGameId: "e8bbb84b", name: "Brotato", origin: "epic", seconds: 3492 * 60 }]);
 
-		await new ConfirmImportUseCase([steam, epic], games, snapshots, now).execute("steam", log());
-		await new ConfirmImportUseCase([steam, epic], games, snapshots, now).execute("epic", log());
+		await new ConfirmImportUseCase([steam, epic], games, snapshots, { now }).execute("steam", log());
+		await new ConfirmImportUseCase([steam, epic], games, snapshots, { now }).execute("epic", log());
 
 		expect(games.games).toHaveLength(1);
 		expect(games.games[0].storeIds).toEqual({ steam: "1942280", epic: "e8bbb84b" });
@@ -236,13 +237,13 @@ describe("ConfirmImportUseCase", () => {
 		const games = memoryGames();
 		const snapshots = memorySnapshots();
 		steam.push([steamGame("1145350", "Hades II", 100)]);
-		await new ConfirmImportUseCase([steam], games, snapshots, now).execute("steam", log());
+		await new ConfirmImportUseCase([steam], games, snapshots, { now }).execute("steam", log());
 		clock = clock.add({ hours: 24 });
 		steam.push([steamGame("1145350", "Hades II", 130)]);
-		await new RunDailySyncUseCase([steam], games, snapshots, now).execute(undefined, log());
+		await new RunDailySyncUseCase([steam], games, snapshots, { now }).execute(undefined, log());
 
 		steam.push([steamGame("1145350", "Hades II", 130)]);
-		await new ConfirmImportUseCase([steam], games, snapshots, now).execute("steam", log());
+		await new ConfirmImportUseCase([steam], games, snapshots, { now }).execute("steam", log());
 
 		expect(playsOf(games, "Hades II")).toEqual([
 			{ date: "2026-11-14", origin: "steam", duration: 30, auto: true },
@@ -257,7 +258,7 @@ describe("RunDailySyncUseCase", () => {
 		const snapshots = memorySnapshots();
 		steam.push([steamGame("1145350", "Hades II", 6755)]);
 
-		const results = await new RunDailySyncUseCase([steam], games, snapshots, now).execute(undefined, log());
+		const results = await new RunDailySyncUseCase([steam], games, snapshots, { now }).execute(undefined, log());
 
 		expect(results).toEqual([{ store: "steam", status: "baseline", plays: 0, minutes: 0 }]);
 		expect(games.games).toEqual([]);
@@ -267,7 +268,7 @@ describe("RunDailySyncUseCase", () => {
 	it("adds the playtime since the previous fetch to the day it belongs to", async () => {
 		const games = memoryGames([manualGame("hades", "Hades II")]);
 		const snapshots = memorySnapshots();
-		const run = new RunDailySyncUseCase([steam], games, snapshots, now);
+		const run = new RunDailySyncUseCase([steam], games, snapshots, { now });
 		steam.push([steamGame("1145350", "Hades II", 6755)]);
 		await run.execute(undefined, log());
 
@@ -283,7 +284,7 @@ describe("RunDailySyncUseCase", () => {
 	it("adds up two runs of the same day, and an immediate rerun adds nothing", async () => {
 		const games = memoryGames([manualGame("hades", "Hades II")]);
 		const snapshots = memorySnapshots();
-		const run = new RunDailySyncUseCase([steam], games, snapshots, now);
+		const run = new RunDailySyncUseCase([steam], games, snapshots, { now });
 		steam.push([steamGame("1145350", "Hades II", 100)]);
 		await run.execute(undefined, log());
 
@@ -305,7 +306,7 @@ describe("RunDailySyncUseCase", () => {
 		]);
 		games.games[0].storeIds = { steam: "1145350" };
 		const snapshots = memorySnapshots();
-		const run = new RunDailySyncUseCase([steam], games, snapshots, now);
+		const run = new RunDailySyncUseCase([steam], games, snapshots, { now });
 		steam.push([steamGame("1145350", "Hades II", 100)]);
 		await run.execute(undefined, log());
 		clock = Temporal.Instant.from("2026-11-15T04:00:00+01:00");
@@ -321,7 +322,7 @@ describe("RunDailySyncUseCase", () => {
 	it("creates a game first played since the previous fetch", async () => {
 		const games = memoryGames();
 		const snapshots = memorySnapshots();
-		const run = new RunDailySyncUseCase([steam], games, snapshots, now);
+		const run = new RunDailySyncUseCase([steam], games, snapshots, { now });
 		steam.push([]);
 		await run.execute(undefined, log());
 		clock = clock.add({ hours: 24 });
@@ -340,7 +341,10 @@ describe("RunDailySyncUseCase", () => {
 		steam.push(new Error("Steam : erreur 503"));
 		epic.push([]);
 
-		const results = await new RunDailySyncUseCase([steam, epic], games, snapshots, now).execute(undefined, log());
+		const results = await new RunDailySyncUseCase([steam, epic], games, snapshots, { now }).execute(
+			undefined,
+			log(),
+		);
 
 		expect(results).toEqual([
 			{ store: "steam", status: "error", plays: 0, minutes: 0, error: "Steam : erreur 503" },
@@ -355,7 +359,7 @@ describe("RunDailySyncUseCase", () => {
 	it("skips the stores that aren't configured, and runs only the store asked", async () => {
 		steam.isConfigured = async () => false;
 		epic.push([]);
-		const run = new RunDailySyncUseCase([steam, epic], memoryGames(), memorySnapshots(), now);
+		const run = new RunDailySyncUseCase([steam, epic], memoryGames(), memorySnapshots(), { now });
 		expect((await run.execute(undefined, log())).map((r) => r.store)).toEqual(["epic"]);
 		expect(await run.execute("steam", log())).toEqual([]);
 	});
@@ -366,8 +370,8 @@ describe("ReplayUseCase", () => {
 		const games = memoryGames();
 		const snapshots = memorySnapshots();
 		steam.push([steamGame("1145350", "Hades II", 100), steamGame("1942280", "Brotato", 10)]);
-		await new ConfirmImportUseCase([steam], games, snapshots, now).execute("steam", log());
-		const run = new RunDailySyncUseCase([steam], games, snapshots, now);
+		await new ConfirmImportUseCase([steam], games, snapshots, { now }).execute("steam", log());
+		const run = new RunDailySyncUseCase([steam], games, snapshots, { now });
 		clock = Temporal.Instant.from("2026-11-14T15:00:00+01:00");
 		steam.push([steamGame("1145350", "Hades II", 120), steamGame("1942280", "Brotato", 10)]);
 		await run.execute(undefined, log());
@@ -427,5 +431,122 @@ describe("MergeGamesUseCase", () => {
 		const merge = new MergeGamesUseCase(games);
 		await expect(merge.execute({ keepId: "keep", removeId: "keep" }, log())).rejects.toThrow(/lui-même/);
 		expect(await merge.execute({ keepId: "keep", removeId: "nope" }, log())).toBeNull();
+	});
+});
+
+describe("store sync with Steam enrichment", () => {
+	const enrichment = (details: Record<string, any> = {}, appIds: Record<string, string> = {}) => {
+		const uploads: Array<[string, string, string]> = [];
+		return {
+			uploads,
+			steam: {
+				details: async (appId: string) => {
+					if (details[appId] instanceof Error) throw details[appId];
+					return details[appId] ?? null;
+				},
+				findAppId: async (name: string) => appIds[name],
+			},
+			images: {
+				uploadFromSource: async (gameId: string, field: string, source: string) => {
+					uploads.push([gameId, field, source]);
+					return `personal-tracker/game/${gameId}.${field}.avif`;
+				},
+			},
+		};
+	};
+
+	it("gives a new Steam game its developer, publisher and pictures", async () => {
+		const games = memoryGames();
+		const deps = enrichment({
+			"1942280": {
+				developer: "Blobfish",
+				publisher: "Blobfish",
+				capsule: "https://steam/capsule.jpg",
+				header: "https://steam/header.jpg",
+			},
+		});
+		steam.push([steamGame("1942280", "Brotato", 4651)]);
+
+		await new ConfirmImportUseCase([steam], games, memorySnapshots(), { now, enrichment: deps }).execute(
+			"steam",
+			log(),
+		);
+
+		const [game] = games.games;
+		expect(game).toMatchObject({
+			developper: "Blobfish",
+			editor: "Blobfish",
+			capsule: `personal-tracker/game/${game.id}.capsule.avif`,
+			header: `personal-tracker/game/${game.id}.header.avif`,
+		});
+		expect(deps.uploads.map(([, field, source]) => [field, source])).toEqual([
+			["capsule", "https://steam/capsule.jpg"],
+			["header", "https://steam/header.jpg"],
+		]);
+	});
+
+	it("links an Epic game to the game owning the Steam app of the same name, filling its missing pictures", async () => {
+		const games = memoryGames([
+			{ ...manualGame("hades", "Hades™ Supergiant Edition"), storeIds: { steam: "1145360" } },
+		]);
+		const deps = enrichment({ "1145360": { capsule: "https://steam/hades-capsule.jpg" } }, { Hades: "1145360" });
+		epic.push([{ storeGameId: "Min", name: "Hades", origin: "epic", seconds: 6392 * 60 }]);
+
+		await new ConfirmImportUseCase([epic], games, memorySnapshots(), { now, enrichment: deps }).execute(
+			"epic",
+			log(),
+		);
+
+		expect(games.games).toHaveLength(1);
+		expect(games.games[0]).toMatchObject({
+			storeIds: { steam: "1145360", epic: "Min" },
+			capsule: "personal-tracker/game/hades.capsule.avif",
+		});
+	});
+
+	it("creates a GOG game with the Steam info of its exact name, and falls back on the store's image", async () => {
+		const games = memoryGames();
+		const deps = enrichment(
+			{ "292030": { developer: "CD PROJEKT RED", publisher: "CD PROJEKT RED" } },
+			{ "The Witcher 3": "292030" },
+		);
+		const gog = fakeConnector("gog", ["gog"]);
+		gog.push([
+			{
+				storeGameId: "1495134320",
+				name: "The Witcher 3",
+				origin: "gog",
+				seconds: 60,
+				image: "https://gog/w3.jpg",
+			},
+		]);
+
+		await new ConfirmImportUseCase([gog], games, memorySnapshots(), { now, enrichment: deps }).execute(
+			"gog",
+			log(),
+		);
+
+		expect(games.games[0]).toMatchObject({
+			developper: "CD PROJEKT RED",
+			storeIds: { steam: "292030", gog: "1495134320" },
+		});
+		expect(deps.uploads.map(([, field, source]) => [field, source])).toEqual([
+			["capsule", "https://gog/w3.jpg"],
+			["header", "https://gog/w3.jpg"],
+		]);
+	});
+
+	it("still creates the game when Steam fails", async () => {
+		const games = memoryGames();
+		const deps = enrichment({ "70": new Error("Steam store : erreur 429") });
+		steam.push([steamGame("70", "Half-Life", 42)]);
+
+		await new ConfirmImportUseCase([steam], games, memorySnapshots(), { now, enrichment: deps }).execute(
+			"steam",
+			log(),
+		);
+
+		expect(games.games[0]).toMatchObject({ name: "Half-Life", developper: "Inconnu", editor: "Inconnu" });
+		expect(games.games[0].capsule).toBeUndefined();
 	});
 });

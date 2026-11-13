@@ -2,6 +2,7 @@ import { Game } from "@personal-tracker/shared/game";
 import { Link } from "@tanstack/react-router";
 import React from "react";
 
+import { API_BASE_URL } from "../../config";
 import { getDurationString } from "../../utils";
 import GameOriginBadge from "./GameOriginBadge";
 import { formatPlayDate, formatPlayDay } from "./origins";
@@ -22,6 +23,7 @@ export default function GameCardGame({ game }: { game: Game }) {
 	return (
 		<div key={`${game.name}`} className="card_item">
 			{game.complete && <span className="status complete"></span>}
+			{game.capsule && <img src={`${API_BASE_URL}${game.capsule}`} alt="" className="game-capsule" />}
 			<span className="title">
 				<Link to="/game/details/$gameId" params={{ gameId: game.id }}>
 					{game.name}

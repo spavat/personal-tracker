@@ -9,6 +9,9 @@ const IMAGE_TARGET_SIZE = {
 	poster: { width: 600, height: 900 },
 	portrait: { width: 400, height: 400 },
 	photo: { width: 1600, height: 1600 },
+	// games: small banner and title image (Steam capsule / header sizes)
+	capsule: { width: 184, height: 69 },
+	header: { width: 460, height: 215 },
 } as const;
 
 export type ImageKind = keyof typeof IMAGE_TARGET_SIZE;

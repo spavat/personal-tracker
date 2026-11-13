@@ -44,7 +44,7 @@ describe("GogConnector.parse", () => {
 				origin: "gog",
 				seconds: 5091 * 60,
 				lastPlayed: "2021-12-11T12:38:55Z",
-				image: witcher.game.image,
+				image: `${witcher.game.image}.jpg`,
 			},
 			{
 				storeGameId: "1207658880",

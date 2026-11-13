@@ -12,8 +12,8 @@ import { RunDailySyncUseCase } from "../routes/game/sync/sync.useCases";
 export default fp(async (fastify) => {
 	if (process.env.GAME_SYNC_SCHEDULER === "off") return;
 
-	const { connectors, games, snapshots } = buildSyncContext(fastify.mongo);
-	const runSync = new RunDailySyncUseCase(connectors, games, snapshots);
+	const { connectors, games, snapshots, enrichment } = buildSyncContext(fastify.mongo);
+	const runSync = new RunDailySyncUseCase(connectors, games, snapshots, { enrichment });
 	const log = fastify.log.child({ module: "game-sync-scheduler" });
 	let timer: NodeJS.Timeout | undefined;
 

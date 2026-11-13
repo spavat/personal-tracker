@@ -30,8 +30,8 @@ const sync: FastifyPluginAsync = async (fastify): Promise<void> => {
 	const { connectors, games, snapshots } = context;
 	const getStatus = new GetSyncStatusUseCase(context);
 	const previewImport = new PreviewImportUseCase(connectors, games);
-	const confirmImport = new ConfirmImportUseCase(connectors, games, snapshots);
-	const runSync = new RunDailySyncUseCase(connectors, games, snapshots);
+	const confirmImport = new ConfirmImportUseCase(connectors, games, snapshots, { enrichment: context.enrichment });
+	const runSync = new RunDailySyncUseCase(connectors, games, snapshots, { enrichment: context.enrichment });
 	const replay = new ReplayUseCase(connectors, games, snapshots);
 	const mergeGames = new MergeGamesUseCase(games);
 

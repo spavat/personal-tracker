@@ -9,14 +9,14 @@ function buildRepo() {
 }
 
 describe("GameRepository.update", () => {
-	it("removes the links and store ids missing from the payload", async () => {
+	it("removes the links, store ids and pictures missing from the payload", async () => {
 		const { repo, updateOne } = buildRepo();
 
 		await repo.update("g1", { name: "X" });
 
 		expect(updateOne).toHaveBeenCalledWith(
 			{ id: "g1" },
-			{ $set: { name: "X" }, $unset: { links: "", storeIds: "" } },
+			{ $set: { name: "X" }, $unset: { links: "", storeIds: "", capsule: "", header: "" } },
 			{ upsert: false },
 		);
 	});
@@ -28,6 +28,8 @@ describe("GameRepository.update", () => {
 			name: "X",
 			links: [{ name: "l", link: "https://l.example.com" }],
 			storeIds: { steam: "1942280" },
+			capsule: "personal-tracker/game/g1.capsule.avif",
+			header: "personal-tracker/game/g1.header.avif",
 		});
 
 		expect(updateOne.mock.calls[0][1]).not.toHaveProperty("$unset");

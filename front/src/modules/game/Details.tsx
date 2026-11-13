@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
+import { API_BASE_URL } from "../../config";
 import { getDurationString } from "../../utils";
 import { gameDetailsQuery } from "./api";
 import GameOriginBadge from "./GameOriginBadge";
@@ -37,6 +38,9 @@ export default function GameDetails({ gameId }: { gameId: string }) {
 					</h2>
 				</div>
 				<div className="general">
+					{gameData.header && (
+						<img src={`${API_BASE_URL}${gameData.header}`} alt="" className="game-header" />
+					)}
 					<div>
 						{gameData.developper && (
 							<>

@@ -14,6 +14,31 @@
 			color: var(--complete-color);
 		}
 
+		/* Steam sizes: small banner 184x69, title image 460x215 */
+		.game-capsule {
+			display: block;
+			width: 184px;
+			max-width: 100%;
+			aspect-ratio: 184 / 69;
+			object-fit: cover;
+			border-radius: 4px;
+			margin-bottom: 6px;
+		}
+		.game-header {
+			width: 230px;
+			max-width: 40vw;
+			aspect-ratio: 460 / 215;
+			object-fit: cover;
+			border-radius: 6px;
+			margin-right: 12px;
+		}
+		.image-preview {
+			display: block;
+			margin-top: 8px;
+			border-radius: 4px;
+			max-width: 100%;
+		}
+
 		.card_item {
 			&:has(.status.complete) {
 				border: 2px solid var(--complete-color);

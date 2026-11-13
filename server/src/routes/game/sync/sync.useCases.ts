@@ -5,11 +5,14 @@ import { randomUUID } from "crypto";
 
 import type { GameMongo } from "../game.entity";
 import type { AutoPlayMongo, GameRepository } from "../game.repository";
+import type { GameImageStorageRepository } from "../image-storage.repository";
 import type { StoreConnector, StoreGame } from "./connector";
 import type { CredentialRepository } from "./credential.repository";
 import type { Snapshot, SnapshotRepository } from "./snapshot.repository";
+import type { SteamStore } from "./steam-store";
 
 import { buildPlay } from "../game.entity";
+import { GameEnricher } from "./game-enricher";
 import { attributeDay, computeCatchUp, diffTotals, normalizeName, playDay } from "./sync.entity";
 
 type SyncGameRepository = Pick<
@@ -22,10 +25,24 @@ type SyncGameRepository = Pick<
 	| "replaceAutoPlay"
 	| "deleteAutoPlays"
 	| "mergeInto"
+	| "updateFields"
 	| "deleteGame"
 >;
 type SyncSnapshotRepository = Pick<SnapshotRepository, "insert" | "findLatestOk" | "findOk" | "deleteOlderThan">;
 type Clock = () => Temporal.Instant;
+
+export interface SyncOptions {
+	now?: Clock;
+	// Steam info and pictures of the games created or linked (left out in tests: no network)
+	enrichment?: {
+		steam: Pick<SteamStore, "details" | "findAppId">;
+		images: Pick<GameImageStorageRepository, "uploadFromSource">;
+	};
+}
+
+const clockOf = (options: SyncOptions): Clock => options.now ?? (() => Temporal.Now.instant());
+const enricherOf = (options: SyncOptions, log: FastifyBaseLogger) =>
+	options.enrichment ? new GameEnricher(options.enrichment.steam, options.enrichment.images, log) : undefined;
 
 const SNAPSHOT_RETENTION = { hours: 30 * 24 };
 // developer / editor are required on a game
@@ -48,15 +65,20 @@ async function withSyncLock<T>(task: () => Promise<T>): Promise<T> {
 	}
 }
 
-/** Finds the game a store game belongs to (store id, then name), creating it when there is none. Loaded once per run. */
+/**
+ * Finds the game a store game belongs to (store id, then name, then for a GOG / Epic game the Steam app of the
+ * same name), creating it when there is none. Loaded once per execution. With an enricher, a new game gets its
+ * Steam info and pictures, and a game linked to a store for the first time gets the pictures it lacks.
+ */
 class GameMatcher {
 	private constructor(
 		private repo: SyncGameRepository,
 		private games: SyncGame[],
+		private enricher?: GameEnricher,
 	) {}
 
-	static async load(repo: SyncGameRepository) {
-		return new GameMatcher(repo, await repo.findAllForSync());
+	static async load(repo: SyncGameRepository, enricher?: GameEnricher) {
+		return new GameMatcher(repo, await repo.findAllForSync(), enricher);
 	}
 
 	find(store: GameStore, storeGame: StoreGame): SyncGame | undefined {
@@ -68,21 +90,35 @@ class GameMatcher {
 	}
 
 	async findOrCreate(store: GameStore, storeGame: StoreGame): Promise<string> {
-		const existing = this.find(store, storeGame);
+		let existing = this.find(store, storeGame);
+		let steamId = store === "steam" ? storeGame.storeGameId : existing?.storeIds?.steam;
+		if (!existing && store !== "steam" && this.enricher) {
+			steamId = await this.enricher.findSteamId(storeGame);
+			existing = steamId ? this.games.find((game) => game.storeIds?.steam === steamId) : undefined;
+		}
+
 		if (existing) {
 			if (existing.storeIds?.[store] !== storeGame.storeGameId) {
 				await this.repo.setStoreId(existing.id, store, storeGame.storeGameId);
 				existing.storeIds = { ...existing.storeIds, [store]: storeGame.storeGameId };
+				const pictures = (await this.enricher?.missingPictures(existing, storeGame, steamId)) ?? {};
+				if (Object.keys(pictures).length > 0) {
+					await this.repo.updateFields(existing.id, pictures);
+					Object.assign(existing, pictures);
+				}
 			}
 			return existing.id;
 		}
 
+		const id = randomUUID();
+		const enrichment = (await this.enricher?.forNewGame(id, storeGame, steamId)) ?? {};
 		const game: GameMongo = {
-			id: randomUUID(),
+			id,
 			name: storeGame.name ?? storeGame.storeGameId,
-			developper: storeGame.developer ?? UNKNOWN,
-			editor: storeGame.publisher ?? UNKNOWN,
-			storeIds: { [store]: storeGame.storeGameId },
+			developper: UNKNOWN,
+			editor: UNKNOWN,
+			...enrichment,
+			storeIds: { ...(steamId ? { steam: steamId } : {}), [store]: storeGame.storeGameId },
 			plays: [],
 		};
 		await this.repo.insert(game as unknown as Record<string, unknown>);
@@ -180,7 +216,7 @@ export class ConfirmImportUseCase {
 		private connectors: StoreConnector[],
 		private games: SyncGameRepository,
 		private snapshots: SyncSnapshotRepository,
-		private now: Clock = () => Temporal.Now.instant(),
+		private options: SyncOptions = {},
 	) {}
 
 	execute(store: GameStore, log: FastifyBaseLogger) {
@@ -190,10 +226,10 @@ export class ConfirmImportUseCase {
 	private async importStore(store: GameStore, log: FastifyBaseLogger) {
 		log.info("ConfirmImportUseCase.execute");
 		const connector = getConnector(this.connectors, store);
-		const fetchedAt = this.now();
+		const fetchedAt = clockOf(this.options)();
 		const raw = await fetchConfigured(connector);
 		const storeGames = connector.parse(raw);
-		const matcher = await GameMatcher.load(this.games);
+		const matcher = await GameMatcher.load(this.games, enricherOf(this.options, log));
 		const rows = buildImportRows(store, storeGames, matcher);
 
 		let created = 0;
@@ -241,7 +277,7 @@ export class RunDailySyncUseCase {
 		private connectors: StoreConnector[],
 		private games: SyncGameRepository,
 		private snapshots: SyncSnapshotRepository,
-		private now: Clock = () => Temporal.Now.instant(),
+		private options: SyncOptions = {},
 	) {}
 
 	execute(store: GameStore | undefined, log: FastifyBaseLogger): Promise<RunResult[]> {
@@ -259,7 +295,7 @@ export class RunDailySyncUseCase {
 	}
 
 	private async runStore(connector: StoreConnector, log: FastifyBaseLogger): Promise<RunResult> {
-		const fetchedAt = this.now();
+		const fetchedAt = clockOf(this.options)();
 		const baseline = await this.snapshots.findLatestOk(connector.store);
 
 		let raw: unknown;
@@ -284,7 +320,7 @@ export class RunDailySyncUseCase {
 			if (decreases.length > 0) {
 				log.warn({ store: connector.store, decreases }, "game sync: playtime decreased, ignored");
 			}
-			const matcher = await GameMatcher.load(this.games);
+			const matcher = await GameMatcher.load(this.games, enricherOf(this.options, log));
 			const from = Temporal.Instant.from(baseline.fetchedAt);
 			for (const diff of diffs) {
 				const storeGame = storeGames.find((g) => g.storeGameId === diff.storeGameId)!;

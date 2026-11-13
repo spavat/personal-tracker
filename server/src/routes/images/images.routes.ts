@@ -3,6 +3,8 @@ import type { FastifyPluginAsync } from "fastify";
 import "@fastify/mongodb";
 import * as z from "zod";
 
+import { GameRepository } from "../game/game.repository";
+import { GAME_IMAGE_FIELDS, type GameImageField, GameImageStorageRepository } from "../game/image-storage.repository";
 import { ImageStorageRepository } from "../internet/image-storage.repository";
 import { InternetRepository } from "../internet/internet.repository";
 import { MediaStorageRepository } from "../show/media/media-storage.repository";
@@ -17,6 +19,8 @@ const images: FastifyPluginAsync = async (fastify): Promise<void> => {
 	const thumbnailStorage = new ThumbnailStorageRepository();
 	const mediaRepository = new MediaRepository(fastify.db);
 	const mediaStorage = new MediaStorageRepository();
+	const gameRepository = new GameRepository(fastify.mongo);
+	const gameImageStorage = new GameImageStorageRepository();
 
 	// public: private programs are filtered out by the repository (findById) for anonymous visitors
 	fastify.get("/internet/:key", { config: { public: true } }, async (request, reply) => {
@@ -55,6 +59,33 @@ const images: FastifyPluginAsync = async (fastify): Promise<void> => {
 
 		try {
 			const object = await thumbnailStorage.getObject(activity.thumbnailKey);
+			reply.header("Content-Type", object.ContentType ?? "image/avif");
+			reply.header("Cache-Control", "public, max-age=86400");
+			return reply.send(object.Body);
+		} catch {
+			return reply.notFound();
+		}
+	});
+
+	// not public, like the game module: the session cookie is sent with the <img> request
+	fastify.get("/game/:key", async (request, reply) => {
+		const { key } = request.params as { key: string };
+		const separatorIndex = key.lastIndexOf(".");
+		const gameId = key.slice(0, separatorIndex);
+		const field = key.slice(separatorIndex + 1);
+
+		if (!(GAME_IMAGE_FIELDS as readonly string[]).includes(field) || !z.uuid().safeParse(gameId).success) {
+			return reply.notFound();
+		}
+
+		const game = await gameRepository.findById(gameId);
+		const s3Key = game?.[field as GameImageField];
+		if (!s3Key) {
+			return reply.notFound();
+		}
+
+		try {
+			const object = await gameImageStorage.getObject(s3Key);
 			reply.header("Content-Type", object.ContentType ?? "image/avif");
 			reply.header("Cache-Control", "public, max-age=86400");
 			return reply.send(object.Body);

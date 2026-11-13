@@ -11,7 +11,7 @@ interface GameListFilters {
 	sortDirection: string;
 }
 
-const CLEARABLE_GAME_FIELDS = ["links", "storeIds"];
+const CLEARABLE_GAME_FIELDS = ["links", "storeIds", "capsule", "header"];
 
 export class GameRepository {
 	constructor(private mongo: FastifyInstance["mongo"]) {}
@@ -156,10 +156,12 @@ export class GameRepository {
 	// --- store sync ---
 
 	/** Every game with what matching and catch-up need: names, store ids and plays. */
-	async findAllForSync(): Promise<Array<Pick<GameMongo, "id" | "name" | "storeIds" | "plays">>> {
+	async findAllForSync(): Promise<
+		Array<Pick<GameMongo, "id" | "name" | "storeIds" | "plays" | "capsule" | "header">>
+	> {
 		return (
 			(await this.collection
-				?.find({}, { projection: { _id: 0, id: 1, name: 1, storeIds: 1, plays: 1 } })
+				?.find({}, { projection: { _id: 0, id: 1, name: 1, storeIds: 1, plays: 1, capsule: 1, header: 1 } })
 				.toArray()) ?? []
 		);
 	}
@@ -196,6 +198,11 @@ export class GameRepository {
 
 	/** Overwrites the merged fields of the kept game (merge of two duplicates). */
 	mergeInto(gameId: string, fields: Pick<GameMongo, "plays"> & Partial<GameMongo>) {
+		return this.collection?.updateOne({ id: gameId }, { $set: fields });
+	}
+
+	/** Sets fields of a game found by the store sync (pictures). */
+	updateFields(gameId: string, fields: Partial<GameMongo>) {
 		return this.collection?.updateOne({ id: gameId }, { $set: fields });
 	}
 
