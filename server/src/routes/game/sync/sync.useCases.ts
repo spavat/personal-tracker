@@ -6,6 +6,7 @@ import { randomUUID } from "crypto";
 import type { GameMongo } from "../game.entity";
 import type { AutoPlayMongo, GameRepository } from "../game.repository";
 import type { StoreConnector, StoreGame } from "./connector";
+import type { CredentialRepository } from "./credential.repository";
 import type { Snapshot, SnapshotRepository } from "./snapshot.repository";
 
 import { buildPlay } from "../game.entity";
@@ -31,6 +32,21 @@ const SNAPSHOT_RETENTION = { hours: 30 * 24 };
 const UNKNOWN = "Inconnu";
 
 type SyncGame = Awaited<ReturnType<GameRepository["findAllForSync"]>>[number];
+
+// Two writers diffing against the same baseline would count the time twice: imports, runs and replays
+// (scheduler or manual) run one at a time in the process.
+let syncInProgress = false;
+async function withSyncLock<T>(task: () => Promise<T>): Promise<T> {
+	if (syncInProgress) {
+		throw new Error("Une synchronisation des magasins est déjà en cours");
+	}
+	syncInProgress = true;
+	try {
+		return await task();
+	} finally {
+		syncInProgress = false;
+	}
+}
 
 /** Finds the game a store game belongs to (store id, then name), creating it when there is none. Loaded once per run. */
 class GameMatcher {
@@ -167,7 +183,11 @@ export class ConfirmImportUseCase {
 		private now: Clock = () => Temporal.Now.instant(),
 	) {}
 
-	async execute(store: GameStore, log: FastifyBaseLogger) {
+	execute(store: GameStore, log: FastifyBaseLogger) {
+		return withSyncLock(() => this.importStore(store, log));
+	}
+
+	private async importStore(store: GameStore, log: FastifyBaseLogger) {
 		log.info("ConfirmImportUseCase.execute");
 		const connector = getConnector(this.connectors, store);
 		const fetchedAt = this.now();
@@ -224,7 +244,11 @@ export class RunDailySyncUseCase {
 		private now: Clock = () => Temporal.Now.instant(),
 	) {}
 
-	async execute(store: GameStore | undefined, log: FastifyBaseLogger): Promise<RunResult[]> {
+	execute(store: GameStore | undefined, log: FastifyBaseLogger): Promise<RunResult[]> {
+		return withSyncLock(() => this.runStores(store, log));
+	}
+
+	private async runStores(store: GameStore | undefined, log: FastifyBaseLogger): Promise<RunResult[]> {
 		log.info("RunDailySyncUseCase.execute");
 		const results: RunResult[] = [];
 		for (const connector of this.connectors.filter((c) => !store || c.store === store)) {
@@ -292,7 +316,11 @@ export class ReplayUseCase {
 		private snapshots: SyncSnapshotRepository,
 	) {}
 
-	async execute(store: GameStore, day: string, log: FastifyBaseLogger) {
+	execute(store: GameStore, day: string, log: FastifyBaseLogger) {
+		return withSyncLock(() => this.replay(store, day, log));
+	}
+
+	private async replay(store: GameStore, day: string, log: FastifyBaseLogger) {
 		log.info("ReplayUseCase.execute");
 		if (day === CATCH_UP_DATE) {
 			throw new Error("Le rattrapage se refait par l'import initial");
@@ -347,5 +375,47 @@ export class MergeGamesUseCase {
 		});
 		await this.games.deleteGame(remove.id);
 		return { id: keep.id };
+	}
+}
+
+export interface SyncStatusDeps {
+	connectors: StoreConnector[];
+	games: Pick<GameRepository, "findAllForSync">;
+	snapshots: Pick<SnapshotRepository, "findRecent">;
+	credentials: Pick<CredentialRepository, "getEpic">;
+}
+
+/** State of each store integration (status page), and the games that look like duplicates. */
+export class GetSyncStatusUseCase {
+	constructor(private deps: SyncStatusDeps) {}
+
+	async execute(log: FastifyBaseLogger) {
+		log.info("GetSyncStatusUseCase.execute");
+		const { connectors, games, snapshots, credentials } = this.deps;
+		const allGames = await games.findAllForSync();
+
+		const stores = await Promise.all(
+			connectors.map(async (connector) => {
+				const epic = connector.store === "epic" ? await credentials.getEpic() : null;
+				return {
+					store: connector.store,
+					configured: await connector.isConfigured(),
+					linkedGames: allGames.filter((game) => game.storeIds?.[connector.store]).length,
+					snapshots: await snapshots.findRecent(connector.store),
+					...(epic ? { tokenExpiresAt: epic.refreshExpiresAt } : {}),
+				};
+			}),
+		);
+
+		const byName = Map.groupBy(allGames, (game) => normalizeName(game.name));
+		const duplicates = [...byName.values()]
+			.filter((group) => group.length > 1)
+			.map((group) => group.map(({ id, name, storeIds }) => ({ id, name, ...(storeIds ? { storeIds } : {}) })));
+
+		return {
+			stores,
+			duplicates,
+			lastRunFailed: stores.some((s) => s.configured && s.snapshots[0]?.status === "error"),
+		};
 	}
 }

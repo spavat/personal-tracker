@@ -121,3 +121,72 @@ export const GameDeleteParamsRequestSchema = z.object({
 	playId: z.uuid(),
 });
 export type GameDeleteParamsRequestType = z.infer<typeof GameDeleteParamsRequestSchema>;
+
+//
+// STORE SYNC
+//
+export const GameSyncStoreParamsSchema = z.object({ store: GameStoreSchema });
+export const GameSyncReplayParamsSchema = z.object({ store: GameStoreSchema, day: z.iso.date() });
+export const GameSyncRunBodySchema = z.object({ store: GameStoreSchema.optional() }).nullish();
+export const GameMergeBodySchema = z.object({ keepId: z.uuid(), removeId: z.uuid() });
+export type GameMergeBody = z.infer<typeof GameMergeBodySchema>;
+
+// a store game in the initial import preview; no game = it will be created
+export const GameImportRowSchema = z.object({
+	storeGameId: z.string(),
+	origin: GameOriginSchema,
+	name: z.string(),
+	storeMinutes: z.number(),
+	recordedMinutes: z.number(),
+	catchUp: z.number(),
+	game: z.object({ id: z.string(), name: z.string() }).optional(),
+});
+export type GameImportRow = z.infer<typeof GameImportRowSchema>;
+export const GameImportPreviewResponseSchema = z.array(GameImportRowSchema);
+
+export const GameImportResponseSchema = z.object({
+	games: z.number(),
+	created: z.number(),
+	catchUpMinutes: z.number(),
+});
+
+export const GameSyncRunResponseSchema = z.array(
+	z.object({
+		store: GameStoreSchema,
+		status: z.enum(["ok", "error", "baseline"]),
+		plays: z.number(),
+		minutes: z.number(),
+		error: z.string().optional(),
+	}),
+);
+
+export const GameReplayResponseSchema = z.object({ plays: z.number(), minutes: z.number() });
+
+export const GameSyncSnapshotSchema = z.object({
+	id: z.string(),
+	kind: z.enum(["import", "run"]),
+	fetchedAt: z.string(),
+	day: z.iso.date(),
+	status: z.enum(["ok", "error"]),
+	error: z.string().optional(),
+});
+export type GameSyncSnapshot = z.infer<typeof GameSyncSnapshotSchema>;
+
+export const GameSyncStatusResponseSchema = z.object({
+	stores: z.array(
+		z.object({
+			store: GameStoreSchema,
+			configured: z.boolean(),
+			linkedGames: z.number(),
+			// most recent first, last 30 days
+			snapshots: z.array(GameSyncSnapshotSchema),
+			// Epic: the refresh token's end, after which `legendary auth` + the seed script are needed again
+			tokenExpiresAt: z.string().optional(),
+		}),
+	),
+	// games whose names match: candidates for a merge
+	duplicates: z.array(z.array(z.object({ id: z.string(), name: z.string(), storeIds: GameSchema.shape.storeIds }))),
+	// the latest fetch of a configured store failed
+	lastRunFailed: z.boolean(),
+});
+export type GameSyncStatus = z.infer<typeof GameSyncStatusResponseSchema>;

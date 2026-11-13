@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { attributeDay, computeCatchUp, diffTotals, normalizeName, playDay, type StoreTotal } from "./sync.entity";
+import {
+	attributeDay,
+	computeCatchUp,
+	diffTotals,
+	isRunDue,
+	lastRunSlot,
+	nextRunSlot,
+	normalizeName,
+	playDay,
+	type StoreTotal,
+} from "./sync.entity";
 
 const at = (iso: string) => Temporal.Instant.from(iso);
 
@@ -117,5 +127,29 @@ describe("computeCatchUp", () => {
 
 	it("never goes below 0", () => {
 		expect(computeCatchUp(30, [{ duration: 60 }])).toBe(0);
+	});
+});
+
+describe("run slots", () => {
+	it("gives today's 04:00 once it has passed, yesterday's before", () => {
+		expect(lastRunSlot(at("2026-11-14T10:00:00+01:00")).toString()).toBe("2026-11-14T03:00:00Z");
+		expect(lastRunSlot(at("2026-11-14T04:00:00+01:00")).toString()).toBe("2026-11-14T03:00:00Z");
+		expect(lastRunSlot(at("2026-11-14T03:59:00+01:00")).toString()).toBe("2026-11-13T03:00:00Z");
+	});
+
+	it("schedules the next 04:00 Paris time across DST changes", () => {
+		expect(nextRunSlot(at("2026-11-14T04:00:00+01:00")).toString()).toBe("2026-11-15T03:00:00Z");
+		// spring: the night of the change is 23h long
+		expect(nextRunSlot(at("2026-03-28T12:00:00+01:00")).toString()).toBe("2026-03-29T02:00:00Z");
+		// autumn: 25h long
+		expect(nextRunSlot(at("2026-10-24T12:00:00+02:00")).toString()).toBe("2026-10-25T03:00:00Z");
+	});
+
+	it("is due when nothing was fetched since the latest slot", () => {
+		const now = at("2026-11-14T10:00:00+01:00");
+		expect(isRunDue(now)).toBe(true);
+		expect(isRunDue(now, "2026-11-13T03:00:00Z")).toBe(true);
+		expect(isRunDue(now, "2026-11-14T03:00:00Z")).toBe(false);
+		expect(isRunDue(now, "2026-11-14T08:00:00Z")).toBe(false);
 	});
 });

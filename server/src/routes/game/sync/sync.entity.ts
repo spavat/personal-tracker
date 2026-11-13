@@ -90,3 +90,23 @@ export function computeCatchUp(totalMinutes: number, existingPlays: Array<{ dura
 	const recorded = existingPlays.reduce((sum, play) => sum + (play.duration ?? 0), 0);
 	return Math.max(0, totalMinutes - recorded);
 }
+
+/** The latest daily run slot (04:00 Europe/Paris) at or before `now`. */
+export function lastRunSlot(now: Temporal.Instant): Temporal.Instant {
+	const zoned = now.toZonedDateTimeISO(SYNC_TIME_ZONE);
+	const today = zoned.toPlainDate().toZonedDateTime({
+		timeZone: SYNC_TIME_ZONE,
+		plainTime: Temporal.PlainTime.from({ hour: DAY_START_HOUR }),
+	});
+	return (Temporal.ZonedDateTime.compare(today, zoned) <= 0 ? today : today.subtract({ days: 1 })).toInstant();
+}
+
+/** The next daily run slot strictly after `now`. */
+export function nextRunSlot(now: Temporal.Instant): Temporal.Instant {
+	return lastRunSlot(now).toZonedDateTimeISO(SYNC_TIME_ZONE).add({ days: 1 }).toInstant();
+}
+
+/** True when no fetch happened since the latest slot (server down at 04:00): the run is due now. */
+export function isRunDue(now: Temporal.Instant, lastFetchedAt?: string): boolean {
+	return !lastFetchedAt || Temporal.Instant.compare(Temporal.Instant.from(lastFetchedAt), lastRunSlot(now)) < 0;
+}

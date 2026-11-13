@@ -50,6 +50,23 @@ export class SnapshotRepository {
 		);
 	}
 
+	/** The store's snapshots without their raw response, most recent first (status page). */
+	async findRecent(store: GameStore): Promise<Omit<Snapshot, "raw">[]> {
+		return (
+			(await this.collection
+				?.find({ store }, { projection: { _id: 0, raw: 0 } })
+				.sort({ fetchedAt: -1 })
+				.toArray()) ?? []
+		);
+	}
+
+	/** Most recent fetch of any store (has the 04:00 run been missed?). */
+	async findLatest(): Promise<Omit<Snapshot, "raw"> | null> {
+		return (
+			(await this.collection?.findOne({}, { sort: { fetchedAt: -1 }, projection: { _id: 0, raw: 0 } })) ?? null
+		);
+	}
+
 	/** Snapshots fetched before `before`, except the store's latest successful one (still the baseline). */
 	async deleteOlderThan(store: GameStore, before: string) {
 		const baseline = await this.findLatestOk(store);
