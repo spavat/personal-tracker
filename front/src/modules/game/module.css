@@ -14,6 +14,60 @@
 			color: var(--complete-color);
 		}
 
+		.integrations {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+			gap: 16px;
+			margin-bottom: 16px;
+		}
+		/* same frame as the form panels (App.css .form .panel) */
+		.integration {
+			border: solid 1px #2a2a40;
+			border-radius: 1rem;
+			background-color: #1e1e30;
+			padding: 10px;
+			text-align: left;
+			p {
+				margin: 4px 0;
+			}
+			details {
+				margin-top: 10px;
+			}
+			.form-footer {
+				display: flex;
+				justify-content: flex-end;
+				gap: 8px;
+				margin-top: 8px;
+			}
+		}
+		.integration-state {
+			font-size: 13px;
+			font-weight: normal;
+			padding: 0 8px;
+			border-radius: 10px;
+			&.ok {
+				background: var(--complete-color);
+				color: white;
+			}
+			&.off {
+				background: #888;
+				color: white;
+			}
+		}
+		.integration-ok {
+			color: var(--complete-color);
+		}
+		.integration-error {
+			color: #c0392b;
+		}
+		.integration-duplicates {
+			list-style: none;
+			padding-left: 0;
+			li {
+				margin: 4px 0;
+			}
+		}
+
 		/* Steam sizes: small banner 184x69, title image 460x215 */
 		.game-capsule {
 			display: block;
