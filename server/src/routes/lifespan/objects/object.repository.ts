@@ -2,6 +2,8 @@ import type { FastifyInstance } from "fastify";
 
 import type { LifespanObjectMongo } from "./object.entity";
 
+import { accentInsensitiveRegex } from "../../../mongo-search";
+
 interface LifespanObjectListFilters {
 	search: string;
 	categoryId?: string;
@@ -55,10 +57,6 @@ const STATUS_STAGES = [
 	{ $project: { _usageEvents: 0, _latestUsageEvent: 0 } },
 ];
 
-function escapeRegExp(text: string) {
-	return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 export class LifespanObjectRepository {
 	constructor(private mongo: FastifyInstance["mongo"]) {}
 
@@ -70,7 +68,7 @@ export class LifespanObjectRepository {
 		const cursor = this.collection?.aggregate([
 			{
 				$match: {
-					...(search ? { name: new RegExp(escapeRegExp(search.normalize("NFC")), "i") } : {}),
+					...(search ? { name: accentInsensitiveRegex(search) } : {}),
 					...(categoryId ? { categoryId } : {}),
 				},
 			},

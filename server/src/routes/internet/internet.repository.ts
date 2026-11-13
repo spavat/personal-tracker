@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 
 import type { ProgramMongo } from "./internet.entity";
 
+import { accentInsensitiveRegex } from "../../mongo-search";
 import { privacyMatch } from "../../request-context";
 
 const MONGO_INTERNET_COLLECTION = "internet";
@@ -27,9 +28,9 @@ export class InternetRepository {
 				$match: {
 					...privacyMatch(),
 					$or: [
-						{ name: new RegExp(`${search.normalize("NFC")}`, "i") },
-						{ author: new RegExp(`${search.normalize("NFC")}`, "i") },
-						{ network: new RegExp(`${search.normalize("NFC")}`, "i") },
+						{ name: accentInsensitiveRegex(search) },
+						{ author: accentInsensitiveRegex(search) },
+						{ network: accentInsensitiveRegex(search) },
 					],
 				},
 			},

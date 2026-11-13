@@ -2,6 +2,8 @@ import type { FastifyInstance } from "fastify";
 
 import type { GameMongo } from "./game.entity";
 
+import { accentInsensitiveRegex } from "../../mongo-search";
+
 interface GameListFilters {
 	search: string;
 	sortField: string;
@@ -21,10 +23,7 @@ export class GameRepository {
 		const cursor = this.collection?.aggregate([
 			{
 				$match: {
-					$or: [
-						{ name: new RegExp(`${search.normalize("NFC")}`, "i") },
-						{ developper: new RegExp(`${search.normalize("NFC")}`, "i") },
-					],
+					$or: [{ name: accentInsensitiveRegex(search) }, { developper: accentInsensitiveRegex(search) }],
 				},
 			},
 			{
