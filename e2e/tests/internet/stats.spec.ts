@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-import { expect, resetDb, test } from "../../fixtures";
+import { expect, ownText, resetDb, test } from "../../fixtures";
 
 const currentYear = new Date().getFullYear();
 
@@ -40,13 +40,14 @@ test.describe("Internet - Stats", () => {
 
 	test("click a tag shows its programs", async ({ page }) => {
 		await page.goto("/internet/stats/2026");
+		const tagsHeading = page.getByRole("heading", { name: /^Tags/ });
 		await page.locator(".stats-music-genre .recharts-bar-rectangle").nth(1).click();
-		await expect(page.getByRole("heading", { name: "Tags (science)" })).toBeVisible();
+		await expect.poll(() => ownText(tagsHeading)).toBe("Tags (science)");
 		await expect(chartLabels(page, 2)).toHaveText(["Mock Podcast"]);
 
 		// Click again to unselect
 		await page.locator(".stats-music-genre .recharts-bar-rectangle").nth(1).click();
-		await expect(page.getByRole("heading", { name: "Tags", exact: true })).toBeVisible();
+		await expect.poll(() => ownText(tagsHeading)).toBe("Tags");
 	});
 
 	test("navigate between years", async ({ page }) => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useMemo, useOptimistic, useState, useTransition } from "react";
 
 import { MusicGenres } from "../../../charts/MusicGenres";
 import { HeaderPortal } from "../../../components/HeaderPortal";
@@ -6,6 +6,8 @@ import PeriodSelector from "../../../components/PeriodSelector";
 import { useYearChanger } from "../../../hooks/use-year-changer";
 import { getDurationString } from "../../../utils";
 import { internetStats } from "../api";
+
+const TOP_LIMIT = 20;
 
 export default function Stats({ year }: { year: string }) {
 	const [period, listQuery, goPrevious, goNext, canGoPrevious, canGoNext] = useYearChanger({
@@ -22,8 +24,37 @@ export default function Stats({ year }: { year: string }) {
 	});
 
 	const [selectedTag, setSelectedTag] = useState<string>("");
+	const [showAllPrograms, setShowAllPrograms] = useState(false);
+	const [showAllTags, setShowAllTags] = useState(false);
+	// transition + optimistic: the checkbox toggles at once, the (slow) chart render follows
+	const [, startTransition] = useTransition();
+	const [optimisticShowAllPrograms, setOptimisticShowAllPrograms] = useOptimistic(showAllPrograms);
+	const [optimisticShowAllTags, setOptimisticShowAllTags] = useOptimistic(showAllTags);
+
+	function changeShowAllPrograms(e: React.ChangeEvent<HTMLInputElement>) {
+		const checked = e.target.checked;
+		startTransition(() => {
+			setOptimisticShowAllPrograms(checked);
+			setShowAllPrograms(checked);
+		});
+	}
+
+	function changeShowAllTags(e: React.ChangeEvent<HTMLInputElement>) {
+		const checked = e.target.checked;
+		startTransition(() => {
+			setOptimisticShowAllTags(checked);
+			setShowAllTags(checked);
+		});
+	}
 
 	const data = listQuery.data;
+	// memoized: a new array reference makes recharts replay its animation (labels blink)
+	const programs = useMemo(
+		() => (showAllPrograms ? data.programs : data.programs.slice(0, TOP_LIMIT)),
+		[data.programs, showAllPrograms],
+	);
+	const tags = useMemo(() => (showAllTags ? data.tags : data.tags.slice(0, TOP_LIMIT)), [data.tags, showAllTags]);
+	const toggleSelectedTag = useCallback((val: string) => setSelectedTag((prev) => (val !== prev ? val : "")), []);
 	const detailsTags = (data.tags ?? []).find((t) => t.name === selectedTag)?.details ?? [];
 
 	return (
@@ -75,21 +106,32 @@ export default function Stats({ year }: { year: string }) {
 					</div>
 				</div>
 
-				<h3>Programmes</h3>
-				<MusicGenres data={data.programs} />
+				<h3>
+					Programmes{" "}
+					<span>
+						<label>
+							<input
+								type="checkbox"
+								checked={optimisticShowAllPrograms}
+								onChange={changeShowAllPrograms}
+							/>{" "}
+							Montrer tout
+						</label>
+					</span>
+				</h3>
+				<MusicGenres data={programs} />
 
-				<h3>Tags {selectedTag && <>({selectedTag})</>}</h3>
+				<h3>
+					Tags {selectedTag && <>({selectedTag})</>}{" "}
+					<span>
+						<label>
+							<input type="checkbox" checked={optimisticShowAllTags} onChange={changeShowAllTags} />{" "}
+							Montrer tout
+						</label>
+					</span>
+				</h3>
 				<div className="stats-music-genre">
-					<MusicGenres
-						data={data.tags}
-						setSelected={(val: string) => {
-							if (val !== selectedTag) {
-								setSelectedTag(val);
-							} else {
-								setSelectedTag("");
-							}
-						}}
-					/>
+					<MusicGenres data={tags} setSelected={toggleSelectedTag} />
 					{detailsTags.length > 0 && <MusicGenres data={detailsTags} reversed={true} />}
 				</div>
 			</div>
