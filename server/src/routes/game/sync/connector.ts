@@ -1,4 +1,4 @@
-import type { GameStore } from "@personal-tracker/shared/game";
+import type { GameOrigin, GameStore } from "@personal-tracker/shared/game";
 
 import type { StoreTotal } from "./sync.entity";
 
@@ -15,6 +15,8 @@ export interface StoreGame extends StoreTotal {
  */
 export interface StoreConnector {
 	store: GameStore;
+	// origins of the plays it produces (a replay replaces the auto plays of these origins)
+	origins: GameOrigin[];
 	isConfigured(): Promise<boolean>;
 	fetchRaw(): Promise<unknown>;
 	parse(raw: unknown): StoreGame[];

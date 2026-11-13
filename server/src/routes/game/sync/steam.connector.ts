@@ -1,3 +1,5 @@
+import type { GameOrigin } from "@personal-tracker/shared/game";
+
 import * as z from "zod";
 
 import type { StoreConnector, StoreGame } from "./connector";
@@ -23,6 +25,7 @@ const SteamOwnedGamesSchema = z.object({
 
 export class SteamConnector implements StoreConnector {
 	store = "steam" as const;
+	origins: GameOrigin[] = ["steam", "steam-deck"];
 
 	constructor(private config: { apiKey: string; steamId: string }) {}
 

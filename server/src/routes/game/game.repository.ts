@@ -1,6 +1,7 @@
+import type { GameOrigin, GameStore } from "@personal-tracker/shared/game";
 import type { FastifyInstance } from "fastify";
 
-import type { GameMongo } from "./game.entity";
+import type { GameMongo, PlayMongo } from "./game.entity";
 
 import { accentInsensitiveRegex } from "../../mongo-search";
 
@@ -151,4 +152,56 @@ export class GameRepository {
 	deletePlay(gameId: string, playId: string) {
 		return this.collection?.updateOne({ id: gameId }, { $pull: { plays: { id: playId } } } as any);
 	}
+
+	// --- store sync ---
+
+	/** Every game with what matching and catch-up need: names, store ids and plays. */
+	async findAllForSync(): Promise<Array<Pick<GameMongo, "id" | "name" | "storeIds" | "plays">>> {
+		return (
+			(await this.collection
+				?.find({}, { projection: { _id: 0, id: 1, name: 1, storeIds: 1, plays: 1 } })
+				.toArray()) ?? []
+		);
+	}
+
+	setStoreId(gameId: string, store: GameStore, storeGameId: string) {
+		return this.collection?.updateOne({ id: gameId }, { $set: { [`storeIds.${store}`]: storeGameId } });
+	}
+
+	/** Adds the play's minutes to the game's auto play of that day and origin, or adds the play when there is none. */
+	async addToAutoPlay(gameId: string, play: AutoPlayMongo) {
+		const result = await this.collection?.updateOne(
+			{ id: gameId, plays: { $elemMatch: { date: play.date, origin: play.origin, auto: true } } },
+			{ $inc: { "plays.$.duration": play.duration } },
+		);
+		if (!result?.matchedCount) {
+			await this.pushPlay(gameId, { ...play });
+		}
+	}
+
+	/** Puts the play in place of the game's auto play of that day and origin (a catch-up is replaced, not added to). */
+	async replaceAutoPlay(gameId: string, play: AutoPlayMongo) {
+		await this.collection?.updateOne({ id: gameId }, {
+			$pull: { plays: { date: play.date, origin: play.origin, auto: true } },
+		} as any);
+		await this.pushPlay(gameId, { ...play });
+	}
+
+	/** Removes the auto plays of a day for these origins, on every game (replay). */
+	deleteAutoPlays(date: string, origins: GameOrigin[]) {
+		return this.collection?.updateMany({}, {
+			$pull: { plays: { date, origin: { $in: origins }, auto: true } },
+		} as any);
+	}
+
+	/** Overwrites the merged fields of the kept game (merge of two duplicates). */
+	mergeInto(gameId: string, fields: Pick<GameMongo, "plays"> & Partial<GameMongo>) {
+		return this.collection?.updateOne({ id: gameId }, { $set: fields });
+	}
+
+	deleteGame(id: string) {
+		return this.collection?.deleteOne({ id });
+	}
 }
+
+export type AutoPlayMongo = PlayMongo & { origin: GameOrigin; duration: number; auto: true };

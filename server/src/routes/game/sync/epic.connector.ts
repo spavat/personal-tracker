@@ -1,3 +1,5 @@
+import type { GameOrigin } from "@personal-tracker/shared/game";
+
 import * as z from "zod";
 
 import type { StoreConnector, StoreGame } from "./connector";
@@ -42,6 +44,7 @@ const EpicRawSchema = z.object({
 
 export class EpicConnector implements StoreConnector {
 	store = "epic" as const;
+	origins: GameOrigin[] = ["epic"];
 
 	constructor(
 		private credentials: CredentialRepository,

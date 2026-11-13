@@ -1,3 +1,5 @@
+import type { GameOrigin } from "@personal-tracker/shared/game";
+
 import * as z from "zod";
 
 import type { StoreConnector, StoreGame } from "./connector";
@@ -20,6 +22,7 @@ const GogStatsPageSchema = z.object({
 
 export class GogConnector implements StoreConnector {
 	store = "gog" as const;
+	origins: GameOrigin[] = ["gog"];
 
 	constructor(private config: { username: string }) {}
 
