@@ -40,4 +40,4 @@ playwright-report
 .auth
 
 # Agent skills scratch (local specs & tickets)
-.scratchfront/.tanstack/
+.scratch
