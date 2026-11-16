@@ -160,8 +160,10 @@ export function catchUpDate(storeGame: Pick<StoreTotal, "lastPlayed" | "acquired
 
 /**
  * Catch-up of each played store game: the store total minus what the game already records for it, i.e. the
- * synced plays of that origin and the manual plays. Manual time is used up by the game's first origins first, so
- * a game played on Steam and Steam Deck doesn't subtract it twice. Another store's catch-up is not subtracted.
+ * synced plays of that origin and the manual plays. A manual play with an origin only counts for that origin's
+ * catch-up (a GOG play never reduces the Steam one, a PS5 play no store's). A manual play without origin is
+ * used up by the game's first origins first, so a game played on Steam and Steam Deck doesn't subtract it twice.
+ * Another store's catch-up is not subtracted.
  */
 export function buildImportRows<T extends StoreTotal>(
 	store: GameStore,
@@ -169,20 +171,19 @@ export function buildImportRows<T extends StoreTotal>(
 	// the game a store game belongs to (findGame, or the import's matcher which also knows the Steam ids)
 	match: (storeGame: T) => SyncGame | undefined,
 ): ImportRow[] {
-	const manualLeft = new Map<string, number>();
+	// what is left, per game, of the manual time without origin
+	const unassignedLeft = new Map<string, number>();
+	const minutes = (plays: SyncGame["plays"]) => plays.reduce((sum, p) => sum + (p.duration ?? 0), 0);
 	return storeGames.map((storeGame) => {
 		const game = match(storeGame);
 		const storeMinutes = Math.floor(storeGame.seconds / 60);
 		const plays = game?.plays ?? [];
-		const synced = plays
-			.filter((p) => p.auto && p.origin === storeGame.origin && !p.catchUp)
-			.reduce((sum, p) => sum + (p.duration ?? 0), 0);
-		const manual =
-			(game && manualLeft.get(game.id)) ??
-			plays.filter((p) => !p.auto).reduce((sum, p) => sum + (p.duration ?? 0), 0);
-		const catchUp = computeCatchUp(Math.max(0, storeMinutes - synced), [{ duration: manual }]);
+		const sameOrigin = minutes(plays.filter((p) => p.origin === storeGame.origin && (!p.auto || !p.catchUp)));
+		const unassigned = (game && unassignedLeft.get(game.id)) ?? minutes(plays.filter((p) => !p.auto && !p.origin));
+		const remaining = Math.max(0, storeMinutes - sameOrigin);
+		const catchUp = computeCatchUp(remaining, [{ duration: unassigned }]);
 		if (game) {
-			manualLeft.set(game.id, manual - (Math.max(0, storeMinutes - synced) - catchUp));
+			unassignedLeft.set(game.id, unassigned - (remaining - catchUp));
 		}
 		return {
 			storeGameId: storeGame.storeGameId,

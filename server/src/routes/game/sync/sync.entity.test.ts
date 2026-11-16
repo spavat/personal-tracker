@@ -254,3 +254,35 @@ describe("canReplay", () => {
 		expect(canReplay("2026-10-15")).toBe(false);
 	});
 });
+
+describe("buildImportRows with manual plays of a store", () => {
+	const brotato = (plays: Array<Record<string, unknown>>) => [
+		{
+			id: "g",
+			name: "Brotato",
+			storeIds: { steam: "1942280", epic: "e8bb" },
+			plays: plays.map((p, i) => ({ id: `p${i}`, date: "2026-01-01", ...p })),
+		},
+	];
+	const rows = (store: "steam" | "epic", origin: "steam" | "epic", games: ReturnType<typeof brotato>) =>
+		buildImportRows(
+			store,
+			[{ storeGameId: store === "steam" ? "1942280" : "e8bb", name: "Brotato", origin, seconds: 100 * 60 }],
+			(storeGame) => findGame(store, storeGame, games),
+		);
+
+	it("subtracts a manual play of a store from that store's catch-up only", () => {
+		const games = brotato([{ duration: 30, origin: "epic" }]);
+		expect(rows("steam", "steam", games)[0]).toMatchObject({ recordedMinutes: 0, catchUp: 100 });
+		expect(rows("epic", "epic", games)[0]).toMatchObject({ recordedMinutes: 30, catchUp: 70 });
+	});
+
+	it("never subtracts a manual play of a non-store origin (console…)", () => {
+		expect(rows("steam", "steam", brotato([{ duration: 30, origin: "ps5" }]))[0]).toMatchObject({ catchUp: 100 });
+	});
+
+	it("still subtracts a manual play without origin, on top of the store's own", () => {
+		const games = brotato([{ duration: 30, origin: "steam" }, { duration: 20 }]);
+		expect(rows("steam", "steam", games)[0]).toMatchObject({ recordedMinutes: 50, catchUp: 50 });
+	});
+});
