@@ -32,6 +32,7 @@ const game: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/games",
 		{
+			config: { public: true },
 			schema: { querystring: GameListQuerystringRequestSchema },
 		},
 		async (request): Promise<any> => listGames.execute(request.query, request.log),
@@ -40,6 +41,7 @@ const game: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/plays",
 		{
+			config: { public: true },
 			schema: { querystring: PlayListQuerystringRequestSchema },
 		},
 		async (request) => listPlays.execute(request.query, request.log),
@@ -64,6 +66,7 @@ const game: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/games/:id",
 		{
+			config: { public: true },
 			schema: { params: DetailsGameParamsRequestSchema },
 		},
 		async (request, reply) =>

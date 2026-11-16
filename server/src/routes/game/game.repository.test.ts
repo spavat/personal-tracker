@@ -114,3 +114,16 @@ describe("GameRepository store sync", () => {
 		);
 	});
 });
+
+describe("GameRepository.findAll", () => {
+	it("adds each game's total playtime, catch-ups included", async () => {
+		const aggregate = vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) }));
+		const repo = new GameRepository({ db: { collection: () => ({ aggregate }) } } as any);
+
+		await repo.findAll({ search: "", sortField: "totalDuration", sortDirection: "desc" });
+
+		const stages = (aggregate.mock.calls[0] as any)[0];
+		expect(stages[1].$addFields.totalDuration).toEqual({ $sum: "$plays.duration" });
+		expect(stages.at(-1).$sort).toMatchObject({ totalDuration: -1 });
+	});
+});

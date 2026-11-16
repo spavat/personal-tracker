@@ -9,6 +9,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 
 import SearchModal from "../../components/SearchModal";
 import Submenu from "../../components/Submenu";
+import { useIsOwner } from "../../hooks/use-is-owner";
 import { getGameList, syncStatusQuery } from "./api";
 import { linkItem, renderResultItem } from "./search-fn";
 
@@ -23,23 +24,34 @@ const links = [
 		label: "Liste",
 		partial: true,
 	},
+	{
+		link: "/game/merge",
+		label: "Fusionner",
+		partial: true,
+		ownerOnly: true,
+	},
 ];
 const integrationsLink = { link: "/game/integrations", label: "Intégrations", partial: true };
 
 export default function AppGame() {
+	const isOwner = useIsOwner();
 	const [isSearchodalOpen, setSearchModalOpen] = useState<boolean>(false);
 	// a red marker when the latest fetch of a store failed (Epic token expired, profile private…)
-	const { data: syncStatus } = useQuery(syncStatusQuery());
+	const { data: syncStatus } = useQuery({ ...syncStatusQuery(), enabled: isOwner });
 
 	useHotkeys("ctrl+shift+f", () => setSearchModalOpen(true), { preventDefault: true });
 	return (
 		<>
 			<Submenu
 				links={[
-					...links,
-					syncStatus?.lastRunFailed
-						? { ...integrationsLink, icon: "fa-solid fa-circle-exclamation sync-error" }
-						: integrationsLink,
+					...links.filter((link) => isOwner || !link.ownerOnly),
+					...(isOwner
+						? [
+								syncStatus?.lastRunFailed
+									? { ...integrationsLink, icon: "fa-solid fa-circle-exclamation sync-error" }
+									: integrationsLink,
+							]
+						: []),
 				]}
 			/>
 			<div className="module game">

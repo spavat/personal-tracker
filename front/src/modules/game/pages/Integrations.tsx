@@ -3,10 +3,11 @@ import type { GameStore, GameSyncStatus } from "@personal-tracker/shared/game";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
-import MutationError from "../../components/MutationError";
-import { formatFullDate, getDurationString } from "../../utils";
-import { replaySync, runSync, syncStatusQuery, type SyncRunResult } from "./api";
-import { STORE_LABELS } from "./stores";
+import MutationError from "../../../components/MutationError";
+import { formatFullDate } from "../../../utils";
+import { replaySync, runSync, syncStatusQuery, type SyncRunResult } from "../api";
+import { formatPlayDuration } from "../duration";
+import { STORE_LABELS } from "../stores";
 
 // how a store gets configured, shown while it isn't
 const SETUP_HINTS: Record<GameStore, string> = {
@@ -27,7 +28,7 @@ function runMessage(result: SyncRunResult) {
 	if (result.status === "baseline")
 		return "Point de départ enregistré : le temps de jeu sera compté à partir de maintenant";
 	if (result.plays === 0) return "Aucun temps de jeu depuis la dernière récupération";
-	return `${result.plays} partie${result.plays > 1 ? "s" : ""} mise${result.plays > 1 ? "s" : ""} à jour (${getDurationString(result.minutes)})`;
+	return `${result.plays} partie${result.plays > 1 ? "s" : ""} mise${result.plays > 1 ? "s" : ""} à jour (${formatPlayDuration(result.minutes)})`;
 }
 
 function StorePanel({ status }: { status: GameSyncStatus["stores"][number] }) {
@@ -110,7 +111,7 @@ function StorePanel({ status }: { status: GameSyncStatus["stores"][number] }) {
 					{replayMutation.data && (
 						<p>
 							Jour rejoué : {replayMutation.data.plays} partie{replayMutation.data.plays > 1 ? "s" : ""} (
-							{getDurationString(replayMutation.data.minutes) || "0min"})
+							{formatPlayDuration(replayMutation.data.minutes) || "0min"})
 						</p>
 					)}
 					<MutationError error={replayMutation.error} />
@@ -165,7 +166,6 @@ function StorePanel({ status }: { status: GameSyncStatus["stores"][number] }) {
 
 function DuplicatesPanel({ duplicates }: { duplicates: GameSyncStatus["duplicates"] }) {
 	const navigate = useNavigate();
-	const location = useLocation();
 	if (duplicates.length === 0) return null;
 
 	return (
@@ -189,13 +189,7 @@ function DuplicatesPanel({ duplicates }: { duplicates: GameSyncStatus["duplicate
 								<button
 									type="button"
 									onClick={() =>
-										navigate({
-											to: "/game/integrations/merge/$keepId/$removeId",
-											params: { keepId: game.id, removeId: other.id },
-											search: { returnTo: location.pathname },
-											replace: true,
-											resetScroll: false,
-										})
+										navigate({ to: "/game/merge", search: { keepId: game.id, removeId: other.id } })
 									}
 								>
 									<i className="fa-solid fa-code-merge"></i> Garder celui-ci

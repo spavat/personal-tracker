@@ -19,12 +19,24 @@ export const GAME_ORIGINS: Record<GameOrigin, { label: string; icon: string }> =
 
 // A catch-up holds the playtime a store recorded before the import: its date is the last session, or the
 // acquisition (Epic), or a placeholder when the store knows neither
-const CATCH_UP_DATE_LABELS = { "last-session": "dernière session le", acquired: "acquis le" } as const;
+const CATCH_UP_DATE_LABELS = {
+	"last-session": "dernière session le",
+	acquired: "acquis le",
+	"last-achievement": "dernier succès le",
+} as const;
 
+/** The play's date; a catch-up's date is marked with "*" (details in `catchUpTitle`), "Rattrapage" without date. */
 export function formatPlayDate({ date, catchUp }: Pick<GamePlay, "date" | "catchUp">) {
 	if (!catchUp) return formatFullDate(date);
 	if (catchUp === "unknown") return "Rattrapage";
-	return `Rattrapage (${CATCH_UP_DATE_LABELS[catchUp]} ${formatFullDate(date)})`;
+	return `${formatFullDate(date)}*`;
+}
+
+/** Native tooltip (title) of a catch-up's date: what the playtime and the date are. */
+export function catchUpTitle({ date, catchUp }: Pick<GamePlay, "date" | "catchUp">) {
+	if (!catchUp) return undefined;
+	if (catchUp === "unknown") return "Rattrapage : temps enregistré par le magasin avant l'import, date inconnue";
+	return `Rattrapage : ${CATCH_UP_DATE_LABELS[catchUp]} ${formatFullDate(date)}`;
 }
 export const formatPlayDay = ({ date, catchUp }: Pick<GamePlay, "date" | "catchUp">) =>
 	catchUp ? "" : formatDay(date);

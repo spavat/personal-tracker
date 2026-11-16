@@ -2,8 +2,9 @@
 	.game {
 		--complete-color: #608a32;
 
+		/* as many columns as fit, a card being at most 494px wide (its header picture) */
 		.grid {
-			grid-template-columns: repeat(4, 1fr);
+			grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
 		}
 
 		.form textarea {
@@ -68,6 +69,13 @@
 			}
 		}
 
+		/* a catch-up's date: its details are in a native tooltip (title) */
+		.catch-up-date {
+			text-decoration: underline dotted;
+			text-underline-offset: 3px;
+			cursor: help;
+		}
+
 		/* Steam sizes: small banner 184x69, title image 460x215 */
 		.game-capsule {
 			display: block;
@@ -86,6 +94,14 @@
 			border-radius: 6px;
 			margin-right: 12px;
 		}
+		.game-header-card {
+			display: block;
+			max-width: 100%;
+			aspect-ratio: 184 / 69;
+			object-fit: cover;
+			border-radius: 4px;
+			margin-bottom: 6px;
+		}
 		.image-preview {
 			display: block;
 			margin-top: 8px;
@@ -94,13 +110,24 @@
 		}
 
 		.card_item {
+			/* no wider than its header picture (460px) + padding and border */
+			&:has(.game-header-card) {
+				max-width: calc(460px + 2 * 15px + 2 * 2px);
+			}
 			&:has(.status.complete) {
 				border: 2px solid var(--complete-color);
-				background: linear-gradient(
-					var(--gradient-degrees),
-					var(--complete-color) 50px,
-					var(--secondary-background) 0
-				);
+				/* the corner is drawn over the card, not as its background: the header picture would cover it */
+				&::after {
+					content: "";
+					position: absolute;
+					inset: 0;
+					border-radius: inherit;
+					pointer-events: none;
+					background: linear-gradient(var(--gradient-degrees), var(--complete-color) 50px, transparent 0);
+				}
+				.status {
+					z-index: 1;
+				}
 			}
 		}
 

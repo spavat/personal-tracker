@@ -1,16 +1,18 @@
 import { GameWithOverview } from "@personal-tracker/shared/game";
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
-import { HeaderPortal } from "../../components/HeaderPortal";
-import PeriodSelector from "../../components/PeriodSelector";
-import { useYearChanger } from "../../hooks/use-year-changer";
-import { formatMonth } from "../../utils";
-import { playHistory } from "./api";
-import GameCardGame from "./CardGame";
+import { HeaderPortal } from "../../../components/HeaderPortal";
+import PeriodSelector from "../../../components/PeriodSelector";
+import { useIsOwner } from "../../../hooks/use-is-owner";
+import { useYearChanger } from "../../../hooks/use-year-changer";
+import { formatMonth } from "../../../utils";
+import { playHistory } from "../api";
+import GameCardGame from "../components/CardGame";
 
 export default function History({ year }: { year: string }) {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const isOwner = useIsOwner();
 
 	const [period, listQuery, goPrevious, goNext, canGoPrevious, canGoNext] = useYearChanger({
 		...playHistory,
@@ -72,31 +74,33 @@ export default function History({ year }: { year: string }) {
 				})}
 			</div>
 
-			<div className="fab-container">
-				<button
-					className="fab-main"
-					type="button"
-					aria-label="Ajouter une partie"
-					onClick={() =>
-						navigate({
-							to: "/game/history/$year/add",
-							params: { year: period },
-							search: { returnTo: location.pathname },
-							replace: true,
-							resetScroll: false,
-							mask: {
-								to: "/game/history/$year",
+			{isOwner && (
+				<div className="fab-container">
+					<button
+						className="fab-main"
+						type="button"
+						aria-label="Ajouter une partie"
+						onClick={() =>
+							navigate({
+								to: "/game/history/$year/add",
 								params: { year: period },
-							},
-						})
-					}
-				>
-					<div className="pulse"></div>
-					<div className="heart-line" aria-hidden="true">
-						<i className="fa-solid fa-plus"></i>
-					</div>
-				</button>
-			</div>
+								search: { returnTo: location.pathname },
+								replace: true,
+								resetScroll: false,
+								mask: {
+									to: "/game/history/$year",
+									params: { year: period },
+								},
+							})
+						}
+					>
+						<div className="pulse"></div>
+						<div className="heart-line" aria-hidden="true">
+							<i className="fa-solid fa-plus"></i>
+						</div>
+					</button>
+				</div>
+			)}
 
 			<Outlet />
 		</>

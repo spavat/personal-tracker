@@ -69,32 +69,36 @@ const images: FastifyPluginAsync = async (fastify): Promise<void> => {
 		}
 	});
 
-	// not public, like the game module: the session cookie is sent with the <img> request
+	// public: game pictures are visible like the rest of the game module
 	fastify
 		.withTypeProvider<ZodTypeProvider>()
-		.get("/game/:id/:field", { schema: { params: GameImageParamsSchema } }, async (request, reply) => {
-			const { id, field } = request.params;
-			const s3Key = (await gameRepository.findById(id))?.[field];
-			if (!s3Key) {
-				return reply.notFound();
-			}
-
-			try {
-				const object = await gameImageStorage.getObject(s3Key);
-				// a picture replaced in the form keeps its URL: the browser revalidates (304 while unchanged)
-				reply.header("Cache-Control", "private, no-cache");
-				if (object.ETag) {
-					reply.header("ETag", object.ETag);
-					if (request.headers["if-none-match"] === object.ETag) {
-						return reply.code(304).send();
-					}
+		.get(
+			"/game/:id/:field",
+			{ config: { public: true }, schema: { params: GameImageParamsSchema } },
+			async (request, reply) => {
+				const { id, field } = request.params;
+				const s3Key = (await gameRepository.findById(id))?.[field];
+				if (!s3Key) {
+					return reply.notFound();
 				}
-				reply.header("Content-Type", object.ContentType ?? "image/avif");
-				return reply.send(object.Body);
-			} catch {
-				return reply.notFound();
-			}
-		});
+
+				try {
+					const object = await gameImageStorage.getObject(s3Key);
+					// a picture replaced in the form keeps its URL: the browser revalidates (304 while unchanged)
+					reply.header("Cache-Control", "private, no-cache");
+					if (object.ETag) {
+						reply.header("ETag", object.ETag);
+						if (request.headers["if-none-match"] === object.ETag) {
+							return reply.code(304).send();
+						}
+					}
+					reply.header("Content-Type", object.ContentType ?? "image/avif");
+					return reply.send(object.Body);
+				} catch {
+					return reply.notFound();
+				}
+			},
+		);
 
 	// public: show media (posters, portraits, programmes...) are visible like the rest of the show module
 	fastify.get("/show/:id", { config: { public: true } }, async (request, reply) => {

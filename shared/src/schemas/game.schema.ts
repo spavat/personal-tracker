@@ -29,7 +29,7 @@ export type GameStore = z.infer<typeof GameStoreSchema>;
 // A catch-up play holds the playtime a store recorded before the import. It is dated by the game's last session
 // (Steam, GOG), else its acquisition (Epic gives no session date), else CATCH_UP_DATE when the store knows neither.
 // It only dates the game (sort, last play): the period views (history, calendar, stats) leave it out.
-export const GameCatchUpSchema = z.enum(["last-session", "acquired", "unknown"]);
+export const GameCatchUpSchema = z.enum(["last-session", "acquired", "last-achievement", "unknown"]);
 export type GameCatchUp = z.infer<typeof GameCatchUpSchema>;
 export const CATCH_UP_DATE = "1900-01-01";
 
@@ -76,6 +76,7 @@ export type Game = z.infer<typeof GameSchema>;
 export const GameWithOverviewSchema = GameSchema.extend({
 	latestPlayDate: z.iso.date(),
 	playCount: z.number(),
+	totalDuration: z.number(),
 });
 export type GameWithOverview = z.infer<typeof GameWithOverviewSchema>;
 

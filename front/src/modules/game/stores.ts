@@ -5,3 +5,6 @@ export const STORE_LABELS: Record<GameStore, string> = {
 	gog: "GOG",
 	epic: "Epic Games",
 };
+
+/** Store page of a Steam app (GOG and Epic pages need a slug the store id doesn't give). */
+export const steamStoreUrl = (appId: string) => `https://store.steampowered.com/app/${appId}/`;

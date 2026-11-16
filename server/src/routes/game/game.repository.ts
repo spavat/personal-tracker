@@ -30,6 +30,7 @@ export class GameRepository {
 			{
 				$addFields: {
 					playCount: { $size: "$plays" },
+					totalDuration: { $sum: "$plays.duration" },
 					latestPlayDate: {
 						$max: {
 							$ifNull: ["$plays.date", []],
