@@ -572,6 +572,11 @@
 		min-width: 600px;
 	}
 
+	/* store sync failure marker (game nav, integrations page) */
+	.sync-error {
+		color: #c0392b;
+	}
+
 	.dialog-large {
 		width: 50%;
 	}

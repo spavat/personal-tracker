@@ -101,6 +101,7 @@ Run from the repo root unless stated otherwise.
 Backend of the application. Query the databases (mongoDB and PostgreSQL)
 
 - `src/app.ts` autoloads `src/plugins/` then every `*.routes.ts` under `src/routes/`; the folder path becomes the URL prefix (e.g. `routes/money/accounts/` → `/money/accounts`). A domain can be split into sub-domain folders (`money/accounts/`, `internet/sync/`), code shared between them staying at the domain root; every folder under `src/routes/` must contain a `*.routes.ts`, otherwise autoload registers all its files as plugins.
+- Background jobs live in `src/jobs/` (`<name>.job.ts`, a fastify-plugin autoloaded after the routes): work the server runs by itself on a schedule, e.g. `game-store-sync.job.ts` (daily 04:00 store playtime sync, `GAME_SYNC_SCHEDULER=off` disables it). The domain logic stays in its route folder; the job only decides when to run it.
 - Two databases side by side:
     - PostgreSQL through Drizzle (`fastify.db`, schema in `src/db/schema.ts`, relations in `src/db/relations.ts`): currently `money` and `show`.
     - MongoDB through `@fastify/mongodb` (`fastify.mongo`, native driver, no ORM): all other domains.

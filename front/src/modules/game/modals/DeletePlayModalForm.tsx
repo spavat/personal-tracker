@@ -3,8 +3,10 @@ import { useNavigate } from "@tanstack/react-router";
 
 import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
-import { formatDate, getDurationString } from "../../../utils";
+import { formatDate } from "../../../utils";
 import { deleteItem, gameDetailsQuery } from "../api";
+import PlayDate from "../components/PlayDate";
+import { formatPlayDuration } from "../duration";
 
 export default function DeletePlayModalForm({
 	gameId,
@@ -55,9 +57,9 @@ export default function DeletePlayModalForm({
 				<p>
 					Êtes-vous sûr de vouloir supprimer la partie suivante ?
 					<br />
-					Date : <strong>{formatDate(play.date)}</strong>
+					Date : <strong>{play.catchUp ? <PlayDate {...play} /> : formatDate(play.date)}</strong>
 					<br />
-					Durée : <strong>{getDurationString(play.duration ?? 0)}</strong>
+					Durée : <strong>{formatPlayDuration(play.duration ?? 0)}</strong>
 				</p>
 				<MutationError error={saveMutation.error} />
 			</div>

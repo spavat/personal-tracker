@@ -2,7 +2,8 @@ import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from "@aws-sd
 import { httpErrors } from "@fastify/sensible";
 
 import { S3_BUCKET, s3Client } from "../../../config/s3";
-import { fetchImageBuffer, type ImageKind, processImage } from "../../internet/image-storage.repository";
+import { fetchImageBuffer, processImage } from "../../images/image-processing";
+import { SHOW_IMAGE_SIZE, type ShowImageKind } from "./media.entity";
 
 const PDF_SIGNATURE = "%PDF-";
 
@@ -13,7 +14,7 @@ export class MediaStorageRepository {
 	async uploadFromSource(
 		keyWithoutExtension: string,
 		source: string,
-		imageKind: ImageKind,
+		imageKind: ShowImageKind,
 	): Promise<{ key: string; contentType: string }> {
 		const original = await fetchImageBuffer(source);
 
@@ -26,7 +27,7 @@ export class MediaStorageRepository {
 			contentType = "application/pdf";
 		} else {
 			try {
-				body = await processImage(original, imageKind);
+				body = await processImage(original, SHOW_IMAGE_SIZE[imageKind]);
 			} catch {
 				throw httpErrors.unsupportedMediaType("Format non supporté : image ou PDF uniquement");
 			}

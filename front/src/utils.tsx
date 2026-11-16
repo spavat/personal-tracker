@@ -1,12 +1,13 @@
 const LOCAL_DATETIME = "fr-FR";
 
-export const getDurationString = (duration: number) => {
+// withDays: false keeps the whole time in hours (49h instead of 2j 1h)
+export const getDurationString = (duration: number, { withDays = true }: { withDays?: boolean } = {}) => {
 	let result = "";
-	const days = Math.floor(duration / (60 * 24));
+	const days = withDays ? Math.floor(duration / (60 * 24)) : 0;
 	if (days > 0) {
 		result += `${days}j `;
 	}
-	const hours = Math.floor((duration % (60 * 24)) / 60);
+	const hours = Math.floor((duration - days * 60 * 24) / 60);
 	if (hours > 0) {
 		result += `${hours}h `;
 	}

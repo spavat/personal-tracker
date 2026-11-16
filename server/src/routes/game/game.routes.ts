@@ -18,18 +18,21 @@ import {
 	ListPlaysUseCase,
 	SaveGameUseCase,
 } from "./game.useCases";
+import { GameImageStorageRepository } from "./image-storage.repository";
 
 const game: FastifyPluginAsync = async (fastify): Promise<void> => {
 	const repository = new GameRepository(fastify.mongo);
-	const listGames = new ListGamesUseCase(repository);
-	const listPlays = new ListPlaysUseCase(repository);
-	const saveGame = new SaveGameUseCase(repository);
+	const images = new GameImageStorageRepository();
+	const listGames = new ListGamesUseCase(repository, images);
+	const listPlays = new ListPlaysUseCase(repository, images);
+	const saveGame = new SaveGameUseCase(repository, images);
 	const deletePlay = new DeletePlayUseCase(repository);
-	const getGame = new GetGameUseCase(repository);
+	const getGame = new GetGameUseCase(repository, images);
 
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/games",
 		{
+			config: { public: true },
 			schema: { querystring: GameListQuerystringRequestSchema },
 		},
 		async (request): Promise<any> => listGames.execute(request.query, request.log),
@@ -38,6 +41,7 @@ const game: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/plays",
 		{
+			config: { public: true },
 			schema: { querystring: PlayListQuerystringRequestSchema },
 		},
 		async (request) => listPlays.execute(request.query, request.log),
@@ -62,6 +66,7 @@ const game: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/games/:id",
 		{
+			config: { public: true },
 			schema: { params: DetailsGameParamsRequestSchema },
 		},
 		async (request, reply) =>

@@ -1,6 +1,13 @@
-import { useFieldArray, useFormContext } from "react-hook-form";
+import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
-import { type GameInputs } from "./GameForm.utils";
+import { API_BASE_URL } from "../../../config";
+import { STORE_ID_LABELS, type GameInputs } from "./GameForm.utils";
+
+// a URL (Steam, GOG…) is stored by the server, which hands back its own /images/game/… URL
+const PICTURE_FIELDS = [
+	{ field: "capsule", label: "Petite bannière" },
+	{ field: "header", label: "Image titre" },
+] as const;
 
 export default function GameForm() {
 	const {
@@ -8,6 +15,7 @@ export default function GameForm() {
 		register,
 		formState: { errors },
 	} = useFormContext<GameInputs>();
+	const [capsule, header] = useWatch({ control, name: ["game.capsule", "game.header"] });
 	const {
 		fields: fieldsLinks,
 		append: appendLink,
@@ -15,6 +23,14 @@ export default function GameForm() {
 	} = useFieldArray({
 		control: control,
 		name: "game.links",
+	});
+	const {
+		fields: fieldsStoreIds,
+		append: appendStoreId,
+		remove: removeStoreId,
+	} = useFieldArray({
+		control: control,
+		name: "game.storeIds",
 	});
 
 	return (
@@ -47,6 +63,65 @@ export default function GameForm() {
 						<span>Commentaire</span>
 						<textarea {...register("game.comment")} />
 					</label>
+				</div>
+			</div>
+
+			<div className="panel">
+				<h3>Images</h3>
+				<div className="form-grid">
+					{PICTURE_FIELDS.map(({ field, label }) => {
+						const value = field === "capsule" ? capsule : header;
+						return (
+							<div key={field} className="form-field">
+								<label htmlFor={`game-${field}`}>
+									<span>{label}</span>
+								</label>
+								<input
+									id={`game-${field}`}
+									{...register(`game.${field}`)}
+									type="text"
+									placeholder="https://…"
+									autoComplete="off"
+								/>
+								{value && (
+									<img
+										src={value.startsWith("/") ? `${API_BASE_URL}${value}` : value}
+										alt={label}
+										className={`image-preview game-${field}`}
+									/>
+								)}
+							</div>
+						);
+					})}
+				</div>
+			</div>
+
+			<div className="panel">
+				<h3>Magasins</h3>
+				<div>
+					{fieldsStoreIds.map((field, index) => (
+						<div key={field.id} className="full-fields-row">
+							<select {...register(`game.storeIds.${index}.key` as const)}>
+								{Object.entries(STORE_ID_LABELS).map(([key, label]) => (
+									<option key={key} value={key}>
+										{label}
+									</option>
+								))}
+							</select>
+							<input
+								type="text"
+								{...register(`game.storeIds.${index}.value` as const)}
+								autoComplete="off"
+								className="flex"
+							/>
+							<button type="button" onClick={() => removeStoreId(index)} title="Supprimer">
+								<i className="fa-regular fa-trash-can"></i>
+							</button>
+						</div>
+					))}
+					<button type="button" onClick={() => appendStoreId({ key: "steam", value: "" })}>
+						<i className="fa-regular fa-plus"></i> Ajouter un magasin
+					</button>
 				</div>
 			</div>
 

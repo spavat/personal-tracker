@@ -52,6 +52,14 @@ const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void>
 		indexPattern: /\.routes\.ts$/,
 		options: opts,
 	});
+
+	// Background jobs (jobs/*.job.ts): work the server runs by itself, on a schedule
+	// eslint-disable-next-line no-void
+	void fastify.register(AutoLoad, {
+		dir: join(__dirname, "jobs"),
+		ignorePattern: /\.test\.ts$/,
+		options: opts,
+	});
 };
 
 export default app;

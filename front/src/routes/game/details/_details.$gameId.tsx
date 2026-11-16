@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { gameDetailsQuery } from "../../../modules/game/api";
-import GameDetails from "../../../modules/game/Details";
+import GameDetails from "../../../modules/game/pages/Details";
 
 export const Route = createFileRoute("/game/details/_details/$gameId")({
 	loader: ({ context, params }) =>
