@@ -1,12 +1,11 @@
-import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
+import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
 import { HeaderPortal } from "../../../components/HeaderPortal";
 import PeriodSelector from "../../../components/PeriodSelector";
 import { useIsOwner } from "../../../hooks/use-is-owner";
 import { useYearChanger } from "../../../hooks/use-year-changer";
-import { formatDate } from "../../../utils";
 import { bookHistory } from "../api";
-import { getStatusIcon } from "../utils";
+import CardBook from "../components/CardBook";
 
 export default function History({ year }: { year: string }) {
 	const navigate = useNavigate();
@@ -41,30 +40,7 @@ export default function History({ year }: { year: string }) {
 
 			<div className="grid">
 				{listQuery.data.map((book) => (
-					<div key={`${book.book}`} className="card_item">
-						<span className="title">
-							<Link to="/reading-book/book/$bookId" params={{ bookId: book.id }}>
-								{book.book}
-							</Link>
-						</span>{" "}
-						- <span className="subtitle">{book.author}</span>
-						<br />
-						{book.readings.length > 0 && (
-							<details open>
-								<summary>
-									{book.readings.length} lecture{book.readings.length > 1 ? "s" : ""}
-								</summary>
-								{book.readings.map((reading, i) => (
-									<p key={reading.id} className="monospace">
-										<span className="smalltext">#{i + 1}</span> :{" "}
-										{getStatusIcon(reading, { color: true })} {formatDate(reading.firstReadDate)} -{" "}
-										{formatDate(reading.lastReadDate)} - {reading.readingDates.length} jour
-										{reading.readingDates.length > 1 ? "s" : ""}
-									</p>
-								))}
-							</details>
-						)}
-					</div>
+					<CardBook key={`${book.book}`} book={book} />
 				))}
 			</div>
 

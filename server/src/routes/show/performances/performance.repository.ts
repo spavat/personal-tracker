@@ -55,7 +55,15 @@ export class PerformanceRepository {
 		from,
 		to,
 		sortDirection = "asc",
-	}: { from?: string; to?: string; sortDirection?: "asc" | "desc" } = {}) {
+		excludeCanceled = false,
+		limit,
+	}: {
+		from?: string;
+		to?: string;
+		sortDirection?: "asc" | "desc";
+		excludeCanceled?: boolean;
+		limit?: number;
+	} = {}) {
 		const date: { gte?: string; lt?: string } = {};
 		if (from) {
 			const fromDate = Temporal.PlainDate.from(from);
@@ -67,8 +75,9 @@ export class PerformanceRepository {
 		}
 
 		return this.db.query.showPerformance.findMany({
-			where: { date, ...visiblePerformanceWhere() },
+			where: { date, ...(excludeCanceled && { canceled: false }), ...visiblePerformanceWhere() },
 			orderBy: { date: sortDirection },
+			...(limit && { limit }),
 			extras: { placeName: placeNameAt },
 			with: {
 				place: true,

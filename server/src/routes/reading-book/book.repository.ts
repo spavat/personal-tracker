@@ -6,6 +6,7 @@ interface BookListFilters {
 	withReadingsDetails: boolean;
 	sortField?: string;
 	sortDirection?: string;
+	limit?: number;
 }
 
 export class BookRepository {
@@ -15,7 +16,7 @@ export class BookRepository {
 		return this.mongo?.db?.collection("reading_book");
 	}
 
-	findAll({ from, to, withReadingsDetails, sortField = "book", sortDirection = "asc" }: BookListFilters) {
+	findAll({ from, to, withReadingsDetails, sortField = "book", sortDirection = "asc", limit }: BookListFilters) {
 		const cursor = this.collection?.aggregate([
 			// add readingDates for readings
 			{
@@ -199,6 +200,7 @@ export class BookRepository {
 					[sortField]: sortDirection === "asc" ? 1 : -1,
 				},
 			},
+			...(limit ? [{ $limit: limit }] : []),
 		]);
 
 		return cursor?.toArray();

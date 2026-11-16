@@ -10,6 +10,7 @@ interface MangaListFilters {
 	withReadings: boolean;
 	sortField?: string;
 	sortDirection?: string;
+	limit?: number;
 }
 
 export class MangaRepository {
@@ -19,7 +20,7 @@ export class MangaRepository {
 		return this.mongo?.db?.collection("reading_manga");
 	}
 
-	findAll({ search, from, to, withReadings, sortField = "title", sortDirection = "asc" }: MangaListFilters) {
+	findAll({ search, from, to, withReadings, sortField = "title", sortDirection = "asc", limit }: MangaListFilters) {
 		const pipeline: Record<string, unknown>[] = [];
 
 		if (search) {
@@ -92,6 +93,7 @@ export class MangaRepository {
 					latestReadingCreated: -1,
 				},
 			},
+			...(limit ? [{ $limit: limit }] : []),
 		]);
 
 		return cursor?.toArray();

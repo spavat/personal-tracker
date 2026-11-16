@@ -130,6 +130,41 @@ export class InternetRepository {
 		return cursor?.toArray();
 	}
 
+	// the programs of the most recent episodes across all the programs, each keeping only those episodes
+	// (oldest first, like findEpisodesInRange), the program of the latest episode first
+	findLatestEpisodes(limit: number) {
+		const cursor = this.collection?.aggregate([
+			{ $match: { ...privacyMatch() } },
+			{ $unwind: "$episodes" },
+			{ $sort: { "episodes.date": -1, "episodes.created": -1 } },
+			{ $limit: limit },
+			{
+				$group: {
+					_id: "$id",
+					program: { $first: "$$ROOT" },
+					episodes: { $push: "$episodes" },
+					latestEpisodeDate: { $first: "$episodes.date" },
+					latestEpisodeCreated: { $first: "$episodes.created" },
+				},
+			},
+			{ $sort: { latestEpisodeDate: -1, latestEpisodeCreated: -1 } },
+			{
+				$replaceRoot: {
+					newRoot: { $mergeObjects: ["$program", { episodes: { $reverseArray: "$episodes" } }] },
+				},
+			},
+			{
+				$project: {
+					_id: 0,
+					refs: 0,
+					links: 0,
+					description: 0,
+				},
+			},
+		]);
+		return cursor?.toArray();
+	}
+
 	findAllWithEpisodes() {
 		const cursor = this.collection
 			?.find({ ...privacyMatch() })

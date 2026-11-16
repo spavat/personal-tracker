@@ -25,6 +25,11 @@
 			"import": "./dist/schemas/context-tag.schema.js",
 			"require": "./dist/schemas/context-tag.schema.js"
 		},
+		"./home": {
+			"types": "./dist/schemas/home.schema.d.ts",
+			"import": "./dist/schemas/home.schema.js",
+			"require": "./dist/schemas/home.schema.js"
+		},
 		"./internet": {
 			"types": "./dist/schemas/internet.schema.d.ts",
 			"import": "./dist/schemas/internet.schema.js",

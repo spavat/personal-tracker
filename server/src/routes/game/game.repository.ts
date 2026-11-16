@@ -9,6 +9,9 @@ interface GameListFilters {
 	search: string;
 	sortField: string;
 	sortDirection: string;
+	limit?: number;
+	// keep the plays (catch-ups excluded, like findPlaysInRange)
+	withPlays?: boolean;
 }
 
 const CLEARABLE_GAME_FIELDS = ["links", "storeIds", "capsule", "header"];
@@ -20,7 +23,7 @@ export class GameRepository {
 		return this.mongo?.db?.collection<GameMongo>("game");
 	}
 
-	findAll({ search, sortField, sortDirection }: GameListFilters) {
+	findAll({ search, sortField, sortDirection, limit, withPlays = false }: GameListFilters) {
 		const cursor = this.collection?.aggregate([
 			{
 				$match: {
@@ -41,12 +44,26 @@ export class GameRepository {
 							$ifNull: ["$plays.created", []],
 						},
 					},
+					// a catch-up is a lifetime total, not that day's play: it doesn't count as played
+					latestRealPlayDate: {
+						$max: {
+							$map: {
+								input: {
+									$filter: {
+										input: { $ifNull: ["$plays", []] },
+										cond: { $eq: [{ $type: "$$this.catchUp" }, "missing"] },
+									},
+								},
+								in: "$$this.date",
+							},
+						},
+					},
 				},
 			},
 			{
 				$project: {
 					_id: 0,
-					plays: 0,
+					...(!withPlays && { plays: 0 }),
 				},
 			},
 			{
@@ -55,6 +72,22 @@ export class GameRepository {
 					latestCreatedDate: -1,
 				},
 			},
+			...(limit ? [{ $limit: limit }] : []),
+			...(withPlays
+				? [
+						{
+							$set: {
+								plays: {
+									$filter: {
+										input: "$plays",
+										as: "play",
+										cond: { $eq: [{ $type: "$$play.catchUp" }, "missing"] },
+									},
+								},
+							},
+						},
+					]
+				: []),
 		]);
 		return cursor?.toArray();
 	}

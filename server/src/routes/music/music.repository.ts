@@ -9,19 +9,14 @@ export class MusicRepository {
 		return this.mongo?.db?.collection("music_listening");
 	}
 
-	findAll({ from, to }: { from?: string; to?: string } = {}) {
-		const cursor = this.listenings?.find(
-			{
-				listeningDate: {
-					$gte: from,
-					$lte: to,
-				},
-			},
-			{
-				projection: { _id: 0 },
-				sort: { listeningDate: -1, created: -1 },
-			},
-		);
+	findAll({ from, to, limit }: { from?: string; to?: string; limit?: number } = {}) {
+		// an undefined bound would be sent as null and match nothing
+		const listeningDate = { ...(from && { $gte: from }), ...(to && { $lte: to }) };
+		const cursor = this.listenings?.find(Object.keys(listeningDate).length ? { listeningDate } : {}, {
+			projection: { _id: 0 },
+			sort: { listeningDate: -1, created: -1 },
+			...(limit && { limit }),
+		});
 		return cursor?.toArray();
 	}
 

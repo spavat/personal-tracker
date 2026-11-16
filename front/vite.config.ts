@@ -24,6 +24,7 @@ export default defineConfig({
 				"../shared/src/schemas/context-tag.schema.ts",
 			),
 			"@personal-tracker/shared/game": path.resolve(import.meta.dirname, "../shared/src/schemas/game.schema.ts"),
+			"@personal-tracker/shared/home": path.resolve(import.meta.dirname, "../shared/src/schemas/home.schema.ts"),
 			"@personal-tracker/shared/internet": path.resolve(
 				import.meta.dirname,
 				"../shared/src/schemas/internet.schema.ts",
