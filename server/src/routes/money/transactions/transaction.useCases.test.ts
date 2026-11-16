@@ -101,8 +101,8 @@ describe("CreateTransactionUseCase", () => {
 			date: "2024-01-01",
 		});
 		// tag links for child then parent
-		expect(repo.bulkCreateTags).toHaveBeenCalledWith([{ transactionId: 100, tagId: 2 }]);
-		expect(repo.bulkCreateTags).toHaveBeenCalledWith([{ transactionId: 100, tagId: 1 }]);
+		expect(repo.bulkCreateTags).toHaveBeenCalledWith([{ transactionId: 100, tagId: 2 }], undefined);
+		expect(repo.bulkCreateTags).toHaveBeenCalledWith([{ transactionId: 100, tagId: 1 }], undefined);
 		expect(result).toEqual({ id: 100, date: "2024-01-01" });
 	});
 });

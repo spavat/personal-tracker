@@ -39,6 +39,11 @@ export default defineConfig({
 				"S3_BUCKET=personal-tracker",
 				"S3_ACCESS_KEY_ID=GK000000000000000000000000",
 				"S3_SECRET_ACCESS_KEY=0000000000000000000000000000000000000000000000000000000000000000",
+				// bank sync against the fake API of e2e/mocks/enable-banking-mock.mjs, which writes the key file
+				"ENABLE_BANKING_APP_ID=e2e-app",
+				"ENABLE_BANKING_KEY_PATH=../e2e/mocks/.enable-banking-e2e.pem",
+				"ENABLE_BANKING_API_URL=https://api.enablebanking.mock",
+				`ENABLE_BANKING_REDIRECT_URL=http://localhost:${FRONT_PORT}/money/banking/callback`,
 				// served by fetch-mock from e2e/mocks/responses/gopodder-episodes.json
 				"GOPODDER_URL=https://gopodder.example.com",
 				"GOPODDER_USERNAME=tracker",

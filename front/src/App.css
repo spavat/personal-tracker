@@ -181,14 +181,6 @@
 		text-decoration: line-through;
 	}
 
-	.list,
-	.list2 {
-		column-count: 2;
-		column-gap: 2em;
-		margin: 0px;
-		padding: 0px;
-	}
-
 	.list > div:first-of-type h3 {
 		margin-top: 0px;
 	}
@@ -200,19 +192,6 @@
 
 	.menu h2 {
 		display: inline;
-	}
-
-	.list div,
-	.list2 div,
-	.list3 div {
-		break-inside: avoid-column;
-	}
-
-	.book_card {
-		border: 1px solid black;
-		padding: 20px;
-		text-align: left;
-		min-width: 500px;
 	}
 
 	.grid {
@@ -388,7 +367,7 @@
 		position: fixed;
 		bottom: 20px;
 		right: 20px;
-		z-index: 100;
+		/* z-index: 100; */
 	}
 
 	.fab-left-container {
@@ -396,7 +375,7 @@
 		display: flex;
 		bottom: 20px;
 		left: 20px;
-		z-index: 100;
+		/* z-index: 100; */
 	}
 
 	.fab-left-container .fab-main {
@@ -733,23 +712,8 @@
 		/* Right padding for last column */
 	}
 
-	.list td,
-	.list th {
-		padding-left: var(--default-cell-padding);
-		padding-right: var(--default-cell-padding);
-	}
-
 	/* TABLE */
-	.game .list,
-	.reading-book .list,
-	.reading-manga .list,
-	.internet .list,
-	.music .list,
-	.sport .list,
-	.shows .list,
-	.money .list,
-	.context-tags .list,
-	.lifespan .list {
+	.list {
 		background-color: var(--secondary-background);
 		border-collapse: collapse;
 		color: var(--main-color);
@@ -773,48 +737,16 @@
 			}
 		}
 
-		button {
-			all: unset;
-			cursor: pointer;
-			background-color: inherit;
-			padding: 5px;
-			border-radius: 40%;
+		td,
+		th {
+			padding-left: var(--default-cell-padding);
+			padding-right: var(--default-cell-padding);
 		}
 
-		button:hover {
-			background-color: #888;
-		}
-
-		.description {
-			font-size: 0.8rem;
-		}
-
-		.new_week {
-			border-top: dashed 2px black;
-		}
-
-		.separator_year {
-			background-color: #000;
-			color: white;
-			font-weight: bold;
-		}
-
-		.separator_month {
-			background-color: grey;
-			font-weight: bold;
-			color: white;
-		}
-
-		.threshold {
-			background-color: pink;
-		}
-
-		tr:has(.row_checkbox:checked) {
-			background-color: lightgreen;
-		}
-
-		.edit {
-			background-color: lightgreen;
+		&.alternate {
+			tr:nth-child(even) {
+				background: color-mix(in srgb, var(--secondary-background) 95%, white 5%);
+			}
 		}
 
 		tbody > tr:hover {
@@ -842,12 +774,6 @@
 
 		.disabled {
 			color: #383232;
-		}
-	}
-
-	.list.alternate {
-		tr:nth-child(even) {
-			background: color-mix(in srgb, var(--secondary-background) 95%, white 5%);
 		}
 	}
 

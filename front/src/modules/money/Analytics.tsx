@@ -24,13 +24,13 @@ export default function MoneyAnalytics() {
 
 	return (
 		<>
-			<h2>Analytique</h2>
-			<p>
+			<h2>
+				Analytique
 				<label>
 					<input type="checkbox" checked={optimisticSplitParent} onChange={changeSplitParent} /> Séparer par
 					années
 				</label>
-			</p>
+			</h2>
 			<PendingContent isPending={isPending}>
 				{data.map((parent) => {
 					if (parent.badges.length === 0) {

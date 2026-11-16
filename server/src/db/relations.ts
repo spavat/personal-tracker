@@ -9,6 +9,28 @@ export const relations = defineRelations(schema, (r) => ({
 			to: r.moneyAccount.bankId,
 		}),
 	},
+	moneyBankConnection: {
+		accounts: r.many.moneyBankConnectionAccount({
+			from: r.moneyBankConnection.id,
+			to: r.moneyBankConnectionAccount.connectionId,
+		}),
+	},
+	moneyBankConnectionAccount: {
+		connection: r.one.moneyBankConnection({
+			from: r.moneyBankConnectionAccount.connectionId,
+			to: r.moneyBankConnection.id,
+		}),
+		account: r.one.moneyAccount({
+			from: r.moneyBankConnectionAccount.accountId,
+			to: r.moneyAccount.id,
+		}),
+	},
+	moneyBankTransaction: {
+		connectionAccount: r.one.moneyBankConnectionAccount({
+			from: r.moneyBankTransaction.connectionAccountId,
+			to: r.moneyBankConnectionAccount.id,
+		}),
+	},
 	moneyAccount: {
 		history: r.many.moneyAccountHistory({
 			from: r.moneyAccount.id,

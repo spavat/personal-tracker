@@ -18,6 +18,13 @@ export const AccountSchema = z.object({
 	textColor: z.string(),
 	backgroundColor: z.string(),
 	bankId: z.coerce.number(),
+	// links the account to a bank account seen through Enable Banking (spaces removed, upper case)
+	iban: z
+		.string()
+		.transform((v) => v.replace(/\s+/g, "").toUpperCase())
+		.pipe(z.union([z.literal(""), z.string().regex(/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/, "IBAN invalide")]))
+		.transform((v) => v || null)
+		.nullish(),
 });
 export type Account = z.infer<typeof AccountSchema>;
 
@@ -103,6 +110,59 @@ export const CreateTagBodyRequestSchema = TagSchema.omit({ id: true });
 export const UpdateTagBodyRequestSchema = TagSchema.omit({ id: true }).partial();
 export type CreateTagBody = z.infer<typeof CreateTagBodyRequestSchema>;
 export type UpdateTagBody = z.infer<typeof UpdateTagBodyRequestSchema>;
+
+//
+// BANKING (Enable Banking sync)
+//
+// Request
+export const AspspsQuerystringRequestSchema = z.object({
+	country: z.string().length(2).toUpperCase(),
+});
+export const StartBankConnectionBodyRequestSchema = z.object({
+	aspspName: z.string().min(1),
+	aspspCountry: z.string().length(2).toUpperCase(),
+});
+export const CompleteBankConnectionBodyRequestSchema = z.object({
+	code: z.string().min(1),
+	state: z.string().min(1),
+});
+export const UpdateBankConnectionAccountBodyRequestSchema = z
+	.object({
+		accountId: z.coerce.number().nullable(),
+		syncFrom: z.iso.date(),
+		enabled: z.boolean(),
+	})
+	.partial();
+export type UpdateBankConnectionAccountBody = z.infer<typeof UpdateBankConnectionAccountBodyRequestSchema>;
+
+const TransactionTagRefSchema = z.looseObject({ id: z.coerce.number() });
+const AcceptChildSchema = z.looseObject({
+	name: z.string(),
+	amount: z.coerce.number(),
+	categoryId: z.coerce.number().default(0),
+	paymentTypeId: z.coerce.number(),
+	comment: z.string().nullish(),
+	tags: z.array(TransactionTagRefSchema).default([]),
+});
+// same fields as the transaction form, the amount comes from the bank line
+export const AcceptBankTransactionBodyRequestSchema = z.object({
+	name: z.string().min(1),
+	description: z.string().nullish(),
+	date: z.iso.date(),
+	time: z.string().nullish(),
+	considerationDate: z.iso.date(),
+	recurrent: z.boolean().default(false),
+	informative: z.boolean().default(false),
+	comment: z.string().nullish(),
+	categoryId: z.coerce.number().default(0),
+	paymentTypeId: z.coerce.number().default(0),
+	tags: z.array(TransactionTagRefSchema).default([]),
+	children: z.array(AcceptChildSchema).default([]),
+});
+export type AcceptBankTransactionBody = z.infer<typeof AcceptBankTransactionBodyRequestSchema>;
+export const MatchBankTransactionBodyRequestSchema = z.object({
+	transactionId: z.coerce.number(),
+});
 
 // TAG: ANALYTICS
 // Request

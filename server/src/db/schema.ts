@@ -40,8 +40,10 @@ export const moneyAccount = money.table(
 		textColor: varchar({ length: 255 }),
 		backgroundColor: varchar({ length: 255 }),
 		bankId: integer().references(() => moneyBank.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		// links the bank account seen through Enable Banking to this account
+		iban: varchar({ length: 34 }),
 	},
-	(table) => [index().on(table.bankId)],
+	(table) => [index().on(table.bankId), uniqueIndex().on(table.iban)],
 );
 
 export const moneyAccountHistory = money.table(
@@ -308,8 +310,77 @@ export const moneyTransaction = money.table(
 			onDelete: "set null",
 			onUpdate: "cascade",
 		}),
+		// bank line this transaction comes from (see banking.entity.ts externalId), null for manual entries
+		externalId: varchar({ length: 255 }),
+		bankLabel: varchar({ length: 255 }),
 	},
-	(table) => [index().on(table.paymentTypeId), index().on(table.categoryId), index().on(table.parentId)],
+	(table) => [
+		index().on(table.paymentTypeId),
+		index().on(table.categoryId),
+		index().on(table.parentId),
+		uniqueIndex().on(table.externalId),
+	],
+);
+
+export const moneyBankConnection = money.table("bank_connection", {
+	id: integer().primaryKey().generatedByDefaultAsIdentity(),
+	aspspName: varchar({ length: 255 }).notNull(),
+	aspspCountry: varchar({ length: 2 }).notNull(),
+	sessionId: varchar({ length: 255 }),
+	// pending | authorized | expired | revoked | error
+	status: varchar({ length: 20 }).notNull(),
+	validUntil: timestamp({ withTimezone: true, mode: "string" }),
+	// random value sent as `state` to Enable Banking, checked on the callback
+	authState: varchar({ length: 64 }),
+	lastSyncAt: timestamp({ withTimezone: true, mode: "string" }),
+	lastSyncSuccessAt: timestamp({ withTimezone: true, mode: "string" }),
+	lastError: text(),
+	createdAt: timestamp({ withTimezone: true, mode: "string" }).notNull().defaultNow(),
+});
+
+export const moneyBankConnectionAccount = money.table(
+	"bank_connection_account",
+	{
+		id: integer().primaryKey().generatedByDefaultAsIdentity(),
+		connectionId: integer()
+			.notNull()
+			.references(() => moneyBankConnection.id, { onDelete: "cascade" }),
+		// Enable Banking account uid, only valid for the current session
+		uid: varchar({ length: 255 }),
+		// stable across sessions
+		identificationHash: varchar({ length: 255 }).notNull(),
+		iban: varchar({ length: 34 }),
+		name: varchar({ length: 255 }),
+		currency: varchar({ length: 3 }),
+		accountId: integer().references(() => moneyAccount.id, { onDelete: "set null" }),
+		syncFrom: date({ mode: "string" }).notNull(),
+		enabled: boolean().notNull().default(true),
+	},
+	(table) => [uniqueIndex().on(table.connectionId, table.identificationHash)],
+);
+
+// Inbox: bank lines waiting to be validated, deleted once they become a money.transaction
+export const moneyBankTransaction = money.table(
+	"bank_transaction",
+	{
+		id: integer().primaryKey().generatedByDefaultAsIdentity(),
+		connectionAccountId: integer()
+			.notNull()
+			.references(() => moneyBankConnectionAccount.id, { onDelete: "cascade" }),
+		externalId: varchar({ length: 255 }).notNull(),
+		transactionDate: date({ mode: "string" }),
+		bookingDate: date({ mode: "string" }).notNull(),
+		valueDate: date({ mode: "string" }),
+		amount: numeric({ precision: 10, scale: 2, mode: "number" }).notNull(),
+		currency: varchar({ length: 3 }),
+		label: varchar({ length: 255 }).notNull(),
+		counterparty: varchar({ length: 255 }),
+		bankTransactionCode: varchar({ length: 255 }),
+		raw: jsonb().notNull(),
+		ignored: boolean().notNull().default(false),
+		createdAt: timestamp({ withTimezone: true, mode: "string" }).notNull().defaultNow(),
+	},
+	(table) => [uniqueIndex().on(table.externalId), index().on(table.connectionAccountId)],
 );
 
 export const moneyTag = money.table(

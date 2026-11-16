@@ -334,3 +334,77 @@ export const tagQuery = (id: number) =>
 		queryKey: ["money", "tags", String(id)],
 		queryFn: () => getTag(id),
 	});
+
+//
+// BANKING (Enable Banking sync)
+//
+export function getAspsps(country: string) {
+	return fetchJson<Array<Money.Aspsp>>(withQuery(`${API_BASE_URL}/money/banking/aspsps`, { country }));
+}
+export function startBankConnection(data: { aspspName: string; aspspCountry: string }) {
+	return sendJson<{ connectionId: number; url: string }>(`${API_BASE_URL}/money/banking/connections`, "POST", data);
+}
+export function renewBankConnection(connectionId: number) {
+	return sendJson<{ connectionId: number; url: string }>(
+		`${API_BASE_URL}/money/banking/connections/${connectionId}/renew`,
+		"POST",
+	);
+}
+export function completeBankConnection(data: { code: string; state: string }) {
+	return sendJson<{ connectionId: number }>(`${API_BASE_URL}/money/banking/connections/callback`, "POST", data);
+}
+export function deleteBankConnection(connectionId: number) {
+	return sendJson(`${API_BASE_URL}/money/banking/connections/${connectionId}`, "DELETE");
+}
+export function updateBankConnectionAccount({
+	id,
+	data,
+}: {
+	id: number;
+	data: Partial<Pick<Money.BankConnectionAccount, "accountId" | "syncFrom" | "enabled">>;
+}) {
+	return sendJson(`${API_BASE_URL}/money/banking/accounts/${id}`, "POST", data);
+}
+export function syncBanks() {
+	return sendJson<{ imported: number }>(`${API_BASE_URL}/money/banking/sync`, "POST");
+}
+export function acceptBankTransaction({ id, data }: { id: number; data: any }) {
+	// same shape as saveTransaction
+	const dataToSend = { ...data };
+	if (data.withChildren) {
+		dataToSend.categoryId = 0;
+		dataToSend.paymentTypeId = 0;
+		dataToSend.tags = [];
+	} else {
+		dataToSend.children = [];
+	}
+	return sendJson(`${API_BASE_URL}/money/banking/inbox/${id}/accept`, "POST", dataToSend);
+}
+export function matchBankTransaction({ id, transactionId }: { id: number; transactionId: number }) {
+	return sendJson(`${API_BASE_URL}/money/banking/inbox/${id}/match`, "POST", { transactionId });
+}
+export function ignoreBankTransaction(id: number) {
+	return sendJson(`${API_BASE_URL}/money/banking/inbox/${id}/ignore`, "POST");
+}
+
+export const aspspsQuery = (country: string) =>
+	queryOptions({
+		queryKey: ["money", "banking", "aspsps", country],
+		queryFn: () => getAspsps(country),
+		staleTime: 60 * 60 * 1000,
+	});
+export const bankConnectionsQuery = () =>
+	queryOptions({
+		queryKey: ["money", "banking", "connections"],
+		queryFn: () => fetchJson<Array<Money.BankConnection>>(`${API_BASE_URL}/money/banking/connections`),
+	});
+export const bankInboxQuery = () =>
+	queryOptions({
+		queryKey: ["money", "banking", "inbox"],
+		queryFn: () => fetchJson<Array<Money.BankTransaction>>(`${API_BASE_URL}/money/banking/inbox`),
+	});
+export const bankInboxCountQuery = () =>
+	queryOptions({
+		queryKey: ["money", "banking", "inbox", "count"],
+		queryFn: () => fetchJson<{ count: number }>(`${API_BASE_URL}/money/banking/inbox/count`),
+	});

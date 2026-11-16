@@ -3,6 +3,8 @@
 // Any external URL missing from ROUTES throws, so a forgotten mock is visible in the server logs.
 import { readFileSync } from "node:fs";
 
+import { ENABLE_BANKING_MOCK_HOST, enableBankingMock } from "./enable-banking-mock.mjs";
+
 const HTML = "text/html; charset=utf-8";
 const XML = "application/xml; charset=utf-8";
 const SVG = "image/svg+xml";
@@ -47,6 +49,10 @@ globalThis.fetch = async (input, init) => {
 	const { hostname } = new URL(url);
 	if (hostname === "localhost" || hostname === "127.0.0.1") {
 		return realFetch(input, init);
+	}
+	// bank sync: stateful fake API (ENABLE_BANKING_API_URL in playwright.config.ts)
+	if (hostname === ENABLE_BANKING_MOCK_HOST) {
+		return enableBankingMock(new URL(url), init);
 	}
 
 	// gopodder episode actions: the `since` query changes with the sync state, match the path only
