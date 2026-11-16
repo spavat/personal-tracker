@@ -5,6 +5,7 @@ import {
 	cleanEpisode,
 	convertDurationInMinutes,
 	getDetails,
+	getEpisodeTags,
 	sortByDuration,
 	sortEpisodesDesc,
 } from "./internet.entity";
@@ -23,12 +24,33 @@ describe("buildEpisode", () => {
 });
 
 describe("cleanEpisode", () => {
-	it("drops empty tags / contextTags / links", () => {
-		expect(cleanEpisode({ name: "x", tags: [], contextTags: [], links: [] })).toEqual({ name: "x" });
+	it("drops empty tags / contextTags / ignoredTags / links", () => {
+		expect(cleanEpisode({ name: "x", tags: [], contextTags: [], ignoredTags: [], links: [] })).toEqual({
+			name: "x",
+		});
 	});
 	it("keeps populated arrays", () => {
 		const ep = { name: "x", tags: ["a"], contextTags: ["b"], links: ["c"] };
 		expect(cleanEpisode(ep)).toEqual(ep);
+	});
+});
+
+describe("getEpisodeTags", () => {
+	it("merges the program tags with the episode ones", () => {
+		expect(getEpisodeTags(["news"], { tags: ["special"] })).toEqual(["news", "special"]);
+	});
+	it("leaves out the ignored program tags", () => {
+		expect(getEpisodeTags(["news", "tech"], { tags: ["special"], ignoredTags: ["news"] })).toEqual([
+			"tech",
+			"special",
+		]);
+	});
+	it("keeps each tag once", () => {
+		expect(getEpisodeTags(["news"], { tags: ["news"] })).toEqual(["news"]);
+	});
+	it("returns no tag when nothing is set", () => {
+		expect(getEpisodeTags(undefined, {})).toEqual([]);
+		expect(getEpisodeTags(["news"], { ignoredTags: ["news"] })).toEqual([]);
 	});
 });
 

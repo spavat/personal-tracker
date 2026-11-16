@@ -297,7 +297,7 @@
 		line-height: 24px;
 		input {
 			height: 15px;
-			background-color: green;
+			background-color: inherit;
 			border: none;
 			outline: none;
 			field-sizing: content; /* input shrinks/grows with content */
@@ -549,6 +549,11 @@
 	.dialog-medium {
 		width: 35%;
 		min-width: 600px;
+	}
+
+	/* store sync failure marker (game nav, integrations page) */
+	.sync-error {
+		color: #c0392b;
 	}
 
 	.dialog-large {

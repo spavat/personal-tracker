@@ -1,5 +1,7 @@
 import type { FastifyInstance } from "fastify";
 
+import { accentInsensitiveRegex } from "../../mongo-search";
+
 export class MusicRepository {
 	constructor(private mongo: FastifyInstance["mongo"]) {}
 
@@ -24,7 +26,7 @@ export class MusicRepository {
 	}
 
 	searchListenings(search?: string) {
-		const searchRegex = new RegExp((search ?? "").normalize("NFC"), "i");
+		const searchRegex = accentInsensitiveRegex(search ?? "");
 		const cursor = this.listenings?.aggregate([
 			{
 				$match: {

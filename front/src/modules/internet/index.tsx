@@ -31,6 +31,13 @@ const links = [
 		label: "Sync Podcast",
 		ownerOnly: true,
 	},
+	{
+		link: "/internet/review",
+		label: "Review Tag",
+		icon: "fa-solid fa-gear",
+		partial: true,
+		ownerOnly: true,
+	},
 ];
 
 export default function AppInternet() {

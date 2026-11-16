@@ -28,6 +28,7 @@ function toDefaultEpisode(item: SyncItem): Inputs["episode"] {
 		externalId: proposition?.externalId ?? item.origin.externalId,
 		tags: (proposition?.tags ?? []).map((t) => ({ value: t })),
 		contextTags: (proposition?.contextTags ?? []).map((t) => ({ value: t })),
+		ignoredTags: [],
 		created: proposition?.created,
 	};
 }

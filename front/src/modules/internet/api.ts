@@ -13,6 +13,14 @@ import {
 	SyncResponse,
 	SyncDeleteParamsRequest,
 	SyncDeleteParamsRequestSchema,
+	SyncCreateResponse,
+	SyncGopodderStatusResponse,
+	SyncUnknownFeedsResponse,
+	SyncLinkFeedBodyRequest,
+	SyncLinkFeedBodyRequestSchema,
+	SyncFeedBodyRequest,
+	SyncFeedBodyRequestSchema,
+	ReviewEpisodesResponse,
 } from "@personal-tracker/shared/internet";
 import { queryOptions } from "@tanstack/react-query";
 
@@ -79,6 +87,16 @@ export const internetStats: YearQueryConfig<StatsArrayResponse> = {
 	queryFn: getStatsYear,
 };
 
+// Episodes without any tag (key under ["programs"]: refreshed on every save)
+async function getReview() {
+	return fetchJson<ReviewEpisodesResponse>(`${API_BASE_URL}/internet/review`);
+}
+export const reviewQuery = () =>
+	queryOptions({
+		queryKey: ["programs", "review"],
+		queryFn: () => getReview(),
+	});
+
 export async function save(data: SaveBodyRequestType) {
 	const sentData = SaveBodyRequestSchema.parse(data);
 	return sendJson(`${API_BASE_URL}/internet/save`, "POST", sentData);
@@ -90,7 +108,7 @@ export async function deleteItem(data: DeleteParamsRequest) {
 }
 
 export async function getFortnightStats() {
-	return fetchJson<FortnightStatsRespons>(`${API_BASE_URL}/internet/fortnight-stats`);
+	return fetchJson<FortnightStatsRespons>(`${API_BASE_URL}/internet/stats/fortnight`);
 }
 
 async function getSync() {
@@ -103,7 +121,7 @@ export const syncQuery = () =>
 	});
 
 export async function uploadSync(file: File) {
-	return fetchJson(`${API_BASE_URL}/internet/sync/upload`, {
+	return fetchJson<SyncCreateResponse>(`${API_BASE_URL}/internet/sync/upload`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/octet-stream",
@@ -112,8 +130,41 @@ export async function uploadSync(file: File) {
 	});
 }
 
-export async function reprocessSync() {
-	return sendJson(`${API_BASE_URL}/internet/sync/reprocess`, "POST");
+// Date of the last gopodder sync (key under ["sync"]: refreshed with the proposals)
+async function getGopodderStatus() {
+	return fetchJson<SyncGopodderStatusResponse>(`${API_BASE_URL}/internet/sync/gopodder`);
+}
+export const gopodderStatusQuery = () =>
+	queryOptions({
+		queryKey: ["sync", "gopodder"],
+		queryFn: () => getGopodderStatus(),
+	});
+
+export async function syncGopodder() {
+	return sendJson<SyncCreateResponse>(`${API_BASE_URL}/internet/sync/gopodder`, "POST");
+}
+
+// Feeds of the current sync without a matching program (step 1)
+async function getUnknownFeeds() {
+	return fetchJson<SyncUnknownFeedsResponse>(`${API_BASE_URL}/internet/sync/feeds`);
+}
+export const unknownFeedsQuery = () =>
+	queryOptions({
+		queryKey: ["sync", "feeds"],
+		queryFn: () => getUnknownFeeds(),
+	});
+
+export async function linkFeed(data: SyncLinkFeedBodyRequest) {
+	return sendJson(`${API_BASE_URL}/internet/sync/feeds/link`, "POST", SyncLinkFeedBodyRequestSchema.parse(data));
+}
+
+export async function ignoreFeed(data: SyncFeedBodyRequest) {
+	return sendJson(`${API_BASE_URL}/internet/sync/feeds/ignore`, "POST", SyncFeedBodyRequestSchema.parse(data));
+}
+
+// With rssUrl: only the proposals of that feed
+export async function reprocessSync(rssUrl?: string) {
+	return sendJson(`${API_BASE_URL}/internet/sync/reprocess`, "POST", rssUrl ? { rssUrl } : undefined);
 }
 
 export async function validateSyncProposal(id: string, data: SaveBodyRequestType) {

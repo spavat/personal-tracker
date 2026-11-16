@@ -1441,6 +1441,9 @@ async function seedMongo(db) {
 			],
 		},
 	]);
+
+	// gopodder already initialized: the next sync reads e2e/mocks/responses/gopodder-episodes.json
+	await db.collection("internet_sync_state").insertOne({ _id: "gopodder", since: 1794400000 });
 }
 
 // Wipes every row/document (schema and indexes are kept) and re-inserts the seed.

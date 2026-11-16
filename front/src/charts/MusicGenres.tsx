@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, ReferenceLine, BarShapeProps, Rectangle } from "recharts";
 
-export const MusicGenres = ({
+export const MusicGenres = memo(function MusicGenres({
 	data,
 	reversed = false,
 	setSelected,
@@ -9,7 +9,7 @@ export const MusicGenres = ({
 	data: any;
 	reversed?: boolean;
 	setSelected?: (val: string) => void;
-}) => {
+}) {
 	const top = data?.[0]?.duration ?? 0;
 
 	const [key, setKey] = useState<string>("");
@@ -49,4 +49,4 @@ export const MusicGenres = ({
 			</BarChart>
 		</ResponsiveContainer>
 	);
-};
+});

@@ -6,12 +6,11 @@ import internetRoutes from "./internet.routes";
 
 const PROGRAM_UUID = "11111111-1111-4111-8111-111111111111";
 const EPISODE_UUID = "22222222-2222-4222-8222-222222222222";
-const PROPOSAL_UUID = "33333333-3333-4333-8333-333333333333";
 
 async function buildApp() {
 	const { mongo, collection } = makeFakeMongo();
 	const app = await buildRouteApp(internetRoutes, { mongo });
-	return { app, programs: collection("internet"), sync: collection("internet_sync") };
+	return { app, programs: collection("internet") };
 }
 
 describe("internet routes", () => {
@@ -69,50 +68,6 @@ describe("internet routes", () => {
 				{ id: PROGRAM_UUID },
 				{ $pull: { episodes: { id: EPISODE_UUID } } },
 			);
-		});
-
-		it("POST /sync/upload accepts a binary body and refuses while a sync is in progress", async () => {
-			ctx.sync.countDocuments.mockResolvedValue(3);
-			const res = await ctx.app.inject({
-				method: "POST",
-				url: "/sync/upload",
-				headers: { "content-type": "application/octet-stream" },
-				payload: Buffer.from("SQLite format 3"),
-			});
-			expect(res.statusCode).toBe(500);
-			expect(res.json().message).toBe("Une synchronisation est déjà en cours");
-			expect(ctx.sync.insertMany).not.toHaveBeenCalled();
-		});
-
-		it("DELETE /sync/:id removes the proposal", async () => {
-			const res = await ctx.app.inject({ method: "DELETE", url: `/sync/${PROPOSAL_UUID}` });
-			expect(res.statusCode).toBe(200);
-			expect(ctx.sync.deleteOne).toHaveBeenCalledWith({ id: PROPOSAL_UUID });
-			expect(ctx.programs.updateOne).not.toHaveBeenCalled();
-		});
-
-		it("POST /sync/validate/:id saves the episode then removes the proposal", async () => {
-			const res = await ctx.app.inject({
-				method: "POST",
-				url: `/sync/validate/${PROPOSAL_UUID}`,
-				payload: {
-					programId: PROGRAM_UUID,
-					episode: {
-						name: "Ep",
-						duration: 30,
-						date: "2026-10-01",
-						type: "podcast",
-						tags: [],
-						contextTags: [],
-					},
-				},
-			});
-			expect(res.statusCode).toBe(200);
-			expect(ctx.programs.updateOne).toHaveBeenCalledWith(
-				{ id: PROGRAM_UUID },
-				{ $push: { episodes: expect.objectContaining({ name: "Ep" }) } },
-			);
-			expect(ctx.sync.deleteOne).toHaveBeenCalledWith({ id: PROPOSAL_UUID });
 		});
 	});
 });

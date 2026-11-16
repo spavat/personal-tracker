@@ -1,4 +1,4 @@
-import { test as base, expect } from "@playwright/test";
+import { test as base, expect, type Locator } from "@playwright/test";
 
 // 1x1 transparent PNG
 const EMPTY_TILE = Buffer.from(
@@ -16,6 +16,18 @@ export const test = base.extend({
 	},
 });
 export { expect };
+
+// Text of an element without its child elements (e.g. a heading holding a checkbox label).
+// One-shot read: assert it with expect.poll(() => ownText(locator)) to get the retries.
+export function ownText(locator: Locator) {
+	return locator.evaluate((el) =>
+		Array.from(el.childNodes)
+			.filter((n) => n.nodeType === Node.TEXT_NODE)
+			.map((n) => n.textContent)
+			.join("")
+			.trim(),
+	);
+}
 export { OWNER, resetDb, queryDb, updateMongo } from "../seed";
 
 export const SEED = {

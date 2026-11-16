@@ -34,7 +34,7 @@ test.describe("Game - Game details", () => {
 
 		await expect(playRows(page).locator("td:nth-child(3)")).toHaveText(["15/08/2026", "03/02/2026", "20/12/2025"]);
 		await expect(playRows(page).locator("td:nth-child(4)")).toHaveText(["45min", "1h 30min", "2h"]);
-		await expect(playRows(page).nth(1).locator("td").nth(4)).toHaveText("Boss final");
+		await expect(playRows(page).nth(1).locator("td").nth(5)).toHaveText("Boss final");
 	});
 
 	test("edit a game", async ({ page }) => {
@@ -97,11 +97,13 @@ test.describe("Game - Game details", () => {
 		await expect(dialog.getByRole("spinbutton", { name: "Durée (min)" })).toHaveValue("45");
 		await dialog.getByRole("spinbutton", { name: "Durée (min)" }).fill("50");
 		await dialog.getByRole("textbox", { name: "Commentaire" }).fill("DLC");
+		await dialog.getByRole("combobox", { name: "Origine" }).selectOption("Steam Deck");
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(dialog).not.toBeVisible();
 		await expect(playRows(page).first().locator("td").nth(3)).toHaveText("50min");
-		await expect(playRows(page).first().locator("td").nth(4)).toHaveText("DLC");
+		await expect(playRows(page).first().locator("td").nth(4)).toHaveText("Steam Deck");
+		await expect(playRows(page).first().locator("td").nth(5)).toHaveText("DLC");
 	});
 
 	test("delete a play", async ({ page }) => {

@@ -80,6 +80,7 @@ export default function AddEpisodeModalForm({ programId, returnTo }: { programId
 				date: getCurrentOrPreviousDate(),
 				tags: [],
 				contextTags: [],
+				ignoredTags: [],
 			},
 			programId,
 		},

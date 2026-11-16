@@ -2,11 +2,12 @@ import type { FastifyInstance } from "fastify";
 
 import type { ProgramMongo } from "./internet.entity";
 
+import { accentInsensitiveRegex } from "../../mongo-search";
 import { privacyMatch } from "../../request-context";
 
 const MONGO_INTERNET_COLLECTION = "internet";
 // Not sent by the episode form when empty (see onSubmitEpisode and cleanEpisode)
-const CLEARABLE_EPISODE_FIELDS = ["durationReal", "tags", "contextTags"];
+const CLEARABLE_EPISODE_FIELDS = ["durationReal", "tags", "contextTags", "ignoredTags"];
 
 interface ProgramListFilters {
 	search: string;
@@ -27,9 +28,9 @@ export class InternetRepository {
 				$match: {
 					...privacyMatch(),
 					$or: [
-						{ name: new RegExp(`${search.normalize("NFC")}`, "i") },
-						{ author: new RegExp(`${search.normalize("NFC")}`, "i") },
-						{ network: new RegExp(`${search.normalize("NFC")}`, "i") },
+						{ name: accentInsensitiveRegex(search) },
+						{ author: accentInsensitiveRegex(search) },
+						{ network: accentInsensitiveRegex(search) },
 					],
 				},
 			},
@@ -129,6 +130,20 @@ export class InternetRepository {
 		return cursor?.toArray();
 	}
 
+	findAllWithEpisodes() {
+		const cursor = this.collection
+			?.find({ ...privacyMatch() })
+			.project<Pick<ProgramMongo, "id" | "name" | "shortName" | "tags" | "episodes">>({
+				_id: 0,
+				id: 1,
+				name: 1,
+				shortName: 1,
+				tags: 1,
+				episodes: 1,
+			});
+		return cursor?.toArray();
+	}
+
 	findById(id: string) {
 		return this.collection?.findOne({ ...privacyMatch(), id });
 	}
@@ -176,6 +191,10 @@ export class InternetRepository {
 
 	updateProgram(id: string, program: Record<string, unknown>) {
 		return this.collection?.updateOne({ id }, { $set: program as any }, { upsert: false });
+	}
+
+	setRssRef(programId: string, rssUrl: string) {
+		return this.collection?.updateOne({ id: programId }, { $set: { "refs.rss": rssUrl } } as any);
 	}
 
 	pushEpisode(programId: string, episode: Record<string, unknown>) {

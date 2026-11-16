@@ -36,7 +36,7 @@ export function linkItem(item: MangaOverview) {
 	return `/reading-manga/manga/${item.id}`;
 }
 
-export function getStatusIcon(item: MangaOverview, { color }: { color: boolean }) {
+export function getStatusIcon(item: { status: string }, { color }: { color: boolean }) {
 	const colorSuffix = color ? "-color" : "";
 	let status;
 	if (item.status === "complete") {

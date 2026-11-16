@@ -1,6 +1,6 @@
 // Pages an anonymous visitor may open; everything else redirects to the home page.
 // Must match the routes flagged `config: { public: true }` on the server.
-// Ids are digits (show) or uuids (internet, reading-book, reading-manga) only, so /add, /edit/… and /delete/… pages stay private.
+// Ids are digits (show) or uuids (internet, reading-book, reading-manga, game) only, so /add, /edit/… and /delete/… pages stay private.
 const PUBLIC_PATHS = [
 	/^\/$/,
 	/^\/login$/,
@@ -20,6 +20,9 @@ const PUBLIC_PATHS = [
 	/^\/reading-manga(\/(history|list))?$/,
 	/^\/reading-manga\/history\/\d{4}$/,
 	/^\/reading-manga\/manga\/[0-9a-f-]{36}$/,
+	/^\/game(\/(history|list))?$/,
+	/^\/game\/history\/\d{4}$/,
+	/^\/game\/details\/[0-9a-f-]{36}$/,
 ];
 
 export function isPublicPath(pathname: string) {

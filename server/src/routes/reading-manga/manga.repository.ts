@@ -1,6 +1,8 @@
 import type { Reading } from "@personal-tracker/shared/reading-manga";
 import type { FastifyInstance } from "fastify";
 
+import { accentInsensitiveRegex } from "../../mongo-search";
+
 interface MangaListFilters {
 	search?: string;
 	from?: string;
@@ -24,11 +26,11 @@ export class MangaRepository {
 			pipeline.push({
 				$match: {
 					$or: [
-						{ title: new RegExp(`${search.normalize("NFC")}`, "i") },
-						{ titleEnglish: new RegExp(`${search.normalize("NFC")}`, "i") },
-						{ author: new RegExp(`${search.normalize("NFC")}`, "i") },
-						{ art: new RegExp(`${search.normalize("NFC")}`, "i") },
-						{ scenario: new RegExp(`${search.normalize("NFC")}`, "i") },
+						{ title: accentInsensitiveRegex(search) },
+						{ titleEnglish: accentInsensitiveRegex(search) },
+						{ author: accentInsensitiveRegex(search) },
+						{ art: accentInsensitiveRegex(search) },
+						{ scenario: accentInsensitiveRegex(search) },
 					],
 				},
 			});

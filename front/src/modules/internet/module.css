@@ -5,10 +5,6 @@
 			font-weight: normal;
 		}
 
-		h3 input {
-			width: 50%;
-		}
-
 		.tooltip {
 			position: relative;
 			display: inline-block;
@@ -127,9 +123,6 @@
 					border-radius: 5px;
 					white-space: nowrap;
 				}
-			}
-			input {
-				width: 50%;
 			}
 			.loading {
 				height: 7lh;
@@ -265,6 +258,38 @@
 			width: 15%;
 		}
 
+		/* Date */
+		.list.episodesNoTag td:nth-of-type(3) {
+			text-align: left;
+			font-variant-numeric: tabular-nums;
+		}
+		/* Program Name */
+		.list.episodesNoTag td:nth-of-type(4),
+		.list.episodesNoTag th:nth-of-type(3),
+		/* Episode Name */
+		.list.episodesNoTag td:nth-of-type(5),
+		.list.episodesNoTag th:nth-of-type(4) {
+			text-align: left;
+		}
+
+		/* Weekday */
+		.list.episodesNoTag td:nth-of-type(2),
+		/* Tags */
+		.list.episodesNoTag td:nth-of-type(6),
+		.list.episodesNoTag th:nth-of-type(5) {
+			text-align: right;
+		}
+		/* Weekday */
+		.list.episodesNoTag td[colspan]:nth-of-type(2) {
+			text-align: center;
+		}
+		/* Duration */
+		.list.episodesNoTag td:nth-of-type(7),
+		.list.episodesNoTag th:nth-of-type(6) {
+			text-align: right;
+			font-variant-numeric: tabular-nums;
+		}
+
 		.program-banner {
 			width: 100%;
 			/* max-height: 200px; */
@@ -316,7 +341,57 @@
 			container-type: inline-size;
 		}
 
+		/* no sync in progress: the two sources side by side, stacked on narrow screens */
+		.sync-sources {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+			gap: 100px;
+		}
+
+		/* same look as the sport GPX / show media drop zones */
+		.sync-drop-zone {
+			border: 2px dashed #555;
+			border-radius: 6px;
+			padding: 16px;
+			text-align: center;
+			transition:
+				border-color 0.2s,
+				background 0.2s;
+
+			&.drag-over {
+				border-color: var(--accent-color, #4a9eff);
+				background: color-mix(in srgb, var(--accent-color, #4a9eff) 10%, transparent);
+			}
+			&.has-file {
+				border-color: #4caf50;
+				color: #4caf50;
+				overflow-wrap: anywhere;
+			}
+			label {
+				cursor: pointer;
+				text-decoration: underline;
+			}
+			input[type="file"] {
+				display: none;
+			}
+		}
+
+		.sync-feed {
+			.title {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				gap: 10px;
+			}
+			.sync-feed-url {
+				overflow-wrap: anywhere;
+				opacity: 0.7;
+				font-size: 0.9em;
+			}
+		}
+
 		.sync-item .form-footer,
+		.sync-feed .form-footer,
 		.sync-upload .form-footer {
 			display: flex;
 			justify-content: center;

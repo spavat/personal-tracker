@@ -8,6 +8,8 @@ const { alice } = SEED.book;
 const ALICE_READING_ID = "0883b913-75f8-4cf2-83b2-a9b832a9311e";
 const { onePiece } = SEED.manga;
 const ONE_PIECE_READING_ID = "3b899ee1-bbc4-4472-b92a-3a58a7ada5f2";
+const { hollow } = SEED.game;
+const HOLLOW_PLAY_ID = "f9593ea1-994b-474d-b6e4-06c3a6c1ae1e";
 
 test.describe("anonymous visitor", () => {
 	test("only sees the public home page", async ({ page }) => {
@@ -18,7 +20,7 @@ test.describe("anonymous visitor", () => {
 		await expect(page.getByRole("link", { name: "Musique" })).toBeVisible();
 		await expect(page.getByRole("link", { name: "Livre" })).toBeVisible();
 		await expect(page.getByRole("link", { name: "Manga" })).toBeVisible();
-		await expect(page.getByRole("link", { name: "Jeux" })).toHaveCount(0);
+		await expect(page.getByRole("link", { name: "Jeux" })).toBeVisible();
 		await expect(page.getByRole("link", { name: "Argent" })).toHaveCount(0);
 	});
 
@@ -91,6 +93,7 @@ test.describe("anonymous visitor", () => {
 			await page.getByRole("link", { name: "Internet" }).click();
 			await expect(page).toHaveURL(/\/internet\/history\/\d{4}-\d{2}$/);
 			await expect(page.getByRole("link", { name: "Sync Podcast" })).toHaveCount(0);
+			await expect(page.getByRole("link", { name: "Review Tag" })).toHaveCount(0);
 
 			await page.goto("/internet/list");
 			await expect(page.getByRole("link", { name: mockPodcast.name })).toBeVisible();
@@ -122,6 +125,7 @@ test.describe("anonymous visitor", () => {
 
 		for (const url of [
 			"/internet/sync",
+			"/internet/review",
 			"/internet/list/add",
 			`/internet/list/edit/${mockPodcast.id}`,
 			`/internet/${mockPodcast.id}/edit`,
@@ -139,6 +143,7 @@ test.describe("anonymous visitor", () => {
 			expect((await request.get(`${API}/internet/id/${mockPodcast.id}`)).status()).toBe(200);
 			expect((await request.get(`${API}/internet/stats?from=2026-01-01&to=2026-12-31`)).status()).toBe(200);
 			expect((await request.get(`${API}/internet/sync`)).status()).toBe(401);
+			expect((await request.get(`${API}/internet/review`)).status()).toBe(401);
 			expect((await request.get(`${API}/internet/latest/${mockPodcast.id}`)).status()).toBe(401);
 			expect((await request.get(`${API}/internet/extract?url=https://example.com`)).status()).toBe(401);
 			expect(
@@ -365,6 +370,68 @@ test.describe("anonymous visitor", () => {
 			expect(
 				(
 					await request.delete(`${API}/reading-manga/mangas/${onePiece.id}/readings/${ONE_PIECE_READING_ID}`)
+				).status(),
+			).toBe(401);
+		});
+	});
+
+	test.describe("game (read only)", () => {
+		test("history and list without add or edit buttons, and no Fusionner or Intégrations", async ({ page }) => {
+			await page.goto("/");
+			await page.getByRole("link", { name: "Jeux" }).click();
+			await expect(page).toHaveURL(/\/game\/history\/\d{4}$/);
+			await expect(page.getByRole("link", { name: "Fusionner" })).toHaveCount(0);
+			await expect(page.getByRole("link", { name: "Intégrations" })).toHaveCount(0);
+
+			await page.goto("/game/history/2026");
+			await expect(page.getByRole("link", { name: hollow.name })).toBeVisible();
+			await expect(page.getByRole("button", { name: "Ajouter une partie" })).toHaveCount(0);
+
+			await page.goto("/game/list");
+			await expect(page.getByRole("link", { name: hollow.name })).toBeVisible();
+			await expect(page.getByRole("columnheader", { name: "Actions" })).toHaveCount(0);
+			await expect(page.getByRole("button", { name: "Ajouter un jeu" })).toHaveCount(0);
+			await expect(page.getByTitle("Modifier")).toHaveCount(0);
+		});
+
+		test("details without add, edit or delete buttons", async ({ page }) => {
+			await page.goto(`/game/details/${hollow.id}`);
+			await expect(page.getByRole("heading", { name: hollow.name })).toBeVisible();
+			await expect(page.locator("table.plays tbody tr").first()).toBeVisible();
+			await expect(page.getByRole("columnheader", { name: "Actions" })).toHaveCount(0);
+			await expect(page.getByTitle("Modifier")).toHaveCount(0);
+			await expect(page.getByTitle("Supprimer")).toHaveCount(0);
+			await expect(page.getByRole("button", { name: "Ajouter une partie" })).toHaveCount(0);
+		});
+
+		for (const url of [
+			"/game/merge",
+			"/game/integrations",
+			"/game/list/add",
+			`/game/list/${hollow.id}/edit`,
+			"/game/history/2026/add",
+			`/game/details/${hollow.id}/edit`,
+			`/game/details/${hollow.id}/play/add`,
+			`/game/details/${hollow.id}/play/${HOLLOW_PLAY_ID}/edit`,
+			`/game/details/${hollow.id}/play/${HOLLOW_PLAY_ID}/delete`,
+		]) {
+			test(`is sent back home from ${url}`, async ({ page }) => {
+				await page.goto(url);
+				await expect(page).toHaveURL("/");
+			});
+		}
+
+		test("reads the public endpoints but cannot write or sync", async ({ request }) => {
+			expect((await request.get(`${API}/game/games`)).status()).toBe(200);
+			expect((await request.get(`${API}/game/games/${hollow.id}`)).status()).toBe(200);
+			expect((await request.get(`${API}/game/plays?from=2026-01-01&to=2026-12-31`)).status()).toBe(200);
+			expect((await request.post(`${API}/game/save`, { data: { game: { name: "Intrus" } } })).status()).toBe(401);
+			expect((await request.delete(`${API}/game/games/${hollow.id}/plays/${HOLLOW_PLAY_ID}`)).status()).toBe(401);
+			expect((await request.get(`${API}/game/sync/status`)).status()).toBe(401);
+			expect((await request.post(`${API}/game/sync/run`)).status()).toBe(401);
+			expect(
+				(
+					await request.post(`${API}/game/sync/merge`, { data: { keepId: hollow.id, removeId: hollow.id } })
 				).status(),
 			).toBe(401);
 		});

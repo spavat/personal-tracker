@@ -44,6 +44,15 @@ export default defineConfig({
 				"ENABLE_BANKING_KEY_PATH=../e2e/mocks/.enable-banking-e2e.pem",
 				"ENABLE_BANKING_API_URL=https://api.enablebanking.mock",
 				`ENABLE_BANKING_REDIRECT_URL=http://localhost:${FRONT_PORT}/money/banking/callback`,
+				// served by fetch-mock from e2e/mocks/responses/gopodder-episodes.json
+				"GOPODDER_URL=https://gopodder.example.com",
+				"GOPODDER_USERNAME=tracker",
+				"GOPODDER_PASSWORD=e2e-password",
+				// no daily store sync, and no real store account from server/.env
+				"GAME_SYNC_SCHEDULER=off",
+				"STEAM_API_KEY=",
+				"STEAM_ID=",
+				"GOG_USERNAME=",
 				// UI mode doesn't show webServer output: follow it with `tail -f e2e/server.log`
 				// fetch-mock serves the external calls (Youtube, RSS, france.tv, images) from e2e/mocks/responses
 				`npx tsx --import ../e2e/mocks/fetch-mock.mjs src/server.ts > ../e2e/server.log`,

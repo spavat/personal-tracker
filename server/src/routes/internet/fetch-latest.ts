@@ -79,6 +79,12 @@ export async function getPodcastCoverImageUrl(url: string): Promise<string | und
 	return result?.rss?.channel?.["itunes:image"]?.["@_href"];
 }
 
+export async function fetchPodcastTitle(url: string): Promise<string | undefined> {
+	const result = await parseRSS(url);
+	const title = result?.rss?.channel?.title;
+	return title === undefined ? undefined : String(title);
+}
+
 // 1. Récupérer le flux RSS via fetch
 async function fetchRSS(url: string) {
 	try {

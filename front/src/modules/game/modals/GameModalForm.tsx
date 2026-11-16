@@ -9,7 +9,7 @@ import MutationError from "../../../components/MutationError";
 import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-query";
 import { gameDetailsQuery, save } from "../api";
 import GameForm from "../forms/GameForm";
-import { GameFormSchema, onSubmitGame, type GameInputs } from "../forms/GameForm.utils";
+import { GameFormSchema, onSubmitGame, toStoreIdRows, type GameInputs } from "../forms/GameForm.utils";
 
 interface Inputs extends GameInputs {}
 
@@ -29,11 +29,12 @@ export default function GameModalForm({ gameId, returnTo }: { gameId?: string; r
 
 	let defaultValues: Inputs | null = null;
 	if (data?.plays) {
-		const { plays, links, ...props } = data;
+		const { plays, links, storeIds, ...props } = data;
 		defaultValues = {
 			game: {
 				...props,
 				links: links ? links.map(({ name, link }) => ({ name, link })) : [],
+				storeIds: toStoreIdRows(storeIds),
 			},
 		};
 	}

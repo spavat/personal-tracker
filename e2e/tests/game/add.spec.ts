@@ -57,11 +57,12 @@ test.describe("Game - Add a play", () => {
 			"1",
 			"",
 			"Sky Tower",
-			"Cloud Publishing",
 			"Cloud Dev",
+			"Cloud Publishing",
 			"",
 			"03/10/2026",
 			"1",
+			"40min",
 			"",
 		]);
 	});

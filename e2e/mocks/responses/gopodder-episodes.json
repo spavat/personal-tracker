@@ -1,0 +1,60 @@
+{
+	"actions": [
+		{
+			"podcast": "https://feeds.example.com/mock-podcast.xml",
+			"episode": "https://feeds.example.com/mock-podcast/4.mp3",
+			"device": "phone",
+			"timestamp": "2026-11-10T18:00:00",
+			"guid": "mock-pod-4",
+			"action": "play",
+			"started": 0,
+			"position": 600,
+			"total": 2100
+		},
+		{
+			"podcast": "https://feeds.example.com/mock-podcast.xml",
+			"episode": "https://feeds.example.com/mock-podcast/4.mp3",
+			"device": "phone",
+			"timestamp": "2026-11-10T19:00:00",
+			"guid": "mock-pod-4",
+			"action": "play",
+			"started": 600,
+			"position": 1050,
+			"total": 2100
+		},
+		{
+			"podcast": "https://feeds.example.com/mock-podcast.xml",
+			"episode": "https://feeds.example.com/mock-podcast/1.mp3",
+			"device": "phone",
+			"timestamp": "2026-11-11T07:00:00",
+			"guid": "mock-pod-1",
+			"action": "play",
+			"started": 0,
+			"position": 2400,
+			"total": 2400
+		},
+		{
+			"podcast": "https://feeds.example.com/mock-podcast.xml",
+			"episode": "https://feeds.example.com/mock-podcast/3.mp3",
+			"device": "phone",
+			"timestamp": "2026-11-11T08:00:00",
+			"guid": "mock-pod-3",
+			"action": "play",
+			"started": 100,
+			"position": 110,
+			"total": 3000
+		},
+		{
+			"podcast": "https://feeds.example.com/third-podcast.xml",
+			"episode": "https://feeds.example.com/third-podcast/2.mp3",
+			"device": "phone",
+			"timestamp": "2026-11-11T12:00:00",
+			"guid": "third-2",
+			"action": "play",
+			"started": 0,
+			"position": 1200,
+			"total": 1200
+		}
+	],
+	"timestamp": 1794500000
+}

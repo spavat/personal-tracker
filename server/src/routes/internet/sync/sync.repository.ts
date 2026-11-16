@@ -23,6 +23,18 @@ export class SyncRepository {
 		return this.collection?.find({}).toArray();
 	}
 
+	findByPodcastUrl(podcastUrl: string) {
+		return this.collection?.find({ "listened.podcastUrl": podcastUrl }).toArray();
+	}
+
+	findWithoutProposition() {
+		return this.collection?.find({ proposition: { $exists: false } }).toArray();
+	}
+
+	deleteByPodcastUrl(podcastUrl: string) {
+		return this.collection?.deleteMany({ "listened.podcastUrl": podcastUrl });
+	}
+
 	count() {
 		return this.collection?.countDocuments() ?? Promise.resolve(0);
 	}

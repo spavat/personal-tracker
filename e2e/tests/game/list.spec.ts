@@ -26,11 +26,12 @@ test.describe("Game - List", () => {
 			"1",
 			"",
 			hollow.name,
-			"Cherry Publishing",
 			"Cherry Team",
+			"Cherry Publishing",
 			"Steam",
 			"15/08/2026",
 			"3",
+			"4h 15min",
 			"",
 		]);
 		await expect(gameRow(page, hollow.name).locator(".complete-color")).toBeVisible();

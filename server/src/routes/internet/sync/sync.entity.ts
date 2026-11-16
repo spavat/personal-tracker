@@ -1,3 +1,5 @@
+import type { GopodderEpisodeAction } from "@personal-tracker/shared/internet";
+
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -61,6 +63,55 @@ function extractListenedEpisodes(dbPath: string): Array<ListenedEpisode> {
 	} finally {
 		db.close();
 	}
+}
+
+// Below this total listening time (sum of the played segments), a play is a stray tap or seek
+const MIN_LISTENED_SECONDS = 30;
+
+// gopodder sends one "play" action per pause/stop: merge them per episode (furthest position, last action date)
+export function aggregateEpisodeActions(actions: Array<GopodderEpisodeAction>): Array<ListenedEpisode> {
+	const byEpisode = new Map<
+		string,
+		{ podcastUrl: string; episodeId: string; timestamp: string; position: number; total: number; heard: number }
+	>();
+	for (const action of actions) {
+		if (action.action !== "play") continue;
+		const episodeId = action.guid ?? action.episode;
+		const key = `${action.podcast}\n${episodeId}`;
+		const position = action.position ?? 0;
+		const heard = Math.max(0, position - (action.started ?? 0));
+		const current = byEpisode.get(key);
+		if (!current) {
+			byEpisode.set(key, {
+				podcastUrl: action.podcast,
+				episodeId,
+				timestamp: action.timestamp,
+				position,
+				total: action.total ?? 0,
+				heard,
+			});
+			continue;
+		}
+		current.position = Math.max(current.position, position);
+		current.total = Math.max(current.total, action.total ?? 0);
+		current.heard += heard;
+		if (action.timestamp > current.timestamp) current.timestamp = action.timestamp;
+	}
+
+	return [...byEpisode.values()]
+		.filter((episode) => episode.heard >= MIN_LISTENED_SECONDS)
+		.sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+		.map((episode) => ({
+			episodeId: episode.episodeId,
+			episodeTitle: "",
+			podcastTitle: "",
+			podcastUrl: episode.podcastUrl,
+			// gopodder timestamps are UTC without zone suffix
+			listenedAtIso: `${episode.timestamp}Z`,
+			duration: episode.total * 1000,
+			playedDuration: episode.position * 1000,
+			percentListened: episode.total ? Math.round((episode.position / episode.total) * 10000) / 100 : 0,
+		}));
 }
 
 export function extractListenedEpisodesFromBuffer(content: Uint8Array): Array<ListenedEpisode> {

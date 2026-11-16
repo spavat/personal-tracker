@@ -23,7 +23,11 @@ describe("InternetRepository.updateEpisode", () => {
 					"episodes.$[element].name": "Ep",
 					"episodes.$[element].tags": ["a"],
 				},
-				$unset: { "episodes.$[element].durationReal": "", "episodes.$[element].contextTags": "" },
+				$unset: {
+					"episodes.$[element].durationReal": "",
+					"episodes.$[element].contextTags": "",
+					"episodes.$[element].ignoredTags": "",
+				},
 			},
 			{ arrayFilters: [{ "element.id": "e1" }] },
 		);
@@ -32,7 +36,13 @@ describe("InternetRepository.updateEpisode", () => {
 	it("doesn't unset anything when every optional field is sent", async () => {
 		const { repo, updateOne } = buildRepo();
 
-		await repo.updateEpisode("p1", { id: "e1", durationReal: 10, tags: ["a"], contextTags: ["b"] });
+		await repo.updateEpisode("p1", {
+			id: "e1",
+			durationReal: 10,
+			tags: ["a"],
+			contextTags: ["b"],
+			ignoredTags: ["c"],
+		});
 
 		expect(updateOne.mock.calls[0][1]).not.toHaveProperty("$unset");
 	});
