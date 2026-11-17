@@ -5,10 +5,14 @@ import { GameImageParamsSchema } from "@personal-tracker/shared/game";
 import "@fastify/mongodb";
 import * as z from "zod";
 
+import { EntityRepository } from "../entities/entity.repository";
+import { PortraitStorageRepository } from "../entities/portrait-storage.repository";
 import { GameRepository } from "../game/game.repository";
 import { GameImageStorageRepository } from "../game/image-storage.repository";
 import { ImageStorageRepository } from "../internet/image-storage.repository";
 import { InternetRepository } from "../internet/internet.repository";
+import { BookRepository } from "../reading-book/book.repository";
+import { CoverStorageRepository } from "../reading-book/cover-storage.repository";
 import { MediaStorageRepository } from "../show/media/media-storage.repository";
 import { MediaRepository } from "../show/media/media.repository";
 import { SportRepository } from "../sport/sport.repository";
@@ -23,6 +27,10 @@ const images: FastifyPluginAsync = async (fastify): Promise<void> => {
 	const mediaStorage = new MediaStorageRepository();
 	const gameRepository = new GameRepository(fastify.mongo);
 	const gameImageStorage = new GameImageStorageRepository();
+	const bookRepository = new BookRepository(fastify.db);
+	const covers = new CoverStorageRepository();
+	const entityRepository = new EntityRepository(fastify.db);
+	const portraits = new PortraitStorageRepository();
 
 	// public: private programs are filtered out by the repository (findById) for anonymous visitors
 	fastify.get("/internet/:key", { config: { public: true } }, async (request, reply) => {
@@ -50,6 +58,50 @@ const images: FastifyPluginAsync = async (fastify): Promise<void> => {
 			return reply.notFound();
 		}
 	});
+
+	// public, like the books; the ?v= of the URL changes with each upload, so the cover can be cached
+	fastify
+		.withTypeProvider<ZodTypeProvider>()
+		.get(
+			"/reading-book/edition/:id",
+			{ config: { public: true }, schema: { params: z.object({ id: z.uuid() }) } },
+			async (request, reply) => {
+				const key = await bookRepository.findCoverKey(request.params.id);
+				if (!key) {
+					return reply.notFound();
+				}
+				try {
+					const object = await covers.getObject(key);
+					reply.header("Content-Type", object.ContentType ?? "image/avif");
+					reply.header("Cache-Control", "public, max-age=86400");
+					return reply.send(object.Body);
+				} catch {
+					return reply.notFound();
+				}
+			},
+		);
+
+	// public, like the pages showing them; the ?v= of the URL changes with each upload
+	fastify
+		.withTypeProvider<ZodTypeProvider>()
+		.get(
+			"/entity/:id",
+			{ config: { public: true }, schema: { params: z.object({ id: z.uuid() }) } },
+			async (request, reply) => {
+				const key = (await entityRepository.findById(request.params.id))?.pictureKey;
+				if (!key) {
+					return reply.notFound();
+				}
+				try {
+					const object = await portraits.getObject(key);
+					reply.header("Content-Type", object.ContentType ?? "image/avif");
+					reply.header("Cache-Control", "public, max-age=86400");
+					return reply.send(object.Body);
+				} catch {
+					return reply.notFound();
+				}
+			},
+		);
 
 	fastify.get("/sport/:id/thumbnail", async (request, reply) => {
 		const { id } = request.params as { id: string };

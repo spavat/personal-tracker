@@ -4,38 +4,74 @@ import {
 	BookDetailsParamsSchema,
 	BookListRequestSchema,
 	DeleteReadingParamsRequestSchema,
+	EditionParamsRequestSchema,
 	GetReportQuerystringRequestSchema,
 	GetReportResponseSchema,
 	ReadingParamsRequestSchema,
 	SaveBookRequestSchema,
-	SaveModelBodyRequestSchema,
+	ModelParamsRequestSchema,
+	SaveBookModelRequestSchema,
+	SaveEditionRequestSchema,
 	SaveReadingRequestSchema,
+	AuthorListResponseSchema,
+	AuthorParamsRequestSchema,
 } from "@personal-tracker/shared/reading-book";
 
 import { ContextTagRepository } from "../context-tags/context-tag.repository";
 import { BookRepository } from "./book.repository";
 import {
 	AddReadingUseCase,
+	DeleteEditionUseCase,
+	DeleteModelUseCase,
 	DeleteReadingUseCase,
 	GetBookUseCase,
 	GetReportUseCase,
+	GetAuthorUseCase,
 	ListBooksUseCase,
+	ListAuthorsUseCase,
 	SaveBookUseCase,
+	SaveEditionUseCase,
 	SaveModelUseCase,
 	SaveReadingUseCase,
 } from "./book.useCases";
+import { CoverStorageRepository } from "./cover-storage.repository";
+
+const COVER_BODY_LIMIT = 15 * 1024 * 1024; // 15MB — the cover can be sent as a base64 data URI
 
 const readingsBook: FastifyPluginAsyncZod = async (fastify): Promise<void> => {
 	const repository = new BookRepository(fastify.db);
 	const contextTagRepository = new ContextTagRepository(fastify.mongo);
+	const covers = new CoverStorageRepository();
 	const listBooks = new ListBooksUseCase(repository);
 	const getBook = new GetBookUseCase(repository);
 	const saveBook = new SaveBookUseCase(repository);
 	const saveModel = new SaveModelUseCase(repository);
+	const deleteModel = new DeleteModelUseCase(repository);
+	const saveEdition = new SaveEditionUseCase(repository, covers);
+	const deleteEdition = new DeleteEditionUseCase(repository, covers);
 	const addReading = new AddReadingUseCase(repository);
 	const saveReading = new SaveReadingUseCase(repository);
 	const deleteReading = new DeleteReadingUseCase(repository);
 	const getReport = new GetReportUseCase(repository, contextTagRepository);
+	const listAuthors = new ListAuthorsUseCase(repository);
+	const getAuthor = new GetAuthorUseCase(repository);
+
+	// public, like the books
+	fastify
+		.withTypeProvider<ZodTypeProvider>()
+		.get(
+			"/authors",
+			{ config: { public: true }, schema: { response: { 200: AuthorListResponseSchema } } },
+			async (request) => listAuthors.execute(request.log),
+		);
+	fastify
+		.withTypeProvider<ZodTypeProvider>()
+		.get(
+			"/authors/:id",
+			{ config: { public: true }, schema: { params: AuthorParamsRequestSchema } },
+			async (request, reply) =>
+				(await getAuthor.execute(request.params.id, request.log)) ?? reply.notFound("Auteur·ice introuvable"),
+		);
 
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/books",
@@ -70,10 +106,10 @@ const readingsBook: FastifyPluginAsyncZod = async (fastify): Promise<void> => {
 	);
 
 	fastify.withTypeProvider<ZodTypeProvider>().post(
-		"/books/:id/saveModel",
+		"/books/:id/models/save",
 		{
 			schema: {
-				body: SaveModelBodyRequestSchema,
+				body: SaveBookModelRequestSchema,
 				params: ReadingParamsRequestSchema,
 			},
 		},
@@ -83,15 +119,59 @@ const readingsBook: FastifyPluginAsyncZod = async (fastify): Promise<void> => {
 		},
 	);
 
-	fastify.withTypeProvider<ZodTypeProvider>().post(
-		"/books/:id/readings",
+	fastify.withTypeProvider<ZodTypeProvider>().delete(
+		"/books/:id/models/:modelId",
 		{
 			schema: {
+				params: ModelParamsRequestSchema,
+			},
+		},
+		async (request, reply) => {
+			await deleteModel.execute({ bookId: request.params.id, modelId: request.params.modelId }, request.log);
+			return reply.code(204).send();
+		},
+	);
+
+	fastify.withTypeProvider<ZodTypeProvider>().post(
+		"/books/:id/editions/save",
+		{
+			bodyLimit: COVER_BODY_LIMIT,
+			schema: {
+				body: SaveEditionRequestSchema,
 				params: ReadingParamsRequestSchema,
 			},
 		},
 		async (request, reply) => {
-			await addReading.execute(request.params.id, request.log);
+			await saveEdition.execute({ bookId: request.params.id, edition: request.body }, request.log);
+			return reply.code(204).send();
+		},
+	);
+
+	fastify.withTypeProvider<ZodTypeProvider>().delete(
+		"/books/:id/editions/:editionId",
+		{
+			schema: {
+				params: EditionParamsRequestSchema,
+			},
+		},
+		async (request, reply) => {
+			await deleteEdition.execute(
+				{ bookId: request.params.id, editionId: request.params.editionId },
+				request.log,
+			);
+			return reply.code(204).send();
+		},
+	);
+
+	fastify.withTypeProvider<ZodTypeProvider>().post(
+		"/books/:id/editions/:editionId/readings",
+		{
+			schema: {
+				params: EditionParamsRequestSchema,
+			},
+		},
+		async (request, reply) => {
+			await addReading.execute({ bookId: request.params.id, editionId: request.params.editionId }, request.log);
 			return reply.code(204).send();
 		},
 	);

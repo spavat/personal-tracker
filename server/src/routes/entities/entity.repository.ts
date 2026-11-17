@@ -1,4 +1,4 @@
-import type { EntityKind, SaveEntityBody } from "@personal-tracker/shared/entity";
+import type { EntityKind } from "@personal-tracker/shared/entity";
 import type { FastifyInstance } from "fastify";
 
 import { and, asc, eq, sql } from "drizzle-orm";
@@ -12,6 +12,15 @@ const ENTITY_COLUMNS = {
 	kind: coreEntity.kind,
 	name: coreEntity.name,
 	sortName: coreEntity.sortName,
+	pictureKey: coreEntity.pictureKey,
+};
+
+export type EntityFields = {
+	id: string;
+	kind: EntityKind;
+	name: string;
+	sortName: string | null;
+	pictureKey: string | null;
 };
 
 export class EntityRepository {
@@ -30,16 +39,21 @@ export class EntityRepository {
 			.orderBy(asc(sql`coalesce(${coreEntity.sortName}, ${coreEntity.name})`));
 	}
 
-	create({ kind, name, sortName }: Omit<SaveEntityBody, "id">) {
-		return this.db.transaction((tx) => createEntity(tx, { kind, name, sortName }));
+	async findById(id: string) {
+		const [entity] = await this.db.select(ENTITY_COLUMNS).from(coreEntity).where(eq(coreEntity.id, id));
+		return entity;
+	}
+
+	create(entity: EntityFields) {
+		return this.db.transaction((tx) => createEntity(tx, entity));
 	}
 
 	// undefined when no entity has this id and kind
-	update({ id, kind, name, sortName }: SaveEntityBody & { id: string }) {
+	update({ id, kind, name, sortName, pictureKey }: EntityFields) {
 		return this.db.transaction(async (tx) => {
 			const [entity] = await tx
 				.update(coreEntity)
-				.set({ name, sortName })
+				.set({ name, sortName, pictureKey })
 				.where(and(eq(coreEntity.id, id), eq(coreEntity.kind, kind)))
 				.returning(ENTITY_COLUMNS);
 			if (!entity) {

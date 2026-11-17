@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
+import ImageCropper from "../../../components/ImageCropper";
 import { CropPanelContext, type CropRequest } from "./CropPanel.utils";
-import ImageCropper from "./ImageCropper";
 
 // Lays a crop panel to the right of its children (too narrow places like a table row):
 // pick an image (paste, file or URL), crop it, then hand the file back to the requester.

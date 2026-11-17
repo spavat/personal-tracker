@@ -1,12 +1,13 @@
 import { SaveBookRequestSchema } from "@personal-tracker/shared/reading-book";
 import { z } from "zod";
 
+// an author row: an entity picked (or created), and the name printed on the book when it differs
 export const BookFormSchema = SaveBookRequestSchema.extend({
-	author: z.array(z.object({ value: z.string().nonempty() })).min(1),
+	authors: z.array(z.object({ entityId: z.string().nonempty(), creditedAs: z.string() })).min(1),
 });
 export const BookFormSchemaTransformation = BookFormSchema.transform((data) => ({
 	...data,
-	author: (data.author ?? []).map((author) => author.value),
+	authors: data.authors.map(({ entityId, creditedAs }) => ({ entityId, creditedAs: creditedAs.trim() || null })),
 }));
 
 export type FormData = z.input<typeof BookFormSchema>;

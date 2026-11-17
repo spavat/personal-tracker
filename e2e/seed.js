@@ -717,9 +717,11 @@ async function seedReadingBooks(conn) {
 	const authorIds = new Map();
 	for (const book of READING_BOOKS) {
 		await conn.query(`INSERT INTO core.node (id, type, label) VALUES ($1, 'book', $2)`, [book.id, book.book]);
-		await conn.query(`INSERT INTO reading.book (id, title, country) VALUES ($1, $2, $3)`, [
+		// the seeded books are read in their original language
+		await conn.query(`INSERT INTO reading.book (id, title, original_language, country) VALUES ($1, $2, $3, $4)`, [
 			book.id,
 			book.book,
+			book.language,
 			book.country,
 		]);
 		for (const [order, name] of book.author.entries()) {

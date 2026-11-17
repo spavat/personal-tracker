@@ -28,8 +28,8 @@ async function openCastingModal(page: Page, buttonName: string) {
 async function addRole(dialog: Locator, role: string, artistSearch: string, artistItem: string) {
 	const footer = dialog.locator("tfoot");
 	await footer.locator('input[name="role"]').fill(role);
-	await footer.locator(".artist-search-select input").fill(artistSearch);
-	await dialog.locator(".artist-search-select-item", { hasText: artistItem }).click();
+	await footer.locator(".search-select input").fill(artistSearch);
+	await dialog.locator(".search-select-item", { hasText: artistItem }).click();
 	await footer.getByRole("button", { name: "Ajouter" }).click();
 }
 
@@ -175,11 +175,11 @@ test.describe("Shows - Performances", () => {
 		await openPerformance(page, performances.hamletSept, spectacles.hamlet.name);
 		const dialog = await openCastingModal(page, "Ajouter le casting");
 		await dialog.locator('tfoot input[name="role"]').fill("Hamlet");
-		await dialog.locator("tfoot .artist-search-select input").fill("Denis Laurent");
+		await dialog.locator("tfoot .search-select input").fill("Denis Laurent");
 		await dialog.getByText("Créer l'artiste « Denis Laurent »").click();
 		// the list closes once the artist is created and selected (until then, "Ajouter" does nothing)
 		await expect(dialog.getByText("Créer l'artiste « Denis Laurent »")).toBeHidden();
-		await expect(dialog.locator("tfoot .artist-search-select input")).toHaveValue("Denis Laurent");
+		await expect(dialog.locator("tfoot .search-select input")).toHaveValue("Denis Laurent");
 		await dialog.locator("tfoot").getByRole("button", { name: "Ajouter" }).click();
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
@@ -201,9 +201,9 @@ test.describe("Shows - Performances", () => {
 		await expect(dialog.locator('input[name="roles.0.name"]')).toHaveValue("Fantine");
 		await expect(dialog.locator('input[name="roles.1.name"]')).toHaveValue("Javert");
 		// The model has no artist for Javert
-		await expect(roleRows.nth(1).locator(".artist-search-select input")).toHaveValue("");
-		await roleRows.nth(1).locator(".artist-search-select input").fill("bob");
-		await dialog.locator(".artist-search-select-item", { hasText: artists.bob.name }).click();
+		await expect(roleRows.nth(1).locator(".search-select input")).toHaveValue("");
+		await roleRows.nth(1).locator(".search-select input").fill("bob");
+		await dialog.locator(".search-select-item", { hasText: artists.bob.name }).click();
 
 		await roleRows.nth(0).getByRole("button", { name: "Supprimer" }).click();
 		await expect(roleRows).toHaveCount(1);

@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-import { expect, resetDb, SEED, test } from "../../fixtures";
+import { expect, resetDb, SEED, test, pickEntity } from "../../fixtures";
 
 const { alice, littleWomen, roman } = SEED.book;
 
@@ -71,27 +71,26 @@ test.describe("Reading Book - List", () => {
 		const dialog = page.getByRole("dialog", { name: "Ajouter un livre" });
 		await expect(dialog).toBeVisible();
 
-		await dialog.locator('input[name="author.0.value"]').fill("New Author");
+		await pickEntity(dialog, "Auteur·ice 1", "New Author");
 		await dialog.getByRole("textbox", { name: "Nom" }).fill("New Test Book");
-		await dialog.getByRole("textbox", { name: "Langue" }).fill("fr");
+		await dialog.getByRole("textbox", { name: "Langue originale" }).fill("fr");
 		await dialog.getByRole("textbox", { name: "Pays" }).fill("fr");
-		await dialog.getByRole("spinbutton", { name: "Pages" }).fill("200");
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		// Redirected to the page of the new book
-		await expect(page.getByRole("heading", { name: "New Test Book" })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "New Test Book", level: 2 })).toBeVisible();
 		await expect(page.getByText("Auteur.ic.es: New Author")).toBeVisible();
+		await expect(page.getByText("Langue originale : fr")).toBeVisible();
 
 		await page.getByRole("link", { name: "Liste" }).click();
 		await expect(bookRows(page)).toHaveCount(4);
-		await expect(bookRows(page).filter({ hasText: "New Test Book" })).toContainText("200 pages");
 	});
 
 	test("book name is required", async ({ page }) => {
 		await page.goto("/reading-book/list");
 		await page.getByRole("button", { name: "Ajouter un livre" }).click();
 		const dialog = page.getByRole("dialog", { name: "Ajouter un livre" });
-		await dialog.locator('input[name="author.0.value"]').fill("New Author");
+		await pickEntity(dialog, "Auteur·ice 1", "New Author");
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(dialog.getByText("Le nom est obligatoire")).toBeVisible();
@@ -110,15 +109,17 @@ test.describe("Reading Book - List", () => {
 		await expect(dialog).toBeVisible();
 	});
 
-	test("the page count is optional", async ({ page }) => {
+	test("a new book starts with one empty edition", async ({ page }) => {
 		await page.goto("/reading-book/list");
 		await page.getByRole("button", { name: "Ajouter un livre" }).click();
 		const dialog = page.getByRole("dialog", { name: "Ajouter un livre" });
-		await dialog.locator('input[name="author.0.value"]').fill("New Author");
+		await pickEntity(dialog, "Auteur·ice 1", "New Author");
 		await dialog.getByRole("textbox", { name: "Nom" }).fill("No Pages Book");
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
-		await expect(page.getByRole("heading", { name: "No Pages Book" })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "No Pages Book", level: 2 })).toBeVisible();
+		await expect(page.locator("section.edition")).toHaveCount(1);
+		await expect(page.locator("section.edition").getByRole("heading", { name: "Édition" })).toBeVisible();
 		await expect(page.locator(".details .general")).not.toContainText("pages");
 
 		await page.getByRole("link", { name: "Liste" }).click();

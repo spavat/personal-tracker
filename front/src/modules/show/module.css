@@ -133,31 +133,6 @@
 			}
 		}
 
-		/* ARTIST SEARCH SELECT */
-		.artist-search-select {
-			position: relative;
-			display: inline-block;
-			width: 100%;
-
-			input {
-				width: 100%;
-				padding-right: 22px;
-			}
-
-			.artist-search-select-clear {
-				position: absolute;
-				top: 50%;
-				right: 4px;
-				transform: translateY(-50%);
-
-				padding: 0;
-				border: none;
-				background: none;
-				cursor: pointer;
-				color: var(--primary-color);
-			}
-		}
-
 		/* MODEL */
 		table.cast {
 			width: 100%;
@@ -176,23 +151,6 @@
 		.card_item.artist {
 			display: flex;
 			direction: row;
-		}
-
-		.portrait-card {
-			width: 100px;
-			height: 100px;
-			object-fit: cover;
-			border-radius: 50%;
-			margin-right: 10px;
-			flex-shrink: 0;
-		}
-		div.portrait-card {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 2.5rem;
-			color: gray;
-			background: rgb(128 128 128 / 15%);
 		}
 
 		.poster-card {
@@ -284,8 +242,7 @@
 			width: 1.6lh;
 			border-radius: 50%;
 		}
-		.presentation .poster,
-		.presentation-with-picture .artist-picture {
+		.presentation .poster {
 			display: block;
 			width: 200px;
 			height: 200px;
@@ -389,30 +346,6 @@
 			}
 		}
 
-		.image-cropper {
-			display: flex;
-			flex-direction: column;
-			gap: 8px;
-
-			/* react-easy-crop fills its positioned parent */
-			.crop-area {
-				position: relative;
-				height: 300px;
-				border-radius: 6px;
-				overflow: hidden;
-			}
-			.crop-controls {
-				display: flex;
-				flex-wrap: wrap;
-				align-items: center;
-				justify-content: space-between;
-				gap: 8px;
-			}
-			.error {
-				color: var(--error-color, red);
-			}
-		}
-
 		/* the dialog widens to keep room for the table next to the panel */
 		dialog:has(.crop-panel) {
 			width: 75%;
@@ -485,38 +418,6 @@
 				height: 48px;
 				width: 30px;
 			}
-		}
-	}
-
-	/* Portaled to <body>, so it lives outside the `.shows` wrapper. */
-	.artist-search-select-results {
-		position: fixed;
-		z-index: 100;
-
-		max-height: 200px;
-		overflow-y: auto;
-
-		background-color: var(--secondary-background);
-		border: 1px solid var(--light-border-color);
-
-		.artist-search-select-item {
-			padding: 5px 8px;
-			cursor: pointer;
-			text-align: left;
-
-			&:hover,
-			&.selected {
-				background-color: var(--hover-background);
-			}
-
-			&.create {
-				border-bottom: 1px solid var(--light-border-color);
-			}
-		}
-
-		.artist-search-select-empty {
-			padding: 5px 8px;
-			color: var(--primary-color);
 		}
 	}
 }

@@ -18,13 +18,22 @@ type Part = {
 };
 
 type InputValues = {
+	name: string;
 	root: Array<Part>;
 };
 
-export default function ModelForm({ bookId, returnTo }: { bookId: string; returnTo: string }) {
+export default function ModelForm({
+	bookId,
+	modelId,
+	returnTo,
+}: {
+	bookId: string;
+	modelId?: string;
+	returnTo: string;
+}) {
 	const navigate = useNavigate();
 	const { data } = useSuspenseQuery(bookDetailsQuery(bookId));
-	const modele = data.model;
+	const modele = data.models.find(({ id }) => id === modelId);
 	const queryClient = useQueryClient();
 	const saveMutation = useMutation({
 		mutationFn: saveModel,
@@ -37,9 +46,11 @@ export default function ModelForm({ bookId, returnTo }: { bookId: string; return
 
 	const methods = useForm<InputValues>({
 		// data is loaded before the modal opens: applied once, never overwritten by a background refetch
-		defaultValues: { root: (modele as any) ?? [] },
+		defaultValues: { name: modele?.name ?? "", root: (modele?.tree as any) ?? [] },
 		// ModelSchema is a recursive ZodType<ReadingModelItem>: its input is typed unknown
-		resolver: zodResolver(z.object({ root: ModelSchema })) as Resolver<InputValues>,
+		resolver: zodResolver(
+			z.object({ name: z.string().trim().nonempty(), root: ModelSchema }),
+		) as Resolver<InputValues>,
 	});
 	// watched (not getValues) so the preview follows every change, nested ones included
 	const root = useWatch({ control: methods.control, name: "root" });
@@ -55,7 +66,7 @@ export default function ModelForm({ bookId, returnTo }: { bookId: string; return
 	}
 
 	function onSubmit(data: InputValues) {
-		saveMutation.mutate({ id: bookId ?? "", model: data.root });
+		saveMutation.mutate({ id: bookId, model: { id: modelId, name: data.name, tree: data.root as any } });
 	}
 
 	function closeModal() {
@@ -71,10 +82,16 @@ export default function ModelForm({ bookId, returnTo }: { bookId: string; return
 			<form onSubmit={methods.handleSubmit(onSubmit)}>
 				<Modal className={"modal form dialog-extralarge"} isOpen={true} onClose={closeModal} hasCloseBtn={true}>
 					<div className="dialog-header">
-						<h2 id="dialog-title">Modèle</h2>
+						<h2 id="dialog-title">{modelId ? "Modifier le modèle" : "Ajouter un modèle"}</h2>
 					</div>
 					<div className="dialog-body">
-						<h3>Modele Form</h3>
+						<label className="form-field">
+							<span>
+								Nom du modèle <span className="req">*</span>
+							</span>
+							<input {...methods.register("name")} type="text" autoComplete="off" />
+							{methods.formState.errors.name && <span className="error">Le nom est obligatoire</span>}
+						</label>
 						<div className="modele-form">
 							<FormProvider {...methods}>
 								<div>

@@ -1,21 +1,29 @@
-import type { BookOverview, ReadingDetails, ReadingModelItem } from "@personal-tracker/shared/reading-book";
+import type {
+	BookModel,
+	BookOverview,
+	Credit,
+	ReadingDetails,
+	ReadingModelItem,
+} from "@personal-tracker/shared/reading-book";
 import type { FastifyInstance } from "fastify";
 
 import { and, asc, between, eq, inArray, sql, type SQL } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
-import type { ReadingStatus } from "./book.entity";
+import type { EditionType, ReadingStatus } from "./book.entity";
 
-import { createNode, findOrCreatePerson, renameNode, type Tx } from "../../db/node";
+import { createNode, type EntityKind, renameNode, type Tx } from "../../db/node";
 import {
 	coreEntity,
 	readingBook,
 	readingBookContributor,
 	readingEdition,
+	readingEditionContributor,
 	readingEntry,
 	readingModel,
 	readingReading,
 } from "../../db/schema";
-import { toBook, toDetails, toEntries } from "./book.entity";
+import { coverUrl, toBook, toDetails, toEntries } from "./book.entity";
 
 interface BookListFilters {
 	from?: string;
@@ -24,25 +32,48 @@ interface BookListFilters {
 	sortField?: string;
 	sortDirection?: string;
 	limit?: number;
+	// only the books credited to this entity as author
+	authorId?: string;
 }
+
+export type CreditFields = { entityId: string; creditedAs: string | null };
 
 export interface BookFields {
 	book: string;
-	author: string[];
-	language: string;
+	authors: CreditFields[];
+	originalLanguage: string;
+	originalYear: number | null;
 	country: string;
+}
+
+export interface EditionFields {
+	id: string;
+	title: string | null;
+	publisherId: string | null;
+	translators: CreditFields[];
+	language: string | null;
 	pages: number | null;
+	type: EditionType;
+	isbn: string | null;
+	year: number | null;
+	coverKey: string | null;
+	modelId: string | null;
 }
 
 const WITH_DETAILS = {
 	contributors: { with: { entity: true }, orderBy: { order: "asc" } },
+	models: { orderBy: { name: "asc" } },
 	editions: {
+		orderBy: { createdAt: "asc" },
 		with: {
-			model: true,
+			publisher: true,
+			contributors: { with: { entity: true }, orderBy: { order: "asc" } },
 			readings: { with: { entries: { orderBy: { date: "asc" } } } },
 		},
 	},
 } as const;
+
+const mainEdition = alias(readingEdition, "main_edition");
 
 export class BookRepository {
 	constructor(private db: FastifyInstance["db"]) {}
@@ -56,6 +87,7 @@ export class BookRepository {
 		sortField = "book",
 		sortDirection = "asc",
 		limit,
+		authorId,
 	}: BookListFilters) {
 		const inPeriod = from && to ? between(readingEntry.date, from, to) : undefined;
 
@@ -64,20 +96,40 @@ export class BookRepository {
 		// with a period, only the readings with an entry in it count
 		const nbReadings =
 			sql<number>`count(distinct ${inPeriod ? readingEntry.readingId : readingReading.id})`.mapWith(Number);
-		const authors = sql<string[]>`coalesce((
-			select array_agg(${coreEntity.name} order by ${readingBookContributor.order})
-			from ${readingBookContributor} join ${coreEntity} on ${coreEntity.id} = ${readingBookContributor.entityId}
-			where ${readingBookContributor.bookId} = ${readingBook.id} and ${readingBookContributor.role} = 'author'
-		), '{}')`;
+		const authors = sql<Credit[]>`coalesce((
+			select json_agg(
+				json_build_object('entityId', e.id, 'name', e.name, 'creditedAs', bc.credited_as) order by bc."order"
+			)
+			from ${readingBookContributor} bc join ${coreEntity} e on e.id = bc.entity_id
+			where bc.book_id = ${readingBook.id} and bc.role = 'author'
+		), '[]')`;
+		// by the sort name of the first author ("Carroll, Lewis"), else its name
+		const firstAuthor = sql`(
+			select coalesce(e.sort_name, e.name)
+			from ${readingBookContributor} bc join ${coreEntity} e on e.id = bc.entity_id
+			where bc.book_id = ${readingBook.id} and bc.role = 'author'
+			order by bc."order" limit 1
+		)`;
+		// the edition of the latest reading, else the first one
+		const mainEditionId = sql`(
+			select e.id from ${readingEdition} e
+			left join ${readingReading} r on r.edition_id = e.id
+			left join ${readingEntry} en on en.reading_id = r.id
+			where e.book_id = ${readingBook.id}
+			group by e.id
+			order by max(en.date) desc nulls last, e.created_at, e.id
+			limit 1
+		)`;
 		const sortValues: Record<string, SQL | typeof readingBook.title> = {
 			book: readingBook.title,
-			author: sql`(${authors})[1]`,
-			language: sql`${readingEdition.language}`,
+			author: firstAuthor,
+			originalYear: sql`${readingBook.originalYear}`,
+			language: sql`${mainEdition.language}`,
 			country: sql`${readingBook.country}`,
 			nbReadings,
 			firstReadDate,
 			lastReadDate,
-			pages: sql`${readingEdition.pages}`,
+			pages: sql`${mainEdition.pages}`,
 		};
 		const sortValue = sortValues[sortField] ?? readingBook.title;
 
@@ -85,11 +137,18 @@ export class BookRepository {
 			.select({
 				id: readingBook.id,
 				book: readingBook.title,
-				author: authors,
-				language: readingEdition.language,
+				authors,
+				originalLanguage: readingBook.originalLanguage,
+				originalYear: readingBook.originalYear,
+				language: mainEdition.language,
 				country: readingBook.country,
-				pages: readingEdition.pages,
-				model: readingModel.tree,
+				pages: mainEdition.pages,
+				mainEditionId: mainEdition.id,
+				coverKey: mainEdition.coverKey,
+				models: sql<BookModel[]>`coalesce((
+					select json_agg(json_build_object('id', m.id, 'name', m.name, 'tree', m.tree) order by m.name)
+					from ${readingModel} m where m.book_id = ${readingBook.id}
+				), '[]')`,
 				readingDates: sql<
 					string[]
 				>`coalesce(array_agg(distinct ${readingEntry.date}::text) filter (where ${readingEntry.date} is not null), '{}')`,
@@ -98,11 +157,19 @@ export class BookRepository {
 				nbReadings,
 			})
 			.from(readingBook)
-			.innerJoin(readingEdition, eq(readingEdition.bookId, readingBook.id))
-			.leftJoin(readingModel, eq(readingModel.id, readingEdition.modelId))
+			.leftJoin(mainEdition, eq(mainEdition.id, mainEditionId))
+			.leftJoin(readingEdition, eq(readingEdition.bookId, readingBook.id))
 			.leftJoin(readingReading, eq(readingReading.editionId, readingEdition.id))
 			.leftJoin(readingEntry, and(eq(readingEntry.readingId, readingReading.id), inPeriod))
-			.groupBy(readingBook.id, readingEdition.id, readingModel.id)
+			.where(
+				authorId
+					? sql`exists (
+						select 1 from ${readingBookContributor} bc
+						where bc.book_id = ${readingBook.id} and bc.role = 'author' and bc.entity_id = ${authorId}
+					)`
+					: undefined,
+			)
+			.groupBy(readingBook.id, mainEdition.id)
 			.having(inPeriod ? sql`count(${readingEntry.date}) > 0` : undefined)
 			.orderBy(
 				sql`${sortValue} ${sql.raw(sortDirection === "desc" ? "desc" : "asc")} nulls last`,
@@ -119,6 +186,7 @@ export class BookRepository {
 				id: readingReading.id,
 				bookId: readingEdition.bookId,
 				status: readingReading.status,
+				language: readingEdition.language,
 				readingDates: sql<
 					string[]
 				>`coalesce(array_agg(distinct ${readingEntry.date}::text) filter (where ${readingEntry.date} is not null), '{}')`,
@@ -134,7 +202,7 @@ export class BookRepository {
 					books.map(({ id }) => id),
 				),
 			)
-			.groupBy(readingReading.id, readingEdition.bookId)
+			.groupBy(readingReading.id, readingEdition.bookId, readingEdition.language)
 			.having(inPeriod ? sql`bool_or(${inPeriod})` : undefined)
 			.orderBy(sql`${firstReadDate} nulls last`);
 
@@ -159,21 +227,21 @@ export class BookRepository {
 					.orderBy(asc(readingEntry.date))
 			: [];
 
-		return books.map((book) => ({
+		return books.map(({ mainEditionId, coverKey, ...book }) => ({
 			...book,
+			originalLanguage: book.originalLanguage ?? "",
 			country: book.country ?? "",
 			language: book.language ?? "",
-			model: book.model ?? [],
+			cover: mainEditionId ? coverUrl(mainEditionId, coverKey) : null,
 			readings: readings
 				.filter(({ bookId }) => bookId === book.id)
-				.map(({ bookId: _bookId, ...reading }) =>
-					withReadingsDetails
-						? {
-								...reading,
-								details: toDetails(entries.filter(({ readingId }) => readingId === reading.id)),
-							}
-						: reading,
-				),
+				.map(({ bookId: _bookId, ...reading }) => ({
+					...reading,
+					language: reading.language ?? "",
+					...(withReadingsDetails && {
+						details: toDetails(entries.filter(({ readingId }) => readingId === reading.id)),
+					}),
+				})),
 		})) as BookOverview[];
 	}
 
@@ -182,60 +250,235 @@ export class BookRepository {
 		return row ? toBook(row) : undefined;
 	}
 
-	// A new book comes with its edition and an empty model
-	insert(id: string, { book, author, language, country, pages }: BookFields) {
+	// A new book comes with an empty model and an empty edition
+	insert(id: string, { book, authors, originalLanguage, originalYear, country }: BookFields) {
 		return this.db.transaction(async (tx) => {
 			await createNode(tx, { type: "book", label: book, id });
-			await tx.insert(readingBook).values({ id, title: book, country });
-			await this.replaceAuthors(tx, id, author);
+			await tx.insert(readingBook).values({
+				id,
+				title: book,
+				originalLanguage: originalLanguage || null,
+				originalYear,
+				country: country || null,
+			});
+			await this.replaceAuthors(tx, id, authors);
 			const [model] = await tx
 				.insert(readingModel)
 				.values({ bookId: id, name: "Modèle" })
 				.returning({ id: readingModel.id });
-			await tx.insert(readingEdition).values({ bookId: id, language, pages, modelId: model.id });
+			await tx.insert(readingEdition).values({ bookId: id, modelId: model.id });
 		});
 	}
 
-	update(id: string, { book, author, language, country, pages }: BookFields) {
+	update(id: string, { book, authors, originalLanguage, originalYear, country }: BookFields) {
 		return this.db.transaction(async (tx) => {
 			const [updated] = await tx
 				.update(readingBook)
-				.set({ title: book, country })
+				.set({
+					title: book,
+					originalLanguage: originalLanguage || null,
+					originalYear,
+					country: country || null,
+				})
 				.where(eq(readingBook.id, id))
 				.returning({ id: readingBook.id });
 			if (!updated) {
 				return;
 			}
 			await renameNode(tx, id, book);
-			await this.replaceAuthors(tx, id, author);
-			await tx.update(readingEdition).set({ language, pages }).where(eq(readingEdition.bookId, id));
+			await this.replaceAuthors(tx, id, authors);
 		});
 	}
 
-	private async replaceAuthors(tx: Tx, bookId: string, authors: string[]) {
+	private async replaceAuthors(tx: Tx, bookId: string, authors: CreditFields[]) {
 		await tx
 			.delete(readingBookContributor)
 			.where(and(eq(readingBookContributor.bookId, bookId), eq(readingBookContributor.role, "author")));
-		// a name listed twice is credited once
-		for (const [order, name] of [...new Set(authors)].entries()) {
-			const entityId = await findOrCreatePerson(tx, name);
-			await tx.insert(readingBookContributor).values({ bookId, entityId, role: "author", order });
+		const credits = uniqueCredits(authors);
+		if (credits.length) {
+			await tx
+				.insert(readingBookContributor)
+				.values(credits.map((credit, order) => ({ ...credit, bookId, role: "author" as const, order })));
 		}
 	}
 
-	async updateModel(bookId: string, tree: ReadingModelItem[]) {
-		await this.db.update(readingModel).set({ tree }).where(eq(readingModel.bookId, bookId));
+	// how many of these entities exist with one of these kinds
+	async countEntities(ids: string[], kinds: EntityKind[]) {
+		if (!ids.length) {
+			return 0;
+		}
+		const [{ count }] = await this.db
+			.select({ count: sql<number>`count(*)`.mapWith(Number) })
+			.from(coreEntity)
+			.where(and(inArray(coreEntity.id, [...new Set(ids)]), inArray(coreEntity.kind, kinds)));
+		return count;
 	}
 
-	async pushReading(bookId: string, { id, status }: { id: string; status: ReadingStatus }) {
+	// The entities credited as author, with how many of their books are in the tracker and read
+	findAuthors() {
+		return this.db
+			.select({
+				id: coreEntity.id,
+				name: coreEntity.name,
+				sortName: coreEntity.sortName,
+				pictureKey: coreEntity.pictureKey,
+				nbBooks: sql<number>`count(distinct ${readingBookContributor.bookId})`.mapWith(Number),
+				nbReadings: sql<number>`count(distinct ${readingReading.id})`.mapWith(Number),
+			})
+			.from(coreEntity)
+			.innerJoin(
+				readingBookContributor,
+				and(eq(readingBookContributor.entityId, coreEntity.id), eq(readingBookContributor.role, "author")),
+			)
+			.leftJoin(readingEdition, eq(readingEdition.bookId, readingBookContributor.bookId))
+			.leftJoin(readingReading, eq(readingReading.editionId, readingEdition.id))
+			.groupBy(coreEntity.id)
+			.orderBy(sql`coalesce(${coreEntity.sortName}, ${coreEntity.name})`);
+	}
+
+	async findEntity(id: string) {
+		const [entity] = await this.db
+			.select({
+				id: coreEntity.id,
+				kind: coreEntity.kind,
+				name: coreEntity.name,
+				sortName: coreEntity.sortName,
+				pictureKey: coreEntity.pictureKey,
+			})
+			.from(coreEntity)
+			.where(eq(coreEntity.id, id));
+		return entity;
+	}
+
+	// undefined when the book has no such edition
+	async findEdition(bookId: string, editionId: string) {
 		const [edition] = await this.db
-			.select({ id: readingEdition.id })
+			.select({
+				id: readingEdition.id,
+				coverKey: readingEdition.coverKey,
+				modelId: readingEdition.modelId,
+				// a single-table select leaves its columns unqualified ("id"): in a correlated subquery they would
+				// name the subquery's own table, so the outer row is named explicitly
+				nbReadings: sql<number>`(
+					select count(*) from ${readingReading} r where r.edition_id = ${readingEdition}.id
+				)`.mapWith(Number),
+				nbBookEditions: sql<number>`(
+					select count(*) from ${readingEdition} e where e.book_id = ${readingEdition}.book_id
+				)`.mapWith(Number),
+			})
 			.from(readingEdition)
-			.where(eq(readingEdition.bookId, bookId))
-			.limit(1);
-		if (edition) {
-			await this.db.insert(readingReading).values({ id, editionId: edition.id, status });
+			.where(and(eq(readingEdition.id, editionId), eq(readingEdition.bookId, bookId)));
+		return edition;
+	}
+
+	async findCoverKey(editionId: string) {
+		const [edition] = await this.db
+			.select({ coverKey: readingEdition.coverKey })
+			.from(readingEdition)
+			.where(eq(readingEdition.id, editionId));
+		return edition?.coverKey ?? null;
+	}
+
+	// false when the book (on create) or the edition (on update) doesn't exist
+	saveEdition(bookId: string, isNew: boolean, { id, translators, ...fields }: EditionFields) {
+		return this.db.transaction(async (tx) => {
+			if (isNew) {
+				const [book] = await tx
+					.select({ id: readingBook.id })
+					.from(readingBook)
+					.where(eq(readingBook.id, bookId));
+				if (!book) {
+					return false;
+				}
+				await tx.insert(readingEdition).values({ id, bookId, ...fields });
+			} else {
+				const [updated] = await tx
+					.update(readingEdition)
+					.set(fields)
+					.where(and(eq(readingEdition.id, id), eq(readingEdition.bookId, bookId)))
+					.returning({ id: readingEdition.id });
+				if (!updated) {
+					return false;
+				}
+			}
+			await tx
+				.delete(readingEditionContributor)
+				.where(
+					and(eq(readingEditionContributor.editionId, id), eq(readingEditionContributor.role, "translator")),
+				);
+			const credits = uniqueCredits(translators);
+			if (credits.length) {
+				await tx.insert(readingEditionContributor).values(
+					credits.map((credit, order) => ({
+						...credit,
+						editionId: id,
+						role: "translator" as const,
+						order,
+					})),
+				);
+			}
+			return true;
+		});
+	}
+
+	async deleteEdition(bookId: string, editionId: string) {
+		await this.db
+			.delete(readingEdition)
+			.where(and(eq(readingEdition.id, editionId), eq(readingEdition.bookId, bookId)));
+	}
+
+	// undefined when the book has no such model
+	async findModel(bookId: string, modelId: string) {
+		const [model] = await this.db
+			.select({
+				id: readingModel.id,
+				// its chapters can't change for the editions that are read
+				nbReadEditions: sql<number>`(
+					select count(distinct e.id) from ${readingEdition} e join ${readingReading} r on r.edition_id = e.id
+					where e.model_id = ${readingModel}.id
+				)`.mapWith(Number),
+			})
+			.from(readingModel)
+			.where(and(eq(readingModel.id, modelId), eq(readingModel.bookId, bookId)));
+		return model;
+	}
+
+	// false when the book (on create) or the model (on update) doesn't exist
+	async saveModel(bookId: string, { id, name, tree }: { id?: string; name: string; tree: ReadingModelItem[] }) {
+		if (id) {
+			const updated = await this.db
+				.update(readingModel)
+				.set({ name, tree })
+				.where(and(eq(readingModel.id, id), eq(readingModel.bookId, bookId)))
+				.returning({ id: readingModel.id });
+			return updated.length > 0;
 		}
+		const [book] = await this.db.select({ id: readingBook.id }).from(readingBook).where(eq(readingBook.id, bookId));
+		if (!book) {
+			return false;
+		}
+		await this.db.insert(readingModel).values({ bookId, name, tree });
+		return true;
+	}
+
+	// the editions using it are left without model
+	deleteModel(bookId: string, modelId: string) {
+		return this.db.transaction(async (tx) => {
+			await tx
+				.update(readingEdition)
+				.set({ modelId: null })
+				.where(and(eq(readingEdition.modelId, modelId), eq(readingEdition.bookId, bookId)));
+			await tx.delete(readingModel).where(and(eq(readingModel.id, modelId), eq(readingModel.bookId, bookId)));
+		});
+	}
+
+	// false when the book has no such edition
+	async pushReading(bookId: string, editionId: string, { id, status }: { id: string; status: ReadingStatus }) {
+		if (!(await this.findEdition(bookId, editionId))) {
+			return false;
+		}
+		await this.db.insert(readingReading).values({ id, editionId, status });
+		return true;
 	}
 
 	updateReading(bookId: string, reading: { id: string; status: ReadingStatus; details: ReadingDetails[] }) {
@@ -270,4 +513,15 @@ export class BookRepository {
 			),
 		);
 	}
+}
+
+// an entity listed twice is credited once (the primary key is entity + role), with its first credited name
+function uniqueCredits(credits: CreditFields[]) {
+	const byEntity = new Map<string, CreditFields>();
+	for (const credit of credits) {
+		if (!byEntity.has(credit.entityId)) {
+			byEntity.set(credit.entityId, credit);
+		}
+	}
+	return [...byEntity.values()];
 }

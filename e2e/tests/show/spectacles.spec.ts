@@ -131,8 +131,8 @@ test.describe("Shows - Spectacles", () => {
 		const footer = dialog.locator("tfoot");
 		await footer.locator('input[name="role"]').fill("Hamlet");
 		await footer.locator('input[name="main"]').check();
-		await footer.locator(".artist-search-select input").fill("ali");
-		await dialog.locator(".artist-search-select-item", { hasText: artists.alice.name }).click();
+		await footer.locator(".search-select input").fill("ali");
+		await dialog.locator(".search-select-item", { hasText: artists.alice.name }).click();
 		await footer.getByRole("button", { name: "Ajouter" }).click();
 		// No artist needed in a model
 		await footer.locator('input[name="role"]').fill("Ophélie");
@@ -157,8 +157,8 @@ test.describe("Shows - Spectacles", () => {
 
 		await dialog.getByRole("textbox", { name: "Nom*" }).fill("Distribution 2027");
 		const javert = dialog.locator("tbody tr").nth(1);
-		await javert.locator(".artist-search-select input").fill("bob");
-		await dialog.locator(".artist-search-select-item", { hasText: artists.bob.name }).click();
+		await javert.locator(".search-select input").fill("bob");
+		await dialog.locator(".search-select-item", { hasText: artists.bob.name }).click();
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(dialog).not.toBeVisible();

@@ -278,7 +278,8 @@ export class GetDailyCalendarUseCase {
 			}) ?? [];
 		const bookItems =
 			books?.map((book) => {
-				const titleMap = buildTitleMap(book.model);
+				// chapter ids are uuids: the titles of all the book's models can share one map
+				const titleMap = buildTitleMap(book.models.flatMap(({ tree }) => tree));
 				return {
 					id: book.id,
 					name: book.book,

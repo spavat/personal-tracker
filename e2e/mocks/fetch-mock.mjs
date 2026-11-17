@@ -38,6 +38,7 @@ const ROUTES = {
 	"https://images.example.com/newchannel-profile.svg": ["profile.svg", SVG],
 	"https://images.example.com/newchannel-banner.svg": ["banner.svg", SVG],
 	"https://images.example.com/podcast-cover.svg": ["profile.svg", SVG],
+	"https://images.example.com/book-cover.svg": ["profile.svg", SVG],
 };
 
 const realFetch = globalThis.fetch;

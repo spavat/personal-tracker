@@ -1,7 +1,18 @@
-import { BookOverview } from "@personal-tracker/shared/reading-book";
+import { BookOverview, EditionType } from "@personal-tracker/shared/reading-book";
 
+import { API_BASE_URL } from "../../config";
 import { formatDate } from "../../utils";
 import { FrontReading } from "./types";
+
+export const EDITION_TYPE_LABELS: Record<EditionType, string> = {
+	print: "Livre",
+	digital: "Numérique",
+};
+
+// the server gives its covers as paths on the API, other values (image URL, data URI) are used as is
+export function coverSrc(cover: string) {
+	return cover.startsWith("/") ? `${API_BASE_URL}${cover}` : cover;
+}
 
 /**
  * Retrieves the first and last dates from the chapters of a book.

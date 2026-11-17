@@ -2,10 +2,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { SaveBookResponse } from "@personal-tracker/shared/reading-book";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 
 import type { FormData } from "./BookForm.utils";
 
+import EntitySearchSelect from "../../../components/EntitySearchSelect";
 import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
 import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-query";
@@ -27,13 +28,15 @@ export default function BookForm({ bookId, returnTo }: { bookId?: string; return
 		// data is loaded before the modal opens: applied once, never overwritten by a background refetch
 		defaultValues: {
 			...(data as any),
-			author: data?.author.map((author: string) => ({ value: author })) ?? [{ value: "" }],
+			authors: data?.authors.map(({ entityId, creditedAs }) => ({ entityId, creditedAs: creditedAs ?? "" })) ?? [
+				{ entityId: "", creditedAs: "" },
+			],
 		},
 		resolver: zodResolver(BookFormSchema),
 	});
 	const { fields, append, remove } = useFieldArray({
 		control: control,
-		name: "author",
+		name: "authors",
 	});
 
 	const saveMutation = useMutation({
@@ -76,32 +79,48 @@ export default function BookForm({ bookId, returnTo }: { bookId?: string; return
 					<div className="panel">
 						<h3>Général</h3>
 						<div className="form-grid">
-							<label className="form-field full-width">
+							<div className="form-field full-width">
 								<span>
-									Auteur <span className="req">*</span>
+									Auteur·ices <span className="req">*</span>
 								</span>
 								{fields.map((field, index) => (
 									<div key={field.id} className="full-fields-row">
+										<Controller
+											control={control}
+											name={`authors.${index}.entityId`}
+											render={({ field: { value, onChange } }) => (
+												<EntitySearchSelect
+													kind="person"
+													value={value}
+													onChange={(entityId) => onChange(entityId ?? "")}
+													aria-label={`Auteur·ice ${index + 1}`}
+												/>
+											)}
+										/>
 										<input
 											type="text"
-											{...register(`author.${index}.value` as const)}
-											className="flex"
+											{...register(`authors.${index}.creditedAs` as const)}
+											placeholder="Crédité·e comme"
+											aria-label={`Auteur·ice ${index + 1} crédité·e comme`}
 										/>
-
 										{(index !== 0 || fields.length > 1) && (
 											<button type="button" onClick={() => remove(index)} title="Supprimer">
 												<i className="fa-regular fa-trash-can"></i>
 											</button>
 										)}
 										{index === fields.length - 1 && (
-											<button type="button" onClick={() => append({ value: "" })} title="Ajouter">
+											<button
+												type="button"
+												onClick={() => append({ entityId: "", creditedAs: "" })}
+												title="Ajouter"
+											>
 												<i className="fa-regular fa-plus"></i>
 											</button>
 										)}
 									</div>
 								))}
-								{errors.author && <span className="error">Au moins un auteur est obligatoire</span>}
-							</label>
+								{errors.authors && <span className="error">Au moins un auteur est obligatoire</span>}
+							</div>
 							<label className="form-field full-width">
 								<span>
 									Nom <span className="req">*</span>
@@ -110,21 +129,22 @@ export default function BookForm({ bookId, returnTo }: { bookId?: string; return
 								{errors.book && <span className="error">Le nom est obligatoire</span>}
 							</label>
 							<label className="form-field">
-								<span>Langue</span>
-								<input {...register("language")} type="text" />
+								<span>Langue originale</span>
+								<input {...register("originalLanguage")} type="text" />
+							</label>
+							<label className="form-field">
+								<span>Année de publication</span>
+								<input
+									{...register("originalYear", {
+										setValueAs: (v) =>
+											v === "" || v === null || v === undefined ? null : Number(v),
+									})}
+									type="number"
+								/>
 							</label>
 							<label className="form-field">
 								<span>Pays</span>
 								<input {...register("country")} type="text" />
-							</label>
-							<label className="form-field">
-								<span>Pages</span>
-								<input
-									{...register("pages", {
-										setValueAs: (v) => (v === "" || v === null ? null : Number(v)),
-									})}
-									type="number"
-								/>
 							</label>
 						</div>
 					</div>

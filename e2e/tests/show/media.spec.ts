@@ -135,7 +135,7 @@ test.describe("Shows - Media", () => {
 		await page.getByRole("button", { name: "Ajouter le casting" }).click();
 		const dialog = page.getByRole("dialog", { name: "Casting de la représentation" });
 		await dialog.locator('tfoot input[name="role"]').fill("Hamlet");
-		await dialog.locator("tfoot .artist-search-select input").fill("Denis Laurent");
+		await dialog.locator("tfoot .search-select input").fill("Denis Laurent");
 		await dialog.getByText("Créer l'artiste « Denis Laurent »").click();
 		// the list closes once the artist is created and selected (until then, "Ajouter" does nothing)
 		await expect(dialog.getByText("Créer l'artiste « Denis Laurent »")).toBeHidden();

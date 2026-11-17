@@ -26,7 +26,7 @@ export default function DeleteReadingModalForm({
 	});
 	const { data } = useSuspenseQuery(bookDetailsQuery(bookId));
 
-	const reading = data.readings.find((r: any) => r.id === readingId)!;
+	const reading = data.editions.flatMap((edition) => edition.readings).find((r) => r.id === readingId)!;
 
 	function closeModal() {
 		navigate({

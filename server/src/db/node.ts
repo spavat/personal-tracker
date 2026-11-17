@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import type { db } from "./index";
 
@@ -25,27 +25,25 @@ export function renameNode(tx: Tx | Db, id: string, label: string) {
 	return tx.update(coreNode).set({ label }).where(eq(coreNode.id, id));
 }
 
-// Node + entity + the subtype row of its kind. `id` keeps an existing uuid (data migration).
+// Node + entity + the subtype row of its kind. `id` keeps a chosen uuid (a portrait uploaded beforehand).
 export async function createEntity(
 	tx: Tx,
-	{ kind, name, sortName = null, id }: { kind: EntityKind; name: string; sortName?: string | null; id?: string },
+	{
+		kind,
+		name,
+		sortName = null,
+		pictureKey = null,
+		id,
+	}: { kind: EntityKind; name: string; sortName?: string | null; pictureKey?: string | null; id?: string },
 ) {
 	const entityId = await createNode(tx, { type: "entity", label: name, id });
-	const [entity] = await tx.insert(coreEntity).values({ id: entityId, kind, name, sortName }).returning({
+	const [entity] = await tx.insert(coreEntity).values({ id: entityId, kind, name, sortName, pictureKey }).returning({
 		id: coreEntity.id,
 		kind: coreEntity.kind,
 		name: coreEntity.name,
 		sortName: coreEntity.sortName,
+		pictureKey: coreEntity.pictureKey,
 	});
 	await tx.insert(ENTITY_SUBTYPE_TABLE[kind]).values({ id: entityId });
 	return entity;
-}
-
-// The person with exactly this name, created when there is none
-export async function findOrCreatePerson(tx: Tx, name: string) {
-	const [existing] = await tx
-		.select({ id: coreEntity.id })
-		.from(coreEntity)
-		.where(and(eq(coreEntity.kind, "person"), eq(coreEntity.name, name)));
-	return existing?.id ?? (await createEntity(tx, { kind: "person", name })).id;
 }

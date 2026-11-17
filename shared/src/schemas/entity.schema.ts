@@ -11,6 +11,8 @@ export const EntitySchema = z.object({
 	kind: EntityKindSchema,
 	name: z.string().trim().nonempty(),
 	sortName: z.string().trim().nonempty().nullable(),
+	// portrait (square), served through /images/entity/:id
+	picture: z.string().nullable(),
 });
 export type Entity = z.infer<typeof EntitySchema>;
 
@@ -26,8 +28,11 @@ export const EntityListResponseSchema = z.array(EntitySchema);
 // SAVE
 //
 // Creates the entity when no id is given. The kind can't change on update.
+// `picture`: the URL given by the server or left out = unchanged, another URL or a data URI = new portrait,
+// null = no portrait
 export const SaveEntityBodyRequestSchema = EntitySchema.partial({ id: true }).extend({
 	sortName: EntitySchema.shape.sortName.default(null),
+	picture: EntitySchema.shape.picture.optional(),
 });
 export type SaveEntityBody = z.infer<typeof SaveEntityBodyRequestSchema>;
 export const SaveEntityResponseSchema = EntitySchema;

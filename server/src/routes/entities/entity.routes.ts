@@ -10,11 +10,14 @@ import {
 
 import { EntityRepository } from "./entity.repository";
 import { ListEntitiesUseCase, SaveEntityUseCase } from "./entity.useCases";
+import { PortraitStorageRepository } from "./portrait-storage.repository";
+
+const PORTRAIT_BODY_LIMIT = 15 * 1024 * 1024; // 15MB — the portrait can be sent as a base64 data URI
 
 const entitiesRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 	const repository = new EntityRepository(fastify.db);
 	const listEntities = new ListEntitiesUseCase(repository);
-	const saveEntity = new SaveEntityUseCase(repository);
+	const saveEntity = new SaveEntityUseCase(repository, new PortraitStorageRepository());
 
 	fastify.withTypeProvider<ZodTypeProvider>().get(
 		"/",
@@ -31,6 +34,7 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 	fastify.withTypeProvider<ZodTypeProvider>().post(
 		"/save",
 		{
+			bodyLimit: PORTRAIT_BODY_LIMIT,
 			schema: {
 				body: SaveEntityBodyRequestSchema,
 				response: { 200: SaveEntityResponseSchema, 201: SaveEntityResponseSchema },

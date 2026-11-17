@@ -477,6 +477,8 @@ export const readingBook = reading.table("book", {
 		.references(() => coreNode.id, { onDelete: "cascade" }),
 	title: text().notNull(),
 	originalLanguage: text(),
+	// year of the first publication
+	originalYear: integer(),
 	country: text(),
 });
 
@@ -532,6 +534,8 @@ export const readingEdition = reading.table(
 		year: integer(),
 		coverKey: text(),
 		modelId: uuid().references(() => readingModel.id),
+		// the first edition is the book's main one until a reading is made
+		createdAt: timestamp().defaultNow().notNull(),
 	},
 	(table) => [index().on(table.bookId), index().on(table.publisherId), index().on(table.modelId)],
 );

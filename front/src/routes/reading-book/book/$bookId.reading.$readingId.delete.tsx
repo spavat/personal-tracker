@@ -9,7 +9,7 @@ export const Route = createFileRoute("/reading-book/book/$bookId/reading/$readin
 	staticData: { modal: true },
 	loader: async ({ context, params }) => {
 		const book = await context.queryClient.query({ ...bookDetailsQuery(params.bookId), staleTime: "static" });
-		if (!book.readings.some((reading) => reading.id === params.readingId)) {
+		if (!book.editions.some((edition) => edition.readings.some((reading) => reading.id === params.readingId))) {
 			throw new Error("Lecture introuvable");
 		}
 	},

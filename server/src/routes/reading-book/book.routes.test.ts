@@ -5,6 +5,7 @@ import {
 	readingBook,
 	readingBookContributor,
 	readingEdition,
+	readingEditionContributor,
 	readingEntry,
 	readingModel,
 	readingReading,
@@ -17,6 +18,9 @@ import bookRoutes from "./book.routes";
 const UUID = "11111111-1111-4111-8111-111111111111";
 const READING_UUID = "22222222-2222-4222-8222-222222222222";
 const CHAPTER_UUID = "33333333-3333-4333-8333-333333333333";
+const EDITION_UUID = "44444444-4444-4444-8444-444444444444";
+const MODEL_UUID = "55555555-5555-4555-8555-555555555555";
+const ENTITY_UUID = "66666666-6666-4666-8666-666666666666";
 
 const tablesOf = (fn: { mock: { calls: unknown[][] } }) => fn.mock.calls.map((call) => call[0]);
 
@@ -80,12 +84,19 @@ describe("reading-book routes", () => {
 
 		it("POST /save creates the node, the book, its authors, a model and an edition", async () => {
 			await ctx.app.close();
-			ctx = await buildApp([{ id: UUID }]);
+			// every select answers this row: the book's id, and 1 entity found for the author check
+			ctx = await buildApp([{ id: UUID, count: 1 }]);
 
 			const res = await ctx.app.inject({
 				method: "POST",
 				url: "/save",
-				payload: { book: "Dune", author: ["Herbert"], language: "en", country: "us", pages: 412 },
+				payload: {
+					book: "Dune",
+					authors: [{ entityId: ENTITY_UUID, creditedAs: null }],
+					originalLanguage: "en",
+					originalYear: 1965,
+					country: "us",
+				},
 			});
 
 			expect(res.statusCode).toBe(200);
@@ -98,14 +109,115 @@ describe("reading-book routes", () => {
 			]);
 		});
 
-		it("POST /books/:id/readings starts a reading on the book's edition", async () => {
+		it("POST /books/:id/editions/:editionId/readings starts a reading on the edition", async () => {
 			await ctx.app.close();
-			ctx = await buildApp([{ id: "edition-1" }]);
+			ctx = await buildApp([{ id: EDITION_UUID, coverKey: null, nbReadings: 0, nbBookEditions: 1 }]);
 
-			const res = await ctx.app.inject({ method: "POST", url: `/books/${UUID}/readings` });
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: `/books/${UUID}/editions/${EDITION_UUID}/readings`,
+			});
 
 			expect(res.statusCode).toBe(204);
 			expect(tablesOf(ctx.db.insert)).toEqual([readingReading]);
+		});
+
+		it("POST /books/:id/editions/:editionId/readings 404s on an edition of another book", async () => {
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: `/books/${UUID}/editions/${EDITION_UUID}/readings`,
+			});
+
+			expect(res.statusCode).toBe(404);
+			expect(ctx.db.insert).not.toHaveBeenCalled();
+		});
+
+		it("POST /books/:id/editions/save creates an edition with its publisher and translators", async () => {
+			await ctx.app.close();
+			ctx = await buildApp([{ id: EDITION_UUID, count: 1 }]);
+
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: `/books/${UUID}/editions/save`,
+				payload: {
+					title: null,
+					publisherId: ENTITY_UUID,
+					translators: [{ entityId: ENTITY_UUID, creditedAs: "M. Demuth" }],
+					language: "fr",
+					pages: 830,
+					type: "print",
+					isbn: null,
+					year: 2021,
+					cover: null,
+					modelId: null,
+				},
+			});
+
+			expect(res.statusCode).toBe(204);
+			expect(tablesOf(ctx.db.insert)).toEqual([readingEdition, readingEditionContributor]);
+		});
+
+		it("POST /books/:id/editions/save accepts a cover of several MB sent as a data URI", async () => {
+			const cover = `data:image/png;base64,${"A".repeat(6 * 1024 * 1024)}`;
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: `/books/${UUID}/editions/save`,
+				payload: { type: "audio", cover },
+			});
+			// past the body limit: refused by the validation, not as too large (413)
+			expect(res.statusCode).toBe(400);
+		});
+
+		it("POST /books/:id/models/save creates a model", async () => {
+			await ctx.app.close();
+			ctx = await buildApp([{ id: UUID }]);
+
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: `/books/${UUID}/models/save`,
+				payload: { name: "VO", tree: [{ id: CHAPTER_UUID, title: "I" }] },
+			});
+
+			expect(res.statusCode).toBe(204);
+			expect(tablesOf(ctx.db.insert)).toEqual([readingModel]);
+		});
+
+		it("POST /books/:id/models/save rejects a model without name", async () => {
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: `/books/${UUID}/models/save`,
+				payload: { name: " ", tree: [] },
+			});
+			expect(res.statusCode).toBe(400);
+		});
+
+		it("DELETE /books/:id/models/:modelId refuses a model used by a read edition", async () => {
+			await ctx.app.close();
+			ctx = await buildApp([{ id: MODEL_UUID, nbReadEditions: 1 }]);
+
+			const res = await ctx.app.inject({ method: "DELETE", url: `/books/${UUID}/models/${MODEL_UUID}` });
+
+			expect(res.statusCode).toBe(409);
+			expect(ctx.db.delete).not.toHaveBeenCalled();
+		});
+
+		it("POST /books/:id/editions/save rejects an unknown edition type", async () => {
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: `/books/${UUID}/editions/save`,
+				payload: { type: "audio" },
+			});
+			expect(res.statusCode).toBe(400);
+		});
+
+		it("DELETE /books/:id/editions/:editionId refuses the book's last edition", async () => {
+			await ctx.app.close();
+			ctx = await buildApp([{ id: EDITION_UUID, coverKey: null, nbReadings: 0, nbBookEditions: 1 }]);
+
+			const res = await ctx.app.inject({ method: "DELETE", url: `/books/${UUID}/editions/${EDITION_UUID}` });
+
+			expect(res.statusCode).toBe(409);
+			expect(ctx.db.delete).not.toHaveBeenCalled();
 		});
 
 		it("POST /books/:id/saveReading replaces the reading's entries", async () => {
@@ -136,6 +248,34 @@ describe("reading-book routes", () => {
 
 			expect(res.statusCode).toBe(204);
 			expect(tablesOf(ctx.db.delete)).toEqual([readingReading]);
+		});
+
+		it("POST /save rejects a book without author", async () => {
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: "/save",
+				payload: { book: "Dune", authors: [], originalLanguage: "", originalYear: null, country: "" },
+			});
+			expect(res.statusCode).toBe(400);
+		});
+
+		it("GET /authors lists the authors, publicly", async () => {
+			await ctx.app.close();
+			ctx = await buildApp([
+				{ id: ENTITY_UUID, name: "Lewis Carroll", sortName: null, nbBooks: 1, nbReadings: 2 },
+			]);
+
+			const res = await ctx.app.inject({ method: "GET", url: "/authors" });
+
+			expect(res.statusCode).toBe(200);
+			expect(res.json()).toEqual([
+				{ id: ENTITY_UUID, name: "Lewis Carroll", sortName: null, picture: null, nbBooks: 1, nbReadings: 2 },
+			]);
+		});
+
+		it("GET /authors/:id 404s on an unknown author", async () => {
+			const res = await ctx.app.inject({ method: "GET", url: `/authors/${ENTITY_UUID}` });
+			expect(res.statusCode).toBe(404);
 		});
 
 		it("GET /reports returns a schema-valid empty report", async () => {

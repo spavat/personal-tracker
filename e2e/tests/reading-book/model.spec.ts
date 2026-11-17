@@ -1,14 +1,15 @@
 import type { Locator, Page } from "@playwright/test";
 
-import { expect, resetDb, SEED, test } from "../../fixtures";
+import { expect, pickEntity, resetDb, SEED, test } from "../../fixtures";
 
 const { roman } = SEED.book;
 const ROMAN_CHAPTERS = 19;
 
+// The seeded books and a new book have one model
 async function openModelModal(page: Page, bookId: string) {
 	await page.goto(`/reading-book/book/${bookId}`);
-	await page.getByRole("heading", { name: "Modele" }).getByRole("button", { name: "Modifier" }).click();
-	const dialog = page.getByRole("dialog", { name: "Modèle" });
+	await detailsModel(page).getByRole("button", { name: "Modifier le modèle" }).click();
+	const dialog = page.getByRole("dialog", { name: "Modifier le modèle" });
 	await expect(dialog).toBeVisible();
 	return dialog;
 }
@@ -19,19 +20,22 @@ function column(dialog: Locator, name: string) {
 }
 
 // Model shown on the details page
-function detailsModel(page: Page) {
-	return page.locator(".card_item").filter({ has: page.getByRole("heading", { name: "Modèle" }) });
+function detailsModel(page: Page, name = "Modèle") {
+	return page.locator(".card_item.model").filter({ has: page.getByRole("heading", { name }) });
+}
+
+function edition(page: Page, title: string) {
+	return page.locator("section.edition").filter({ has: page.getByRole("heading", { name: title, level: 3 }) });
 }
 
 async function createBook(page: Page, name: string) {
 	await page.goto("/reading-book/list");
 	await page.getByRole("button", { name: "Ajouter un livre" }).click();
 	const dialog = page.getByRole("dialog", { name: "Ajouter un livre" });
-	await dialog.locator('input[name="author.0.value"]').fill("Model Author");
+	await pickEntity(dialog, "Auteur·ice 1", "Model Author");
 	await dialog.getByRole("textbox", { name: "Nom" }).fill(name);
-	await dialog.getByRole("spinbutton", { name: "Pages" }).fill("100");
 	await dialog.getByRole("button", { name: "Enregistrer" }).click();
-	await expect(page.getByRole("heading", { name })).toBeVisible();
+	await expect(page.getByRole("heading", { name, level: 2 })).toBeVisible();
 	return page.url().split("/").pop() as string;
 }
 
@@ -145,5 +149,72 @@ test.describe("Reading Book - Model", () => {
 
 		await page.reload();
 		await expect(detailsModel(page).locator("ul ul > li").first()).toHaveText("Au commencement était le printemps");
+	});
+
+	test("add a second model and use it for a new edition", async ({ page }) => {
+		await page.goto(`/reading-book/book/${roman.id}`);
+		await page.getByRole("button", { name: "Ajouter un modèle" }).click();
+		const dialog = page.getByRole("dialog", { name: "Ajouter un modèle" });
+		// a name is required
+		await column(dialog, "Texte").getByRole("textbox").fill("Prologue\nÉpilogue");
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+		await expect(dialog.getByText("Le nom est obligatoire")).toBeVisible();
+		await dialog.getByRole("textbox", { name: "Nom du modèle" }).fill("Édition courte");
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+		await expect(dialog).not.toBeVisible();
+		await expect(detailsModel(page, "Édition courte").locator("ul ul > li")).toHaveText(["Prologue", "Épilogue"]);
+
+		await page.getByRole("button", { name: "Ajouter une édition" }).click();
+		const editionDialog = page.getByRole("dialog", { name: "Ajouter une édition" });
+		await editionDialog.getByRole("textbox", { name: "Titre de l'édition" }).fill("Poche");
+		// a new edition gets the first model (by name)
+		await expect(editionDialog.getByRole("combobox", { name: "Modèle" })).toHaveValue(/.+/);
+		await editionDialog.getByRole("combobox", { name: "Modèle" }).selectOption("Édition courte");
+		await editionDialog.getByRole("button", { name: "Enregistrer" }).click();
+		await expect(editionDialog).not.toBeVisible();
+		await expect(detailsModel(page, "Édition courte")).toContainText("Utilisé par : Poche");
+
+		// its readings follow its model
+		const poche = edition(page, "Poche");
+		await poche.getByRole("button", { name: "+ Commencer une lecture" }).click();
+		await expect(poche.locator(".card_item").getByText("Prologue")).toBeVisible();
+	});
+
+	test("the model of an edition with readings is locked", async ({ page }) => {
+		await page.goto(`/reading-book/book/${roman.id}`);
+		await page.getByRole("button", { name: "Modifier l'édition" }).click();
+		const dialog = page.getByRole("dialog", { name: "Modifier l'édition" });
+		await expect(dialog.getByRole("combobox", { name: "Modèle" })).toBeDisabled();
+		await expect(dialog).toContainText("Cette édition a des lectures : son modèle ne change plus.");
+
+		// the other fields still save, the model is kept
+		await dialog.getByRole("spinbutton", { name: "Pages" }).fill("300");
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+		await expect(dialog).not.toBeVisible();
+		await expect(detailsModel(page)).toContainText("Utilisé par : Édition");
+	});
+
+	test("a model used by an edition with readings can't be deleted", async ({ page }) => {
+		await page.goto(`/reading-book/book/${roman.id}`);
+		await detailsModel(page).getByRole("button", { name: "Supprimer le modèle" }).click();
+		const dialog = page.getByRole("dialog", { name: "Supprimer le modèle" });
+		await expect(dialog).toContainText("Ce modèle est utilisé par une édition qui a des lectures");
+		await expect(dialog.getByRole("button", { name: "Supprimer" })).toHaveCount(0);
+	});
+
+	test("delete a model: its editions are left without model", async ({ page }) => {
+		const bookId = await createBook(page, "Model Book");
+		await detailsModel(page).getByRole("button", { name: "Supprimer le modèle" }).click();
+		const dialog = page.getByRole("dialog", { name: "Supprimer le modèle" });
+		await expect(dialog).toContainText("Ces éditions n'auront plus de modèle : Édition.");
+		await dialog.getByRole("button", { name: "Supprimer" }).click();
+		await expect(dialog).not.toBeVisible();
+
+		await expect(page.locator(".card_item.model")).toHaveCount(0);
+		await page.goto(`/reading-book/book/${bookId}`);
+		await page.getByRole("button", { name: "Modifier l'édition" }).click();
+		await expect(
+			page.getByRole("dialog", { name: "Modifier l'édition" }).getByRole("combobox", { name: "Modèle" }),
+		).toHaveValue("");
 	});
 });

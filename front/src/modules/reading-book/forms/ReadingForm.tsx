@@ -167,6 +167,9 @@ export function ReadingForm({
 											to: "/reading-book/book/$bookId/reading/$readingId/delete",
 											params: { bookId, readingId: reading.id },
 											search: { returnTo: location.pathname },
+											replace: true,
+											resetScroll: false,
+											mask: { to: "/reading-book/book/$bookId", params: { bookId } },
 										})
 									}
 								>

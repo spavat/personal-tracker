@@ -300,7 +300,7 @@ test.describe("anonymous visitor", () => {
 			"/reading-book/list/add",
 			"/reading-book/history/2026/add",
 			`/reading-book/book/${alice.id}/edit`,
-			`/reading-book/book/${alice.id}/model`,
+			`/reading-book/book/${alice.id}/model/add`,
 			`/reading-book/book/${alice.id}/reading/${ALICE_READING_ID}/delete`,
 		]) {
 			test(`is sent back home from ${url}`, async ({ page }) => {
@@ -312,9 +312,24 @@ test.describe("anonymous visitor", () => {
 		test("reads the public endpoints but cannot write", async ({ request }) => {
 			expect((await request.get(`${API}/reading-book/books`)).status()).toBe(200);
 			expect((await request.get(`${API}/reading-book/books/${alice.id}`)).status()).toBe(200);
+			expect((await request.get(`${API}/reading-book/authors`)).status()).toBe(200);
+			// the entities are only listed for the forms
+			expect((await request.get(`${API}/entities?kind=person`)).status()).toBe(401);
 			expect((await request.get(`${API}/reading-book/reports?from=2026-01-01&to=2026-12-31`)).status()).toBe(401);
 			expect((await request.post(`${API}/reading-book/save`, { data: { book: "Intrus" } })).status()).toBe(401);
-			expect((await request.post(`${API}/reading-book/books/${alice.id}/readings`)).status()).toBe(401);
+			// any uuid as edition: the login is checked before the edition is looked for
+			const editionUrl = `${API}/reading-book/books/${alice.id}/editions/${ALICE_READING_ID}`;
+			expect((await request.post(`${editionUrl}/readings`)).status()).toBe(401);
+			expect(
+				(await request.post(`${API}/reading-book/books/${alice.id}/editions/save`, { data: {} })).status(),
+			).toBe(401);
+			expect((await request.delete(editionUrl)).status()).toBe(401);
+			expect(
+				(await request.post(`${API}/reading-book/books/${alice.id}/models/save`, { data: {} })).status(),
+			).toBe(401);
+			expect(
+				(await request.delete(`${API}/reading-book/books/${alice.id}/models/${ALICE_READING_ID}`)).status(),
+			).toBe(401);
 			expect(
 				(await request.delete(`${API}/reading-book/books/${alice.id}/readings/${ALICE_READING_ID}`)).status(),
 			).toBe(401);

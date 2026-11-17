@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-import { expect, resetDb, SEED, test } from "../../fixtures";
+import { expect, resetDb, SEED, test, pickEntity } from "../../fixtures";
 
 const { alice, littleWomen, roman } = SEED.book;
 const currentYear = new Date().getFullYear();
@@ -67,12 +67,11 @@ test.describe("Reading Book - History", () => {
 		await page.getByRole("button", { name: "Ajouter un livre" }).click();
 		const dialog = page.getByRole("dialog", { name: "Ajouter un livre" });
 		await expect(dialog).toBeVisible();
-		await dialog.locator('input[name="author.0.value"]').fill("History Author");
+		await pickEntity(dialog, "Auteur·ice 1", "History Author");
 		await dialog.getByRole("textbox", { name: "Nom" }).fill("History Book");
-		await dialog.getByRole("spinbutton", { name: "Pages" }).fill("100");
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
-		await expect(page.getByRole("heading", { name: "History Book" })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "History Book", level: 2 })).toBeVisible();
 	});
 
 	test("submenu switches between history and list", async ({ page }) => {

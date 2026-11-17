@@ -1,3 +1,4 @@
+import { creditName } from "@personal-tracker/shared/reading-book";
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
 import { PendingContent } from "../../../components/PendingContent";
@@ -44,7 +45,17 @@ export default function BookList() {
 										</Link>
 									</td>
 									<td className="cell-text" data-label="Auteur">
-										{book.author}
+										{book.authors.map((author, i) => (
+											<span key={author.entityId}>
+												{i > 0 && ", "}
+												<Link
+													to="/reading-book/authors/$authorId"
+													params={{ authorId: author.entityId }}
+												>
+													{creditName(author)}
+												</Link>
+											</span>
+										))}
 									</td>
 									<td className="cell-text" data-label="Langue">
 										{book.language}

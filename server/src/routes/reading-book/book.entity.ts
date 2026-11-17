@@ -2,7 +2,8 @@ import type { Book, ReadingDetails, ReadingModelItem } from "@personal-tracker/s
 
 import { randomUUID } from "crypto";
 
-export type ReadingStatus = Book["readings"][number]["status"];
+export type ReadingStatus = Book["editions"][number]["readings"][number]["status"];
+export type EditionType = Book["editions"][number]["type"];
 
 export interface Entry {
 	readingId: string;
@@ -11,40 +12,80 @@ export interface Entry {
 	tags: string[];
 }
 
-// Shape loaded by BookRepository (book + contributors + editions → model, readings → entries)
+type CreditRow = { role: string; creditedAs: string | null; entity: { id: string; name: string } | null };
+const credits = (rows: CreditRow[], role: string) =>
+	rows
+		.filter((row) => row.role === role && row.entity)
+		.map(({ entity, creditedAs }) => ({ entityId: entity!.id, name: entity!.name, creditedAs }));
+
+// Shape loaded by BookRepository (book + contributors + models, editions → readings → entries)
 export interface BookRow {
 	id: string;
 	title: string;
+	originalLanguage: string | null;
+	originalYear: number | null;
 	country: string | null;
-	contributors: Array<{ role: string; entity: { name: string } | null }>;
+	contributors: CreditRow[];
+	models: Array<{ id: string; name: string; tree: ReadingModelItem[] }>;
 	editions: Array<{
+		id: string;
+		title: string | null;
+		publisher: { id: string; name: string } | null;
+		contributors: CreditRow[];
 		language: string | null;
 		pages: number | null;
-		model: { tree: ReadingModelItem[] } | null;
+		type: EditionType;
+		isbn: string | null;
+		year: number | null;
+		coverKey: string | null;
+		modelId: string | null;
 		readings: Array<{ id: string; status: ReadingStatus; entries: Array<Omit<Entry, "readingId">> }>;
 	}>;
 }
 
-// API shape of a book (as stored in Mongo before): one edition per book for now
 export function toBook(row: BookRow): Book {
-	const edition = row.editions[0];
 	return {
 		id: row.id,
 		book: row.title,
-		author: row.contributors.filter(({ role }) => role === "author").map(({ entity }) => entity?.name ?? ""),
-		language: edition?.language ?? "",
+		authors: credits(row.contributors, "author"),
+		originalLanguage: row.originalLanguage ?? "",
+		originalYear: row.originalYear,
 		country: row.country ?? "",
-		pages: edition?.pages ?? null,
-		model: edition?.model?.tree ?? [],
-		// first read first, the readings not started yet last
-		readings: (edition?.readings ?? [])
-			.toSorted((a, b) => (a.entries[0]?.date ?? "9999").localeCompare(b.entries[0]?.date ?? "9999"))
-			.map((reading) => ({
-				id: reading.id,
-				status: reading.status,
-				details: toDetails(reading.entries),
-			})),
+		models: row.models.map(({ id, name, tree }) => ({ id, name, tree })),
+		editions: row.editions.map((edition) => ({
+			id: edition.id,
+			title: edition.title,
+			publisher: edition.publisher && { id: edition.publisher.id, name: edition.publisher.name },
+			translators: credits(edition.contributors, "translator"),
+			language: edition.language,
+			pages: edition.pages,
+			type: edition.type,
+			isbn: edition.isbn,
+			year: edition.year,
+			cover: coverUrl(edition.id, edition.coverKey),
+			modelId: edition.modelId,
+			// first read first, the readings not started yet last
+			readings: edition.readings
+				.toSorted((a, b) => (a.entries[0]?.date ?? "9999").localeCompare(b.entries[0]?.date ?? "9999"))
+				.map((reading) => ({
+					id: reading.id,
+					status: reading.status,
+					details: toDetails(reading.entries),
+				})),
+		})),
 	};
+}
+
+// Covers are stored as personal-tracker/reading-book/edition/<editionId>.<version>.avif and served through
+// the images proxy; the version changes with each upload, so a replaced cover isn't served from the cache.
+export const COVER_URL_PREFIX = "/images/reading-book/edition/";
+
+export function coverKey(editionId: string, version: string) {
+	return `personal-tracker/reading-book/edition/${editionId}.${version}.avif`;
+}
+
+export function coverUrl(editionId: string, key: string | null) {
+	return key ? `${COVER_URL_PREFIX}${editionId}?v=${key.split(".").at(-2)}` : null;
 }
 
 // entries (sorted by date) → one detail per chapter, in the order the chapters were first read

@@ -4,11 +4,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
+import ImageCropper from "../../../components/ImageCropper";
 import MutationError from "../../../components/MutationError";
 import { useIsOwner } from "../../../hooks/use-is-owner";
 import { deleteMedia, type MediaOwner, reorderMedia, spectaclesQuery, updateMedia, uploadMedia } from "../api";
 import { mediaSrc, readFile } from "../utils";
-import ImageCropper from "./ImageCropper";
 
 const MEDIA_KIND_LABELS: Record<SpectacleMediaKind, string> = {
 	poster: "Affiche",

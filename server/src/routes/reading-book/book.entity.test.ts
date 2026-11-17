@@ -124,50 +124,81 @@ describe("buildInitialReading", () => {
 const ctx = (date: string, tags: string[] = []) => ({ date, tags });
 
 describe("toBook", () => {
-	const row: BookRow = {
-		id: "b1",
-		title: "Dune",
-		country: "us",
+	const edition: BookRow["editions"][number] = {
+		id: "e1",
+		title: "Dune (fr)",
+		publisher: { id: "pub", name: "Pocket" },
 		contributors: [
-			{ role: "author", entity: { name: "Frank Herbert" } },
-			{ role: "illustrator", entity: { name: "Someone" } },
+			{ role: "translator", creditedAs: null, entity: { id: "t1", name: "Michel Demuth" } },
+			{ role: "translator", creditedAs: "M. D.", entity: { id: "t2", name: "Someone" } },
 		],
-		editions: [
+		language: "fr",
+		pages: 830,
+		type: "print",
+		isbn: "978-2266320481",
+		year: 2021,
+		coverKey: "personal-tracker/reading-book/edition/e1.0a1b2c3d.avif",
+		modelId: "m1",
+		readings: [
 			{
-				language: "en",
-				pages: 412,
-				model: { tree: [{ id: "c1", title: "I" }] },
-				readings: [
-					{
-						id: "r1",
-						status: "complete",
-						entries: [
-							{ chapterId: "c2", date: "2024-06-01", tags: ["metro"] },
-							{ chapterId: "c1", date: "2024-06-01", tags: [] },
-							{ chapterId: "c2", date: "2024-06-03", tags: [] },
-						],
-					},
+				id: "r1",
+				status: "complete",
+				entries: [
+					{ chapterId: "c2", date: "2024-06-01", tags: ["metro"] },
+					{ chapterId: "c1", date: "2024-06-01", tags: [] },
+					{ chapterId: "c2", date: "2024-06-03", tags: [] },
 				],
 			},
 		],
 	};
+	const row: BookRow = {
+		id: "b1",
+		title: "Dune",
+		originalLanguage: "en",
+		originalYear: 1965,
+		country: "us",
+		contributors: [
+			{ role: "author", creditedAs: null, entity: { id: "a1", name: "Frank Herbert" } },
+			{ role: "illustrator", creditedAs: null, entity: { id: "i1", name: "Someone" } },
+		],
+		models: [{ id: "m1", name: "VO", tree: [{ id: "c1", title: "I" }] }],
+		editions: [edition],
+	};
 
-	it("gives the former Mongo shape: authors only, edition fields, details grouped by chapter", () => {
+	it("gives the book, its model and its editions, with the readings grouped by chapter", () => {
 		expect(toBook(row)).toEqual({
 			id: "b1",
 			book: "Dune",
-			author: ["Frank Herbert"],
-			language: "en",
+			authors: [{ entityId: "a1", name: "Frank Herbert", creditedAs: null }],
+			originalLanguage: "en",
+			originalYear: 1965,
 			country: "us",
-			pages: 412,
-			model: [{ id: "c1", title: "I" }],
-			readings: [
+			models: [{ id: "m1", name: "VO", tree: [{ id: "c1", title: "I" }] }],
+			editions: [
 				{
-					id: "r1",
-					status: "complete",
-					details: [
-						{ id: "c2", context: [ctx("2024-06-01", ["metro"]), ctx("2024-06-03")] },
-						{ id: "c1", context: [ctx("2024-06-01")] },
+					id: "e1",
+					title: "Dune (fr)",
+					publisher: { id: "pub", name: "Pocket" },
+					translators: [
+						{ entityId: "t1", name: "Michel Demuth", creditedAs: null },
+						{ entityId: "t2", name: "Someone", creditedAs: "M. D." },
+					],
+					language: "fr",
+					pages: 830,
+					type: "print",
+					isbn: "978-2266320481",
+					year: 2021,
+					cover: "/images/reading-book/edition/e1?v=0a1b2c3d",
+					modelId: "m1",
+					readings: [
+						{
+							id: "r1",
+							status: "complete",
+							details: [
+								{ id: "c2", context: [ctx("2024-06-01", ["metro"]), ctx("2024-06-03")] },
+								{ id: "c1", context: [ctx("2024-06-01")] },
+							],
+						},
 					],
 				},
 			],
@@ -175,7 +206,6 @@ describe("toBook", () => {
 	});
 
 	it("lists the readings first read first, the ones not started yet last", () => {
-		const edition = row.editions[0];
 		const reading = (id: string, date?: string) => ({
 			id,
 			status: "complete" as const,
@@ -190,17 +220,19 @@ describe("toBook", () => {
 				},
 			],
 		});
-		expect(book.readings.map(({ id }) => id)).toEqual(["first", "second", "new"]);
+		expect(book.editions[0].readings.map(({ id }) => id)).toEqual(["first", "second", "new"]);
 	});
 
-	it("defaults the edition fields of a book without edition", () => {
-		expect(toBook({ ...row, country: null, editions: [] })).toMatchObject({
-			language: "",
-			country: "",
-			pages: null,
-			model: [],
-			readings: [],
+	it("gives empty strings for a missing original language or country, and no cover without key", () => {
+		const book = toBook({
+			...row,
+			originalLanguage: null,
+			country: null,
+			models: [],
+			editions: [{ ...edition, coverKey: null, publisher: null }],
 		});
+		expect(book).toMatchObject({ originalLanguage: "", country: "", models: [] });
+		expect(book.editions[0]).toMatchObject({ cover: null, publisher: null });
 	});
 });
 

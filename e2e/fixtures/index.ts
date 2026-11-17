@@ -57,6 +57,23 @@ export function ownText(locator: Locator) {
 }
 export { OWNER, resetDb, queryDb, updateMongo } from "../seed";
 
+// Picker of a person or an organization (components/EntitySearchSelect): types the name in the field
+// labelled `label`, then picks the entity with exactly this name, or creates it ("Créer … « name »")
+export async function pickEntity(scope: Locator, label: string, name: string) {
+	const input = scope.getByRole("textbox", { name: label, exact: true });
+	await input.fill(name);
+	const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	await scope
+		.page()
+		.locator(".search-select-item")
+		.filter({ hasText: new RegExp(`^\\s*(Créer .* « ${escaped} »|${escaped})$`) })
+		.first()
+		.click();
+	// the list stays open while the entity is being created: the input then still shows the typed name
+	await expect(scope.page().locator(".search-select-results")).toHaveCount(0);
+	await expect(input).toHaveValue(name);
+}
+
 export const SEED = {
 	music: {
 		// 2026-10-20 (2), 2026-10-05, 2026-09-14 (2), 2026-09-02, 2026-09-01, 2025-12-10

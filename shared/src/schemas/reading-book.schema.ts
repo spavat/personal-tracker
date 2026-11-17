@@ -1,5 +1,7 @@
 import * as z from "zod";
 
+import type { EntityKind } from "./entity.schema";
+
 import { GenericListSchema, PeriodQSSchema, UUIDParamsSchema } from "./common.schema";
 
 const ReadingContextItemSchema = z.object({
@@ -33,17 +35,64 @@ export const ReadingModelItemSchema: z.ZodType<ReadingModelItem> = z.object({
 	content: z.lazy(() => z.array(ReadingModelItemSchema)).optional(),
 });
 
+// A table of contents: chapters, possibly grouped in parts
 export const ModelSchema = z.array(ReadingModelItemSchema);
+
+// A book's model, shared by the editions with the same chapters
+export const BookModelSchema = z.object({
+	id: z.uuid(),
+	name: z.string().trim().nonempty(),
+	tree: ModelSchema,
+});
+export type BookModel = z.infer<typeof BookModelSchema>;
+
+// A person or organization credited on a book or an edition (core entity)
+export const CreditSchema = z.object({
+	entityId: z.uuid(),
+	name: z.string(),
+	// the name printed on this work, when it differs from the entity's (pseudonym, transliteration…)
+	creditedAs: z.string().nullable(),
+});
+export type Credit = z.infer<typeof CreditSchema>;
+export const SaveCreditSchema = z.object({
+	entityId: z.uuid(),
+	creditedAs: z.string().trim().nonempty().nullable(),
+});
+
+// The name shown for a credit
+export const creditName = (credit: Credit) => credit.creditedAs ?? credit.name;
+
+export const EditionTypeSchema = z.enum(["print", "digital"]);
+export type EditionType = z.infer<typeof EditionTypeSchema>;
+
+export const EditionSchema = z.object({
+	id: z.uuid(),
+	// localized title, the book's when null
+	title: z.string().nullable(),
+	publisher: z.object({ id: z.uuid(), name: z.string() }).nullable(),
+	translators: z.array(CreditSchema),
+	language: z.string().nullable(),
+	pages: z.number().int().nullable(),
+	type: EditionTypeSchema.nullable(),
+	isbn: z.string().nullable(),
+	year: z.number().int().nullable(),
+	// served through /images/reading-book/edition/:id
+	cover: z.string().nullable(),
+	// the chapters its readings follow
+	modelId: z.uuid().nullable(),
+	readings: z.array(ReadingSchema),
+});
+export type Edition = z.infer<typeof EditionSchema>;
 
 export const BookSchema = z.object({
 	id: z.uuidv4(),
 	book: z.string().nonempty(),
-	author: z.array(z.string().nonempty()).min(1),
-	language: z.string(),
+	authors: z.array(CreditSchema).min(1),
+	originalLanguage: z.string(),
+	originalYear: z.number().int().nullable(),
 	country: z.string(),
-	pages: z.number().nullable(),
-	model: z.array(ReadingModelItemSchema),
-	readings: z.array(ReadingSchema),
+	models: z.array(BookModelSchema),
+	editions: z.array(EditionSchema),
 });
 
 export type Book = z.infer<typeof BookSchema>;
@@ -54,10 +103,15 @@ type ComputedBookProps = {
 	readingDates: Array<string>;
 };
 const ReadingWithOptionalDetailsSchema = ReadingSchema.partial({ details: true });
-export type BookOverview = Omit<Book, "readings"> &
+// A book in lists: its main edition (the one of its latest reading, else the first one) gives
+// the language, pages and cover; each reading carries the language of its edition.
+export type BookOverview = Omit<Book, "editions"> &
 	ComputedBookProps & {
+		language: string;
+		pages: number | null;
+		cover: string | null;
 		nbReadings: number;
-		readings: Array<z.infer<typeof ReadingWithOptionalDetailsSchema> & ComputedBookProps>;
+		readings: Array<z.infer<typeof ReadingWithOptionalDetailsSchema> & ComputedBookProps & { language: string }>;
 	};
 
 export const BookListRequestSchema = GenericListSchema.extend({
@@ -68,17 +122,61 @@ export const BookListRequestSchema = GenericListSchema.extend({
 });
 export const BookDetailsParamsSchema = UUIDParamsSchema;
 
-export const SaveModelBodyRequestSchema = z.array(ReadingModelItemSchema);
+//
+// SAVE / DELETE MODEL
+//
+export const SaveBookModelRequestSchema = BookModelSchema.partial({ id: true });
+export type SaveBookModelRequest = z.infer<typeof SaveBookModelRequestSchema>;
+export const ModelParamsRequestSchema = z.object({
+	id: z.uuid(),
+	modelId: z.uuid(),
+});
 export const ReadingParamsRequestSchema = UUIDParamsSchema;
 
 //
 // SAVE BOOK
 //
 // Request
-export const SaveBookRequestSchema = BookSchema.partial({ id: true }).omit({ readings: true, model: true });
+export const SaveBookRequestSchema = BookSchema.partial({ id: true })
+	.omit({ editions: true, models: true, authors: true })
+	.extend({ authors: z.array(SaveCreditSchema).min(1) });
 // Response
 export const SaveBookResponseSchema = BookSchema;
 export type SaveBookResponse = z.infer<typeof SaveBookResponseSchema>;
+
+//
+// SAVE EDITION
+//
+// `cover`: the URL given by the server = unchanged, another URL or a data URI = new cover, null = no cover
+export const SaveEditionRequestSchema = EditionSchema.partial({ id: true })
+	.omit({ readings: true, publisher: true, translators: true })
+	.extend({
+		// an organization
+		publisherId: z.uuid().nullable(),
+		translators: z.array(SaveCreditSchema),
+	});
+export type SaveEditionRequest = z.infer<typeof SaveEditionRequestSchema>;
+export const EditionParamsRequestSchema = z.object({
+	id: z.uuid(),
+	editionId: z.uuid(),
+});
+
+//
+// AUTHORS (the people credited as author of a book)
+//
+export const AuthorSchema = z.object({
+	id: z.uuid(),
+	name: z.string(),
+	sortName: z.string().nullable(),
+	// the portrait of the entity
+	picture: z.string().nullable(),
+	nbBooks: z.number(),
+	nbReadings: z.number(),
+});
+export type Author = z.infer<typeof AuthorSchema>;
+export const AuthorListResponseSchema = z.array(AuthorSchema);
+export const AuthorParamsRequestSchema = UUIDParamsSchema;
+export type AuthorDetails = Omit<Author, "nbBooks" | "nbReadings"> & { kind: EntityKind; books: BookOverview[] };
 
 //
 // SAVE READING

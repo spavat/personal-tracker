@@ -18,6 +18,76 @@
 			padding: 4em;
 		}
 
+		.edition {
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+		}
+		.edition-info {
+			display: flex;
+			gap: 16px;
+			align-items: flex-start;
+			h3 {
+				margin-top: 0;
+			}
+			p {
+				margin: 4px 0;
+			}
+		}
+		.cover {
+			width: 120px;
+			aspect-ratio: 2 / 3;
+			object-fit: cover;
+			border-radius: 4px;
+			flex-shrink: 0;
+		}
+		.cover-placeholder {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 2em;
+			opacity: 0.5;
+			border: 1px dashed currentColor;
+			box-sizing: border-box;
+		}
+		.cover-preview {
+			max-width: 150px;
+			max-height: 225px;
+			object-fit: contain;
+		}
+		/* the portraits (.artist-picture, .portrait-card) are styled in App.css, shared with the show artists */
+		.grid.authors {
+			grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+		}
+		.card_item.author {
+			display: flex;
+		}
+		.portrait-input {
+			display: flex;
+			gap: 12px;
+			align-items: center;
+			margin-bottom: 8px;
+			.image-drop-zone {
+				flex: 1;
+				margin-bottom: 0;
+			}
+		}
+		.portrait-preview {
+			width: 120px;
+			aspect-ratio: 1;
+			object-fit: cover;
+			border-radius: 50%;
+			flex-shrink: 0;
+		}
+		.card-cover {
+			float: left;
+			width: 48px;
+			aspect-ratio: 2 / 3;
+			object-fit: cover;
+			border-radius: 3px;
+			margin: 0 12px 4px 0;
+		}
+
 		ul.book-tree {
 			/*remove padding for the root ul*/
 			padding-left: 0px;
