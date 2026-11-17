@@ -15,7 +15,7 @@ import CardPerformance from "../modules/show/components/CardPerformance";
 import "../modules/show/module.css";
 import { formatDate } from "../utils";
 
-// Home page of an anonymous visitor: MainDashboard reads private data
+// Home page of everyone; the owner also has MainDashboard (private data) on /dashboard
 export default function PublicHome() {
 	return (
 		<div className="stats">

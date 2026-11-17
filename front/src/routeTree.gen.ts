@@ -9,7 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as HomeRouteImport } from './routes/_home'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as ContextTagsRouteImport } from './routes/context-tags'
 import { Route as GameRouteImport } from './routes/game'
@@ -23,6 +23,8 @@ import { Route as ReadingMangaRouteImport } from './routes/reading-manga'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ShowsRouteImport } from './routes/shows'
 import { Route as SportRouteImport } from './routes/sport'
+import { Route as HomeIndexRouteImport } from './routes/_home/index'
+import { Route as HomeDashboardRouteImport } from './routes/_home/dashboard'
 import { Route as CalendarIndexRouteImport } from './routes/calendar/index'
 import { Route as CalendarPeriodRouteImport } from './routes/calendar/$period'
 import { Route as ContextTagsListRouteImport } from './routes/context-tags/_list'
@@ -206,9 +208,8 @@ import { Route as InternetReviewReviewEpisodeProgramIdEpisodeIdEditRouteImport }
 import { Route as LifespanListListObjectIdEventEventIdDeleteRouteImport } from './routes/lifespan/list/_list.$objectId.event.$eventId.delete'
 import { Route as LifespanListListObjectIdEventEventIdEditRouteImport } from './routes/lifespan/list/_list.$objectId.event.$eventId.edit'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const HomeRoute = HomeRouteImport.update({
+  id: '/_home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalendarRoute = CalendarRouteImport.update({
@@ -275,6 +276,16 @@ const SportRoute = SportRouteImport.update({
   id: '/sport',
   path: '/sport',
   getParentRoute: () => rootRouteImport,
+} as any)
+const HomeIndexRoute = HomeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => HomeRoute,
+} as any)
+const HomeDashboardRoute = HomeDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => HomeRoute,
 } as any)
 const CalendarIndexRoute = CalendarIndexRouteImport.update({
   id: '/',
@@ -1275,7 +1286,7 @@ const LifespanListListObjectIdEventEventIdEditRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof HomeIndexRoute
   '/calendar': typeof CalendarRouteWithChildren
   '/context-tags': typeof ContextTagsRouteWithChildren
   '/game': typeof GameRouteWithChildren
@@ -1289,6 +1300,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/shows': typeof ShowsRouteWithChildren
   '/sport': typeof SportRouteWithChildren
+  '/dashboard': typeof HomeDashboardRoute
   '/calendar/$period': typeof CalendarPeriodRouteWithChildren
   '/money/analytics': typeof MoneyAnalyticsRoute
   '/calendar/': typeof CalendarIndexRoute
@@ -1472,12 +1484,13 @@ export interface FileRoutesByFullPath {
   '/lifespan/list/$objectId/event/$eventId/edit': typeof LifespanListListObjectIdEventEventIdEditRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/context-tags': typeof ContextTagsListIndexRoute
   '/login': typeof LoginRoute
   '/reports': typeof ReportsRoute
+  '/dashboard': typeof HomeDashboardRoute
   '/calendar/$period': typeof CalendarPeriodRouteWithChildren
   '/money/analytics': typeof MoneyAnalyticsRoute
+  '/': typeof HomeIndexRoute
   '/calendar': typeof CalendarIndexRoute
   '/game': typeof GameIndexRoute
   '/internet': typeof InternetIndexRoute
@@ -1644,7 +1657,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_home': typeof HomeRouteWithChildren
   '/calendar': typeof CalendarRouteWithChildren
   '/context-tags': typeof ContextTagsRouteWithChildren
   '/game': typeof GameRouteWithChildren
@@ -1658,9 +1671,11 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/shows': typeof ShowsRouteWithChildren
   '/sport': typeof SportRouteWithChildren
+  '/_home/dashboard': typeof HomeDashboardRoute
   '/calendar/$period': typeof CalendarPeriodRouteWithChildren
   '/context-tags/_list': typeof ContextTagsListRouteWithChildren
   '/money/analytics': typeof MoneyAnalyticsRoute
+  '/_home/': typeof HomeIndexRoute
   '/calendar/': typeof CalendarIndexRoute
   '/game/': typeof GameIndexRoute
   '/internet/': typeof InternetIndexRoute
@@ -1858,6 +1873,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/shows'
     | '/sport'
+    | '/dashboard'
     | '/calendar/$period'
     | '/money/analytics'
     | '/calendar/'
@@ -2041,12 +2057,13 @@ export interface FileRouteTypes {
     | '/lifespan/list/$objectId/event/$eventId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/context-tags'
     | '/login'
     | '/reports'
+    | '/dashboard'
     | '/calendar/$period'
     | '/money/analytics'
+    | '/'
     | '/calendar'
     | '/game'
     | '/internet'
@@ -2212,7 +2229,7 @@ export interface FileRouteTypes {
     | '/lifespan/list/$objectId/event/$eventId/edit'
   id:
     | '__root__'
-    | '/'
+    | '/_home'
     | '/calendar'
     | '/context-tags'
     | '/game'
@@ -2226,9 +2243,11 @@ export interface FileRouteTypes {
     | '/reports'
     | '/shows'
     | '/sport'
+    | '/_home/dashboard'
     | '/calendar/$period'
     | '/context-tags/_list'
     | '/money/analytics'
+    | '/_home/'
     | '/calendar/'
     | '/game/'
     | '/internet/'
@@ -2411,7 +2430,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  HomeRoute: typeof HomeRouteWithChildren
   CalendarRoute: typeof CalendarRouteWithChildren
   ContextTagsRoute: typeof ContextTagsRouteWithChildren
   GameRoute: typeof GameRouteWithChildren
@@ -2429,11 +2448,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
+    '/_home': {
+      id: '/_home'
+      path: ''
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calendar': {
@@ -2526,6 +2545,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/sport'
       preLoaderRoute: typeof SportRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_home/': {
+      id: '/_home/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof HomeIndexRouteImport
+      parentRoute: typeof HomeRoute
+    }
+    '/_home/dashboard': {
+      id: '/_home/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof HomeDashboardRouteImport
+      parentRoute: typeof HomeRoute
     }
     '/calendar/': {
       id: '/calendar/'
@@ -3804,6 +3837,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface HomeRouteChildren {
+  HomeDashboardRoute: typeof HomeDashboardRoute
+  HomeIndexRoute: typeof HomeIndexRoute
+}
+
+const HomeRouteChildren: HomeRouteChildren = {
+  HomeDashboardRoute: HomeDashboardRoute,
+  HomeIndexRoute: HomeIndexRoute,
+}
+
+const HomeRouteWithChildren = HomeRoute._addFileChildren(HomeRouteChildren)
+
 interface CalendarPeriodRouteChildren {
   CalendarPeriodDateRoute: typeof CalendarPeriodDateRoute
 }
@@ -4717,7 +4762,7 @@ const SportRouteChildren: SportRouteChildren = {
 const SportRouteWithChildren = SportRoute._addFileChildren(SportRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  HomeRoute: HomeRouteWithChildren,
   CalendarRoute: CalendarRouteWithChildren,
   ContextTagsRoute: ContextTagsRouteWithChildren,
   GameRoute: GameRouteWithChildren,

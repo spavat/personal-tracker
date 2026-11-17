@@ -23,10 +23,13 @@ test.describe("anonymous visitor", () => {
 		await expect(page.getByRole("link", { name: "Manga" })).toBeVisible();
 		await expect(page.getByRole("link", { name: "Jeux" })).toBeVisible();
 		await expect(page.getByRole("link", { name: "Argent" })).toHaveCount(0);
+		await expect(page.getByRole("link", { name: "Dashboard" })).toHaveCount(0);
 	});
 
 	test("is sent back home from a private page", async ({ page }) => {
 		await page.goto("/sport/list");
+		await expect(page).toHaveURL("/");
+		await page.goto("/dashboard");
 		await expect(page).toHaveURL("/");
 	});
 

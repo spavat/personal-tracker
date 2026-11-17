@@ -10,7 +10,8 @@ import { mainNavItems, moneyNavItem } from "./nav-items";
 const SIDEBAR_COLLAPSED_KEY = "tracker_sidebar_collapsed";
 
 function isActive(pathname: string, itemPath: string) {
-	return itemPath === "/" ? pathname === "/" : pathname.startsWith(itemPath);
+	// the home page and its owner-only dashboard tab
+	return itemPath === "/" ? pathname === "/" || pathname === "/dashboard" : pathname.startsWith(itemPath);
 }
 
 interface SidebarProps {
