@@ -3,7 +3,8 @@ import type { Page } from "@playwright/test";
 import { expect, resetDb, test } from "../../fixtures";
 import { buildGpx } from "./gpx";
 
-const API_URL = "http://localhost:3001";
+// the server, behind the front proxy (relative to the worker's baseURL)
+const API_URL = "/api";
 
 function activityRow(page: Page, name: string) {
 	return page.locator("table.activities tbody tr").filter({ has: page.getByRole("link", { name, exact: true }) });

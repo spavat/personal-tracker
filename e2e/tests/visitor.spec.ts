@@ -1,6 +1,7 @@
 import { expect, resetDb, SEED, test, updateMongo } from "../fixtures";
 
-const API = "http://localhost:3001";
+// the server, behind the front proxy (relative to the worker's baseURL)
+const API = "/api";
 const { artists, spectacles, performances } = SEED.show;
 const { mockPodcast, mockTube } = SEED.internet;
 const { discovery, genres: musicGenres } = SEED.music;

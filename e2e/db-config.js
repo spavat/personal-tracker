@@ -4,16 +4,35 @@ const path = require("path");
 // Same ports as the docker stack; variables already set in the shell win
 process.loadEnvFile(path.join(__dirname, "test.env"));
 
-const TEST_DB = "personal_tracker_test";
+// Each Playwright worker has its own databases, server and front (index = Playwright's parallelIndex)
+const WORKERS = Number(process.env.E2E_WORKERS ?? 3);
 const POSTGRES_PORT = process.env.POSTGRES_PORT ?? "5432";
 const MONGO_PORT = process.env.MONGO_PORT ?? "27017";
 
-// Servers (to create / drop the test database)
+// Servers (to create / drop the test databases)
 const POSTGRES_SERVER_URL = `postgresql://tracker:tracker@localhost:${POSTGRES_PORT}/postgres`;
 const MONGO_SERVER_URL = `mongodb://localhost:${MONGO_PORT}`;
 
-// Test database
-const TEST_POSTGRES_URL = `postgresql://tracker:tracker@localhost:${POSTGRES_PORT}/${TEST_DB}`;
-const TEST_MONGO_URL = `${MONGO_SERVER_URL}/${TEST_DB}`;
+// Test databases and app ports of a worker
+const testDb = (i) => `personal_tracker_test_${i}`;
+const testPostgresUrl = (i) => `postgresql://tracker:tracker@localhost:${POSTGRES_PORT}/${testDb(i)}`;
+const testMongoUrl = (i) => `${MONGO_SERVER_URL}/${testDb(i)}`;
+const serverPort = (i) => 3001 + i;
+const frontPort = (i) => 5174 + i;
 
-module.exports = { TEST_DB, POSTGRES_SERVER_URL, MONGO_SERVER_URL, TEST_POSTGRES_URL, TEST_MONGO_URL };
+// Index of the current Playwright worker (set by Playwright in its worker processes, 0 elsewhere)
+const workerIndex = () => Number(process.env.TEST_PARALLEL_INDEX ?? 0);
+
+module.exports = {
+	WORKERS,
+	POSTGRES_SERVER_URL,
+	MONGO_SERVER_URL,
+	testDb,
+	testPostgresUrl,
+	testMongoUrl,
+	serverPort,
+	frontPort,
+	workerIndex,
+	// worker 0 databases, for the scripts run outside Playwright (api-snapshot.js)
+	TEST_POSTGRES_URL: testPostgresUrl(0),
+};

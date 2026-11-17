@@ -1,4 +1,8 @@
 import { test as base, expect, type Locator } from "@playwright/test";
+import path from "path";
+
+import { frontPort } from "../db-config";
+import { OWNER } from "../seed";
 
 // 1x1 transparent PNG
 const EMPTY_TILE = Buffer.from(
@@ -6,7 +10,30 @@ const EMPTY_TILE = Buffer.from(
 	"base64",
 );
 
-export const test = base.extend({
+// Each worker has its own front, server and databases (see playwright.config.ts)
+export const test = base.extend<{}, { asOwner: boolean; ownerState: string | undefined }>({
+	// set by the project: the tests run logged in as the seeded owner
+	asOwner: [false, { option: true, scope: "worker" }],
+	// logs the owner in once per worker (the session lives in the worker's database)
+	ownerState: [
+		async ({ asOwner, browser }, provide, workerInfo) => {
+			if (!asOwner) return provide(undefined);
+			const file = path.resolve(__dirname, `../.auth/owner-${workerInfo.parallelIndex}.json`);
+			const page = await browser.newPage({ baseURL: `http://localhost:${frontPort(workerInfo.parallelIndex)}` });
+			await page.goto("/login");
+			await page.getByLabel("Email").fill(OWNER.email);
+			await page.getByLabel("Mot de passe").fill(OWNER.password);
+			await page.getByRole("button", { name: "Se connecter" }).click();
+			await expect(page.getByRole("link", { name: "Se déconnecter" })).toBeVisible();
+			await page.context().storageState({ path: file });
+			await page.close();
+			await provide(file);
+		},
+		{ scope: "worker" },
+	],
+	storageState: async ({ ownerState, storageState }, provide) => provide(ownerState ?? storageState),
+	// oxlint-disable-next-line no-empty-pattern -- Playwright reads a fixture's dependencies from this destructuring
+	baseURL: async ({}, provide, testInfo) => provide(`http://localhost:${frontPort(testInfo.parallelIndex)}`),
 	page: async ({ page }, provide) => {
 		// The sport maps load their tiles from OpenStreetMap: served locally so the tests never need the network
 		await page.route("https://*.tile.openstreetmap.org/**", (route) =>

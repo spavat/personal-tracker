@@ -137,6 +137,8 @@ test.describe("Shows - Media", () => {
 		await dialog.locator('tfoot input[name="role"]').fill("Hamlet");
 		await dialog.locator("tfoot .artist-search-select input").fill("Denis Laurent");
 		await dialog.getByText("Créer l'artiste « Denis Laurent »").click();
+		// the list closes once the artist is created and selected (until then, "Ajouter" does nothing)
+		await expect(dialog.getByText("Créer l'artiste « Denis Laurent »")).toBeHidden();
 		await dialog.locator("tfoot").getByRole("button", { name: "Ajouter" }).click();
 
 		const row = dialog.locator("tbody tr").first();
@@ -149,8 +151,9 @@ test.describe("Shows - Media", () => {
 		await expect(row.locator(".media-picker button.selected img")).toHaveCount(1);
 
 		// the next one is the portrait of this role, from a URL: the server downloads it
-		const url = await row.locator(".media-picker img").getAttribute("src");
-		page.once("dialog", (d) => d.accept(url!));
+		// absolute (the src is relative to the front, under /api)
+		const url = await row.locator(".media-picker img").evaluate((img: HTMLImageElement) => img.src);
+		page.once("dialog", (d) => d.accept(url));
 		await row.getByTitle("Ajouter un portrait pour ce rôle depuis une URL", { exact: true }).click();
 		await expect(row.locator(".media-picker img")).toHaveCount(2);
 		await expect(row.locator(".media-picker button.selected img")).toHaveCount(1);

@@ -56,10 +56,11 @@ export default defineConfig({
 	},
 	// Same setup as production: the API is reached on the front origin under /api (VITE_API_BASE_URL=/api),
 	// so the session cookie is first-party whatever host the app is opened from (localhost, LAN IP from a phone)
+	// (also used by `vite preview`; the e2e tests point each worker's front to its own server with API_PROXY_TARGET)
 	server: {
 		proxy: {
 			"/api": {
-				target: "http://localhost:3000",
+				target: process.env.API_PROXY_TARGET ?? "http://localhost:3000",
 				rewrite: (path) => path.replace(/^\/api/, ""),
 			},
 		},

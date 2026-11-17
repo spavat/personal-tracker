@@ -1,9 +1,10 @@
 // Seed data shared by setup-db.js (once, before the run) and resetDb (after mutating tests).
+// resetDb, queryDb and updateMongo act on the databases of the current Playwright worker.
 const { hashPassword } = require("better-auth/crypto");
 const { Client } = require("pg");
 const { MongoClient } = require("mongodb");
 
-const { TEST_DB, MONGO_SERVER_URL, TEST_POSTGRES_URL } = require("./db-config");
+const { MONGO_SERVER_URL, testDb, testPostgresUrl, workerIndex } = require("./db-config");
 
 /** @param {import("pg").Client} conn */
 async function seedPostgres(conn) {
@@ -1451,7 +1452,7 @@ async function seedMongo(db) {
 async function resetDb() {
 	await Promise.all([
 		(async () => {
-			const conn = new Client({ connectionString: TEST_POSTGRES_URL });
+			const conn = new Client({ connectionString: testPostgresUrl(workerIndex()) });
 			await conn.connect();
 			const { rows } = await conn.query(
 				"SELECT format('%I.%I', schemaname, tablename) AS name FROM pg_tables WHERE schemaname IN ('money', 'show')",
@@ -1464,7 +1465,7 @@ async function resetDb() {
 		(async () => {
 			const client = new MongoClient(MONGO_SERVER_URL);
 			await client.connect();
-			const db = client.db(TEST_DB);
+			const db = client.db(testDb(workerIndex()));
 			for (const col of await db.listCollections().toArray()) {
 				await db.collection(col.name).deleteMany({});
 			}
@@ -1494,7 +1495,7 @@ async function seedOwner(conn) {
 // Runs a query against the Postgres test database, e.g. to check rows after a UI action.
 /** @returns {Promise<Record<string, any>[]>} */
 async function queryDb(sql, params = []) {
-	const conn = new Client({ connectionString: TEST_POSTGRES_URL });
+	const conn = new Client({ connectionString: testPostgresUrl(workerIndex()) });
 	await conn.connect();
 	try {
 		const { rows } = await conn.query(sql, params);
@@ -1510,7 +1511,7 @@ async function updateMongo(collection, filter, update) {
 	const client = new MongoClient(MONGO_SERVER_URL);
 	await client.connect();
 	try {
-		await client.db(TEST_DB).collection(collection).updateMany(filter, update);
+		await client.db(testDb(workerIndex())).collection(collection).updateMany(filter, update);
 	} finally {
 		await client.close();
 	}

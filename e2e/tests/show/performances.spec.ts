@@ -177,6 +177,8 @@ test.describe("Shows - Performances", () => {
 		await dialog.locator('tfoot input[name="role"]').fill("Hamlet");
 		await dialog.locator("tfoot .artist-search-select input").fill("Denis Laurent");
 		await dialog.getByText("Créer l'artiste « Denis Laurent »").click();
+		// the list closes once the artist is created and selected (until then, "Ajouter" does nothing)
+		await expect(dialog.getByText("Créer l'artiste « Denis Laurent »")).toBeHidden();
 		await expect(dialog.locator("tfoot .artist-search-select input")).toHaveValue("Denis Laurent");
 		await dialog.locator("tfoot").getByRole("button", { name: "Ajouter" }).click();
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
