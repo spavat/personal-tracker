@@ -1,8 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from "vitest";
 
 import { makeFakeDrizzle } from "../../test-support/fake-drizzle";
 import { makeCursor, makeFakeMongo } from "../../test-support/fake-mongo";
 import { buildRouteApp } from "../../test-support/route-harness";
+import { BookRepository } from "../reading-book/book.repository";
 import homeRoutes from "./home.routes";
 
 async function buildApp() {
@@ -12,30 +13,6 @@ async function buildApp() {
 	return { app, collection, db };
 }
 
-// a book row as loaded by BookRepository, with one reading on the given dates
-function bookRow(id: string, title: string, dates: string[]) {
-	return {
-		id,
-		title,
-		country: "fr",
-		contributors: [],
-		editions: [
-			{
-				language: "fr",
-				pages: null,
-				model: null,
-				readings: [
-					{
-						id: `${id}-r`,
-						status: "complete",
-						entries: dates.map((date) => ({ chapterId: "c1", date, tags: [] })),
-					},
-				],
-			},
-		],
-	};
-}
-
 function pipelineOf(collection: ReturnType<typeof makeFakeMongo>["collection"], name: string) {
 	return (collection(name).aggregate.mock.calls[0] as any)[0] as Record<string, unknown>[];
 }
@@ -43,10 +20,14 @@ function pipelineOf(collection: ReturnType<typeof makeFakeMongo>["collection"], 
 describe("home routes", () => {
 	let ctx: Awaited<ReturnType<typeof buildApp>>;
 
+	let findBooks: MockInstance<BookRepository["findAll"]>;
+
 	beforeEach(async () => {
+		findBooks = vi.spyOn(BookRepository.prototype, "findAll").mockResolvedValue([]);
 		ctx = await buildApp();
 	});
 	afterEach(async () => {
+		vi.restoreAllMocks();
 		await ctx.app.close();
 	});
 
@@ -72,7 +53,12 @@ describe("home routes", () => {
 		expect(pipelineOf(ctx.collection, "reading_manga")).toEqual(
 			expect.arrayContaining([{ $sort: { lastReadingDate: -1, latestReadingCreated: -1 } }, { $limit: 6 }]),
 		);
-		expect((ctx.db.query as any).readingBook.findMany).toHaveBeenCalled();
+		expect(findBooks).toHaveBeenCalledWith({
+			withReadingsDetails: false,
+			sortField: "lastReadDate",
+			sortDirection: "desc",
+			limit: 6,
+		});
 		expect(pipelineOf(ctx.collection, "internet")).toEqual(
 			expect.arrayContaining([
 				{ $unwind: "$episodes" },
@@ -91,22 +77,6 @@ describe("home routes", () => {
 				limit: 6,
 			}),
 		);
-	});
-
-	it("GET /latest keeps the 6 books read last", async () => {
-		(ctx.db.query as any).readingBook.findMany.mockResolvedValue(
-			["01", "07", "03", "05", "02", "06", "04"].map((day) => bookRow(`b${day}`, day, [`2026-10-${day}`])),
-		);
-
-		const res = await ctx.app.inject({ method: "GET", url: "/latest" });
-		expect(res.json()["reading-book"].map((book: { id: string }) => book.id)).toEqual([
-			"b07",
-			"b06",
-			"b05",
-			"b04",
-			"b03",
-			"b02",
-		]);
 	});
 
 	it("GET /latest keeps the game plays, without the catch-ups", async () => {
@@ -194,10 +164,10 @@ describe("home routes", () => {
 		ctx.collection("reading_manga").aggregate.mockReturnValue(
 			makeCursor([{ id: "m1", title: "Jamais lu", lastReadingDate: null }]),
 		);
-		(ctx.db.query as any).readingBook.findMany.mockResolvedValue([
-			bookRow("b1", "Lu", ["2026-10-01"]),
-			bookRow("b2", "Jamais lu", []),
-		]);
+		findBooks.mockResolvedValue([
+			{ id: "b1", book: "Lu", lastReadDate: "2026-10-01", readings: [] },
+			{ id: "b2", book: "Jamais lu", lastReadDate: null, readings: [] },
+		] as any);
 
 		const res = await ctx.app.inject({ method: "GET", url: "/latest" });
 		expect(res.json().game.map((game: { id: string }) => game.id)).toEqual(["g1"]);

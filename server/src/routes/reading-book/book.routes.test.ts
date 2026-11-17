@@ -64,45 +64,12 @@ describe("reading-book routes", () => {
 	});
 
 	describe("wiring", () => {
-		it("GET /books loads the books with their editions, readings and entries", async () => {
-			ctx.books.findMany.mockResolvedValueOnce([
-				{
-					id: UUID,
-					title: "Dune",
-					country: "us",
-					contributors: [{ role: "author", entity: { name: "Frank Herbert" } }],
-					editions: [
-						{
-							language: "en",
-							pages: 412,
-							model: { tree: [] },
-							readings: [
-								{
-									id: READING_UUID,
-									status: "complete",
-									entries: [{ chapterId: CHAPTER_UUID, date: "2024-06-01", tags: [] }],
-								},
-							],
-						},
-					],
-				},
-			]);
-
-			const res = await ctx.app.inject({ method: "GET", url: "/books" });
+		it("GET /books runs the list query", async () => {
+			const res = await ctx.app.inject({ method: "GET", url: "/books?withReadingsDetails=true" });
 
 			expect(res.statusCode).toBe(200);
-			expect(res.json()).toMatchObject([
-				{
-					id: UUID,
-					book: "Dune",
-					author: ["Frank Herbert"],
-					nbReadings: 1,
-					firstReadDate: "2024-06-01",
-					readings: [{ id: READING_UUID, status: "complete", readingDates: ["2024-06-01"] }],
-				},
-			]);
-			// details are left out of the list unless asked for
-			expect(res.json()[0].readings[0]).not.toHaveProperty("details");
+			expect(res.json()).toEqual([]);
+			expect(ctx.db.select).toHaveBeenCalled();
 		});
 
 		it("GET /books/:id 404s on an unknown book", async () => {

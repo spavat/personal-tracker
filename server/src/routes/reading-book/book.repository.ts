@@ -1,12 +1,13 @@
-import type { ReadingDetails, ReadingModelItem } from "@personal-tracker/shared/reading-book";
+import type { BookOverview, ReadingDetails, ReadingModelItem } from "@personal-tracker/shared/reading-book";
 import type { FastifyInstance } from "fastify";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, asc, between, eq, inArray, sql, type SQL } from "drizzle-orm";
 
 import type { ReadingStatus } from "./book.entity";
 
 import { createNode, findOrCreatePerson, renameNode, type Tx } from "../../db/node";
 import {
+	coreEntity,
 	readingBook,
 	readingBookContributor,
 	readingEdition,
@@ -14,7 +15,7 @@ import {
 	readingModel,
 	readingReading,
 } from "../../db/schema";
-import { sortBookOverviews, toBook, toBookOverviews, toEntries } from "./book.entity";
+import { toBook, toDetails, toEntries } from "./book.entity";
 
 interface BookListFilters {
 	from?: string;
@@ -46,11 +47,134 @@ const WITH_DETAILS = {
 export class BookRepository {
 	constructor(private db: FastifyInstance["db"]) {}
 
-	// The whole list is loaded then shaped in memory (book.entity.ts), like the former Mongo aggregation
-	async findAll({ sortField = "book", sortDirection = "asc", limit, ...filters }: BookListFilters) {
-		const rows = await this.db.query.readingBook.findMany({ with: WITH_DETAILS, orderBy: { title: "asc" } });
-		const books = sortBookOverviews(toBookOverviews(rows.map(toBook), filters), sortField, sortDirection);
-		return limit ? books.slice(0, limit) : books;
+	// With a period, a book or a reading is listed when it has an entry in it, and its details only hold
+	// the entries in it. A reading's own dates always come from all its entries.
+	async findAll({
+		from,
+		to,
+		withReadingsDetails,
+		sortField = "book",
+		sortDirection = "asc",
+		limit,
+	}: BookListFilters) {
+		const inPeriod = from && to ? between(readingEntry.date, from, to) : undefined;
+
+		const firstReadDate = sql<string | null>`min(${readingEntry.date})::text`;
+		const lastReadDate = sql<string | null>`max(${readingEntry.date})::text`;
+		// with a period, only the readings with an entry in it count
+		const nbReadings =
+			sql<number>`count(distinct ${inPeriod ? readingEntry.readingId : readingReading.id})`.mapWith(Number);
+		const authors = sql<string[]>`coalesce((
+			select array_agg(${coreEntity.name} order by ${readingBookContributor.order})
+			from ${readingBookContributor} join ${coreEntity} on ${coreEntity.id} = ${readingBookContributor.entityId}
+			where ${readingBookContributor.bookId} = ${readingBook.id} and ${readingBookContributor.role} = 'author'
+		), '{}')`;
+		const sortValues: Record<string, SQL | typeof readingBook.title> = {
+			book: readingBook.title,
+			author: sql`(${authors})[1]`,
+			language: sql`${readingEdition.language}`,
+			country: sql`${readingBook.country}`,
+			nbReadings,
+			firstReadDate,
+			lastReadDate,
+			pages: sql`${readingEdition.pages}`,
+		};
+		const sortValue = sortValues[sortField] ?? readingBook.title;
+
+		const query = this.db
+			.select({
+				id: readingBook.id,
+				book: readingBook.title,
+				author: authors,
+				language: readingEdition.language,
+				country: readingBook.country,
+				pages: readingEdition.pages,
+				model: readingModel.tree,
+				readingDates: sql<
+					string[]
+				>`coalesce(array_agg(distinct ${readingEntry.date}::text) filter (where ${readingEntry.date} is not null), '{}')`,
+				firstReadDate,
+				lastReadDate,
+				nbReadings,
+			})
+			.from(readingBook)
+			.innerJoin(readingEdition, eq(readingEdition.bookId, readingBook.id))
+			.leftJoin(readingModel, eq(readingModel.id, readingEdition.modelId))
+			.leftJoin(readingReading, eq(readingReading.editionId, readingEdition.id))
+			.leftJoin(readingEntry, and(eq(readingEntry.readingId, readingReading.id), inPeriod))
+			.groupBy(readingBook.id, readingEdition.id, readingModel.id)
+			.having(inPeriod ? sql`count(${readingEntry.date}) > 0` : undefined)
+			.orderBy(
+				sql`${sortValue} ${sql.raw(sortDirection === "desc" ? "desc" : "asc")} nulls last`,
+				asc(readingBook.title),
+			)
+			.$dynamic();
+		const books = await (limit ? query.limit(limit) : query);
+		if (!books.length) {
+			return [];
+		}
+
+		const readings = await this.db
+			.select({
+				id: readingReading.id,
+				bookId: readingEdition.bookId,
+				status: readingReading.status,
+				readingDates: sql<
+					string[]
+				>`coalesce(array_agg(distinct ${readingEntry.date}::text) filter (where ${readingEntry.date} is not null), '{}')`,
+				firstReadDate,
+				lastReadDate,
+			})
+			.from(readingReading)
+			.innerJoin(readingEdition, eq(readingEdition.id, readingReading.editionId))
+			.leftJoin(readingEntry, eq(readingEntry.readingId, readingReading.id))
+			.where(
+				inArray(
+					readingEdition.bookId,
+					books.map(({ id }) => id),
+				),
+			)
+			.groupBy(readingReading.id, readingEdition.bookId)
+			.having(inPeriod ? sql`bool_or(${inPeriod})` : undefined)
+			.orderBy(sql`${firstReadDate} nulls last`);
+
+		const entries = withReadingsDetails
+			? await this.db
+					.select({
+						readingId: readingEntry.readingId,
+						chapterId: readingEntry.chapterId,
+						date: readingEntry.date,
+						tags: readingEntry.tags,
+					})
+					.from(readingEntry)
+					.where(
+						and(
+							inArray(
+								readingEntry.readingId,
+								readings.map(({ id }) => id),
+							),
+							inPeriod,
+						),
+					)
+					.orderBy(asc(readingEntry.date))
+			: [];
+
+		return books.map((book) => ({
+			...book,
+			country: book.country ?? "",
+			language: book.language ?? "",
+			model: book.model ?? [],
+			readings: readings
+				.filter(({ bookId }) => bookId === book.id)
+				.map(({ bookId: _bookId, ...reading }) =>
+					withReadingsDetails
+						? {
+								...reading,
+								details: toDetails(entries.filter(({ readingId }) => readingId === reading.id)),
+							}
+						: reading,
+				),
+		})) as BookOverview[];
 	}
 
 	async findById(id: string) {
