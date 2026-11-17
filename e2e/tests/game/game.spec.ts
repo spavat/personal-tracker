@@ -32,9 +32,13 @@ test.describe("Game - Game details", () => {
 		await expect(general).toContainText("Statut : Terminé");
 		await expect(general.getByRole("link", { name: "Steam" })).toBeVisible();
 
-		await expect(playRows(page).locator("td:nth-child(3)")).toHaveText(["15/08/2026", "03/02/2026", "20/12/2025"]);
-		await expect(playRows(page).locator("td:nth-child(4)")).toHaveText(["45min", "1h 30min", "2h"]);
-		await expect(playRows(page).nth(1).locator("td").nth(5)).toHaveText("Boss final");
+		await expect(playRows(page).locator("td:nth-child(2)")).toHaveText([
+			/15\/08\/2026$/,
+			/03\/02\/2026$/,
+			/20\/12\/2025$/,
+		]);
+		await expect(playRows(page).locator("td:nth-child(3)")).toHaveText(["45min", "1h 30min", "2h"]);
+		await expect(playRows(page).nth(1).locator("td").nth(4)).toHaveText("Boss final");
 	});
 
 	test("edit a game", async ({ page }) => {
@@ -87,7 +91,7 @@ test.describe("Game - Game details", () => {
 
 		await expect(dialog).not.toBeVisible();
 		await expect(playRows(page)).toHaveCount(2);
-		await expect(playRows(page).first().locator("td").nth(3)).toHaveText("1h 15min");
+		await expect(playRows(page).first().locator("td").nth(2)).toHaveText("1h 15min");
 	});
 
 	test("edit a play", async ({ page }) => {
@@ -101,9 +105,9 @@ test.describe("Game - Game details", () => {
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(dialog).not.toBeVisible();
-		await expect(playRows(page).first().locator("td").nth(3)).toHaveText("50min");
-		await expect(playRows(page).first().locator("td").nth(4)).toHaveText("Steam Deck");
-		await expect(playRows(page).first().locator("td").nth(5)).toHaveText("DLC");
+		await expect(playRows(page).first().locator("td").nth(2)).toHaveText("50min");
+		await expect(playRows(page).first().locator("td").nth(3)).toHaveText("Steam Deck");
+		await expect(playRows(page).first().locator("td").nth(4)).toHaveText("DLC");
 	});
 
 	test("delete a play", async ({ page }) => {
@@ -119,6 +123,6 @@ test.describe("Game - Game details", () => {
 		await playRows(page).nth(1).getByRole("button", { name: "Supprimer" }).click();
 		await dialog.getByRole("button", { name: "Supprimer" }).click();
 		await expect(dialog).not.toBeVisible();
-		await expect(playRows(page).locator("td:nth-child(3)")).toHaveText(["15/08/2026", "20/12/2025"]);
+		await expect(playRows(page).locator("td:nth-child(2)")).toHaveText([/15\/08\/2026$/, /20\/12\/2025$/]);
 	});
 });

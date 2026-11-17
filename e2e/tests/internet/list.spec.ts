@@ -46,7 +46,7 @@ test.describe("Internet - List", () => {
 		await expect(cells.nth(8)).toHaveText("1h 25min");
 		await expect(cells.nth(9)).toHaveText("science");
 
-		await expect(programRows(page).nth(1).locator("td").nth(5).locator(".fa-youtube")).toBeVisible();
+		await expect(programRows(page).nth(1).locator('td[data-label="Refs"]').locator(".fa-youtube")).toBeVisible();
 	});
 
 	test("sort by program name", async ({ page }) => {

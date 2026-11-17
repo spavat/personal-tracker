@@ -41,7 +41,9 @@ export default function BookForm({ bookId, returnTo }: { bookId?: string; return
 		onSuccess: (data: SaveBookResponse) => {
 			reset();
 			queryClient.invalidateQueries({ queryKey: ["reading", "books"] });
-			if (!bookId) {
+			if (bookId) {
+				closeModal();
+			} else {
 				// Insert
 				navigate({
 					to: "/reading-book/book/$bookId",

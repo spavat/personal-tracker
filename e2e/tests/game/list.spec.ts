@@ -34,8 +34,8 @@ test.describe("Game - List", () => {
 			"4h 15min",
 			"",
 		]);
-		await expect(gameRow(page, hollow.name).locator(".complete-color")).toBeVisible();
-		await expect(gameRow(page, starFarm.name).locator(".complete-color")).toHaveCount(0);
+		await expect(gameRow(page, hollow.name).locator(".complete")).toBeVisible();
+		await expect(gameRow(page, starFarm.name).locator(".complete")).toHaveCount(0);
 		await expect(gameRow(page, hollow.name).getByRole("link", { name: "Steam" })).toHaveAttribute(
 			"href",
 			"https://store.steampowered.com/app/1001/",
@@ -67,7 +67,7 @@ test.describe("Game - List", () => {
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(dialog).not.toBeVisible();
-		await expect(gameRow(page, ruins.name).locator(".complete-color")).toBeVisible();
+		await expect(gameRow(page, ruins.name).locator(".complete")).toBeVisible();
 	});
 
 	test("search a game with ctrl+shift+f", async ({ page }) => {

@@ -1,4 +1,4 @@
-// Test databases connection settings, shared by setup-db.js, seed.js, global-teardown.ts and playwright.config.ts.
+// Test databases connection settings, shared by setup-db.js, seed.js and playwright.config.ts.
 const path = require("path");
 
 // Same ports as the docker stack; variables already set in the shell win

@@ -23,7 +23,6 @@ export default defineConfig({
 		trace: "retain-on-failure",
 		screenshot: "only-on-failure",
 	},
-	globalTeardown: path.resolve(__dirname, "global-teardown.ts"),
 	webServer: [
 		{
 			command: [

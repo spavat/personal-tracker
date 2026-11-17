@@ -197,7 +197,7 @@ test.describe("Music - List", () => {
 
 		await expect(dialog).not.toBeVisible();
 		const row = listeningRow(page, "Nevermind (Deluxe)");
-		await expect(row.locator("td").nth(4)).toHaveText("80");
+		await expect(row.locator("td").nth(4)).toHaveText("1h 20min");
 		await expect(row.locator("td").nth(6)).toHaveText("voiture");
 	});
 
