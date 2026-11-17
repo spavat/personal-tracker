@@ -1,16 +1,30 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import {
+	coreNode,
+	readingBook,
+	readingBookContributor,
+	readingEdition,
+	readingEntry,
+	readingModel,
+	readingReading,
+} from "../../db/schema";
+import { makeFakeDrizzle } from "../../test-support/fake-drizzle";
 import { makeFakeMongo } from "../../test-support/fake-mongo";
 import { buildRouteApp } from "../../test-support/route-harness";
 import bookRoutes from "./book.routes";
 
 const UUID = "11111111-1111-4111-8111-111111111111";
 const READING_UUID = "22222222-2222-4222-8222-222222222222";
+const CHAPTER_UUID = "33333333-3333-4333-8333-333333333333";
 
-async function buildApp() {
-	const { mongo, collection } = makeFakeMongo();
-	const app = await buildRouteApp(bookRoutes, { mongo });
-	return { app, books: collection("reading_book"), contextTags: collection("context_tags") };
+const tablesOf = (fn: { mock: { calls: unknown[][] } }) => fn.mock.calls.map((call) => call[0]);
+
+async function buildApp(builderResult?: unknown) {
+	const { mongo } = makeFakeMongo();
+	const { db, table } = makeFakeDrizzle({ builderResult });
+	const app = await buildRouteApp(bookRoutes, { mongo, db });
+	return { app, db, books: table("readingBook") };
 }
 
 describe("reading-book routes", () => {
@@ -50,23 +64,57 @@ describe("reading-book routes", () => {
 	});
 
 	describe("wiring", () => {
-		it("GET /books runs the list aggregation", async () => {
+		it("GET /books loads the books with their editions, readings and entries", async () => {
+			ctx.books.findMany.mockResolvedValueOnce([
+				{
+					id: UUID,
+					title: "Dune",
+					country: "us",
+					contributors: [{ role: "author", entity: { name: "Frank Herbert" } }],
+					editions: [
+						{
+							language: "en",
+							pages: 412,
+							model: { tree: [] },
+							readings: [
+								{
+									id: READING_UUID,
+									status: "complete",
+									entries: [{ chapterId: CHAPTER_UUID, date: "2024-06-01", tags: [] }],
+								},
+							],
+						},
+					],
+				},
+			]);
+
 			const res = await ctx.app.inject({ method: "GET", url: "/books" });
+
 			expect(res.statusCode).toBe(200);
-			expect(ctx.books.aggregate).toHaveBeenCalledTimes(1);
+			expect(res.json()).toMatchObject([
+				{
+					id: UUID,
+					book: "Dune",
+					author: ["Frank Herbert"],
+					nbReadings: 1,
+					firstReadDate: "2024-06-01",
+					readings: [{ id: READING_UUID, status: "complete", readingDates: ["2024-06-01"] }],
+				},
+			]);
+			// details are left out of the list unless asked for
+			expect(res.json()[0].readings[0]).not.toHaveProperty("details");
 		});
 
-		it("GET /books/:id loads the book by id", async () => {
-			ctx.books.findOne.mockResolvedValueOnce({ id: UUID, book: "Dune" });
-
+		it("GET /books/:id 404s on an unknown book", async () => {
 			const res = await ctx.app.inject({ method: "GET", url: `/books/${UUID}` });
-
-			expect(res.statusCode).toBe(200);
-			expect(res.json()).toEqual({ id: UUID, book: "Dune" });
-			expect(ctx.books.findOne).toHaveBeenCalledWith({ id: UUID }, { projection: { _id: 0 } });
+			expect(res.statusCode).toBe(404);
+			expect(ctx.books.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { id: UUID } }));
 		});
 
-		it("POST /save inserts a new book", async () => {
+		it("POST /save creates the node, the book, its authors, a model and an edition", async () => {
+			await ctx.app.close();
+			ctx = await buildApp([{ id: UUID }]);
+
 			const res = await ctx.app.inject({
 				method: "POST",
 				url: "/save",
@@ -74,36 +122,53 @@ describe("reading-book routes", () => {
 			});
 
 			expect(res.statusCode).toBe(200);
-			expect(ctx.books.insertOne).toHaveBeenCalledTimes(1);
-			expect(ctx.books.insertOne.mock.calls[0][0]).toMatchObject({
-				book: "Dune",
-				author: ["Herbert"],
-				readings: [],
-				model: [],
-			});
+			expect(tablesOf(ctx.db.insert)).toEqual([
+				coreNode,
+				readingBook,
+				readingBookContributor,
+				readingModel,
+				readingEdition,
+			]);
 		});
 
-		it("POST /books/:id/readings pushes a new reading", async () => {
+		it("POST /books/:id/readings starts a reading on the book's edition", async () => {
+			await ctx.app.close();
+			ctx = await buildApp([{ id: "edition-1" }]);
+
 			const res = await ctx.app.inject({ method: "POST", url: `/books/${UUID}/readings` });
 
-			expect(res.statusCode).toBe(200);
-			expect(ctx.books.updateOne).toHaveBeenCalledTimes(1);
-			const [filter, update] = ctx.books.updateOne.mock.calls[0];
-			expect(filter).toEqual({ id: UUID });
-			expect(update.$push.readings).toMatchObject({ status: "in-progress", details: [] });
+			expect(res.statusCode).toBe(204);
+			expect(tablesOf(ctx.db.insert)).toEqual([readingReading]);
 		});
 
-		it("DELETE /books/:id/readings/:readingId pulls the reading", async () => {
+		it("POST /books/:id/saveReading replaces the reading's entries", async () => {
+			await ctx.app.close();
+			ctx = await buildApp([{ id: READING_UUID }]);
+
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: `/books/${UUID}/saveReading`,
+				payload: {
+					id: READING_UUID,
+					status: "complete",
+					details: [{ id: CHAPTER_UUID, context: [{ date: "2024-06-01", tags: ["metro"] }] }],
+				},
+			});
+
+			expect(res.statusCode).toBe(204);
+			expect(tablesOf(ctx.db.update)).toEqual([readingReading]);
+			expect(tablesOf(ctx.db.delete)).toEqual([readingEntry]);
+			expect(tablesOf(ctx.db.insert)).toEqual([readingEntry]);
+		});
+
+		it("DELETE /books/:id/readings/:readingId deletes the reading", async () => {
 			const res = await ctx.app.inject({
 				method: "DELETE",
 				url: `/books/${UUID}/readings/${READING_UUID}`,
 			});
 
-			expect(res.statusCode).toBe(200);
-			expect(ctx.books.updateOne).toHaveBeenCalledWith(
-				{ id: UUID },
-				{ $pull: { readings: { id: READING_UUID } } },
-			);
+			expect(res.statusCode).toBe(204);
+			expect(tablesOf(ctx.db.delete)).toEqual([readingReading]);
 		});
 
 		it("GET /reports returns a schema-valid empty report", async () => {

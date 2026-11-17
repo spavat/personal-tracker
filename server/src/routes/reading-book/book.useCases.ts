@@ -53,7 +53,7 @@ export class SaveBookUseCase {
 			await this.repo.update(bookId, book);
 		} else {
 			bookId = randomUUID();
-			await this.repo.insert({ id: bookId, ...book, readings: [], model: [] });
+			await this.repo.insert(bookId, book);
 		}
 		return this.repo.findById(bookId);
 	}
@@ -163,7 +163,8 @@ export class GetReportUseCase {
 					}
 				});
 
-				for (let detail of reading.details) {
+				// always loaded: the report asks for withReadingsDetails
+				for (let detail of reading.details ?? []) {
 					const dates: Array<string> = [];
 					dates.push(...detail.context.map(({ date }: { date: string }) => date));
 					const datesThisYear = dates.filter((date) => isDateBetween(date, from, to));

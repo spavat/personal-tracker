@@ -23,7 +23,7 @@ const homeRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 		new InternetRepository(fastify.mongo),
 		new InternetImageStorageRepository(),
 		new MangaRepository(fastify.mongo),
-		new BookRepository(fastify.mongo),
+		new BookRepository(fastify.db),
 	);
 
 	fastify.withTypeProvider<ZodTypeProvider>().get(

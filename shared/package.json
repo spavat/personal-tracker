@@ -15,6 +15,11 @@
 			"import": "./dist/schemas/calendar.schema.js",
 			"require": "./dist/schemas/calendar.schema.js"
 		},
+		"./entity": {
+			"types": "./dist/schemas/entity.schema.d.ts",
+			"import": "./dist/schemas/entity.schema.js",
+			"require": "./dist/schemas/entity.schema.js"
+		},
 		"./game": {
 			"types": "./dist/schemas/game.schema.d.ts",
 			"import": "./dist/schemas/game.schema.js",

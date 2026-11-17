@@ -1,4 +1,4 @@
-import { expect, resetDb, SEED, test, updateMongo } from "../fixtures";
+import { expect, queryDb, resetDb, SEED, test, updateMongo } from "../fixtures";
 
 // the server, behind the front proxy (relative to the worker's baseURL)
 const API = "/api";
@@ -281,7 +281,7 @@ test.describe("anonymous visitor", () => {
 
 		test.describe("in-progress reading", () => {
 			test.beforeEach(() =>
-				updateMongo("reading_book", { id: alice.id }, { $set: { "readings.0.status": "in-progress" } }),
+				queryDb("UPDATE reading.reading SET status = 'in-progress' WHERE id = $1", [ALICE_READING_ID]),
 			);
 			test.afterEach(resetDb);
 

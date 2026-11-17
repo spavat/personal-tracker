@@ -26,7 +26,7 @@ import {
 } from "./book.useCases";
 
 const readingsBook: FastifyPluginAsyncZod = async (fastify): Promise<void> => {
-	const repository = new BookRepository(fastify.mongo);
+	const repository = new BookRepository(fastify.db);
 	const contextTagRepository = new ContextTagRepository(fastify.mongo);
 	const listBooks = new ListBooksUseCase(repository);
 	const getBook = new GetBookUseCase(repository);
@@ -77,7 +77,10 @@ const readingsBook: FastifyPluginAsyncZod = async (fastify): Promise<void> => {
 				params: ReadingParamsRequestSchema,
 			},
 		},
-		async (request) => saveModel.execute({ bookId: request.params.id, model: request.body }, request.log),
+		async (request, reply) => {
+			await saveModel.execute({ bookId: request.params.id, model: request.body }, request.log);
+			return reply.code(204).send();
+		},
 	);
 
 	fastify.withTypeProvider<ZodTypeProvider>().post(
@@ -87,7 +90,10 @@ const readingsBook: FastifyPluginAsyncZod = async (fastify): Promise<void> => {
 				params: ReadingParamsRequestSchema,
 			},
 		},
-		async (request) => addReading.execute(request.params.id, request.log),
+		async (request, reply) => {
+			await addReading.execute(request.params.id, request.log);
+			return reply.code(204).send();
+		},
 	);
 
 	fastify.withTypeProvider<ZodTypeProvider>().post(
@@ -98,7 +104,10 @@ const readingsBook: FastifyPluginAsyncZod = async (fastify): Promise<void> => {
 				params: ReadingParamsRequestSchema,
 			},
 		},
-		async (request) => saveReading.execute({ bookId: request.params.id, reading: request.body }, request.log),
+		async (request, reply) => {
+			await saveReading.execute({ bookId: request.params.id, reading: request.body }, request.log);
+			return reply.code(204).send();
+		},
 	);
 
 	fastify.withTypeProvider<ZodTypeProvider>().delete(
@@ -108,8 +117,13 @@ const readingsBook: FastifyPluginAsyncZod = async (fastify): Promise<void> => {
 				params: DeleteReadingParamsRequestSchema,
 			},
 		},
-		async (request) =>
-			deleteReading.execute({ bookId: request.params.id, readingId: request.params.readingId }, request.log),
+		async (request, reply) => {
+			await deleteReading.execute(
+				{ bookId: request.params.id, readingId: request.params.readingId },
+				request.log,
+			);
+			return reply.code(204).send();
+		},
 	);
 
 	fastify.withTypeProvider<ZodTypeProvider>().get(

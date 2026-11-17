@@ -184,4 +184,90 @@ export const relations = defineRelations(schema, (r) => ({
 			to: r.showSpectacle.id,
 		}),
 	},
+	readingBook: {
+		contributors: r.many.readingBookContributor({
+			from: r.readingBook.id,
+			to: r.readingBookContributor.bookId,
+		}),
+		editions: r.many.readingEdition({
+			from: r.readingBook.id,
+			to: r.readingEdition.bookId,
+		}),
+		models: r.many.readingModel({
+			from: r.readingBook.id,
+			to: r.readingModel.bookId,
+		}),
+		series: r.many.readingSeriesBook({
+			from: r.readingBook.id,
+			to: r.readingSeriesBook.bookId,
+		}),
+	},
+	readingBookContributor: {
+		book: r.one.readingBook({
+			from: r.readingBookContributor.bookId,
+			to: r.readingBook.id,
+		}),
+		entity: r.one.coreEntity({
+			from: r.readingBookContributor.entityId,
+			to: r.coreEntity.id,
+		}),
+	},
+	readingEdition: {
+		book: r.one.readingBook({
+			from: r.readingEdition.bookId,
+			to: r.readingBook.id,
+		}),
+		contributors: r.many.readingEditionContributor({
+			from: r.readingEdition.id,
+			to: r.readingEditionContributor.editionId,
+		}),
+		publisher: r.one.coreEntity({
+			from: r.readingEdition.publisherId,
+			to: r.coreEntity.id,
+		}),
+		model: r.one.readingModel({
+			from: r.readingEdition.modelId,
+			to: r.readingModel.id,
+		}),
+		readings: r.many.readingReading({
+			from: r.readingEdition.id,
+			to: r.readingReading.editionId,
+		}),
+	},
+	readingEditionContributor: {
+		edition: r.one.readingEdition({
+			from: r.readingEditionContributor.editionId,
+			to: r.readingEdition.id,
+		}),
+		entity: r.one.coreEntity({
+			from: r.readingEditionContributor.entityId,
+			to: r.coreEntity.id,
+		}),
+	},
+	readingReading: {
+		edition: r.one.readingEdition({
+			from: r.readingReading.editionId,
+			to: r.readingEdition.id,
+		}),
+		entries: r.many.readingEntry({
+			from: r.readingReading.id,
+			to: r.readingEntry.readingId,
+		}),
+	},
+	readingSeries: {
+		books: r.many.readingSeriesBook({
+			from: r.readingSeries.id,
+			to: r.readingSeriesBook.seriesId,
+		}),
+	},
+	readingSeriesBook: {
+		series: r.one.readingSeries({
+			from: r.readingSeriesBook.seriesId,
+			to: r.readingSeries.id,
+		}),
+		book: r.one.readingBook({
+			from: r.readingSeriesBook.bookId,
+			to: r.readingBook.id,
+		}),
+	},
 }));

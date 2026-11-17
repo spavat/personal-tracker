@@ -89,19 +89,16 @@ describe("SaveBookUseCase", () => {
 		expect(result).toEqual({ id: "book-1", book: "Dune" });
 	});
 
-	it("inserts a new book with a generated id and empty readings/model", async () => {
+	it("inserts a new book with a generated id", async () => {
 		const repo = fakeRepo();
 		const book = { book: "Dune", author: ["Herbert"] };
 
 		await new SaveBookUseCase(asRepo(repo)).execute(book as any, asLog(makeLog()));
 
 		expect(repo.update).not.toHaveBeenCalled();
-		expect(repo.insert).toHaveBeenCalledTimes(1);
-		const inserted = repo.insert.mock.calls[0][0];
-		expect(inserted).toMatchObject({ book: "Dune", author: ["Herbert"], readings: [], model: [] });
-		expect(inserted.id).toEqual(expect.any(String));
-		// the reloaded document uses the same generated id
-		expect(repo.findById).toHaveBeenCalledWith(inserted.id);
+		expect(repo.insert).toHaveBeenCalledWith(expect.any(String), book);
+		// the reloaded book uses the same generated id
+		expect(repo.findById).toHaveBeenCalledWith(repo.insert.mock.calls[0][0]);
 	});
 });
 

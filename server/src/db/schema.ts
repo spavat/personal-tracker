@@ -1,5 +1,7 @@
+import type { ReadingModelItem } from "@personal-tracker/shared/reading-book";
 import type { SpectacleLink } from "@personal-tracker/shared/show";
 
+import { sql } from "drizzle-orm";
 import {
 	snakeCase,
 	integer,
@@ -18,6 +20,8 @@ import {
 	jsonb,
 	type AnyPgColumn,
 	customType,
+	unique,
+	check,
 } from "drizzle-orm/pg-core";
 
 // timestamp read as an ISO local date-time ("2024-01-01T20:00:00"):
@@ -30,6 +34,7 @@ const localTimestamp = customType<{ data: string; driverData: string }>({
 export const money = snakeCase.schema("money");
 export const show = snakeCase.schema("show");
 export const auth = snakeCase.schema("auth");
+export const core = snakeCase.schema("core");
 
 export const moneyAccount = money.table(
 	"account",
@@ -386,4 +391,221 @@ export const authVerification = auth.table(
 		updatedAt: timestamp().defaultNow().notNull(),
 	},
 	(table) => [index().on(table.identifier)],
+);
+
+// Registry of everything that can be linked across modules: each linkable row shares its node's uuid.
+// See .scratch/connected-domains/spec.md
+export const coreNodeType = core.enum("node_type", ["entity", "book", "book_series"]);
+
+export const coreNode = core.table("node", {
+	id: uuid().primaryKey().defaultRandom(),
+	type: coreNodeType().notNull(),
+	// display name, kept in sync with the row it stands for (search, link lists)
+	label: text().notNull(),
+});
+
+export const coreEntityKind = core.enum("entity_kind", ["person", "group", "organization"]);
+
+// People, groups and organizations (supertype). The kind-specific fields live in the core.entity_<kind> tables.
+export const coreEntity = core.table(
+	"entity",
+	{
+		id: uuid()
+			.primaryKey()
+			.references(() => coreNode.id, { onDelete: "cascade" }),
+		kind: coreEntityKind().notNull(),
+		name: text().notNull(),
+		// "Carroll, Lewis"
+		sortName: text(),
+		pictureKey: text(),
+	},
+	// (id, kind) is the target of the subtype FKs: a subtype row can only belong to an entity of its kind
+	(table) => [unique("entity_id_kind_key").on(table.id, table.kind), index().on(table.kind)],
+);
+
+function entitySubtypeConstraints(name: string, kind: "person" | "group" | "organization") {
+	return (table: { id: AnyPgColumn; kind: AnyPgColumn }) => [
+		foreignKey({
+			name: `${name}_entity_fkey`,
+			columns: [table.id, table.kind],
+			foreignColumns: [coreEntity.id, coreEntity.kind],
+		}).onDelete("cascade"),
+		check(`${name}_kind_check`, sql`${table.kind} = ${sql.raw(`'${kind}'`)}`),
+	];
+}
+
+export const coreEntityPerson = core.table(
+	"entity_person",
+	{
+		id: uuid().primaryKey(),
+		kind: coreEntityKind().default("person").notNull(),
+		birthDate: date(),
+		deathDate: date(),
+	},
+	entitySubtypeConstraints("entity_person", "person"),
+);
+
+export const coreEntityGroup = core.table(
+	"entity_group",
+	{
+		id: uuid().primaryKey(),
+		kind: coreEntityKind().default("group").notNull(),
+		formedOn: date(),
+		dissolvedOn: date(),
+	},
+	entitySubtypeConstraints("entity_group", "group"),
+);
+
+export const coreEntityOrganization = core.table(
+	"entity_organization",
+	{
+		id: uuid().primaryKey(),
+		kind: coreEntityKind().default("organization").notNull(),
+		foundedOn: date(),
+		dissolvedOn: date(),
+	},
+	entitySubtypeConstraints("entity_organization", "organization"),
+);
+
+// Reading-book: a book has editions (language, translators, cover…), models (tables of contents) shared by
+// its editions, and readings made on an edition. See .scratch/reading-book-editions/spec.md
+export const reading = snakeCase.schema("reading");
+
+export const readingBook = reading.table("book", {
+	id: uuid()
+		.primaryKey()
+		.references(() => coreNode.id, { onDelete: "cascade" }),
+	title: text().notNull(),
+	originalLanguage: text(),
+	country: text(),
+});
+
+export const readingBookContributorRole = reading.enum("book_contributor_role", ["author", "illustrator", "preface"]);
+
+export const readingBookContributor = reading.table(
+	"book_contributor",
+	{
+		bookId: uuid()
+			.notNull()
+			.references(() => readingBook.id, { onDelete: "cascade" }),
+		entityId: uuid()
+			.notNull()
+			.references(() => coreEntity.id),
+		role: readingBookContributorRole().notNull(),
+		// name printed on this book when it differs from the entity's (pseudonym…)
+		creditedAs: text(),
+		order: integer().default(0).notNull(),
+	},
+	(table) => [primaryKey({ columns: [table.bookId, table.entityId, table.role] }), index().on(table.entityId)],
+);
+
+export const readingModel = reading.table(
+	"model",
+	{
+		id: uuid().primaryKey().defaultRandom(),
+		bookId: uuid()
+			.notNull()
+			.references(() => readingBook.id, { onDelete: "cascade" }),
+		name: text().notNull(),
+		tree: jsonb().$type<ReadingModelItem[]>().default([]).notNull(),
+	},
+	(table) => [index().on(table.bookId)],
+);
+
+export const readingEditionType = reading.enum("edition_type", ["print", "digital"]);
+
+export const readingEdition = reading.table(
+	"edition",
+	{
+		id: uuid().primaryKey().defaultRandom(),
+		bookId: uuid()
+			.notNull()
+			.references(() => readingBook.id, { onDelete: "cascade" }),
+		// localized title, falls back to the book's
+		title: text(),
+		// an organization entity
+		publisherId: uuid().references(() => coreEntity.id),
+		language: text(),
+		pages: integer(),
+		type: readingEditionType(),
+		isbn: text(),
+		year: integer(),
+		coverKey: text(),
+		modelId: uuid().references(() => readingModel.id),
+	},
+	(table) => [index().on(table.bookId), index().on(table.publisherId), index().on(table.modelId)],
+);
+
+export const readingEditionContributorRole = reading.enum("edition_contributor_role", ["translator"]);
+
+export const readingEditionContributor = reading.table(
+	"edition_contributor",
+	{
+		editionId: uuid()
+			.notNull()
+			.references(() => readingEdition.id, { onDelete: "cascade" }),
+		entityId: uuid()
+			.notNull()
+			.references(() => coreEntity.id),
+		role: readingEditionContributorRole().notNull(),
+		creditedAs: text(),
+		order: integer().default(0).notNull(),
+	},
+	(table) => [primaryKey({ columns: [table.editionId, table.entityId, table.role] }), index().on(table.entityId)],
+);
+
+export const readingStatus = reading.enum("status", ["in-progress", "complete", "abandoned"]);
+
+export const readingReading = reading.table(
+	"reading",
+	{
+		id: uuid().primaryKey().defaultRandom(),
+		editionId: uuid()
+			.notNull()
+			.references(() => readingEdition.id, { onDelete: "cascade" }),
+		status: readingStatus().default("in-progress").notNull(),
+	},
+	(table) => [index().on(table.editionId)],
+);
+
+// One row per chapter read on a given day (chapter_id = an item id of the edition's model tree)
+export const readingEntry = reading.table(
+	"entry",
+	{
+		readingId: uuid()
+			.notNull()
+			.references(() => readingReading.id, { onDelete: "cascade" }),
+		chapterId: uuid().notNull(),
+		date: date().notNull(),
+		tags: text().array().default([]).notNull(),
+	},
+	(table) => [primaryKey({ columns: [table.readingId, table.chapterId, table.date] }), index().on(table.date)],
+);
+
+export const readingSeries = reading.table("series", {
+	id: uuid()
+		.primaryKey()
+		.references(() => coreNode.id, { onDelete: "cascade" }),
+	title: text().notNull(),
+});
+
+export const readingSeriesBook = reading.table(
+	"series_book",
+	{
+		seriesId: uuid()
+			.notNull()
+			.references(() => readingSeries.id, { onDelete: "cascade" }),
+		bookId: uuid()
+			.notNull()
+			.references(() => readingBook.id, { onDelete: "cascade" }),
+		// display order only, rewritten 1..n on reorder
+		position: integer().notNull(),
+		// the only displayed value: "1", "2.5", "interlude"…
+		positionLabel: text(),
+	},
+	(table) => [
+		primaryKey({ columns: [table.seriesId, table.bookId] }),
+		unique("series_book_series_id_position_key").on(table.seriesId, table.position),
+		index().on(table.bookId),
+	],
 );

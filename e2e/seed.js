@@ -6,6 +6,766 @@ const { MongoClient } = require("mongodb");
 
 const { MONGO_SERVER_URL, testDb, testPostgresUrl, workerIndex } = require("./db-config");
 
+// Books in the former Mongo shape (one edition and one model per book), written to the reading schema
+const READING_BOOKS = [
+	{
+		id: "18aff3b3-d93d-478b-969f-aa6bc521d6a4",
+		book: "Alice’s Adventures in Wonderland",
+		author: ["Lewis Carroll"],
+		language: "en",
+		country: "gb",
+		pages: 181,
+		readings: [
+			{
+				id: "0883b913-75f8-4cf2-83b2-a9b832a9311e",
+				status: "complete",
+				details: [
+					{
+						id: "5f1f45c9-e632-4c65-9052-0547f8c909d1",
+						context: [
+							{
+								date: "2026-02-05",
+								tags: ["metro"],
+							},
+						],
+					},
+					{
+						id: "bd641031-6c6c-4092-aaa9-65cf1a3a3028",
+						context: [
+							{
+								date: "2026-02-05",
+								tags: ["metro"],
+							},
+						],
+					},
+					{
+						id: "918bd7c0-8540-41ff-8cbb-2af446d4e0e8",
+						context: [
+							{
+								date: "2026-02-05",
+								tags: ["metro"],
+							},
+						],
+					},
+					{
+						id: "e0e42b01-623d-4322-aaeb-414a9fcbb857",
+						context: [
+							{
+								date: "2026-02-05",
+								tags: ["metro"],
+							},
+						],
+					},
+					{
+						id: "e5b36443-d3f4-4518-8071-13188c760b31",
+						context: [
+							{
+								date: "2026-02-17",
+								tags: ["metro"],
+							},
+						],
+					},
+					{
+						id: "1cc850e6-ed33-42f8-a19b-2ef14ce7ecda",
+						context: [
+							{
+								date: "2026-02-17",
+								tags: ["metro"],
+							},
+						],
+					},
+					{
+						id: "ade3c2e2-bce5-402d-86a7-9e9246107948",
+						context: [
+							{
+								date: "2026-02-19",
+								tags: ["metro"],
+							},
+						],
+					},
+					{
+						id: "214fd9e9-7417-4954-a7bf-002068607722",
+						context: [
+							{
+								date: "2026-02-21",
+								tags: ["metro"],
+							},
+						],
+					},
+					{
+						id: "e9bbd2b1-9e70-438c-acb8-c4311635e6bd",
+						context: [
+							{
+								date: "2026-03-08",
+								tags: ["metro"],
+							},
+						],
+					},
+					{
+						id: "5dcb9969-7bea-4104-993b-f6763dff5bf1",
+						context: [
+							{
+								date: "2026-03-08",
+								tags: ["metro"],
+							},
+						],
+					},
+					{
+						id: "bcca2ae5-a8f9-46f0-9783-373bf0878dd5",
+						context: [
+							{
+								date: "2026-03-08",
+								tags: ["metro"],
+							},
+						],
+					},
+					{
+						id: "18c7e3b8-1620-4942-9236-1e6c74fe28ed",
+						context: [
+							{
+								date: "2026-03-08",
+								tags: ["metro"],
+							},
+						],
+					},
+				],
+			},
+		],
+		model: [
+			{
+				id: "5f1f45c9-e632-4c65-9052-0547f8c909d1",
+				title: "I: Down the Rabbit-Hole",
+			},
+			{
+				id: "bd641031-6c6c-4092-aaa9-65cf1a3a3028",
+				title: "II: The Pool of Tears",
+			},
+			{
+				id: "918bd7c0-8540-41ff-8cbb-2af446d4e0e8",
+				title: "III: A Caucus-Race and a Long Tale",
+			},
+			{
+				id: "e0e42b01-623d-4322-aaeb-414a9fcbb857",
+				title: "IV: The Rabbit Sends in a Little Bill",
+			},
+			{
+				id: "e5b36443-d3f4-4518-8071-13188c760b31",
+				title: "V: Advice from a Caterpillar",
+			},
+			{
+				id: "1cc850e6-ed33-42f8-a19b-2ef14ce7ecda",
+				title: "VI: Pig and Pepper",
+			},
+			{
+				id: "ade3c2e2-bce5-402d-86a7-9e9246107948",
+				title: "VII: A Mad Tea-Party",
+			},
+			{
+				id: "214fd9e9-7417-4954-a7bf-002068607722",
+				title: "VIII: The Queen’s Croquet-Ground",
+			},
+			{
+				id: "e9bbd2b1-9e70-438c-acb8-c4311635e6bd",
+				title: "IX: The Mock Turtle’s Story",
+			},
+			{
+				id: "5dcb9969-7bea-4104-993b-f6763dff5bf1",
+				title: "X: The Lobster Quadrille",
+			},
+			{
+				id: "bcca2ae5-a8f9-46f0-9783-373bf0878dd5",
+				title: "XI: Who Stole the Tarts?",
+			},
+			{
+				id: "18c7e3b8-1620-4942-9236-1e6c74fe28ed",
+				title: "XII: Alice’s Evidence",
+			},
+		],
+	},
+	{
+		id: "185d86c8-d527-4213-b91c-8e52327cce8e",
+		book: "Little Women",
+		author: ["Louisa May Alcott"],
+		language: "en",
+		country: "us",
+		pages: 495,
+		readings: [
+			{
+				id: "ca8ac288-e15c-4b4d-a86c-68ea69dc70f5",
+				status: "abandoned",
+				details: [
+					{
+						id: "ecaa30ab-253f-452b-85dd-d227622a6784",
+						context: [
+							{
+								date: "2026-09-02",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "191b9ae2-8aec-4433-9878-cb804a73ca11",
+						context: [
+							{
+								date: "2026-09-02",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "cee92420-e6ec-4bba-bed6-009cb1dffe1c",
+						context: [
+							{
+								date: "2026-09-22",
+								tags: ["metro"],
+							},
+						],
+					},
+					{
+						id: "d4fd5f11-d377-4fb4-b138-39fa6ade8f40",
+						context: [
+							{
+								date: "2026-09-22",
+								tags: ["metro", "bus"],
+							},
+						],
+					},
+					{
+						id: "4365e37e-0b8f-41d6-adbc-8a35d11c53a8",
+						context: [
+							{
+								date: "2026-09-22",
+								tags: ["metro"],
+							},
+						],
+					},
+				],
+			},
+		],
+		model: [
+			{
+				id: "6af2a135-554c-4b15-b4e8-b7b65bc7cfc1",
+				title: "Part I",
+				content: [
+					{
+						id: "ecaa30ab-253f-452b-85dd-d227622a6784",
+						title: "I: Playing Pilgrims",
+					},
+					{
+						id: "191b9ae2-8aec-4433-9878-cb804a73ca11",
+						title: "II: A Merry Christmas",
+					},
+					{
+						id: "cee92420-e6ec-4bba-bed6-009cb1dffe1c",
+						title: "III: The Laurence Boy",
+					},
+					{
+						id: "d4fd5f11-d377-4fb4-b138-39fa6ade8f40",
+						title: "IV: Burdens",
+					},
+					{
+						id: "4365e37e-0b8f-41d6-adbc-8a35d11c53a8",
+						title: "V: Being Neighborly",
+					},
+					{
+						id: "a95fd002-80d1-402b-888e-086b051bfa17",
+						title: "VI: Beth Finds the Palace Beautiful",
+					},
+					{
+						id: "5d31e9f5-8867-4e7f-995a-204283eadbc6",
+						title: "VII: Amy’s Valley of Humiliation",
+					},
+					{
+						id: "e0219f7b-23a0-448c-bf2d-62b9bb7d0022",
+						title: "VIII: Jo Meets Apollyon",
+					},
+					{
+						id: "59da9728-060f-4e66-abd5-f6312ce1418b",
+						title: "IX: Meg Goes to Vanity Fair",
+					},
+					{
+						id: "f3c2be28-e21d-472e-a9ab-4619bb8048f7",
+						title: "X: The P.C. and P.O.",
+					},
+					{
+						id: "bf2a352f-7744-4f01-9d68-7362c78c5253",
+						title: "XI: Experiments",
+					},
+					{
+						id: "d39bde39-37aa-4bd5-8220-f6b19fbd4bbf",
+						title: "XII: Camp Laurence",
+					},
+					{
+						id: "c83ae201-d9d0-40ec-a035-07b3eb9fd60f",
+						title: "XIII: Castles in the Air",
+					},
+					{
+						id: "7c1c083f-e6db-43b1-8b48-dec07086cc82",
+						title: "XIV: Secrets",
+					},
+					{
+						id: "b36827e4-fcd4-46c0-8fc6-4f5e12c84819",
+						title: "XV: A Telegram",
+					},
+					{
+						id: "d0545856-bc84-47e4-ac20-7dac7d105262",
+						title: "XVI: Letters",
+					},
+					{
+						id: "545a1fc6-ad91-4505-98ac-c95912ee5bda",
+						title: "XVII: Little Faithful",
+					},
+					{
+						id: "053a2330-a88c-45d7-99d0-f94fb803a040",
+						title: "XVIII: Dark Days",
+					},
+					{
+						id: "788e62d9-3651-4d4a-84aa-12e88476689c",
+						title: "XIX: Amy’s Will",
+					},
+					{
+						id: "d3bca89c-ae1a-4e9f-bd7a-160473ad4707",
+						title: "XX: Confidential",
+					},
+					{
+						id: "e1ba2d4e-68ba-4ac9-bfe5-7e10e4a79e69",
+						title: "XXI: Laurie Makes Mischief, and Jo Makes Peace",
+					},
+					{
+						id: "c3f02d71-9da3-4572-915c-f69d414cecea",
+						title: "XXII: Pleasant Meadows",
+					},
+					{
+						id: "49d4eb88-f85f-4d55-b369-a0af6eff8d22",
+						title: "XXIII: Aunt March Settles the Question",
+					},
+				],
+			},
+			{
+				id: "3ef6c9d7-405e-44ec-ae01-32afcadf2e7e",
+				title: "Part II",
+				content: [
+					{
+						id: "ea076ee3-1503-47fa-bec2-8d9410a974f7",
+						title: "XXIV: Gossip",
+					},
+					{
+						id: "6cba0690-e505-477d-be4b-61674b65e7d6",
+						title: "XXV: The First Wedding",
+					},
+					{
+						id: "8ebf4bde-eb93-4e46-b452-71499262a910",
+						title: "XXVI: Artistic Attempts",
+					},
+					{
+						id: "8ef25790-a31a-4485-9884-57ed15541d3e",
+						title: "XXVII: Literary Lessons",
+					},
+					{
+						id: "0dcaed1a-1f33-418d-b23a-8359c491a982",
+						title: "XXVIII: Domestic Experiences",
+					},
+					{
+						id: "5ffa4aa4-5c68-4cff-9885-f6727ae8840e",
+						title: "XXIX: Calls",
+					},
+					{
+						id: "c5b43207-dfda-494a-aaa3-6456284d1e45",
+						title: "XXX: Consequences",
+					},
+					{
+						id: "dc1c2133-2b69-4068-bf29-5fd30fa6b208",
+						title: "XXXI: Our Foreign Correspondent",
+					},
+					{
+						id: "a48add10-4414-4201-a687-a1897f5cb6fa",
+						title: "XXXII: Tender Troubles",
+					},
+					{
+						id: "5ad2fa96-6f32-4522-8259-17c358da2b9d",
+						title: "XXXIII: Jo’s Journal",
+					},
+					{
+						id: "c911558a-ef7a-4d83-bdcd-a26d46f68b43",
+						title: "XXXIV: A Friend",
+					},
+					{
+						id: "3633bd0e-16ce-4d20-a049-bf03d5ebd382",
+						title: "XXXV: Heartache",
+					},
+					{
+						id: "3e344523-69d6-4b9d-94c0-7e369ef36c61",
+						title: "XXXVI: Beth’s Secret",
+					},
+					{
+						id: "d1a7fb04-e22f-4eb5-9e91-7ef0d01eb4dc",
+						title: "XXXVII: New Impressions",
+					},
+					{
+						id: "ad26d3ac-ff49-4ed0-9350-a1c0563cb753",
+						title: "XXXVIII: On the Shelf",
+					},
+					{
+						id: "372e07ce-f0dd-47de-a687-eb8b3b7ab2cd",
+						title: "XXXIX: Lazy Laurence",
+					},
+					{
+						id: "b434eb39-fe30-4477-b35d-655e949d246b",
+						title: "XL: The Valley of the Shadow",
+					},
+					{
+						id: "ae8a5855-e02e-419a-8d78-a9a5de0c041d",
+						title: "XLI: Learning to Forget",
+					},
+					{
+						id: "765ffb58-861b-4e4d-9e18-6efef883824d",
+						title: "XLII: All Alone",
+					},
+					{
+						id: "15d40b45-50c6-47bd-b95f-4ff116ba47a7",
+						title: "XLIII: Surprises",
+					},
+					{
+						id: "0df714dd-021d-483f-95a4-46534d5440b5",
+						title: "XLIV: My Lord and Lady",
+					},
+					{
+						id: "12d83395-c362-45a9-8bc5-2a13809be456",
+						title: "XLV: Daisy and Demi",
+					},
+					{
+						id: "4d826ffc-daf3-4494-ae00-527bfb5e8c7e",
+						title: "XLVI: Under the Umbrella",
+					},
+					{
+						id: "85407938-d5d1-4237-917d-171a2b5f443d",
+						title: "XLVII: Harvest Time",
+					},
+				],
+			},
+		],
+	},
+	{
+		id: "7c663c14-5404-46e6-90aa-fc76c8f052be",
+		book: "Roman de Ronce et d'Épine",
+		author: ["Lucie Baratte"],
+		language: "fr",
+		country: "fr",
+		pages: 206,
+		readings: [
+			{
+				id: "d7b2d3a4-2566-44ff-ad2d-b834fd0262c8",
+				status: "complete",
+				details: [
+					{
+						id: "2853be3b-3235-4c5f-94a5-6c4ae4a02429",
+						context: [
+							{
+								date: "2026-08-25",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "04e8c87d-a8a0-41b3-80e3-1162e2938f2c",
+						context: [
+							{
+								date: "2026-08-25",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "12e0c5d7-b70a-49fc-bb20-390f0c4eaeeb",
+						context: [
+							{
+								date: "2026-08-25",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "f842ae80-98d4-4b5b-a088-56105a3aad3a",
+						context: [
+							{
+								date: "2026-08-26",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "403117e6-c07e-412a-8b6c-3ace22d5dbd9",
+						context: [
+							{
+								date: "2026-08-26",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "dbf7bb5b-ef4f-4af2-abdd-41ee5217863b",
+						context: [
+							{
+								date: "2026-08-26",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "4e8c8904-4d36-4a82-a174-52bdaec6460d",
+						context: [
+							{
+								date: "2026-08-26",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "db4c7d89-491e-4a86-95ba-cd45b03e281e",
+						context: [
+							{
+								date: "2026-08-26",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "e27ec2da-aca7-46bb-b8e1-c87993bc911d",
+						context: [
+							{
+								date: "2026-08-28",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "bd3bea88-bb22-4315-8f7e-294868d308bd",
+						context: [
+							{
+								date: "2026-08-28",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "41dc4305-2549-4eb6-958a-11e28a738c3e",
+						context: [
+							{
+								date: "2026-08-28",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "f9f5b8d7-870c-4f4b-8145-411f4cd3751c",
+						context: [
+							{
+								date: "2026-08-28",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "702ee7a3-c1e8-4262-b77f-987f7c5522fc",
+						context: [
+							{
+								date: "2026-08-28",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "44f28ff5-0271-4fc4-ae1a-592e7485e47f",
+						context: [
+							{
+								date: "2026-08-28",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "d88552ed-85f4-40ba-9cf8-74bc4a8d26fb",
+						context: [
+							{
+								date: "2026-08-29",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "a604d4a8-c854-453f-825a-0281a2c4d6aa",
+						context: [
+							{
+								date: "2026-08-29",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "cdfb5f13-69d8-4b9d-a841-f383dbaf7d26",
+						context: [
+							{
+								date: "2026-08-29",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "59a0afb0-52b1-445a-bae9-699258eb5ecc",
+						context: [
+							{
+								date: "2026-08-29",
+								tags: ["dodo"],
+							},
+						],
+					},
+					{
+						id: "0fa12198-e933-4b8e-a69f-4e757e098378",
+						context: [
+							{
+								date: "2026-08-29",
+								tags: ["dodo"],
+							},
+						],
+					},
+				],
+			},
+		],
+		model: [
+			{
+				id: "2853be3b-3235-4c5f-94a5-6c4ae4a02429",
+				title: "Au commencement était le printemps",
+			},
+			{
+				id: "04e8c87d-a8a0-41b3-80e3-1162e2938f2c",
+				title: "Amour de mai, Joli bébé",
+			},
+			{
+				id: "12e0c5d7-b70a-49fc-bb20-390f0c4eaeeb",
+				title: "Automne à la prière, Ombres au cimetière",
+			},
+			{
+				id: "f842ae80-98d4-4b5b-a088-56105a3aad3a",
+				title: "Automne errant, Démon rampant",
+			},
+			{
+				id: "403117e6-c07e-412a-8b6c-3ace22d5dbd9",
+				title: "Hiver sans sou ni maille, Rien de bon qui vaille",
+			},
+			{
+				id: "dbf7bb5b-ef4f-4af2-abdd-41ee5217863b",
+				title: "Nuit hivernale, Enfantement brutal",
+			},
+			{
+				id: "4e8c8904-4d36-4a82-a174-52bdaec6460d",
+				title: "Hiver amaigri, Confiance trahie",
+			},
+			{
+				id: "db4c7d89-491e-4a86-95ba-cd45b03e281e",
+				title: "Printemps tumultueux, Printemps contagieux",
+			},
+			{
+				id: "e27ec2da-aca7-46bb-b8e1-c87993bc911d",
+				title: "Été ardent, Orage menaçant",
+			},
+			{
+				id: "bd3bea88-bb22-4315-8f7e-294868d308bd",
+				title: "Automne brumeux, Présage malheureux",
+			},
+			{
+				id: "41dc4305-2549-4eb6-958a-11e28a738c3e",
+				title: "Hiver impatient, Nuit de tourments",
+			},
+			{
+				id: "f9f5b8d7-870c-4f4b-8145-411f4cd3751c",
+				title: "Sans saison se tisse",
+			},
+			{
+				id: "702ee7a3-c1e8-4262-b77f-987f7c5522fc",
+				title: "Printemps inattendu, Piège tendu",
+			},
+			{
+				id: "44f28ff5-0271-4fc4-ae1a-592e7485e47f",
+				title: "Hiver qui envahit, Mal qui grandit",
+			},
+			{
+				id: "d88552ed-85f4-40ba-9cf8-74bc4a8d26fb",
+				title: "Printemps sexuel, Piège charnel",
+			},
+			{
+				id: "a604d4a8-c854-453f-825a-0281a2c4d6aa",
+				title: "Guerre des saisons, Ventre rond",
+			},
+			{
+				id: "cdfb5f13-69d8-4b9d-a841-f383dbaf7d26",
+				title: "Printemps criminel, Piège cruel",
+			},
+			{
+				id: "59a0afb0-52b1-445a-bae9-699258eb5ecc",
+				title: "Mai à la fenêtre, L’espoir fait renaître",
+			},
+			{
+				id: "0fa12198-e933-4b8e-a69f-4e757e098378",
+				title: "Il y eut un soir, il y eut un matin et ce fut la fin",
+			},
+		],
+	},
+];
+
+/** @param {import("pg").Client} conn */
+async function seedReadingBooks(conn) {
+	const authorIds = new Map();
+	for (const book of READING_BOOKS) {
+		await conn.query(`INSERT INTO core.node (id, type, label) VALUES ($1, 'book', $2)`, [book.id, book.book]);
+		await conn.query(`INSERT INTO reading.book (id, title, country) VALUES ($1, $2, $3)`, [
+			book.id,
+			book.book,
+			book.country,
+		]);
+		for (const [order, name] of book.author.entries()) {
+			if (!authorIds.has(name)) {
+				const {
+					rows: [{ id }],
+				} = await conn.query(`INSERT INTO core.node (type, label) VALUES ('entity', $1) RETURNING id`, [name]);
+				await conn.query(`INSERT INTO core.entity (id, kind, name) VALUES ($1, 'person', $2)`, [id, name]);
+				await conn.query(`INSERT INTO core.entity_person (id) VALUES ($1)`, [id]);
+				authorIds.set(name, id);
+			}
+			await conn.query(
+				`INSERT INTO reading.book_contributor (book_id, entity_id, role, "order") VALUES ($1, $2, 'author', $3)`,
+				[book.id, authorIds.get(name), order],
+			);
+		}
+		const {
+			rows: [model],
+		} = await conn.query(`INSERT INTO reading.model (book_id, name, tree) VALUES ($1, 'Modèle', $2) RETURNING id`, [
+			book.id,
+			JSON.stringify(book.model),
+		]);
+		const {
+			rows: [edition],
+		} = await conn.query(
+			`INSERT INTO reading.edition (book_id, language, pages, model_id) VALUES ($1, $2, $3, $4) RETURNING id`,
+			[book.id, book.language, book.pages, model.id],
+		);
+		for (const reading of book.readings) {
+			await conn.query(`INSERT INTO reading.reading (id, edition_id, status) VALUES ($1, $2, $3)`, [
+				reading.id,
+				edition.id,
+				reading.status,
+			]);
+			for (const detail of reading.details) {
+				for (const { date, tags } of detail.context) {
+					await conn.query(
+						`INSERT INTO reading.entry (reading_id, chapter_id, date, tags) VALUES ($1, $2, $3, $4)`,
+						[reading.id, detail.id, date, tags],
+					);
+				}
+			}
+		}
+	}
+}
+
 /** @param {import("pg").Client} conn */
 async function seedPostgres(conn) {
 	await conn.query(
@@ -109,6 +869,8 @@ async function seedPostgres(conn) {
 		`INSERT INTO show.model_role (name, main, artist_id, model_id, "order")
 		 VALUES ('Fantine', true, 1, 1, 1), ('Javert', false, NULL, 1, 2)`,
 	);
+
+	await seedReadingBooks(conn);
 
 	// Explicit ids don't move identity sequences (unlike MySQL AUTO_INCREMENT): restart them after the seed
 	await conn.query(`
@@ -596,711 +1358,6 @@ async function seedMongo(db) {
 		},
 	]);
 
-	await db.collection("reading_book").insertMany([
-		{
-			id: "18aff3b3-d93d-478b-969f-aa6bc521d6a4",
-			book: "Alice’s Adventures in Wonderland",
-			author: ["Lewis Carroll"],
-			language: "en",
-			country: "gb",
-			pages: 181,
-			readings: [
-				{
-					id: "0883b913-75f8-4cf2-83b2-a9b832a9311e",
-					status: "complete",
-					details: [
-						{
-							id: "5f1f45c9-e632-4c65-9052-0547f8c909d1",
-							context: [
-								{
-									date: "2026-02-05",
-									tags: ["metro"],
-								},
-							],
-						},
-						{
-							id: "bd641031-6c6c-4092-aaa9-65cf1a3a3028",
-							context: [
-								{
-									date: "2026-02-05",
-									tags: ["metro"],
-								},
-							],
-						},
-						{
-							id: "918bd7c0-8540-41ff-8cbb-2af446d4e0e8",
-							context: [
-								{
-									date: "2026-02-05",
-									tags: ["metro"],
-								},
-							],
-						},
-						{
-							id: "e0e42b01-623d-4322-aaeb-414a9fcbb857",
-							context: [
-								{
-									date: "2026-02-05",
-									tags: ["metro"],
-								},
-							],
-						},
-						{
-							id: "e5b36443-d3f4-4518-8071-13188c760b31",
-							context: [
-								{
-									date: "2026-02-17",
-									tags: ["metro"],
-								},
-							],
-						},
-						{
-							id: "1cc850e6-ed33-42f8-a19b-2ef14ce7ecda",
-							context: [
-								{
-									date: "2026-02-17",
-									tags: ["metro"],
-								},
-							],
-						},
-						{
-							id: "ade3c2e2-bce5-402d-86a7-9e9246107948",
-							context: [
-								{
-									date: "2026-02-19",
-									tags: ["metro"],
-								},
-							],
-						},
-						{
-							id: "214fd9e9-7417-4954-a7bf-002068607722",
-							context: [
-								{
-									date: "2026-02-21",
-									tags: ["metro"],
-								},
-							],
-						},
-						{
-							id: "e9bbd2b1-9e70-438c-acb8-c4311635e6bd",
-							context: [
-								{
-									date: "2026-03-08",
-									tags: ["metro"],
-								},
-							],
-						},
-						{
-							id: "5dcb9969-7bea-4104-993b-f6763dff5bf1",
-							context: [
-								{
-									date: "2026-03-08",
-									tags: ["metro"],
-								},
-							],
-						},
-						{
-							id: "bcca2ae5-a8f9-46f0-9783-373bf0878dd5",
-							context: [
-								{
-									date: "2026-03-08",
-									tags: ["metro"],
-								},
-							],
-						},
-						{
-							id: "18c7e3b8-1620-4942-9236-1e6c74fe28ed",
-							context: [
-								{
-									date: "2026-03-08",
-									tags: ["metro"],
-								},
-							],
-						},
-					],
-				},
-			],
-			model: [
-				{
-					id: "5f1f45c9-e632-4c65-9052-0547f8c909d1",
-					title: "I: Down the Rabbit-Hole",
-				},
-				{
-					id: "bd641031-6c6c-4092-aaa9-65cf1a3a3028",
-					title: "II: The Pool of Tears",
-				},
-				{
-					id: "918bd7c0-8540-41ff-8cbb-2af446d4e0e8",
-					title: "III: A Caucus-Race and a Long Tale",
-				},
-				{
-					id: "e0e42b01-623d-4322-aaeb-414a9fcbb857",
-					title: "IV: The Rabbit Sends in a Little Bill",
-				},
-				{
-					id: "e5b36443-d3f4-4518-8071-13188c760b31",
-					title: "V: Advice from a Caterpillar",
-				},
-				{
-					id: "1cc850e6-ed33-42f8-a19b-2ef14ce7ecda",
-					title: "VI: Pig and Pepper",
-				},
-				{
-					id: "ade3c2e2-bce5-402d-86a7-9e9246107948",
-					title: "VII: A Mad Tea-Party",
-				},
-				{
-					id: "214fd9e9-7417-4954-a7bf-002068607722",
-					title: "VIII: The Queen’s Croquet-Ground",
-				},
-				{
-					id: "e9bbd2b1-9e70-438c-acb8-c4311635e6bd",
-					title: "IX: The Mock Turtle’s Story",
-				},
-				{
-					id: "5dcb9969-7bea-4104-993b-f6763dff5bf1",
-					title: "X: The Lobster Quadrille",
-				},
-				{
-					id: "bcca2ae5-a8f9-46f0-9783-373bf0878dd5",
-					title: "XI: Who Stole the Tarts?",
-				},
-				{
-					id: "18c7e3b8-1620-4942-9236-1e6c74fe28ed",
-					title: "XII: Alice’s Evidence",
-				},
-			],
-		},
-		{
-			id: "185d86c8-d527-4213-b91c-8e52327cce8e",
-			book: "Little Women",
-			author: ["Louisa May Alcott"],
-			language: "en",
-			country: "us",
-			pages: 495,
-			readings: [
-				{
-					id: "ca8ac288-e15c-4b4d-a86c-68ea69dc70f5",
-					status: "abandoned",
-					details: [
-						{
-							id: "ecaa30ab-253f-452b-85dd-d227622a6784",
-							context: [
-								{
-									date: "2026-09-02",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "191b9ae2-8aec-4433-9878-cb804a73ca11",
-							context: [
-								{
-									date: "2026-09-02",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "cee92420-e6ec-4bba-bed6-009cb1dffe1c",
-							context: [
-								{
-									date: "2026-09-22",
-									tags: ["metro"],
-								},
-							],
-						},
-						{
-							id: "d4fd5f11-d377-4fb4-b138-39fa6ade8f40",
-							context: [
-								{
-									date: "2026-09-22",
-									tags: ["metro", "bus"],
-								},
-							],
-						},
-						{
-							id: "4365e37e-0b8f-41d6-adbc-8a35d11c53a8",
-							context: [
-								{
-									date: "2026-09-22",
-									tags: ["metro"],
-								},
-							],
-						},
-					],
-				},
-			],
-			model: [
-				{
-					id: "6af2a135-554c-4b15-b4e8-b7b65bc7cfc1",
-					title: "Part I",
-					content: [
-						{
-							id: "ecaa30ab-253f-452b-85dd-d227622a6784",
-							title: "I: Playing Pilgrims",
-						},
-						{
-							id: "191b9ae2-8aec-4433-9878-cb804a73ca11",
-							title: "II: A Merry Christmas",
-						},
-						{
-							id: "cee92420-e6ec-4bba-bed6-009cb1dffe1c",
-							title: "III: The Laurence Boy",
-						},
-						{
-							id: "d4fd5f11-d377-4fb4-b138-39fa6ade8f40",
-							title: "IV: Burdens",
-						},
-						{
-							id: "4365e37e-0b8f-41d6-adbc-8a35d11c53a8",
-							title: "V: Being Neighborly",
-						},
-						{
-							id: "a95fd002-80d1-402b-888e-086b051bfa17",
-							title: "VI: Beth Finds the Palace Beautiful",
-						},
-						{
-							id: "5d31e9f5-8867-4e7f-995a-204283eadbc6",
-							title: "VII: Amy’s Valley of Humiliation",
-						},
-						{
-							id: "e0219f7b-23a0-448c-bf2d-62b9bb7d0022",
-							title: "VIII: Jo Meets Apollyon",
-						},
-						{
-							id: "59da9728-060f-4e66-abd5-f6312ce1418b",
-							title: "IX: Meg Goes to Vanity Fair",
-						},
-						{
-							id: "f3c2be28-e21d-472e-a9ab-4619bb8048f7",
-							title: "X: The P.C. and P.O.",
-						},
-						{
-							id: "bf2a352f-7744-4f01-9d68-7362c78c5253",
-							title: "XI: Experiments",
-						},
-						{
-							id: "d39bde39-37aa-4bd5-8220-f6b19fbd4bbf",
-							title: "XII: Camp Laurence",
-						},
-						{
-							id: "c83ae201-d9d0-40ec-a035-07b3eb9fd60f",
-							title: "XIII: Castles in the Air",
-						},
-						{
-							id: "7c1c083f-e6db-43b1-8b48-dec07086cc82",
-							title: "XIV: Secrets",
-						},
-						{
-							id: "b36827e4-fcd4-46c0-8fc6-4f5e12c84819",
-							title: "XV: A Telegram",
-						},
-						{
-							id: "d0545856-bc84-47e4-ac20-7dac7d105262",
-							title: "XVI: Letters",
-						},
-						{
-							id: "545a1fc6-ad91-4505-98ac-c95912ee5bda",
-							title: "XVII: Little Faithful",
-						},
-						{
-							id: "053a2330-a88c-45d7-99d0-f94fb803a040",
-							title: "XVIII: Dark Days",
-						},
-						{
-							id: "788e62d9-3651-4d4a-84aa-12e88476689c",
-							title: "XIX: Amy’s Will",
-						},
-						{
-							id: "d3bca89c-ae1a-4e9f-bd7a-160473ad4707",
-							title: "XX: Confidential",
-						},
-						{
-							id: "e1ba2d4e-68ba-4ac9-bfe5-7e10e4a79e69",
-							title: "XXI: Laurie Makes Mischief, and Jo Makes Peace",
-						},
-						{
-							id: "c3f02d71-9da3-4572-915c-f69d414cecea",
-							title: "XXII: Pleasant Meadows",
-						},
-						{
-							id: "49d4eb88-f85f-4d55-b369-a0af6eff8d22",
-							title: "XXIII: Aunt March Settles the Question",
-						},
-					],
-				},
-				{
-					id: "3ef6c9d7-405e-44ec-ae01-32afcadf2e7e",
-					title: "Part II",
-					content: [
-						{
-							id: "ea076ee3-1503-47fa-bec2-8d9410a974f7",
-							title: "XXIV: Gossip",
-						},
-						{
-							id: "6cba0690-e505-477d-be4b-61674b65e7d6",
-							title: "XXV: The First Wedding",
-						},
-						{
-							id: "8ebf4bde-eb93-4e46-b452-71499262a910",
-							title: "XXVI: Artistic Attempts",
-						},
-						{
-							id: "8ef25790-a31a-4485-9884-57ed15541d3e",
-							title: "XXVII: Literary Lessons",
-						},
-						{
-							id: "0dcaed1a-1f33-418d-b23a-8359c491a982",
-							title: "XXVIII: Domestic Experiences",
-						},
-						{
-							id: "5ffa4aa4-5c68-4cff-9885-f6727ae8840e",
-							title: "XXIX: Calls",
-						},
-						{
-							id: "c5b43207-dfda-494a-aaa3-6456284d1e45",
-							title: "XXX: Consequences",
-						},
-						{
-							id: "dc1c2133-2b69-4068-bf29-5fd30fa6b208",
-							title: "XXXI: Our Foreign Correspondent",
-						},
-						{
-							id: "a48add10-4414-4201-a687-a1897f5cb6fa",
-							title: "XXXII: Tender Troubles",
-						},
-						{
-							id: "5ad2fa96-6f32-4522-8259-17c358da2b9d",
-							title: "XXXIII: Jo’s Journal",
-						},
-						{
-							id: "c911558a-ef7a-4d83-bdcd-a26d46f68b43",
-							title: "XXXIV: A Friend",
-						},
-						{
-							id: "3633bd0e-16ce-4d20-a049-bf03d5ebd382",
-							title: "XXXV: Heartache",
-						},
-						{
-							id: "3e344523-69d6-4b9d-94c0-7e369ef36c61",
-							title: "XXXVI: Beth’s Secret",
-						},
-						{
-							id: "d1a7fb04-e22f-4eb5-9e91-7ef0d01eb4dc",
-							title: "XXXVII: New Impressions",
-						},
-						{
-							id: "ad26d3ac-ff49-4ed0-9350-a1c0563cb753",
-							title: "XXXVIII: On the Shelf",
-						},
-						{
-							id: "372e07ce-f0dd-47de-a687-eb8b3b7ab2cd",
-							title: "XXXIX: Lazy Laurence",
-						},
-						{
-							id: "b434eb39-fe30-4477-b35d-655e949d246b",
-							title: "XL: The Valley of the Shadow",
-						},
-						{
-							id: "ae8a5855-e02e-419a-8d78-a9a5de0c041d",
-							title: "XLI: Learning to Forget",
-						},
-						{
-							id: "765ffb58-861b-4e4d-9e18-6efef883824d",
-							title: "XLII: All Alone",
-						},
-						{
-							id: "15d40b45-50c6-47bd-b95f-4ff116ba47a7",
-							title: "XLIII: Surprises",
-						},
-						{
-							id: "0df714dd-021d-483f-95a4-46534d5440b5",
-							title: "XLIV: My Lord and Lady",
-						},
-						{
-							id: "12d83395-c362-45a9-8bc5-2a13809be456",
-							title: "XLV: Daisy and Demi",
-						},
-						{
-							id: "4d826ffc-daf3-4494-ae00-527bfb5e8c7e",
-							title: "XLVI: Under the Umbrella",
-						},
-						{
-							id: "85407938-d5d1-4237-917d-171a2b5f443d",
-							title: "XLVII: Harvest Time",
-						},
-					],
-				},
-			],
-		},
-		{
-			id: "7c663c14-5404-46e6-90aa-fc76c8f052be",
-			book: "Roman de Ronce et d'Épine",
-			author: ["Lucie Baratte"],
-			language: "fr",
-			country: "fr",
-			pages: 206,
-			readings: [
-				{
-					id: "d7b2d3a4-2566-44ff-ad2d-b834fd0262c8",
-					status: "complete",
-					details: [
-						{
-							id: "2853be3b-3235-4c5f-94a5-6c4ae4a02429",
-							context: [
-								{
-									date: "2026-08-25",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "04e8c87d-a8a0-41b3-80e3-1162e2938f2c",
-							context: [
-								{
-									date: "2026-08-25",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "12e0c5d7-b70a-49fc-bb20-390f0c4eaeeb",
-							context: [
-								{
-									date: "2026-08-25",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "f842ae80-98d4-4b5b-a088-56105a3aad3a",
-							context: [
-								{
-									date: "2026-08-26",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "403117e6-c07e-412a-8b6c-3ace22d5dbd9",
-							context: [
-								{
-									date: "2026-08-26",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "dbf7bb5b-ef4f-4af2-abdd-41ee5217863b",
-							context: [
-								{
-									date: "2026-08-26",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "4e8c8904-4d36-4a82-a174-52bdaec6460d",
-							context: [
-								{
-									date: "2026-08-26",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "db4c7d89-491e-4a86-95ba-cd45b03e281e",
-							context: [
-								{
-									date: "2026-08-26",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "e27ec2da-aca7-46bb-b8e1-c87993bc911d",
-							context: [
-								{
-									date: "2026-08-28",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "bd3bea88-bb22-4315-8f7e-294868d308bd",
-							context: [
-								{
-									date: "2026-08-28",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "41dc4305-2549-4eb6-958a-11e28a738c3e",
-							context: [
-								{
-									date: "2026-08-28",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "f9f5b8d7-870c-4f4b-8145-411f4cd3751c",
-							context: [
-								{
-									date: "2026-08-28",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "702ee7a3-c1e8-4262-b77f-987f7c5522fc",
-							context: [
-								{
-									date: "2026-08-28",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "44f28ff5-0271-4fc4-ae1a-592e7485e47f",
-							context: [
-								{
-									date: "2026-08-28",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "d88552ed-85f4-40ba-9cf8-74bc4a8d26fb",
-							context: [
-								{
-									date: "2026-08-29",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "a604d4a8-c854-453f-825a-0281a2c4d6aa",
-							context: [
-								{
-									date: "2026-08-29",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "cdfb5f13-69d8-4b9d-a841-f383dbaf7d26",
-							context: [
-								{
-									date: "2026-08-29",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "59a0afb0-52b1-445a-bae9-699258eb5ecc",
-							context: [
-								{
-									date: "2026-08-29",
-									tags: ["dodo"],
-								},
-							],
-						},
-						{
-							id: "0fa12198-e933-4b8e-a69f-4e757e098378",
-							context: [
-								{
-									date: "2026-08-29",
-									tags: ["dodo"],
-								},
-							],
-						},
-					],
-				},
-			],
-			model: [
-				{
-					id: "2853be3b-3235-4c5f-94a5-6c4ae4a02429",
-					title: "Au commencement était le printemps",
-				},
-				{
-					id: "04e8c87d-a8a0-41b3-80e3-1162e2938f2c",
-					title: "Amour de mai, Joli bébé",
-				},
-				{
-					id: "12e0c5d7-b70a-49fc-bb20-390f0c4eaeeb",
-					title: "Automne à la prière, Ombres au cimetière",
-				},
-				{
-					id: "f842ae80-98d4-4b5b-a088-56105a3aad3a",
-					title: "Automne errant, Démon rampant",
-				},
-				{
-					id: "403117e6-c07e-412a-8b6c-3ace22d5dbd9",
-					title: "Hiver sans sou ni maille, Rien de bon qui vaille",
-				},
-				{
-					id: "dbf7bb5b-ef4f-4af2-abdd-41ee5217863b",
-					title: "Nuit hivernale, Enfantement brutal",
-				},
-				{
-					id: "4e8c8904-4d36-4a82-a174-52bdaec6460d",
-					title: "Hiver amaigri, Confiance trahie",
-				},
-				{
-					id: "db4c7d89-491e-4a86-95ba-cd45b03e281e",
-					title: "Printemps tumultueux, Printemps contagieux",
-				},
-				{
-					id: "e27ec2da-aca7-46bb-b8e1-c87993bc911d",
-					title: "Été ardent, Orage menaçant",
-				},
-				{
-					id: "bd3bea88-bb22-4315-8f7e-294868d308bd",
-					title: "Automne brumeux, Présage malheureux",
-				},
-				{
-					id: "41dc4305-2549-4eb6-958a-11e28a738c3e",
-					title: "Hiver impatient, Nuit de tourments",
-				},
-				{
-					id: "f9f5b8d7-870c-4f4b-8145-411f4cd3751c",
-					title: "Sans saison se tisse",
-				},
-				{
-					id: "702ee7a3-c1e8-4262-b77f-987f7c5522fc",
-					title: "Printemps inattendu, Piège tendu",
-				},
-				{
-					id: "44f28ff5-0271-4fc4-ae1a-592e7485e47f",
-					title: "Hiver qui envahit, Mal qui grandit",
-				},
-				{
-					id: "d88552ed-85f4-40ba-9cf8-74bc4a8d26fb",
-					title: "Printemps sexuel, Piège charnel",
-				},
-				{
-					id: "a604d4a8-c854-453f-825a-0281a2c4d6aa",
-					title: "Guerre des saisons, Ventre rond",
-				},
-				{
-					id: "cdfb5f13-69d8-4b9d-a841-f383dbaf7d26",
-					title: "Printemps criminel, Piège cruel",
-				},
-				{
-					id: "59a0afb0-52b1-445a-bae9-699258eb5ecc",
-					title: "Mai à la fenêtre, L’espoir fait renaître",
-				},
-				{
-					id: "0fa12198-e933-4b8e-a69f-4e757e098378",
-					title: "Il y eut un soir, il y eut un matin et ce fut la fin",
-				},
-			],
-		},
-	]);
-
 	// External refs (Youtube channel, RSS feeds, france.tv links) match the fixtures served by e2e/mocks/fetch-mock.mjs
 	await db.collection("internet").insertMany([
 		{
@@ -1455,7 +1512,7 @@ async function resetDb() {
 			const conn = new Client({ connectionString: testPostgresUrl(workerIndex()) });
 			await conn.connect();
 			const { rows } = await conn.query(
-				"SELECT format('%I.%I', schemaname, tablename) AS name FROM pg_tables WHERE schemaname IN ('money', 'show')",
+				"SELECT format('%I.%I', schemaname, tablename) AS name FROM pg_tables WHERE schemaname IN ('money', 'show', 'core', 'reading')",
 			);
 			// One statement for every table, so foreign keys between them don't get in the way
 			await conn.query(`TRUNCATE ${rows.map((r) => r.name).join(", ")}`);

@@ -21,7 +21,7 @@ import { GetDailyCalendarUseCase, GetMonthlyCalendarUseCase, GetPeriodCalendarUs
 const calendarRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 	const musicRepository = new MusicRepository(fastify.mongo);
 	const internetRepository = new InternetRepository(fastify.mongo);
-	const bookRepository = new BookRepository(fastify.mongo);
+	const bookRepository = new BookRepository(fastify.db);
 	const mangaRepository = new MangaRepository(fastify.mongo);
 	const performanceRepository = new PerformanceRepository(fastify.db);
 	const gameRepository = new GameRepository(fastify.mongo);
