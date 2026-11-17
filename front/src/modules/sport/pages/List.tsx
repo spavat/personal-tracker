@@ -14,16 +14,16 @@ export default function SportList() {
 
 	return (
 		<>
-			<table className="list activities alternate">
+			<table className="list activities alternate responsive">
 				<thead>
 					<tr>
-						<th>#</th>
-						<th>Date</th>
-						<th>Nom</th>
-						<th>Type</th>
-						<th>Distance</th>
-						<th>Temps</th>
-						<th>Allure</th>
+						<th className="cell-index"></th>
+						<th className="cell-date">Date</th>
+						<th className="cell-text">Nom</th>
+						<th className="cell-text">Type</th>
+						<th className="cell-number">Distance</th>
+						<th className="cell-duration">Temps</th>
+						<th className="cell-number">Allure</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
@@ -35,18 +35,28 @@ export default function SportList() {
 					)}
 					{activities.map((activity, i) => (
 						<tr key={activity.id}>
-							<td>{i + 1}</td>
-							<td>{formatFullDate(activity.date)}</td>
-							<td>
+							<td className="cell-index">{i + 1}</td>
+							<td className="cell-date" data-label="Date">
+								{formatFullDate(activity.date)}
+							</td>
+							<td className="cell-text">
 								<Link to="/sport/$activityId" params={{ activityId: activity.id }}>
 									{activity.name}
 								</Link>
 							</td>
-							<td>{getActivityTypeLabel(activity.type)}</td>
-							<td>{activity.details.distance} km</td>
-							<td>{getDurationString(activity.details.totalDuration)}</td>
-							<td>{formatPaceMinPerKm(activity.details.pace)} /km</td>
-							<td>
+							<td className="cell-text" data-label="Type">
+								{getActivityTypeLabel(activity.type)}
+							</td>
+							<td className="cell-number" data-label="Distance">
+								{activity.details.distance} km
+							</td>
+							<td className="cell-duration" data-label="Temps">
+								{getDurationString(activity.details.totalDuration)}
+							</td>
+							<td className="cell-number" data-label="Allure">
+								{formatPaceMinPerKm(activity.details.pace)} /km
+							</td>
+							<td data-label="Actions">
 								<button
 									type="button"
 									title="Modifier"

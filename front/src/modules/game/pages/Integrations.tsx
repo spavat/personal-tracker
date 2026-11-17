@@ -118,22 +118,26 @@ function StorePanel({ status }: { status: GameSyncStatus["stores"][number] }) {
 					<table className="list alternate responsive">
 						<thead>
 							<tr>
-								<th>Date</th>
-								<th>Jour de jeu</th>
-								<th>Type</th>
-								<th>Statut</th>
+								<th className="cell-date">Date</th>
+								<th className="cell-date">Jour de jeu</th>
+								<th className="cell-text">Type</th>
+								<th className="cell-text">Statut</th>
 								<th>Actions</th>
 							</tr>
 						</thead>
 						<tbody>
 							{status.snapshots.map((snapshot) => (
 								<tr key={snapshot.id}>
-									<td data-label="Date">{formatInstant(snapshot.fetchedAt)}</td>
-									<td data-label="Jour de jeu">{formatFullDate(snapshot.day)}</td>
-									<td data-label="Type">
+									<td className="cell-date" data-label="Date">
+										{formatInstant(snapshot.fetchedAt)}
+									</td>
+									<td className="cell-date" data-label="Jour de jeu">
+										{formatFullDate(snapshot.day)}
+									</td>
+									<td className="cell-text" data-label="Type">
 										{snapshot.kind === "import" ? "Import" : "Synchronisation"}
 									</td>
-									<td data-label="Statut">
+									<td className="cell-text" data-label="Statut">
 										{snapshot.status === "ok" ? (
 											"Réussie"
 										) : (

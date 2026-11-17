@@ -30,7 +30,7 @@ test.describe("Shows - History", () => {
 		await expect(page.locator("table.performances tbody tr td[colspan]").last()).toContainText("(2)");
 		await expect(performanceRows(page)).toHaveCount(4);
 		// The canceled performance has no number
-		await expect(performanceRows(page).locator("td:first-child")).toHaveText(["#3", "#2", "", "#1"]);
+		await expect(performanceRows(page).locator("td:first-child")).toHaveText(["3", "2", "", "1"]);
 	});
 
 	test("navigate between years", async ({ page }) => {
@@ -72,7 +72,7 @@ test.describe("Shows - History", () => {
 		await expect(monthTitles(page)).toHaveText(["septembre 2026", "juin 2026", "avril 2026", "février 2026"]);
 		const row = performanceRows(page).nth(1);
 		await expect(row.locator("td")).toHaveText([
-			"#3",
+			"3",
 			"12/06/26 19:00",
 			spectacles.hamlet.name,
 			places.sondheim.name,

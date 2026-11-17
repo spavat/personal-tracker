@@ -132,12 +132,12 @@ export default function PlaceDetails({ placeId }: { placeId: string }) {
 				<table className="list performances alternate responsive">
 					<thead>
 						<tr>
-							<th></th>
-							<th>Date</th>
-							<th>Spectacle</th>
-							<th>Lieu</th>
-							<th>Pays</th>
-							<th>Place</th>
+							<th className="cell-index"></th>
+							<th className="cell-date">Date</th>
+							<th className="cell-text">Spectacle</th>
+							<th className="cell-text">Lieu</th>
+							<th className="cell-icon">Pays</th>
+							<th className="cell-text">Place</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -160,11 +160,11 @@ export default function PlaceDetails({ placeId }: { placeId: string }) {
 									const [date, time] = formatShowDate(perf.date).split(" ");
 									return (
 										<tr key={perf.id} className={perf.canceled ? "canceled" : ""}>
-											<td className="smalltext">{!perf.canceled && <>#{index++}</>}</td>
-											<td data-label="Date">
+											<td className="cell-index">{!perf.canceled && index++}</td>
+											<td className="cell-date" data-label="Date">
 												{date} <span className="smalltext">{time}</span>
 											</td>
-											<td>
+											<td className="cell-text">
 												{perf.posterUrl && (
 													<img
 														src={mediaSrc(perf.posterUrl)}
@@ -182,11 +182,15 @@ export default function PlaceDetails({ placeId }: { placeId: string }) {
 													{perf.spectacle.name}
 												</Link>
 											</td>
-											<td data-label="Lieu">{perf.place?.name}</td>
-											<td data-label="Pays">
+											<td className="cell-text" data-label="Lieu">
+												{perf.place?.name}
+											</td>
+											<td className="cell-icon" data-label="Pays">
 												<span className={`fi fi-${perf.place?.country}`}></span>
 											</td>
-											<td data-label="Place">{perf.seat ? <> 🎫 {perf.seat}</> : ""}</td>
+											<td className="cell-text" data-label="Place">
+												{perf.seat ? <> 🎫 {perf.seat}</> : ""}
+											</td>
 										</tr>
 									);
 								})}

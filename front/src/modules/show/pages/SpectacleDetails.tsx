@@ -121,13 +121,13 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 					<table className="list performances alternate responsive">
 						<thead>
 							<tr>
-								<th></th>
-								<th>Date</th>
-								<th>Performance</th>
-								<th>Lieu</th>
-								<th>Pays</th>
-								<th>Place</th>
-								<th>Casting</th>
+								<th className="cell-index"></th>
+								<th className="cell-date">Date</th>
+								<th className="cell-text">Performance</th>
+								<th className="cell-text">Lieu</th>
+								<th className="cell-icon">Pays</th>
+								<th className="cell-text">Place</th>
+								<th className="cell-icon">Casting</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -137,13 +137,13 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 								return (
 									<Fragment key={perf.id}>
 										<tr className={perf.canceled ? "canceled" : ""}>
-											<td onClick={() => toggleSecondRow(perf.id)} className="smalltext">
-												{!perf.canceled && <>#{index++}</>}
+											<td onClick={() => toggleSecondRow(perf.id)} className="cell-index">
+												{!perf.canceled && index++}
 											</td>
-											<td data-label="Date">
+											<td className="cell-date" data-label="Date">
 												{date} <span className="smalltext">{time}</span>
 											</td>
-											<td>
+											<td className="cell-text">
 												<Link
 													to="/shows/performances/$performanceId"
 													params={{ performanceId: String(perf.id) }}
@@ -161,7 +161,7 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 													{details.name}
 												</Link>
 											</td>
-											<td data-label="Lieu">
+											<td className="cell-text" data-label="Lieu">
 												<Link
 													to="/shows/places/$placeId"
 													params={{ placeId: String(perf.place?.id) }}
@@ -170,11 +170,17 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 													{perf.place?.name}
 												</Link>
 											</td>
-											<td data-label="Pays">
+											<td className="cell-icon" data-label="Pays">
 												<span className={`fi fi-${perf.place?.country}`}></span>
 											</td>
-											<td data-label="Place">{perf.seat ? <> 🎫 {perf.seat}</> : ""}</td>
-											<td data-label="Casting" onClick={() => toggleSecondRow(perf.id)}>
+											<td className="cell-text" data-label="Place">
+												{perf.seat ? <> 🎫 {perf.seat}</> : ""}
+											</td>
+											<td
+												className="cell-icon"
+												data-label="Casting"
+												onClick={() => toggleSecondRow(perf.id)}
+											>
 												<CastingIcon {...perf} />
 											</td>
 										</tr>

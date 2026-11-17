@@ -25,8 +25,8 @@ function KmSplitsTable({
 		<table className="list alternate">
 			<thead>
 				<tr>
-					<th>Km</th>
-					<th>Allure</th>
+					<th className="cell-number">Km</th>
+					<th className="cell-number">Allure</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -39,8 +39,10 @@ function KmSplitsTable({
 							onMouseEnter={() => onHoverRow({ x1, x2 })}
 							onMouseLeave={() => onHoverRow(null)}
 						>
-							<td>{s.distanceKm < 1 ? `${s.km} (${Math.round(s.distanceKm * 1000)} m)` : s.km}</td>
-							<td>{formatPace(s.paceSecPerKm)}/km</td>
+							<td className="cell-number">
+								{s.distanceKm < 1 ? `${s.km} (${Math.round(s.distanceKm * 1000)} m)` : s.km}
+							</td>
+							<td className="cell-number">{formatPace(s.paceSecPerKm)}/km</td>
 						</tr>
 					);
 				})}

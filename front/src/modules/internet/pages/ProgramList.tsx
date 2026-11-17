@@ -16,17 +16,17 @@ export default function ProgramList() {
 	const { query, headers, isPending } = useSortTable({
 		...programListSort,
 		columnsList: [
-			null,
-			{ name: "Programme", colName: "name", isSortable: true },
-			{ name: "Author", colName: "author", isSortable: true },
-			{ name: "Réseau", colName: "network", isSortable: true },
-			{ name: "Pays", colName: "country", isSortable: true },
-			{ name: "Refs", colName: "", isSortable: false },
-			{ name: "Dernière écoute", colName: "latestEpisodeDate", isSortable: true },
-			{ name: "Episodes", colName: "episodeCount", isSortable: true },
-			{ name: "Durée", colName: "totalDuration", isSortable: true },
-			{ name: "Tags", colName: "", isSortable: false },
-			{ name: "Art", colName: "", isSortable: false },
+			{ name: "", isSortable: false, className: "cell-index" },
+			{ name: "Programme", colName: "name", isSortable: true, className: "cell-text" },
+			{ name: "Author", colName: "author", isSortable: true, className: "cell-text col-author" },
+			{ name: "Réseau", colName: "network", isSortable: true, className: "cell-text col-network" },
+			{ name: "Pays", colName: "country", isSortable: true, className: "cell-icon" },
+			{ name: "Refs", colName: "", isSortable: false, className: "cell-icon" },
+			{ name: "Dernière écoute", colName: "latestEpisodeDate", isSortable: true, className: "cell-date" },
+			{ name: "Episodes", colName: "episodeCount", isSortable: true, className: "cell-number col-episodes" },
+			{ name: "Durée", colName: "totalDuration", isSortable: true, className: "cell-duration col-duration" },
+			{ name: "Tags", colName: "", isSortable: false, className: "cell-text col-tags" },
+			{ name: "Art", colName: "", isSortable: false, className: "cell-icon" },
 			...(isOwner ? [{ name: "Actions", colName: "", isSortable: false }] : []),
 		],
 	});
@@ -40,11 +40,10 @@ export default function ProgramList() {
 					</thead>
 					<tbody>
 						{query.data.map((program, i) => {
-							console.log("program.profile ko", program.profile);
 							return (
 								<tr key={program.id}>
-									<td className="smalltext">#{i + 1}</td>
-									<td>
+									<td className="cell-index">{i + 1}</td>
+									<td className="cell-text">
 										<Link
 											to="/internet/$programId"
 											params={{ programId: program.id }}
@@ -59,12 +58,19 @@ export default function ProgramList() {
 											)}
 										</Link>
 									</td>
-									<td data-label="Author">{program.author}</td>
-									<td data-label="Réseau">{program.network}</td>
-									<td data-label="Pays">
+									{/* no network: the author takes its cell too */}
+									<td className="cell-text" data-label="Author" colSpan={program.network ? 1 : 2}>
+										{program.author}
+									</td>
+									{program.network && (
+										<td className="cell-text" data-label="Réseau">
+											{program.network}
+										</td>
+									)}
+									<td className="cell-icon" data-label="Pays">
 										<span className={`fi fi-${program.country}`}></span>
 									</td>
-									<td data-label="Refs">
+									<td className="cell-icon" data-label="Refs">
 										{refsKeys.map((key) => {
 											const value = program.refs?.[key];
 											if (value) {
@@ -113,15 +119,21 @@ export default function ProgramList() {
 											}
 										})}
 									</td>
-									<td data-label="Dernière écoute">{formatFullDate(program.latestEpisodeDate)}</td>
-									<td data-label="Episodes">{program.episodeCount}</td>
-									<td data-label="Durée">{getDurationString(program.totalDuration)}</td>
-									<td data-label="Tags">
+									<td className="cell-date" data-label="Dernière écoute">
+										{formatFullDate(program.latestEpisodeDate)}
+									</td>
+									<td className="cell-number" data-label="Episodes">
+										{program.episodeCount}
+									</td>
+									<td className="cell-duration" data-label="Durée">
+										{getDurationString(program.totalDuration)}
+									</td>
+									<td className="cell-text" data-label="Tags">
 										{program.tags?.map((t) => (
 											<TagBadge key={t} name={t} />
 										))}
 									</td>
-									<td data-label="Art">
+									<td className="cell-icon" data-label="Art">
 										<i
 											className={`${!program.profile ? "disabled" : ""} fa-solid fa-circle-user`}
 										></i>
@@ -153,11 +165,6 @@ export default function ProgramList() {
 							);
 						})}
 					</tbody>
-					<tfoot>
-						<tr>
-							<td colSpan={11}></td>
-						</tr>
-					</tfoot>
 				</table>
 			</PendingContent>
 

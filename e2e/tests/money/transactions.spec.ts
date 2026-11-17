@@ -83,10 +83,10 @@ test.describe("Transactions", () => {
 			await expect(page.locator(".month-year-selector")).toContainText("juin 2026");
 			// Check page
 			const row = page.locator("table tr:has-text('Doctor')");
-			await expect(row.getByRole("cell").nth(3)).toContainText("Doctor");
-			await expect(row.getByRole("cell").nth(4)).toContainText("-30");
-			await expect(row.getByRole("cell").nth(5)).toContainText("Health");
-			await expect(row.getByRole("cell").nth(6)).toContainText("Card Main Bank");
+			await expect(row.getByRole("cell").nth(2)).toContainText("Doctor");
+			await expect(row.getByRole("cell").nth(3)).toContainText("-30");
+			await expect(row.getByRole("cell").nth(4)).toContainText("Health");
+			await expect(row.getByRole("cell").nth(5)).toContainText("Card Main Bank");
 			// Click to enable quick edit
 			page.locator("table tr:has-text('Doctor')")
 				.getByRole("button", { name: "Quick edit transaction" })
@@ -104,10 +104,10 @@ test.describe("Transactions", () => {
 			// Assertion
 			await expect(page.locator('input[name="name"]')).not.toBeVisible();
 			const updatedRow = page.locator("table tr:has-text('Doctor 2')");
-			await expect(updatedRow.getByRole("cell").nth(3)).toContainText("Doctor 2 - Paris");
-			await expect(updatedRow.getByRole("cell").nth(4)).toContainText("-25");
-			await expect(updatedRow.getByRole("cell").nth(5)).toContainText("Food");
-			await expect(updatedRow.getByRole("cell").nth(6)).toContainText("Cash");
+			await expect(updatedRow.getByRole("cell").nth(2)).toContainText("Doctor 2 - Paris");
+			await expect(updatedRow.getByRole("cell").nth(3)).toContainText("-25");
+			await expect(updatedRow.getByRole("cell").nth(4)).toContainText("Food");
+			await expect(updatedRow.getByRole("cell").nth(5)).toContainText("Cash");
 		});
 
 		test("Quick edit a transaction (cancel)", async ({ page }) => {
@@ -116,10 +116,10 @@ test.describe("Transactions", () => {
 			await expect(page.locator(".month-year-selector")).toContainText("juin 2026");
 			// Check page
 			const row = page.locator("table tr:has-text('Doctor')");
-			await expect(row.getByRole("cell").nth(3)).toContainText("Doctor");
-			await expect(row.getByRole("cell").nth(4)).toContainText("-30");
-			await expect(row.getByRole("cell").nth(5)).toContainText("Health");
-			await expect(row.getByRole("cell").nth(6)).toContainText("Card Main Bank");
+			await expect(row.getByRole("cell").nth(2)).toContainText("Doctor");
+			await expect(row.getByRole("cell").nth(3)).toContainText("-30");
+			await expect(row.getByRole("cell").nth(4)).toContainText("Health");
+			await expect(row.getByRole("cell").nth(5)).toContainText("Card Main Bank");
 			// Click to enable quick edit
 			page.locator("table tr:has-text('Doctor')")
 				.getByRole("button", { name: "Quick edit transaction" })
@@ -137,10 +137,10 @@ test.describe("Transactions", () => {
 			// Assertion
 			await expect(page.locator('input[name="name"]')).not.toBeVisible();
 			const updatedRow = page.locator("table tr:has-text('Doctor')");
-			await expect(updatedRow.getByRole("cell").nth(3)).toContainText("Doctor");
-			await expect(updatedRow.getByRole("cell").nth(4)).toContainText("-30");
-			await expect(updatedRow.getByRole("cell").nth(5)).toContainText("Health");
-			await expect(updatedRow.getByRole("cell").nth(6)).toContainText("Card Main Bank");
+			await expect(updatedRow.getByRole("cell").nth(2)).toContainText("Doctor");
+			await expect(updatedRow.getByRole("cell").nth(3)).toContainText("-30");
+			await expect(updatedRow.getByRole("cell").nth(4)).toContainText("Health");
+			await expect(updatedRow.getByRole("cell").nth(5)).toContainText("Card Main Bank");
 		});
 	});
 
@@ -168,10 +168,10 @@ test.describe("Transactions", () => {
 			// Assertion
 			await expect(page.locator('input[name="name"]')).not.toBeVisible();
 			const updatedRow = page.getByRole("row").nth(2);
-			await expect(updatedRow.getByRole("cell").nth(3)).toContainText("Doctor 3 - Marseille");
-			await expect(updatedRow.getByRole("cell").nth(4)).toContainText("-35");
-			await expect(updatedRow.getByRole("cell").nth(5)).toContainText("Transport");
-			await expect(updatedRow.getByRole("cell").nth(6)).toContainText("Card Secondary Bank");
+			await expect(updatedRow.getByRole("cell").nth(2)).toContainText("Doctor 3 - Marseille");
+			await expect(updatedRow.getByRole("cell").nth(3)).toContainText("-35");
+			await expect(updatedRow.getByRole("cell").nth(4)).toContainText("Transport");
+			await expect(updatedRow.getByRole("cell").nth(5)).toContainText("Card Secondary Bank");
 		});
 
 		test("Update a transaction with children (save)", async ({ page }) => {
@@ -212,8 +212,8 @@ test.describe("Transactions", () => {
 			// Collapsed by default: children hidden, their categories are displayed on the parent
 			await expect(groceries).toBeHidden();
 			await expect(health).toBeHidden();
-			await expect(row.getByRole("cell").nth(5)).toContainText("Food");
-			await expect(row.getByRole("cell").nth(5)).toContainText("Health");
+			await expect(row.getByRole("cell").nth(4)).toContainText("Food");
+			await expect(row.getByRole("cell").nth(4)).toContainText("Health");
 			// Expand
 			await row.getByRole("button", { name: "Expand transaction" }).click();
 			await expect(groceries).toBeVisible();
@@ -245,9 +245,9 @@ test.describe("Transactions", () => {
 			await child.getByRole("button", { name: "Enregistrer" }).click();
 			// Assertion
 			await expect(child.locator('input[name="name"]')).not.toBeVisible();
-			await expect(child.getByRole("cell").nth(3)).toContainText("Vegetables");
-			await expect(child.getByRole("cell").nth(4)).toContainText("-12");
-			await expect(child.getByRole("cell").nth(5)).toContainText("Hobbies");
+			await expect(child.getByRole("cell").nth(2)).toContainText("Vegetables");
+			await expect(child.getByRole("cell").nth(3)).toContainText("-12");
+			await expect(child.getByRole("cell").nth(4)).toContainText("Hobbies");
 		});
 	});
 
@@ -279,15 +279,15 @@ test.describe("Transactions", () => {
 			// Assertion
 			await expect(dialog).not.toBeVisible();
 			const row = transactionRow(page, "Cinema");
-			await expect(row.getByRole("cell").nth(3)).toContainText("Cinema - Avatar");
-			await expect(row.getByRole("cell").nth(3)).toContainText("With friends"); // comment tooltip
-			await expect(row.getByRole("cell").nth(4)).toContainText("-15");
-			await expect(row.getByRole("cell").nth(5)).toContainText("Hobbies");
-			await expect(row.getByRole("cell").nth(6)).toContainText("Cash");
+			await expect(row.getByRole("cell").nth(2)).toContainText("Cinema - Avatar");
+			await expect(row.getByRole("cell").nth(2)).toContainText("With friends"); // comment tooltip
+			await expect(row.getByRole("cell").nth(3)).toContainText("-15");
+			await expect(row.getByRole("cell").nth(4)).toContainText("Hobbies");
+			await expect(row.getByRole("cell").nth(5)).toContainText("Cash");
 			// Tags are only displayed on demand
 			await page.getByRole("checkbox", { name: "Afficher les tags" }).check();
-			await expect(row.getByRole("cell").nth(3)).toContainText("Food\\Miam");
-			await expect(row.getByRole("cell").nth(3)).toContainText("Food\\Drink");
+			await expect(row.getByRole("cell").nth(2)).toContainText("Food\\Miam");
+			await expect(row.getByRole("cell").nth(2)).toContainText("Food\\Drink");
 		});
 
 		test("Create a transaction with 3 children, tags and comments", async ({ page }) => {
@@ -331,9 +331,9 @@ test.describe("Transactions", () => {
 			// Assertion
 			await expect(dialog).not.toBeVisible();
 			const row = transactionRow(page, "Fnac");
-			await expect(row.getByRole("cell").nth(5)).toContainText("Hobbies > Music");
-			await expect(row.getByRole("cell").nth(5)).toContainText("Hobbies > Book");
-			await expect(row.getByRole("cell").nth(5)).toContainText("Food");
+			await expect(row.getByRole("cell").nth(4)).toContainText("Hobbies > Music");
+			await expect(row.getByRole("cell").nth(4)).toContainText("Hobbies > Book");
+			await expect(row.getByRole("cell").nth(4)).toContainText("Food");
 			await row.getByRole("button", { name: "Expand transaction" }).click();
 			for (const child of children) {
 				await expect(page.locator("tr[id^='transaction-']").filter({ hasText: child.name })).toBeVisible();

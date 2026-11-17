@@ -46,29 +46,37 @@ export default function ImportPreviewModal({ store, returnTo }: { store: GameSto
 				<table className="list alternate responsive">
 					<thead>
 						<tr>
-							<th>Jeu du magasin</th>
-							<th>Origine</th>
-							<th>Jeu</th>
-							<th>Date</th>
-							<th>Magasin</th>
-							<th>Déjà enregistré</th>
-							<th>Rattrapage</th>
+							<th className="cell-text">Jeu du magasin</th>
+							<th className="cell-text">Origine</th>
+							<th className="cell-text">Jeu</th>
+							<th className="cell-date">Date</th>
+							<th className="cell-duration">Magasin</th>
+							<th className="cell-duration">Déjà enregistré</th>
+							<th className="cell-duration">Rattrapage</th>
 						</tr>
 					</thead>
 					<tbody>
 						{rows.map((row) => (
 							<tr key={`${row.storeGameId}-${row.origin}`}>
-								<td data-label="Jeu du magasin">{row.name}</td>
-								<td data-label="Origine">{GAME_ORIGINS[row.origin].label}</td>
-								<td data-label="Jeu">{row.game ? row.game.name : <i>nouveau</i>}</td>
-								<td data-label="Date">
+								<td className="cell-text" data-label="Jeu du magasin">
+									{row.name}
+								</td>
+								<td className="cell-text" data-label="Origine">
+									{GAME_ORIGINS[row.origin].label}
+								</td>
+								<td className="cell-text" data-label="Jeu">
+									{row.game ? row.game.name : <i>nouveau</i>}
+								</td>
+								<td className="cell-date" data-label="Date">
 									<PlayDate date={row.date} catchUp={row.dateKind} />
 								</td>
-								<td data-label="Magasin">{duration(row.storeMinutes)}</td>
-								<td data-label="Déjà enregistré">
+								<td className="cell-duration" data-label="Magasin">
+									{duration(row.storeMinutes)}
+								</td>
+								<td className="cell-duration" data-label="Déjà enregistré">
 									{row.recordedMinutes > 0 ? duration(row.recordedMinutes) : ""}
 								</td>
-								<td data-label="Rattrapage">
+								<td className="cell-duration" data-label="Rattrapage">
 									<b>{duration(row.catchUp)}</b>
 								</td>
 							</tr>

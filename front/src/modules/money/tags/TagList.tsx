@@ -16,34 +16,34 @@ export default function TagList() {
 			<table className="list tags alternate">
 				<thead>
 					<tr>
-						<th></th>
-						<th>Nom</th>
-						<th>Icone</th>
-						<th>Couleur du fond</th>
-						<th>Couleur du texte</th>
-						<th>Affichage</th>
+						<th className="cell-index"></th>
+						<th className="cell-text">Nom</th>
+						<th className="cell-text">Icone</th>
+						<th className="cell-icon">Couleur du fond</th>
+						<th className="cell-icon">Couleur du texte</th>
+						<th className="cell-text">Affichage</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
 				<tbody>
 					{tagsList.map((tag, i) => (
 						<tr key={tag.id}>
-							<td className="smalltext">#{i + 1}</td>
-							<td>
+							<td className="cell-index">{i + 1}</td>
+							<td className="cell-text">
 								<Link to="/money/transactions/$type/$id" params={{ type: "tag", id: String(tag.id) }}>
 									{tag.name}
 								</Link>
 							</td>
-							<td>
+							<td className="cell-text">
 								<i className={tag.icon} /> {tag.icon}
 							</td>
-							<td>
+							<td className="cell-icon">
 								<input type="color" value={tag.backgroundColor} disabled aria-label="Couleur du fond" />
 							</td>
-							<td>
+							<td className="cell-icon">
 								<input type="color" value={tag.textColor} disabled aria-label="Couleur du texte" />
 							</td>
-							<td>
+							<td className="cell-text">
 								<Badge
 									key={tag.id}
 									name={tag.name}

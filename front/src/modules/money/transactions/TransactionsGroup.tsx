@@ -3,7 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { Fragment } from "react";
 
 import Badge from "../../../components/Badge";
-import { formatDate, formatDay, formatMonth } from "../../../utils";
+import DayDate from "../../../components/DayDate";
+import { formatMonth } from "../../../utils";
 import { groupDetailsQuery, groupTransactionsQuery } from "../api";
 import { formatAmount, getAmountClassName } from "../utils";
 
@@ -179,14 +180,14 @@ export default function MoneyGroupTransactions({ type, id }: { type: "category" 
 			<table className="list transactions alternate">
 				<thead>
 					<tr>
-						<th></th>
-						<th colSpan={2}>Date</th>
-						<th>Transaction</th>
-						<th>Montant</th>
-						<th>Catégorie(s)</th>
-						<th>Paiement</th>
-						<th></th>
-						<th></th>
+						<th className="cell-icon"></th>
+						<th className="cell-date">Date</th>
+						<th className="cell-text">Transaction</th>
+						<th className="cell-number">Montant</th>
+						<th className="cell-text">Catégorie(s)</th>
+						<th className="cell-text">Paiement</th>
+						<th className="cell-number"></th>
+						<th className="cell-icon"></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -195,7 +196,7 @@ export default function MoneyGroupTransactions({ type, id }: { type: "category" 
 							return (
 								<Fragment key={`${transaction.type}-${transaction.value}`}>
 									<tr className={`separator_${transaction.type}`}>
-										<td colSpan={7}>
+										<td colSpan={6}>
 											{transaction.type === "year" ? "ANNEE" : ""} {transaction.value}
 										</td>
 										<td></td>
@@ -208,10 +209,12 @@ export default function MoneyGroupTransactions({ type, id }: { type: "category" 
 							return (
 								<Fragment key={`threshold-${transaction.value}`}>
 									<tr className={"threshold"}>
-										<td colSpan={7}>
+										<td colSpan={6}>
 											({transaction.date}) {transaction.value}
 										</td>
-										<td>{transaction.balance !== null && formatAmount(transaction.balance)}</td>
+										<td className="cell-number">
+											{transaction.balance !== null && formatAmount(transaction.balance)}
+										</td>
 										<td></td>
 									</tr>
 								</Fragment>
@@ -248,10 +251,13 @@ export default function MoneyGroupTransactions({ type, id }: { type: "category" 
 						return (
 							<Fragment key={transaction.id}>
 								<tr className={`${newWeek}`}>
-									<td>{hasParent ? <i className="fa-solid fa-list"></i> : ""}</td>
-									<td>{formatDay(transaction.date)}</td>
-									<td>{formatDate(transaction.date)}</td>
-									<td>
+									<td className="cell-icon">
+										{hasParent ? <i className="fa-solid fa-list"></i> : ""}
+									</td>
+									<td className="cell-date">
+										<DayDate date={transaction.date} />
+									</td>
+									<td className="cell-text">
 										{transaction.parent ? (
 											<>
 												<b>
@@ -283,10 +289,12 @@ export default function MoneyGroupTransactions({ type, id }: { type: "category" 
 											<span className="description">- {transaction.description}</span>
 										)}
 									</td>
-									<td className={getAmountClassName(parseFloat(transaction.amount), transaction)}>
+									<td
+										className={`cell-number ${getAmountClassName(parseFloat(transaction.amount), transaction)}`}
+									>
 										{transaction.amount}&nbsp;€
 									</td>
-									<td>
+									<td className="cell-text">
 										{categories.map((cat) => (
 											<Badge
 												key={cat.id}
@@ -297,7 +305,7 @@ export default function MoneyGroupTransactions({ type, id }: { type: "category" 
 											/>
 										))}
 									</td>
-									<td>
+									<td className="cell-text">
 										{paymentTypes.map((pt) => (
 											<Badge
 												key={pt.id}
@@ -308,8 +316,10 @@ export default function MoneyGroupTransactions({ type, id }: { type: "category" 
 											/>
 										))}
 									</td>
-									<td>{transaction.balance !== null && formatAmount(transaction.balance)}</td>
-									<td>
+									<td className="cell-number">
+										{transaction.balance !== null && formatAmount(transaction.balance)}
+									</td>
+									<td className="cell-icon">
 										<input
 											className="row_checkbox"
 											type="checkbox"
@@ -324,9 +334,11 @@ export default function MoneyGroupTransactions({ type, id }: { type: "category" 
 				<tfoot>
 					<tr>
 						<th></th>
-						<th colSpan={2}></th>
-						<th>{transactionData.length} transactions</th>
-						<th className={getAmountClassName(totalAmount)}>{totalAmount.toFixed(2)}&nbsp;€</th>
+						<th></th>
+						<th className="cell-text">{transactionData.length} transactions</th>
+						<th className={`cell-number ${getAmountClassName(totalAmount)}`}>
+							{totalAmount.toFixed(2)}&nbsp;€
+						</th>
 						<th></th>
 						<th></th>
 					</tr>

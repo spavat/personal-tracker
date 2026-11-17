@@ -164,6 +164,7 @@ import { Route as MusicGenresListDeleteIdRouteImport } from './routes/music/genr
 import { Route as MusicGenresListEditIdRouteImport } from './routes/music/genres/_list.edit.$id'
 import { Route as MusicListPeriodListeningIdDeleteRouteImport } from './routes/music/list/$period.$listeningId.delete'
 import { Route as MusicListPeriodListeningIdEditRouteImport } from './routes/music/list/$period.$listeningId.edit'
+import { Route as ReadingBookListListBookIdEditRouteImport } from './routes/reading-book/list/_list.$bookId.edit'
 import { Route as ReadingMangaListListMangaIdEditRouteImport } from './routes/reading-manga/list/_list.$mangaId.edit'
 import { Route as ReadingMangaMangaMangaIdReadingAddRouteImport } from './routes/reading-manga/manga/$mangaId.reading.add'
 import { Route as ShowsArtistsArtistIdDetailsIndexRouteImport } from './routes/shows/artists/$artistId/_details.index'
@@ -1026,6 +1027,12 @@ const MusicListPeriodListeningIdEditRoute =
     path: '/$listeningId/edit',
     getParentRoute: () => MusicListPeriodRoute,
   } as any)
+const ReadingBookListListBookIdEditRoute =
+  ReadingBookListListBookIdEditRouteImport.update({
+    id: '/$bookId/edit',
+    path: '/$bookId/edit',
+    getParentRoute: () => ReadingBookListListRoute,
+  } as any)
 const ReadingMangaListListMangaIdEditRoute =
   ReadingMangaListListMangaIdEditRouteImport.update({
     id: '/$mangaId/edit',
@@ -1422,6 +1429,7 @@ export interface FileRoutesByFullPath {
   '/music/genres/edit/$id': typeof MusicGenresListEditIdRoute
   '/music/list/$period/$listeningId/delete': typeof MusicListPeriodListeningIdDeleteRoute
   '/music/list/$period/$listeningId/edit': typeof MusicListPeriodListeningIdEditRoute
+  '/reading-book/list/$bookId/edit': typeof ReadingBookListListBookIdEditRoute
   '/reading-manga/list/$mangaId/edit': typeof ReadingMangaListListMangaIdEditRoute
   '/reading-manga/manga/$mangaId/reading/add': typeof ReadingMangaMangaMangaIdReadingAddRoute
   '/shows/artists/$artistId/edit': typeof ShowsArtistsArtistIdDetailsEditRoute
@@ -1592,6 +1600,7 @@ export interface FileRoutesByTo {
   '/music/genres/edit/$id': typeof MusicGenresListEditIdRoute
   '/music/list/$period/$listeningId/delete': typeof MusicListPeriodListeningIdDeleteRoute
   '/music/list/$period/$listeningId/edit': typeof MusicListPeriodListeningIdEditRoute
+  '/reading-book/list/$bookId/edit': typeof ReadingBookListListBookIdEditRoute
   '/reading-manga/list/$mangaId/edit': typeof ReadingMangaListListMangaIdEditRoute
   '/reading-manga/manga/$mangaId/reading/add': typeof ReadingMangaMangaMangaIdReadingAddRoute
   '/shows/artists/$artistId/edit': typeof ShowsArtistsArtistIdDetailsEditRoute
@@ -1790,6 +1799,7 @@ export interface FileRoutesById {
   '/music/genres/_list/edit/$id': typeof MusicGenresListEditIdRoute
   '/music/list/$period/$listeningId/delete': typeof MusicListPeriodListeningIdDeleteRoute
   '/music/list/$period/$listeningId/edit': typeof MusicListPeriodListeningIdEditRoute
+  '/reading-book/list/_list/$bookId/edit': typeof ReadingBookListListBookIdEditRoute
   '/reading-manga/list/_list/$mangaId/edit': typeof ReadingMangaListListMangaIdEditRoute
   '/reading-manga/manga/$mangaId/reading/add': typeof ReadingMangaMangaMangaIdReadingAddRoute
   '/shows/artists/$artistId/_details/edit': typeof ShowsArtistsArtistIdDetailsEditRoute
@@ -1988,6 +1998,7 @@ export interface FileRouteTypes {
     | '/music/genres/edit/$id'
     | '/music/list/$period/$listeningId/delete'
     | '/music/list/$period/$listeningId/edit'
+    | '/reading-book/list/$bookId/edit'
     | '/reading-manga/list/$mangaId/edit'
     | '/reading-manga/manga/$mangaId/reading/add'
     | '/shows/artists/$artistId/edit'
@@ -2158,6 +2169,7 @@ export interface FileRouteTypes {
     | '/music/genres/edit/$id'
     | '/music/list/$period/$listeningId/delete'
     | '/music/list/$period/$listeningId/edit'
+    | '/reading-book/list/$bookId/edit'
     | '/reading-manga/list/$mangaId/edit'
     | '/reading-manga/manga/$mangaId/reading/add'
     | '/shows/artists/$artistId/edit'
@@ -2355,6 +2367,7 @@ export interface FileRouteTypes {
     | '/music/genres/_list/edit/$id'
     | '/music/list/$period/$listeningId/delete'
     | '/music/list/$period/$listeningId/edit'
+    | '/reading-book/list/_list/$bookId/edit'
     | '/reading-manga/list/_list/$mangaId/edit'
     | '/reading-manga/manga/$mangaId/reading/add'
     | '/shows/artists/$artistId/_details/edit'
@@ -3501,6 +3514,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MusicListPeriodListeningIdEditRouteImport
       parentRoute: typeof MusicListPeriodRoute
     }
+    '/reading-book/list/_list/$bookId/edit': {
+      id: '/reading-book/list/_list/$bookId/edit'
+      path: '/$bookId/edit'
+      fullPath: '/reading-book/list/$bookId/edit'
+      preLoaderRoute: typeof ReadingBookListListBookIdEditRouteImport
+      parentRoute: typeof ReadingBookListListRoute
+    }
     '/reading-manga/list/_list/$mangaId/edit': {
       id: '/reading-manga/list/_list/$mangaId/edit'
       path: '/$mangaId/edit'
@@ -4347,10 +4367,12 @@ const ReadingBookHistoryYearRouteWithChildren =
 
 interface ReadingBookListListRouteChildren {
   ReadingBookListListAddRoute: typeof ReadingBookListListAddRoute
+  ReadingBookListListBookIdEditRoute: typeof ReadingBookListListBookIdEditRoute
 }
 
 const ReadingBookListListRouteChildren: ReadingBookListListRouteChildren = {
   ReadingBookListListAddRoute: ReadingBookListListAddRoute,
+  ReadingBookListListBookIdEditRoute: ReadingBookListListBookIdEditRoute,
 }
 
 const ReadingBookListListRouteWithChildren =

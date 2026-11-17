@@ -37,7 +37,7 @@ test.describe("Reading Manga - Details", () => {
 		await expect(page.locator(".details .general")).toContainText("Auteur.ic.es: Eiichirô ODA");
 
 		await expect(readingRows(page)).toHaveCount(6);
-		await expect(readingRows(page).locator("td:nth-child(4)")).toHaveText([
+		await expect(readingRows(page).locator("td:nth-child(3)")).toHaveText([
 			"T06",
 			"T05",
 			"T04",
@@ -46,9 +46,8 @@ test.describe("Reading Manga - Details", () => {
 			"T01",
 		]);
 		await expect(readingRows(page).first().locator("td")).toHaveText([
-			"#1",
-			"mar.",
-			"12/05/26",
+			"1",
+			"mar. 12/05/26",
 			"T06",
 			"",
 			"fr",

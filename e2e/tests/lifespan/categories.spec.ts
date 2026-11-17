@@ -9,7 +9,7 @@ function rows(page: Page) {
 }
 
 function row(page: Page, name: string) {
-	return rows(page).filter({ has: page.locator("td:first-child").getByText(name, { exact: true }) });
+	return rows(page).filter({ has: page.locator("td:nth-child(2)").getByText(name, { exact: true }) });
 }
 
 async function openEditModal(page: Page, name: string) {
@@ -33,14 +33,14 @@ test.describe("Lifespan - Categories", () => {
 
 	test("list shows the categories and their parent, by name", async ({ page }) => {
 		await page.goto("/lifespan/categories");
-		await expect(rows(page).locator("td:nth-child(1)")).toHaveText([
+		await expect(rows(page).locator("td:nth-child(2)")).toHaveText([
 			cuisine.name,
 			informatique.name,
 			peripheriques.name,
 			vide.name,
 		]);
-		await expect(row(page, peripheriques.name).locator("td").nth(1)).toHaveText(informatique.name);
-		await expect(row(page, cuisine.name).locator("td").nth(1)).toHaveText("—");
+		await expect(row(page, peripheriques.name).locator("td").nth(2)).toHaveText(informatique.name);
+		await expect(row(page, cuisine.name).locator("td").nth(2)).toHaveText("—");
 	});
 
 	test("add a category", async ({ page }) => {
@@ -52,8 +52,8 @@ test.describe("Lifespan - Categories", () => {
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(dialog).not.toBeVisible();
-		await expect(row(page, "Électroménager").locator("td").nth(1)).toHaveText(cuisine.name);
-		await expect(rows(page).locator("td:nth-child(1)")).toHaveText([
+		await expect(row(page, "Électroménager").locator("td").nth(2)).toHaveText(cuisine.name);
+		await expect(rows(page).locator("td:nth-child(2)")).toHaveText([
 			cuisine.name,
 			"Électroménager",
 			informatique.name,
@@ -78,7 +78,7 @@ test.describe("Lifespan - Categories", () => {
 
 		await expect(dialog).not.toBeVisible();
 		await expect(row(page, vide.name)).toHaveCount(0);
-		await expect(row(page, "Divers").locator("td").nth(1)).toHaveText(informatique.name);
+		await expect(row(page, "Divers").locator("td").nth(2)).toHaveText(informatique.name);
 	});
 
 	test("remove the parent of a category", async ({ page }) => {
@@ -88,7 +88,7 @@ test.describe("Lifespan - Categories", () => {
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(dialog).not.toBeVisible();
-		await expect(row(page, peripheriques.name).locator("td").nth(1)).toHaveText("—");
+		await expect(row(page, peripheriques.name).locator("td").nth(2)).toHaveText("—");
 	});
 
 	test("a category can't be under itself nor its sub-categories", async ({ page }) => {

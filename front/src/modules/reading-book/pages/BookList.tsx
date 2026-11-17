@@ -13,15 +13,15 @@ export default function BookList() {
 	const { query, headers, isPending } = useSortTable({
 		...bookListSort,
 		columnsList: [
-			null,
-			{ name: "Livre", colName: "book", isSortable: true },
-			{ name: "Auteur", colName: "author", isSortable: true },
-			{ name: "Langue", colName: "language", isSortable: true },
-			{ name: "Pays", colName: "country", isSortable: true },
-			{ name: "Lecture", colName: "nbReadings", isSortable: true },
-			{ name: "Début", colName: "firstReadDate", isSortable: true },
-			{ name: "Fin", colName: "lastReadDate", isSortable: true },
-			{ name: "Pages", colName: "pages", isSortable: true },
+			{ name: "", isSortable: false, className: "cell-index" },
+			{ name: "Livre", colName: "book", isSortable: true, className: "cell-text" },
+			{ name: "Auteur", colName: "author", isSortable: true, className: "cell-text" },
+			{ name: "Langue", colName: "language", isSortable: true, className: "cell-text" },
+			{ name: "Pays", colName: "country", isSortable: true, className: "cell-icon" },
+			{ name: "Lecture", colName: "nbReadings", isSortable: true, className: "cell-number" },
+			{ name: "Début", colName: "firstReadDate", isSortable: true, className: "cell-date" },
+			{ name: "Fin", colName: "lastReadDate", isSortable: true, className: "cell-date" },
+			{ name: "Pages", colName: "pages", isSortable: true, className: "cell-number" },
 			...(isOwner ? [{ name: "Actions", colName: "", isSortable: false }] : []),
 		],
 	});
@@ -29,7 +29,7 @@ export default function BookList() {
 	return (
 		<>
 			<PendingContent isPending={isPending}>
-				<table className="list books alternate">
+				<table className="list books alternate responsive">
 					<thead>
 						<tr>{headers.map((h) => h)}</tr>
 					</thead>
@@ -37,26 +37,51 @@ export default function BookList() {
 						{query.data.map((book, i) => {
 							return (
 								<tr key={book.id}>
-									<td className="smalltext">#{i + 1}</td>
-									<td>
+									<td className="cell-index">{i + 1}</td>
+									<td className="cell-text">
 										<Link to="/reading-book/book/$bookId" params={{ bookId: book.id }}>
 											{book.book}
 										</Link>
 									</td>
-									<td>{book.author}</td>
-									<td>{book.language}</td>
-									<td>
+									<td className="cell-text" data-label="Auteur">
+										{book.author}
+									</td>
+									<td className="cell-text" data-label="Langue">
+										{book.language}
+									</td>
+									<td className="cell-icon" data-label="Pays">
 										<span className={`fi fi-${book.country}`}></span>
 									</td>
-									<td>{book.nbReadings}</td>
-									<td>{formatDate(book.firstReadDate)}</td>
-									<td>{formatDate(book.lastReadDate)}</td>
-									<td>{book.pages !== null && `${book.pages} pages`}</td>
+									<td className="cell-number" data-label="Lectures">
+										{book.nbReadings}
+									</td>
+									<td className="cell-date" data-label="Début">
+										{formatDate(book.firstReadDate)}
+									</td>
+									<td className="cell-date" data-label="Fin">
+										{formatDate(book.lastReadDate)}
+									</td>
+									<td className="cell-number" data-label="Pages">
+										{book.pages !== null && `${book.pages} pages`}
+									</td>
 									{isOwner && (
-										<td>
-											{/* <button key="edit" type="button" onClick={() => showPlayModal(game.id)}>
-									<i className="fa-regular fa-pen-to-square"></i>
-								</button> */}
+										<td data-label="Actions">
+											<button
+												type="button"
+												title="Modifier"
+												onClick={() =>
+													navigate({
+														to: "/reading-book/list/$bookId/edit",
+														params: { bookId: book.id },
+														search: { returnTo: location.pathname },
+														replace: true,
+														resetScroll: false,
+														mask: { to: "/reading-book/list" },
+													})
+												}
+											>
+												<i className="fa-regular fa-pen-to-square"></i>
+											</button>
 										</td>
 									)}
 								</tr>

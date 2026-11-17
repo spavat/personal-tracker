@@ -56,7 +56,7 @@ test.describe("Shows - Performances", () => {
 		const canceled = performanceRows(page).nth(3);
 		await expect(canceled).toHaveClass(/canceled/);
 		await expect(canceled.locator("td").first()).toHaveText("");
-		await expect(performanceRows(page).nth(4).locator("td").first()).toHaveText("#4");
+		await expect(performanceRows(page).nth(4).locator("td").first()).toHaveText("4");
 	});
 
 	test("list links to the performance, spectacle and place", async ({ page }) => {
@@ -83,7 +83,7 @@ test.describe("Shows - Performances", () => {
 		await expect(page.locator(".presentation-with-picture .general")).toContainText("Place : 🎫 B7");
 
 		await expect(castingRows(page)).toHaveCount(2);
-		await expect(castingRows(page).first().locator("td")).toHaveText(["#1", "Fantine", artists.alice.name, ""]);
+		await expect(castingRows(page).first().locator("td")).toHaveText(["1", "Fantine", artists.alice.name, ""]);
 		await expect(page.getByText("Casting: complete")).toBeVisible();
 		await expect(page.getByText("Origine: program")).toBeVisible();
 
@@ -162,9 +162,9 @@ test.describe("Shows - Performances", () => {
 
 		await expect(dialog).not.toBeVisible();
 		await expect(castingRows(page)).toHaveCount(2);
-		await expect(castingRows(page).nth(0).locator("td")).toHaveText(["#1", "Hamlet", artists.alice.name, ""]);
+		await expect(castingRows(page).nth(0).locator("td")).toHaveText(["1", "Hamlet", artists.alice.name, ""]);
 		await expect(castingRows(page).nth(1).locator("td")).toHaveText([
-			"#2",
+			"2",
 			"Ophélie",
 			artists.claire.name,
 			"remplaçante",
@@ -209,7 +209,7 @@ test.describe("Shows - Performances", () => {
 
 		await expect(dialog).not.toBeVisible();
 		await expect(castingRows(page)).toHaveCount(1);
-		await expect(castingRows(page).first().locator("td")).toHaveText(["#1", "Javert", artists.bob.name, ""]);
+		await expect(castingRows(page).first().locator("td")).toHaveText(["1", "Javert", artists.bob.name, ""]);
 	});
 
 	test("edit the casting of roles without status", async ({ page }) => {
@@ -219,9 +219,9 @@ test.describe("Shows - Performances", () => {
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(dialog).not.toBeVisible();
-		await expect(castingRows(page).nth(0).locator("td")).toHaveText(["#1", "Fantine", artists.alice.name, ""]);
+		await expect(castingRows(page).nth(0).locator("td")).toHaveText(["1", "Fantine", artists.alice.name, ""]);
 		await expect(castingRows(page).nth(1).locator("td")).toHaveText([
-			"#2",
+			"2",
 			"Javert",
 			artists.bob.name,
 			"remplaçant",

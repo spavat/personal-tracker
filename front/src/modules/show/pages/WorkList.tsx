@@ -43,14 +43,14 @@ export default function WorkList() {
 				<table className="list works alternate responsive">
 					<thead>
 						<tr>
-							<th></th>
-							<th>Oeuvre</th>
-							<th>Représentations</th>
-							<th>Spectacles</th>
-							<th>Nom du spectacle</th>
-							<th>Lieu</th>
-							<th>#</th>
-							<th>Dates</th>
+							<th className="cell-index"></th>
+							<th className="cell-text">Oeuvre</th>
+							<th className="cell-number">Représentations</th>
+							<th className="cell-number">Spectacles</th>
+							<th className="cell-text">Nom du spectacle</th>
+							<th className="cell-text">Lieu</th>
+							<th className="cell-number">#</th>
+							<th className="cell-text">Dates</th>
 							{isOwner && <th>Actions</th>}
 						</tr>
 					</thead>
@@ -101,22 +101,19 @@ export default function WorkList() {
 												return (
 													<tr key={dataRow.id}>
 														{i === 0 && (
-															<td
-																rowSpan={nbRows}
-																className="alignRight smalltext monospace"
-															>
-																#{index++}
+															<td rowSpan={nbRows} className="cell-index">
+																{index++}
 															</td>
 														)}
 														{i === 0 && (
-															<td rowSpan={nbRows} className="alignLeft">
+															<td rowSpan={nbRows} className="cell-text">
 																{work.name}
 															</td>
 														)}
 														{i === 0 && (
 															<td
 																rowSpan={nbRows}
-																className="alignRight monospace"
+																className="cell-number"
 																data-label="Représentations"
 															>
 																{work.nbPerformances}
@@ -125,7 +122,7 @@ export default function WorkList() {
 														{i === 0 && (
 															<td
 																rowSpan={nbRows}
-																className="alignRight monospace"
+																className="cell-number"
 																data-label="Spectacles"
 															>
 																{work.nbSpectacles}
@@ -133,18 +130,21 @@ export default function WorkList() {
 														)}
 
 														{dataRow.hasSpectacle && (
-															<td rowSpan={dataRow.rowSpan} data-label="Spectacle">
+															<td
+																rowSpan={dataRow.rowSpan}
+																className="cell-text"
+																data-label="Spectacle"
+															>
 																{dataRow.displaySpectacle ? dataRow.spectacleName : ""}
 															</td>
 														)}
-														<td data-label="Lieu">{dataRow.placeName}</td>
-														<td
-															className="alignRight monospace"
-															data-label="Représentations"
-														>
+														<td className="cell-text" data-label="Lieu">
+															{dataRow.placeName}
+														</td>
+														<td className="cell-number" data-label="Représentations">
 															{dataRow.performances.length}
 														</td>
-														<td data-label="Dates">
+														<td className="cell-text" data-label="Dates">
 															{dataRow.performances.map((d: any) => {
 																const isFuture = isFutureShow(d.date);
 																return (

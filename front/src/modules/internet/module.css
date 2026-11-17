@@ -176,118 +176,21 @@
 			}
 		}
 
-		/* Date */
-		.list.episodes td:nth-of-type(3) {
-			text-align: left;
-			font-variant-numeric: tabular-nums;
-		}
-		/* Episode Name */
-		.list.episodes td:nth-of-type(4),
-		.list.episodes th:nth-of-type(3) {
-			text-align: left;
-		}
-
-		/* Weekday */
-		.list.episodes td:nth-of-type(2),
-		/* Tags */
-		.list.episodes td:nth-of-type(5),
-		.list.episodes th:nth-of-type(4) {
-			text-align: right;
-		}
-		/* Weekday */
-		.list.episodes td[colspan]:nth-of-type(2) {
-			text-align: center;
-		}
-		/* Duration */
-		.list.episodes td:nth-of-type(6),
-		.list.episodes th:nth-of-type(5) {
-			text-align: right;
-			font-variant-numeric: tabular-nums;
-		}
-
-		.list.programs :is(td, th):nth-of-type(2), /* Name */
-		.list.programs :is(td, th):nth-of-type(3), /* Author */
-		.list.programs :is(td, th):nth-of-type(4), /* Network */
-		.list.programs :is(td, th):nth-of-type(10) /* Tags */ {
-			text-align: left;
-		}
-
-		.list.programs :is(td, th):nth-of-type(1), /* Position */
-		.list.programs :is(td, th):nth-of-type(8), /* Nb Ep */
-		.list.programs :is(td, th):nth-of-type(9) /* Total duration */ {
-			text-align: right;
-			font-variant-numeric: tabular-nums;
-		}
-
-		.list.programs :is(td, th):nth-of-type(7) /* Last listening */ {
-			text-align: center;
-			font-variant-numeric: tabular-nums;
-		}
-
-		/* position */
-		.list.programs td:nth-of-type(1) {
-			width: 2%;
-		}
-
-		.list.programs td:nth-of-type(3) {
-			width: 15%;
-		}
-
-		.list.programs td:nth-of-type(4) {
-			width: 10%;
-		}
-
-		/* Refs*/
-		.list.programs td:nth-of-type(6) {
-			width: 5%;
-		}
-
-		.list.programs td:nth-of-type(8) {
-			width: 5%;
-		}
-
-		.list.programs td:nth-of-type(9) {
-			width: 8%;
-		}
-
-		.list.programs td:nth-of-type(10) {
-			width: 5%;
-		}
-
-		.list.programs td:nth-of-type(10) {
-			width: 15%;
-		}
-
-		/* Date */
-		.list.episodesNoTag td:nth-of-type(3) {
-			text-align: left;
-			font-variant-numeric: tabular-nums;
-		}
-		/* Program Name */
-		.list.episodesNoTag td:nth-of-type(4),
-		.list.episodesNoTag th:nth-of-type(3),
-		/* Episode Name */
-		.list.episodesNoTag td:nth-of-type(5),
-		.list.episodesNoTag th:nth-of-type(4) {
-			text-align: left;
-		}
-
-		/* Weekday */
-		.list.episodesNoTag td:nth-of-type(2),
-		/* Tags */
-		.list.episodesNoTag td:nth-of-type(6),
-		.list.episodesNoTag th:nth-of-type(5) {
-			text-align: right;
-		}
-		/* Weekday */
-		.list.episodesNoTag td[colspan]:nth-of-type(2) {
-			text-align: center;
-		}
-		/* Duration */
-		.list.episodesNoTag td:nth-of-type(7),
-		.list.episodesNoTag th:nth-of-type(6) {
-			text-align: right;
-			font-variant-numeric: tabular-nums;
+		/* PROGRAM LIST: column widths, on the headers */
+		.list.programs th {
+			&.col-author,
+			&.col-tags {
+				width: 15%;
+			}
+			&.col-network {
+				width: 10%;
+			}
+			&.col-episodes {
+				width: 5%;
+			}
+			&.col-duration {
+				width: 8%;
+			}
 		}
 
 		.program-banner {

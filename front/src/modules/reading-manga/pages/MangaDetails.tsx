@@ -5,10 +5,11 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { Fragment } from "react/jsx-runtime";
 
 import ContextTagBadge from "../../../components/ContextTagBadge";
+import DayDate from "../../../components/DayDate";
 import MutationError from "../../../components/MutationError";
 import { useStoredValue } from "../../../hooks/stored-value";
 import { useIsOwner } from "../../../hooks/use-is-owner";
-import { formatDate, formatDay, getCurrentOrPreviousDate } from "../../../utils";
+import { getCurrentOrPreviousDate } from "../../../utils";
 import { mangaDetailsQuery, save } from "../api";
 import { FrontManga } from "../types";
 import { getMangaPrefixName, getNextReadingName, getReadingForQuickAdd, mergeReadings } from "../utils";
@@ -148,13 +149,12 @@ export default function MangaDetails({ mangaId }: { mangaId: string }) {
 			<table className="list readings alternate responsive">
 				<thead>
 					<tr>
-						<th></th>
-						<th></th>
-						<th>Date</th>
-						<th>Nom</th>
-						<th>Edition</th>
-						<th>Langage</th>
-						<th>Origine</th>
+						<th className="cell-index"></th>
+						<th className="cell-date">Date</th>
+						<th className="cell-text">Nom</th>
+						<th className="cell-text">Edition</th>
+						<th className="cell-text">Langage</th>
+						<th className="cell-text">Origine</th>
 						{isOwner && <th>Actions</th>}
 					</tr>
 				</thead>
@@ -165,10 +165,11 @@ export default function MangaDetails({ mangaId }: { mangaId: string }) {
 						const lastReading = getReadingForQuickAdd(reading);
 						return (
 							<tr key={reading.id}>
-								<td className="smalltext">#{index + 1}</td>
-								<td data-label="Date">{formatDay(reading.date)}</td>
-								<td data-label="Date">{formatDate(reading.date)}</td>
-								<td>
+								<td className="cell-index">{index + 1}</td>
+								<td className="cell-date" data-label="Date">
+									<DayDate date={reading.date} />
+								</td>
+								<td className="cell-text">
 									{getMangaPrefixName(reading)}
 									{reading.name}
 									{reading.title ? ` - ${reading.title}` : ""}
@@ -176,9 +177,15 @@ export default function MangaDetails({ mangaId }: { mangaId: string }) {
 										<ContextTagBadge key={c} name={c} />
 									))}
 								</td>
-								<td data-label="Edition">{reading.edition}</td>
-								<td data-label="Langue">{reading.language}</td>
-								<td data-label="Origine">{reading.origin}</td>
+								<td className="cell-text" data-label="Edition">
+									{reading.edition}
+								</td>
+								<td className="cell-text" data-label="Langue">
+									{reading.language}
+								</td>
+								<td className="cell-text" data-label="Origine">
+									{reading.origin}
+								</td>
 								{isOwner && (
 									<td data-label="Actions">
 										<button

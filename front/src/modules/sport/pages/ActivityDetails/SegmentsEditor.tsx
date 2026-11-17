@@ -91,10 +91,10 @@ function SegmentsPaceTable({
 		<table className="list alternate">
 			<thead>
 				<tr>
-					<th>Libellé</th>
-					<th>Distance</th>
-					<th>Durée</th>
-					<th>Allure</th>
+					<th className="cell-text">Libellé</th>
+					<th className="cell-number">Distance</th>
+					<th className="cell-duration">Durée</th>
+					<th className="cell-number">Allure</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -124,10 +124,12 @@ function SegmentsPaceTable({
 
 					return (
 						<tr key={band.time} {...rowProps}>
-							<td>{band.label ?? "–"}</td>
-							<td>{distanceKm.toFixed(2)} km</td>
-							<td>{formatElapsed(band.durationSec)}</td>
-							<td>{paceSecPerKm != null ? `${formatPace(paceSecPerKm)}/km` : "–"}</td>
+							<td className="cell-text">{band.label ?? "–"}</td>
+							<td className="cell-number">{distanceKm.toFixed(2)} km</td>
+							<td className="cell-duration">{formatElapsed(band.durationSec)}</td>
+							<td className="cell-number">
+								{paceSecPerKm != null ? `${formatPace(paceSecPerKm)}/km` : "–"}
+							</td>
 						</tr>
 					);
 				})}
@@ -296,10 +298,10 @@ export default function SegmentsEditor({
 					<table className="list alternate">
 						<thead>
 							<tr>
-								<th>Temps</th>
-								<th>Distance</th>
-								<th>Type</th>
-								<th>Libellé</th>
+								<th className="cell-duration">Temps</th>
+								<th className="cell-number">Distance</th>
+								<th className="cell-text">Type</th>
+								<th className="cell-text">Libellé</th>
 								<th></th>
 							</tr>
 						</thead>
@@ -316,10 +318,10 @@ export default function SegmentsEditor({
 										key={s.time}
 										style={s.time === selectedTime ? { fontWeight: "bold" } : undefined}
 									>
-										<td className="monospace">{formatElapsed(s.time)}</td>
-										<td className="monospace">{band ? `${band.x1.toFixed(2)} km` : "–"}</td>
-										<td>{SEGMENT_LABELS[s.type]}</td>
-										<td>
+										<td className="cell-duration">{formatElapsed(s.time)}</td>
+										<td className="cell-number">{band ? `${band.x1.toFixed(2)} km` : "–"}</td>
+										<td className="cell-text">{SEGMENT_LABELS[s.type]}</td>
+										<td className="cell-text">
 											<input
 												type="text"
 												defaultValue={s.label ?? ""}

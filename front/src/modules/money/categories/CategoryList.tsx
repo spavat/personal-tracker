@@ -16,20 +16,20 @@ export default function CategoryList() {
 			<table className="list categories alternate">
 				<thead>
 					<tr>
-						<th></th>
-						<th>Nom</th>
-						<th>Icone</th>
-						<th>Couleur du fond</th>
-						<th>Couleur du texte</th>
-						<th>Affichage</th>
+						<th className="cell-index"></th>
+						<th className="cell-text">Nom</th>
+						<th className="cell-text">Icone</th>
+						<th className="cell-icon">Couleur du fond</th>
+						<th className="cell-icon">Couleur du texte</th>
+						<th className="cell-text">Affichage</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
 				<tbody>
 					{categories.map((category, i) => (
 						<tr key={category.id}>
-							<td className="smalltext">#{i + 1}</td>
-							<td>
+							<td className="cell-index">{i + 1}</td>
+							<td className="cell-text">
 								<Link
 									to="/money/transactions/$type/$id"
 									params={{ type: "category", id: String(category.id) }}
@@ -37,10 +37,10 @@ export default function CategoryList() {
 									{category.name}
 								</Link>
 							</td>
-							<td>
+							<td className="cell-text">
 								<i className={category.icon} /> {category.icon}
 							</td>
-							<td>
+							<td className="cell-icon">
 								<input
 									type="color"
 									value={category.backgroundColor}
@@ -48,10 +48,10 @@ export default function CategoryList() {
 									aria-label="Couleur du fond"
 								/>
 							</td>
-							<td>
+							<td className="cell-icon">
 								<input type="color" value={category.textColor} disabled aria-label="Couleur du texte" />
 							</td>
-							<td>
+							<td className="cell-text">
 								<Badge
 									key={category.id}
 									name={category.name}

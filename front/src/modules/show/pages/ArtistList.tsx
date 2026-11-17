@@ -18,11 +18,21 @@ export default function ArtistList() {
 	const { query, headers, isPending } = useSortTable({
 		...artistListSort,
 		columnsList: [
-			null,
-			{ name: "Nom", colName: "name", isSortable: true },
-			{ name: "Spectacle(s)", colName: "nbSpectacles", isSortable: true },
-			{ name: "Représentation(s)", colName: "nbPerformances", isSortable: true },
-			...(isOwner ? [{ name: "Actions", colName: "actions", isSortable: false }] : []),
+			{ name: "", isSortable: false, className: "cell-index" },
+			{ name: "Nom", colName: "name", isSortable: true, className: "cell-text" },
+			{
+				name: "Spectacle(s)",
+				colName: "nbSpectacles",
+				isSortable: true,
+				className: "cell-number col-spectacles",
+			},
+			{
+				name: "Représentation(s)",
+				colName: "nbPerformances",
+				isSortable: true,
+				className: "cell-number col-performances",
+			},
+			...(isOwner ? [{ name: "Actions", colName: "actions", isSortable: false, className: "col-actions" }] : []),
 		],
 	});
 

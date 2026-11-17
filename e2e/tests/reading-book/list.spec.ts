@@ -22,7 +22,7 @@ test.describe("Reading Book - List", () => {
 
 		const aliceRow = bookRows(page).filter({ hasText: alice.book });
 		await expect(aliceRow.locator("td")).toHaveText([
-			"#1",
+			"1",
 			alice.book,
 			"Lewis Carroll",
 			"en",

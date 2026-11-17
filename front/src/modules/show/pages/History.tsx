@@ -65,13 +65,13 @@ export default function History({ year }: { year: string }) {
 			<table className="list performances alternate responsive">
 				<thead>
 					<tr>
-						<th></th>
-						<th>Date</th>
-						<th>Spectacle</th>
-						<th>Lieu</th>
-						<th>Pays</th>
-						<th>Place</th>
-						<th>Casting</th>
+						<th className="cell-index"></th>
+						<th className="cell-date">Date</th>
+						<th className="cell-text">Spectacle</th>
+						<th className="cell-text">Lieu</th>
+						<th className="cell-icon">Pays</th>
+						<th className="cell-text">Place</th>
+						<th className="cell-icon">Casting</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -91,8 +91,8 @@ export default function History({ year }: { year: string }) {
 									const [date, time] = formatShowDate(show.date).split(" ");
 									return (
 										<tr key={show.id} className={show.canceled ? "canceled" : ""}>
-											<td className="smalltext">{!show.canceled && <>#{index--}</>}</td>
-											<td data-label="Date">
+											<td className="cell-index">{!show.canceled && index--}</td>
+											<td className="cell-date" data-label="Date">
 												<Link
 													to="/shows/performances/$performanceId"
 													params={{ performanceId: String(show.id) }}
@@ -101,7 +101,7 @@ export default function History({ year }: { year: string }) {
 												</Link>{" "}
 												<span className="smalltext">{time}</span>
 											</td>
-											<td>
+											<td className="cell-text">
 												<b>
 													{show.posterUrl && (
 														<img
@@ -121,7 +121,7 @@ export default function History({ year }: { year: string }) {
 													</Link>
 												</b>
 											</td>
-											<td data-label="Lieu">
+											<td className="cell-text" data-label="Lieu">
 												<Link
 													to="/shows/places/$placeId"
 													params={{ placeId: String(show.place?.id) }}
@@ -130,11 +130,13 @@ export default function History({ year }: { year: string }) {
 													{show.place?.name}
 												</Link>
 											</td>
-											<td data-label="Pays">
+											<td className="cell-icon" data-label="Pays">
 												<span className={`fi fi-${show.place?.country}`}></span>
 											</td>
-											<td data-label="Place">{show.seat ? <> 🎫 {show.seat}</> : ""}</td>
-											<td data-label="Casting">
+											<td className="cell-text" data-label="Place">
+												{show.seat ? <> 🎫 {show.seat}</> : ""}
+											</td>
+											<td className="cell-icon" data-label="Casting">
 												<CastingIcon {...show} />
 											</td>
 										</tr>

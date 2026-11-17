@@ -43,7 +43,7 @@ test.describe("Internet - Program details", () => {
 			/^Podcast épisode 0/,
 		]);
 		const first = episodeRows(page).first().locator("td");
-		await expect(first.nth(2)).toHaveText("24/10/26");
+		await expect(first.nth(2)).toContainText("24/10/26");
 		await expect(first.nth(4)).toContainText("metro");
 		await expect(first.nth(5)).toHaveText("30min*");
 	});
@@ -54,10 +54,10 @@ test.describe("Internet - Program details", () => {
 		await expect(row.locator(".fa-circle-info")).toBeVisible();
 		await expect(row).toContainText("tuto");
 
-		await row.locator("td").first().click();
+		await row.locator("td").nth(1).click();
 		const link = page.getByRole("link", { name: "https://www.youtube.com/watch?v=vid00000001" });
 		await expect(link).toBeVisible();
-		await row.locator("td").first().click();
+		await row.locator("td").nth(1).click();
 		await expect(link).not.toBeVisible();
 	});
 

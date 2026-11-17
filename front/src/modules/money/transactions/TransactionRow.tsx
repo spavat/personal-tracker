@@ -5,7 +5,7 @@ import { useFormContext } from "react-hook-form";
 import type { QuickEditInputs } from "./TransactionsTable";
 
 import Badge from "../../../components/Badge";
-import { formatDate, formatDay } from "../../../utils";
+import DayDate from "../../../components/DayDate";
 import { getAmountClassName } from "../utils";
 import TransactionChildRow from "./TransactionChildRow";
 
@@ -102,7 +102,7 @@ export default function TransactionRow({
 	return (
 		<Fragment>
 			<tr className={`${newWeek} ${editInProgress ? "edit" : ""}`}>
-				<td>
+				<td className="cell-icon">
 					{hasChildren ? (
 						<button
 							type="button"
@@ -120,9 +120,10 @@ export default function TransactionRow({
 						""
 					)}
 				</td>
-				<td>{formatDay(transaction.date)}</td>
-				<td>{formatDate(transaction.date)}</td>
-				<td>
+				<td className="cell-date">
+					<DayDate date={transaction.date} />
+				</td>
+				<td className="cell-text">
 					{recurrent && (
 						<>
 							<i className="fa-solid fa-rotate"></i>&nbsp;
@@ -164,14 +165,14 @@ export default function TransactionRow({
 						</>
 					)}
 				</td>
-				<td className={getAmountClassName(transaction.amount, transaction)}>
+				<td className={`cell-number ${getAmountClassName(transaction.amount, transaction)}`}>
 					{editInProgress ? (
 						<input type="text" {...register("amount", { valueAsNumber: true })} aria-label="amount" />
 					) : (
 						<>{transaction.amount}&nbsp;€</>
 					)}
 				</td>
-				<td>
+				<td className="cell-text">
 					{editInProgress && !hasChildren ? (
 						<select {...register("categoryId", { valueAsNumber: true })} aria-label="category">
 							<option value={0}></option>
@@ -193,7 +194,7 @@ export default function TransactionRow({
 						))
 					)}
 				</td>
-				<td>
+				<td className="cell-text">
 					{editInProgress && !hasChildren ? (
 						<select {...register("paymentTypeId", { valueAsNumber: true })} aria-label="payment type">
 							<option value={0}></option>

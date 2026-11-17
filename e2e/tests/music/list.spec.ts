@@ -54,11 +54,11 @@ test.describe("Music - List", () => {
 		await expect(listeningRows(page)).toHaveCount(3);
 		// Same day: the last created first
 		await expect(listeningRows(page).nth(0).locator("td")).toHaveText([
-			"#1",
-			"20/10/2026",
+			"1",
+			"mar. 20/10/26",
 			`${discovery.artist} - ${discovery.album}`,
 			"12/03/2001",
-			"61",
+			"1h 01min",
 			"Electro",
 			"",
 			" ",
@@ -118,11 +118,11 @@ test.describe("Music - List", () => {
 		await expect(dialog).not.toBeVisible();
 		await expect(listeningRows(page)).toHaveCount(4);
 		await expect(listeningRows(page).first().locator("td")).toHaveText([
-			"#1",
-			"25/10/2026",
+			"1",
+			"dim. 25/10/26",
 			"Massive Attack • Elizabeth Fraser - Mezzanine",
 			"20/04/1998",
-			"63",
+			"1h 03min",
 			"Trip Hop",
 			"casque",
 			" ",

@@ -4,10 +4,11 @@ import { Fragment, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 
 import ContextTagBadge from "../../../components/ContextTagBadge";
+import DayDate from "../../../components/DayDate";
 import TagBadge from "../../../components/TagBadge";
 import { API_BASE_URL } from "../../../config";
 import { useIsOwner } from "../../../hooks/use-is-owner";
-import { formatDate, formatDateTime, formatDay, getDurationString, getPeriodDifference } from "../../../utils";
+import { formatDate, formatDateTime, getDurationString, getPeriodDifference } from "../../../utils";
 import { programDetailsQuery } from "../api";
 import IgnoredTagBadge from "../components/IgnoredTagBadge";
 import { getIconType } from "../search-fn";
@@ -193,30 +194,37 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 			<table className="list episodes alternate responsive">
 				<thead>
 					<tr data-title="Épisodes">
-						<th></th>
-						<th colSpan={2}>Date</th>
-						<th>Nom</th>
-						<th>Tags</th>
-						<th>Durée</th>
+						<th className="cell-index"></th>
+						<th className="cell-icon"></th>
+						<th className="cell-date">Date</th>
+						<th className="cell-text">Nom</th>
+						<th className="cell-text">Tags</th>
+						<th className="cell-duration">Durée</th>
 						{isOwner && <th>Actions</th>}
 					</tr>
 				</thead>
 				<tbody>
-					{program.episodes.map((episode) => {
+					{program.episodes.map((episode, i) => {
 						const isOpened = openedEpisodes.has(episode.id);
 						const notFull = Boolean(episode.durationReal);
 						return (
 							<Fragment key={episode.id}>
 								<tr>
-									<td data-label="Type" onClick={() => toggleSecondRow(episode.id)}>
+									<td className="cell-index">{i + 1}</td>
+									<td
+										className="cell-icon"
+										data-label="Type"
+										onClick={() => toggleSecondRow(episode.id)}
+									>
 										{episode.type === "video" && <i className="fa-solid fa-video"></i>}
 										{episode.type === "podcast" && <i className="fa-solid fa-podcast"></i>}
 										{episode.type === "live" && <i className="fa-solid fa-play"></i>}
 										{episode.type === "radio" && <i className="fa-solid fa-radio"></i>}
 									</td>
-									<td data-label="Jour">{formatDay(episode.date)}</td>
-									<td data-label="Date">{formatDate(episode.date)}</td>
-									<td>
+									<td className="cell-date" data-label="Date">
+										<DayDate date={episode.date} />
+									</td>
+									<td className="cell-text">
 										{episode.name}
 										{episode.comment && (
 											<>
@@ -235,7 +243,7 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 											</>
 										)}
 									</td>
-									<td data-label="Tags">
+									<td className="cell-text" data-label="Tags">
 										{(episode.tags ?? []).map((c: string) => (
 											<TagBadge key={c} name={c} />
 										))}
@@ -246,7 +254,7 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 											<ContextTagBadge key={c} name={c} />
 										))}
 									</td>
-									<td data-label="Durée">
+									<td className="cell-duration" data-label="Durée">
 										{getDurationString(episode.durationReal ?? episode.duration)}
 										{notFull ? "*" : ""}
 									</td>
@@ -291,10 +299,11 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 								{isOpened && (
 									<tr>
 										<td></td>
-										<td data-label="Date de création" colSpan={2} className="smalltext">
+										<td></td>
+										<td data-label="Date de création" className="cell-date smalltext">
 											{formatDateTime(episode.created)}
 										</td>
-										<td data-label="Lien">
+										<td className="cell-text" data-label="Lien">
 											<i className="fa-solid fa-link"></i> Lien :{" "}
 											<a href={episode.link}>{episode.link}</a>
 										</td>

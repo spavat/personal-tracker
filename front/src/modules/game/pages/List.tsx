@@ -5,7 +5,7 @@ import { useIsOwner } from "../../../hooks/use-is-owner";
 import { useSortTable } from "../../../hooks/use-sort-table";
 import { gameListSort } from "../api";
 import { formatPlayDuration } from "../duration";
-import { formatLastPlayDate } from "../origins";
+import { formatPlayDate } from "../origins";
 import { steamStoreUrl } from "../stores";
 
 export default function GameList() {
@@ -15,15 +15,15 @@ export default function GameList() {
 	const { query, headers, isPending } = useSortTable({
 		...gameListSort,
 		columnsList: [
-			null,
-			{ name: "Statut", colName: "complete", isSortable: true },
-			{ name: "Jeu", colName: "name", isSortable: true },
-			{ name: "Developpeur", colName: "developper", isSortable: true },
-			{ name: "Editeur", colName: "editor", isSortable: true },
-			{ name: "Liens", colName: "", isSortable: false },
-			{ name: "Dernière partie", colName: "latestPlayDate", isSortable: true },
-			{ name: "Parties", colName: "playCount", isSortable: true },
-			{ name: "Durée totale", colName: "totalDuration", isSortable: true },
+			{ name: "", isSortable: false, className: "cell-index" },
+			{ name: "Statut", colName: "complete", isSortable: true, className: "cell-icon" },
+			{ name: "Jeu", colName: "name", isSortable: true, className: "cell-text" },
+			{ name: "Developpeur", colName: "developper", isSortable: true, className: "cell-text" },
+			{ name: "Editeur", colName: "editor", isSortable: true, className: "cell-text" },
+			{ name: "Liens", colName: "", isSortable: false, className: "cell-text" },
+			{ name: "Dernière partie", colName: "latestPlayDate", isSortable: true, className: "cell-date" },
+			{ name: "Parties", colName: "playCount", isSortable: true, className: "cell-number" },
+			{ name: "Durée totale", colName: "totalDuration", isSortable: true, className: "cell-duration" },
 			...(isOwner ? [{ name: "Actions", colName: "", isSortable: false }] : []),
 		],
 	});
@@ -38,16 +38,22 @@ export default function GameList() {
 					<tbody>
 						{query.data.map((game, i) => (
 							<tr key={game.id}>
-								<td>{i + 1}</td>
-								<td>{game.complete && <i className="complete-color fa-solid fa-circle-check"></i>}</td>
-								<td>
+								<td className="cell-index">{i + 1}</td>
+								<td className="cell-icon">
+									{game.complete && <i className="complete fa-solid fa-circle-check"></i>}
+								</td>
+								<td className="cell-text">
 									<Link to="/game/details/$gameId" params={{ gameId: game.id }}>
 										{game.name}
 									</Link>
 								</td>
-								<td data-label="Développeur">{game.developper}</td>
-								<td data-label="Editeur">{game.editor}</td>
-								<td data-label="Lien">
+								<td className="cell-text" data-label="Développeur">
+									{game.developper}
+								</td>
+								<td className="cell-text" data-label="Editeur">
+									{game.editor}
+								</td>
+								<td className="cell-text" data-label="Lien">
 									{game.storeIds?.steam && <a href={steamStoreUrl(game.storeIds.steam)}>Steam</a>}
 									{(game.links ?? []).map(({ name, link }) => (
 										<Link key={name} to={link}>
@@ -55,9 +61,15 @@ export default function GameList() {
 										</Link>
 									))}
 								</td>
-								<td data-label="Dernière date">{formatLastPlayDate(game.latestPlayDate)}</td>
-								<td data-label="Nombre">{game.playCount}</td>
-								<td data-label="Durée totale">{formatPlayDuration(game.totalDuration) || "0min"}</td>
+								<td className="cell-date" data-label="Dernière date">
+									{formatPlayDate(game.latestPlayDate)}
+								</td>
+								<td className="cell-number" data-label="Nombre">
+									{game.playCount}
+								</td>
+								<td className="cell-duration" data-label="Durée totale">
+									{formatPlayDuration(game.totalDuration) || "0min"}
+								</td>
 								{isOwner && (
 									<td data-label="Actions">
 										<button

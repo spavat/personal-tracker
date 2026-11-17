@@ -60,16 +60,20 @@ export default function ArtistTable({
 					const artist = artists[row.index];
 					return (
 						<tr key={artist.id} data-index={row.index} ref={virtualizer.measureElement}>
-							<td className="smalltext">#{row.index + 1}</td>
-							<td>
+							<td className="cell-index">{row.index + 1}</td>
+							<td className="cell-text">
 								<b>
 									<Link to="/shows/artists/$artistId" params={{ artistId: String(artist.id) }}>
 										{artist.name}
 									</Link>
 								</b>
 							</td>
-							<td data-label="Spectacles">{artist.nbSpectacles}</td>
-							<td data-label="Représentations">{artist.nbPerformances}</td>
+							<td className="cell-number" data-label="Spectacles">
+								{artist.nbSpectacles}
+							</td>
+							<td className="cell-number" data-label="Représentations">
+								{artist.nbPerformances}
+							</td>
 							{isOwner && (
 								<td data-label="Actions">
 									<button

@@ -30,8 +30,7 @@ export default function TransactionChildRow({
 		<tr id={`transaction-${child.id}`} className={`${expanded ? "" : "hidden"} ${editInProgress ? "edit" : ""}`}>
 			<td></td>
 			<td></td>
-			<td></td>
-			<td>
+			<td className="cell-text">
 				{editInProgress ? (
 					<>
 						<i className="fa-solid fa-caret-right"></i>
@@ -43,14 +42,14 @@ export default function TransactionChildRow({
 					</>
 				)}
 			</td>
-			<td className={getAmountClassName(child.amount, parentTransaction)}>
+			<td className={`cell-number ${getAmountClassName(child.amount, parentTransaction)}`}>
 				{editInProgress ? (
 					<input type="text" {...register("amount", { valueAsNumber: true })} />
 				) : (
 					<>{child.amount}&nbsp;€</>
 				)}
 			</td>
-			<td>
+			<td className="cell-text">
 				{editInProgress ? (
 					<select {...register("categoryId", { valueAsNumber: true })}>
 						<option value={0}></option>
@@ -73,7 +72,7 @@ export default function TransactionChildRow({
 				)}
 			</td>
 
-			<td>
+			<td className="cell-text">
 				{editInProgress ? (
 					<select {...register("paymentTypeId", { valueAsNumber: true })}>
 						<option value={0}></option>

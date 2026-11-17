@@ -100,15 +100,13 @@ export default function TransactionsTable({
 				<table className="list transactions alternate">
 					<thead>
 						<tr>
-							<th className="left-actions"></th>
-							<th className="date" colSpan={2}>
-								Date
-							</th>
-							<th className="transaction">Transaction</th>
-							<th className="amount">Montant</th>
-							<th className="category">Catégorie</th>
-							<th className="paiement">Paiement</th>
-							<th className="right-actions">Actions</th>
+							<th className="cell-icon col-expand"></th>
+							<th className="cell-date">Date</th>
+							<th className="cell-text col-transaction">Transaction</th>
+							<th className="cell-number col-amount">Montant</th>
+							<th className="cell-text col-category">Catégorie</th>
+							<th className="cell-text col-payment">Paiement</th>
+							<th className="col-actions">Actions</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -193,9 +191,11 @@ export default function TransactionsTable({
 					<tfoot>
 						<tr>
 							<th></th>
-							<th colSpan={2}></th>
-							<th>{transactions?.length} transactions</th>
-							<th className={getAmountClassName(totalAmount)}>{totalAmount.toFixed(2)}&nbsp;€</th>
+							<th></th>
+							<th className="cell-text">{transactions?.length} transactions</th>
+							<th className={`cell-number ${getAmountClassName(totalAmount)}`}>
+								{totalAmount.toFixed(2)}&nbsp;€
+							</th>
 							<th></th>
 							<th></th>
 						</tr>

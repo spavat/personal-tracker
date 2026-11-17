@@ -144,18 +144,18 @@ export default function PerformanceDetails({ performanceId }: { performanceId: s
 							<table className="list casting alternate responsive">
 								<thead>
 									<tr>
-										<th></th>
-										<th>Nom</th>
-										<th>Artist</th>
-										<th>Divers</th>
+										<th className="cell-index"></th>
+										<th className="cell-text">Nom</th>
+										<th className="cell-text">Artist</th>
+										<th className="cell-text">Divers</th>
 									</tr>
 								</thead>
 								<tbody>
 									{(details.roles ?? []).map((role, index) => (
 										<tr key={role.id}>
-											<td className="smalltext">#{index + 1}</td>
-											<td>{role.name}</td>
-											<td data-label="Artiste">
+											<td className="cell-index">{index + 1}</td>
+											<td className="cell-text">{role.name}</td>
+											<td className="cell-text" data-label="Artiste">
 												<Link
 													to="/shows/artists/$artistId"
 													params={{ artistId: String(role.artist.id) }}
@@ -171,7 +171,9 @@ export default function PerformanceDetails({ performanceId }: { performanceId: s
 													{role.artist.name}
 												</Link>
 											</td>
-											<td data-label="Statut">{role.status}</td>
+											<td className="cell-text" data-label="Statut">
+												{role.status}
+											</td>
 										</tr>
 									))}
 								</tbody>

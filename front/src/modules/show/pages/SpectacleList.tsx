@@ -41,11 +41,11 @@ export default function SpectacleDetails() {
 				<table className="list spectacles alternate responsive">
 					<thead>
 						<tr>
-							<th></th>
-							<th>Spectacle</th>
-							<th>Représentation</th>
-							<th>Lieu</th>
-							<th>Dates</th>
+							<th className="cell-index"></th>
+							<th className="cell-text">Spectacle</th>
+							<th className="cell-number">Représentation</th>
+							<th className="cell-text">Lieu</th>
+							<th className="cell-text">Dates</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -64,8 +64,8 @@ export default function SpectacleDetails() {
 								{spectacles.map((show: any, index: number) => (
 									<Fragment key={show.id}>
 										<tr>
-											<td className="smalltext">#{index + 1}</td>
-											<td>
+											<td className="cell-index">{index + 1}</td>
+											<td className="cell-text">
 												<Link
 													to="/shows/spectacles/$spectacleId"
 													params={{ spectacleId: String(show.id) }}
@@ -73,8 +73,10 @@ export default function SpectacleDetails() {
 													{show.name}
 												</Link>
 											</td>
-											<td data-label="Représentations">{show.nbPerformances}</td>
-											<td data-label="Lieu">
+											<td className="cell-number" data-label="Représentations">
+												{show.nbPerformances}
+											</td>
+											<td className="cell-text" data-label="Lieu">
 												{show.places.map((place: any) => (
 													// a renamed place is listed once per name (same id)
 													<Fragment key={`${place.id}-${place.name}`}>
@@ -88,11 +90,11 @@ export default function SpectacleDetails() {
 													</Fragment>
 												))}
 											</td>
-											<td data-label="Dates">
+											<td className="cell-text" data-label="Dates">
 												{show.places.map((place: any) => (
 													<span
 														key={`${id}-${show.name}-${place.id}-${place.name}`}
-														className="smalltext"
+														className="smalltext monospace"
 													>
 														{place.performances.map((d: any) => {
 															const isFuture = isFutureShow(d.date);

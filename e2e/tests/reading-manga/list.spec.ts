@@ -30,7 +30,7 @@ test.describe("Reading Manga - List", () => {
 
 		const onePieceRow = mangaRows(page).filter({ hasText: onePiece.title });
 		await expect(onePieceRow.locator("td")).toHaveText([
-			"#2",
+			"2",
 			"",
 			onePiece.title,
 			"Eiichirô ODA",

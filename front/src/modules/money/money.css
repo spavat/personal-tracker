@@ -87,92 +87,23 @@
 			}
 		}
 
-		/* Date */
-		.transactions td:nth-of-type(3),
-		/* Transaction */
-		.transactions td:nth-of-type(4),
-		.transactions th:nth-of-type(3) {
-			text-align: left;
-		}
-
-		/* Weekday */
-		.transactions td:nth-of-type(2),
-		/* Amount */
-		.transactions td:nth-of-type(5),
-		.transactions th:nth-of-type(4) {
-			text-align: right;
-		}
-
-		.transactions .left-actions {
-			/* Expand */
-			width: 3%;
-		}
-
-		.transactions .date {
-			/* Date:Day */
-			width: 4%;
-		}
-
-		.transactions .transaction {
-			/* Description */
-			width: 30%;
-		}
-
-		.transactions .amount {
-			/* Montant */
-			width: 5%;
-		}
-
-		.transactions .tags {
-			/* Montant */
-			width: 40%;
-		}
-
-		.transactions .category {
-			/* Montant */
-			width: 20%;
-		}
-
-		.transactions .paiement {
-			/* Montant */
-			width: 20%;
-		}
-
-		.transactions .right-actions {
-			/* Montant */
-			width: 10%;
-		}
-
-		table.categories,
-		table.tags {
-			/* Index */
-			td:nth-of-type(1),
-			th:nth-of-type(1) {
-				text-align: right;
+		/* TRANSACTIONS: column widths, on the headers */
+		.transactions th {
+			&.col-expand {
+				width: 3%;
 			}
-
-			/* Nom */
-			td:nth-of-type(2),
-			th:nth-of-type(2),
-			/* Icone */
-			td:nth-of-type(3),
-			th:nth-of-type(3),
-			/* Display */
-			td:nth-of-type(6),
-			th:nth-of-type(6),
-			/* Actions */
-			td:nth-of-type(7),
-			th:nth-of-type(7) {
-				text-align: left;
+			&.col-transaction {
+				width: 30%;
 			}
-
-			/* Background color */
-			td:nth-of-type(4),
-			th:nth-of-type(4),
-			/* Text color */
-			td:nth-of-type(5),
-			th:nth-of-type(5) {
-				text-align: center;
+			&.col-amount {
+				width: 5%;
+			}
+			&.col-category,
+			&.col-payment {
+				width: 20%;
+			}
+			&.col-actions {
+				width: 10%;
 			}
 		}
 
@@ -310,16 +241,6 @@
 		.recap {
 			td {
 				height: 2lh;
-			}
-
-			td,
-			th {
-				text-align: right;
-			}
-
-			th:nth-of-type(1),
-			td:nth-of-type(1) {
-				text-align: left;
 			}
 		}
 	}

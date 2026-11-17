@@ -15,14 +15,14 @@ export default function MangaList() {
 	const { query, headers, isPending } = useSortTable({
 		...mangaListSort,
 		columnsList: [
-			null,
-			{ name: "Statut", colName: "status", isSortable: true },
-			{ name: "Titre", colName: "title", isSortable: true },
-			{ name: "Auteur", colName: "author", isSortable: true },
-			{ name: "Type", colName: "type", isSortable: true },
-			{ name: "Links", colName: "links", isSortable: false },
-			{ name: "Première", colName: "firstReadingDate", isSortable: true },
-			{ name: "Dernière", colName: "lastReadingDate", isSortable: true },
+			{ name: "", isSortable: false, className: "cell-index" },
+			{ name: "Statut", colName: "status", isSortable: true, className: "cell-icon" },
+			{ name: "Titre", colName: "title", isSortable: true, className: "cell-text" },
+			{ name: "Auteur", colName: "author", isSortable: true, className: "cell-text" },
+			{ name: "Type", colName: "type", isSortable: true, className: "cell-text" },
+			{ name: "Links", colName: "links", isSortable: false, className: "cell-text" },
+			{ name: "Première", colName: "firstReadingDate", isSortable: true, className: "cell-date" },
+			{ name: "Dernière", colName: "lastReadingDate", isSortable: true, className: "cell-date" },
 			...(isOwner ? [{ name: "Actions", colName: "", isSortable: false }] : []),
 		],
 	});
@@ -36,20 +36,20 @@ export default function MangaList() {
 					</thead>
 					<tbody>
 						{query.data.map((manga, i) => {
-							const status = getStatusIcon(manga, { color: true });
+							const status = getStatusIcon(manga, { color: false });
 							const authors = manga.author ?? [];
 							const arts = manga.art ?? [];
 							const scenarios = manga.scenario ?? [];
 							return (
 								<tr key={manga.id}>
-									<td className="smalltext">#{i + 1}</td>
-									<td>{status}</td>
-									<td>
+									<td className="cell-index">{i + 1}</td>
+									<td className="cell-icon">{status}</td>
+									<td className="cell-text">
 										<Link to="/reading-manga/manga/$mangaId" params={{ mangaId: manga.id }}>
 											{manga.title}
 										</Link>
 									</td>
-									<td data-label="Auteur">
+									<td className="cell-text" data-label="Auteur">
 										{authors.length > 0 && authors.join(", ")}
 										{arts.length > 0 && (
 											<span>
@@ -63,8 +63,10 @@ export default function MangaList() {
 											</span>
 										)}
 									</td>
-									<td data-label="Type">{manga.type}</td>
-									<td data-label="Links">
+									<td className="cell-text" data-label="Type">
+										{manga.type}
+									</td>
+									<td className="cell-text" data-label="Links">
 										{manga.links &&
 											manga.links.length > 0 &&
 											manga.links.map((link) => (
@@ -75,8 +77,12 @@ export default function MangaList() {
 												</Fragment>
 											))}
 									</td>
-									<td data-label="Première">{formatDate(manga.firstReadingDate)}</td>
-									<td data-label="Dernière">{formatDate(manga.lastReadingDate)}</td>
+									<td className="cell-date" data-label="Première">
+										{formatDate(manga.firstReadingDate)}
+									</td>
+									<td className="cell-date" data-label="Dernière">
+										{formatDate(manga.lastReadingDate)}
+									</td>
 									{isOwner && (
 										<td data-label="Actions">
 											<button

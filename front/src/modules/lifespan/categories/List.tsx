@@ -13,25 +13,29 @@ export default function CategoriesList() {
 
 	return (
 		<>
-			<table className="list alternate">
+			<table className="list alternate responsive">
 				<thead>
 					<tr>
-						<th>Nom</th>
-						<th>Catégorie parente</th>
+						<th className="cell-index"></th>
+						<th className="cell-text">Nom</th>
+						<th className="cell-text">Catégorie parente</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
 				<tbody>
 					{categories.length === 0 && (
 						<tr>
-							<td colSpan={3}>Aucune catégorie.</td>
+							<td colSpan={4}>Aucune catégorie.</td>
 						</tr>
 					)}
-					{categories.map((category) => (
+					{categories.map((category, i) => (
 						<tr key={category.id}>
-							<td>{category.name}</td>
-							<td>{category.parentId ? (nameById.get(category.parentId) ?? "—") : "—"}</td>
-							<td>
+							<td className="cell-index">{i + 1}</td>
+							<td className="cell-text">{category.name}</td>
+							<td className="cell-text" data-label="Catégorie parente">
+								{category.parentId ? (nameById.get(category.parentId) ?? "—") : "—"}
+							</td>
+							<td data-label="Actions">
 								<button
 									type="button"
 									title="Modifier"

@@ -30,7 +30,7 @@ test.describe("Shows - Works", () => {
 		const miserables = workBody(page, works.miserables.name);
 		await expect(miserables.locator("tr")).toHaveCount(3);
 		await expect(miserables.locator("tr").first().locator("td")).toHaveText([
-			"#1",
+			"1",
 			works.miserables.name,
 			"4",
 			"2",

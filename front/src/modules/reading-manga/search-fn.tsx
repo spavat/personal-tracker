@@ -42,7 +42,7 @@ export function getStatusIcon(item: { status: string }, { color }: { color: bool
 	if (item.status === "complete") {
 		status = <i className={`complete${colorSuffix} fa-solid fa-circle-check`}></i>;
 	} else if (item.status === "abandoned") {
-		status = <i className={`dev-abandoned${colorSuffix} fa-solid fa-ban`}></i>;
+		status = <i className={`abandoned${colorSuffix} fa-solid fa-ban`}></i>;
 	}
 	return status;
 }

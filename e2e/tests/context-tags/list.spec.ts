@@ -37,7 +37,7 @@ test.describe("Context tags", () => {
 
 	test("list shows the main tags and their tags, by name", async ({ page }) => {
 		await page.goto("/context-tags");
-		await expect(rows(page).locator("td:nth-child(1)")).toHaveText([ecoute.name, lieu.name, transport.name]);
+		await expect(rows(page).locator("td:nth-child(2)")).toHaveText([ecoute.name, lieu.name, transport.name]);
 		await expect(row(page, transport.name).locator(".badge")).toHaveText(["train", "voiture", "vélo"]);
 		await expect(row(page, ecoute.name).locator(".badge")).toHaveText(["casque"]);
 	});
@@ -128,7 +128,7 @@ test.describe("Context tags", () => {
 		await row(page, lieu.name).getByRole("button", { name: "Supprimer" }).click();
 		await dialog.getByRole("button", { name: "Supprimer" }).click();
 		await expect(dialog).not.toBeVisible();
-		await expect(rows(page).locator("td:nth-child(1)")).toHaveText([ecoute.name, transport.name]);
+		await expect(rows(page).locator("td:nth-child(2)")).toHaveText([ecoute.name, transport.name]);
 	});
 
 	test("an empty list", async ({ page }) => {

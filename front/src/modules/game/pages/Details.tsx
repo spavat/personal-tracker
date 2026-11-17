@@ -91,26 +91,28 @@ export default function GameDetails({ gameId }: { gameId: string }) {
 			<table className="list plays alternate responsive">
 				<thead>
 					<tr data-title="Sessions de jeu">
-						<th></th>
-						<th></th>
-						<th>Date</th>
-						<th>Durée</th>
-						<th>Origine</th>
-						<th>Commentaire</th>
+						<th className="cell-index"></th>
+						<th className="cell-date">Date</th>
+						<th className="cell-duration">Durée</th>
+						<th className="cell-text">Origine</th>
+						<th className="cell-text">Commentaire</th>
 						{isOwner && <th>Actions</th>}
 					</tr>
 				</thead>
 				<tbody>
 					{gameData.plays.map((play, i) => (
 						<tr key={play.id}>
-							<td className="smalltext">#{i + 1}</td>
-							<td data-label="Date">{formatPlayDay(play)}</td>
-							<td data-label="Date">
-								<PlayDate {...play} />
+							<td className="cell-index">{i + 1}</td>
+							<td className="cell-date" data-label="Date">
+								<span className="weekday">{formatPlayDay(play)}</span> <PlayDate {...play} />
 							</td>
-							<td data-label="Durée">{formatPlayDuration(play.duration ?? 0)}</td>
-							<td data-label="Origine">{play.origin && <GameOriginBadge origin={play.origin} />}</td>
-							<td data-label="Commentaire" style={{ whiteSpace: "pre-line" }}>
+							<td className="cell-duration" data-label="Durée">
+								{formatPlayDuration(play.duration ?? 0)}
+							</td>
+							<td className="cell-text" data-label="Origine">
+								{play.origin && <GameOriginBadge origin={play.origin} />}
+							</td>
+							<td className="cell-text" data-label="Commentaire" style={{ whiteSpace: "pre-line" }}>
 								{play.comment}
 							</td>
 							{isOwner && (

@@ -1,11 +1,12 @@
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
 import ContextTagBadge from "../../../components/ContextTagBadge";
+import DayDate from "../../../components/DayDate";
 import { HeaderPortal } from "../../../components/HeaderPortal";
 import PeriodSelector from "../../../components/PeriodSelector";
 import { useIsOwner } from "../../../hooks/use-is-owner";
 import { useMonthChanger } from "../../../hooks/use-month-changer";
-import { formatFullDate, formatMonth } from "../../../utils";
+import { formatFullDate, formatMonth, getDurationString } from "../../../utils";
 import { listeningHistory } from "../api";
 
 export default function ListeningList({ period }: { period: string }) {
@@ -44,14 +45,14 @@ export default function ListeningList({ period }: { period: string }) {
 			<table className="list listenings alternate responsive">
 				<thead>
 					<tr>
-						<th></th>
-						<th>Date</th>
-						<th>Artiste(s)</th>
-						<th>Sortie</th>
-						<th>Durée</th>
-						<th>Genre</th>
-						<th>Tags</th>
-						{isOwner && <th>Actions</th>}
+						<th className="cell-index"></th>
+						<th className="cell-date">Date</th>
+						<th className="cell-text">Artiste(s)</th>
+						<th className="cell-date col-release">Sortie</th>
+						<th className="cell-duration col-duration">Durée</th>
+						<th className="cell-text col-genre">Genre</th>
+						<th className="cell-text col-tags">Tags</th>
+						{isOwner && <th className="col-actions">Actions</th>}
 					</tr>
 				</thead>
 				<tbody>
@@ -70,15 +71,23 @@ export default function ListeningList({ period }: { period: string }) {
 						}
 						return (
 							<tr key={listening.id}>
-								<td>#{index++}</td>
-								<td data-label="Date d'écoute">{formatFullDate(listening.listeningDate)}</td>
-								<td>
+								<td className="cell-index">{index++}</td>
+								<td className="cell-date" data-label="Date d'écoute">
+									<DayDate date={listening.listeningDate} />
+								</td>
+								<td className="cell-text">
 									{listening.artist.join(" • ")} - {listening.album}
 								</td>
-								<td data-label="Date de sortie">{date}</td>
-								<td data-label="Durée">{listening.duration}</td>
-								<td data-label="Genre">{listening.genre}</td>
-								<td data-label="Contexte tag">
+								<td className="cell-date" data-label="Date de sortie">
+									{date}
+								</td>
+								<td className="cell-duration" data-label="Durée">
+									{getDurationString(listening.duration)}
+								</td>
+								<td className="cell-text" data-label="Genre">
+									{listening.genre}
+								</td>
+								<td className="cell-text" data-label="Contexte tag">
 									{listening.contextTags?.map((contextTag) => (
 										<ContextTagBadge key={contextTag} name={contextTag} />
 									))}

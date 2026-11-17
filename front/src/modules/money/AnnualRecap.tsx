@@ -57,15 +57,19 @@ export default function MoneyAnnualRecap({ year: initialYear }: { year: string }
 				<table className="list alternate recap">
 					<thead>
 						<tr>
-							<th>Catégorie</th>
+							<th className="cell-text">Catégorie</th>
 							{data.allMonths.map((month) => {
-								return <th key={month}>{formatMonth(`${month}-01`)}</th>;
+								return (
+									<th key={month} className="cell-number">
+										{formatMonth(`${month}-01`)}
+									</th>
+								);
 							})}
 
-							<th>
+							<th className="cell-number">
 								Moyenne <br />({data.nbMonths} mois)
 							</th>
-							<th>Total</th>
+							<th className="cell-number">Total</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -74,11 +78,15 @@ export default function MoneyAnnualRecap({ year: initialYear }: { year: string }
 							const moyenneAmount = r.months.moyenne.total;
 							return (
 								<tr key={r.id}>
-									<td>{r.name}</td>
+									<td className="cell-text">{r.name}</td>
 									{data.allMonths.map((month) => {
 										const data = r.months[month];
 										if (!data) {
-											return <td key={month}>-</td>;
+											return (
+												<td key={month} className="cell-number">
+													-
+												</td>
+											);
 										}
 
 										const classDebit = getAmountClassName(data.debit);
@@ -86,7 +94,7 @@ export default function MoneyAnnualRecap({ year: initialYear }: { year: string }
 
 										if (data.debit && data.credit) {
 											return (
-												<td key={month}>
+												<td key={month} className="cell-number">
 													<span className={classCredit}>{data.credit.toFixed(2)}&nbsp;€</span>
 													<br />
 													<span className={classDebit}>{data.debit.toFixed(2)}&nbsp;€</span>
@@ -95,33 +103,35 @@ export default function MoneyAnnualRecap({ year: initialYear }: { year: string }
 										}
 										if (data.debit) {
 											return (
-												<td className={classDebit} key={month}>
+												<td className={`cell-number ${classDebit}`} key={month}>
 													{data.debit.toFixed(2)}&nbsp;€
 												</td>
 											);
 										}
 										return (
-											<td className={classCredit} key={month}>
+											<td className={`cell-number ${classCredit}`} key={month}>
 												{data.credit.toFixed(2)}&nbsp;€
 											</td>
 										);
 									})}
-									<td className={getAmountClassName(moyenneAmount ?? 0)}>
+									<td className={`cell-number ${getAmountClassName(moyenneAmount ?? 0)}`}>
 										{(moyenneAmount ?? 0).toFixed(2)}&nbsp;€
 									</td>
-									<td className={getAmountClassName(totalAmount)}>{totalAmount.toFixed(2)}&nbsp;€</td>
+									<td className={`cell-number ${getAmountClassName(totalAmount)}`}>
+										{totalAmount.toFixed(2)}&nbsp;€
+									</td>
 								</tr>
 							);
 						})}
 					</tbody>
 					<tfoot>
 						<tr>
-							<th>TOTAL</th>
+							<th className="cell-text">TOTAL</th>
 							{data.allMonths.map((month) => {
 								const total = data.total[month];
 								if (total) {
 									return (
-										<th key={month} className={getAmountClassName(total)}>
+										<th key={month} className={`cell-number ${getAmountClassName(total)}`}>
 											{total.toFixed(2)}&nbsp;€
 										</th>
 									);

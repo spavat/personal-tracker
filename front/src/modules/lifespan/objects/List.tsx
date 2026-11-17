@@ -19,12 +19,13 @@ export default function ObjectsList() {
 	const { query, headers, isPending } = useSortTable({
 		...objectListSort,
 		columnsList: [
-			null,
-			{ name: "Nom", colName: "name", isSortable: true },
-			{ name: "Catégorie", colName: "categoryId", isSortable: false },
-			{ name: "Type", colName: "type", isSortable: true },
-			{ name: "Statut", colName: "usageStatus", isSortable: true },
-			{ name: "Possession", colName: "possessionStatus", isSortable: true },
+			{ name: "", isSortable: false, className: "cell-index" },
+			{ name: " ", isSortable: false, className: "cell-icon" },
+			{ name: "Nom", colName: "name", isSortable: true, className: "cell-text" },
+			{ name: "Catégorie", colName: "categoryId", isSortable: false, className: "cell-text" },
+			{ name: "Type", colName: "type", isSortable: true, className: "cell-text" },
+			{ name: "Statut", colName: "usageStatus", isSortable: true, className: "cell-text" },
+			{ name: "Possession", colName: "possessionStatus", isSortable: true, className: "cell-text" },
 			{ name: "Actions", colName: "", isSortable: false },
 		],
 	});
@@ -32,15 +33,16 @@ export default function ObjectsList() {
 	return (
 		<>
 			<PendingContent isPending={isPending}>
-				<table className="list objects alternate">
+				<table className="list objects alternate responsive">
 					<thead>
 						<tr>{headers.map((h) => h)}</tr>
 					</thead>
 					<tbody>
-						{query.data.map((object) => (
+						{query.data.map((object, i) => (
 							<Fragment key={object.id}>
 								<tr>
-									<td>
+									<td className="cell-index">{i + 1}</td>
+									<td className="cell-icon">
 										<button
 											type="button"
 											aria-label="Afficher les évènements"
@@ -51,15 +53,23 @@ export default function ObjectsList() {
 											></i>
 										</button>
 									</td>
-									<td>
+									<td className="cell-text">
 										{object.name}
 										{object.description && <div className="description">{object.description}</div>}
 									</td>
-									<td>{categoryNameById.get(object.categoryId) ?? "—"}</td>
-									<td>{object.type || "—"}</td>
-									<td>{USAGE_STATUS_LABELS[object.usageStatus]}</td>
-									<td>{POSSESSION_STATUS_LABELS[object.possessionStatus]}</td>
-									<td>
+									<td className="cell-text" data-label="Catégorie">
+										{categoryNameById.get(object.categoryId) ?? "—"}
+									</td>
+									<td className="cell-text" data-label="Type">
+										{object.type || "—"}
+									</td>
+									<td className="cell-text" data-label="Statut">
+										{USAGE_STATUS_LABELS[object.usageStatus]}
+									</td>
+									<td className="cell-text" data-label="Possession">
+										{POSSESSION_STATUS_LABELS[object.possessionStatus]}
+									</td>
+									<td data-label="Actions">
 										{/* <button
 										type="button"
 										title="Ajouter"
@@ -114,7 +124,7 @@ export default function ObjectsList() {
 								</tr>
 								{expandedId === object.id && (
 									<tr>
-										<td colSpan={7}>
+										<td colSpan={8}>
 											{/* local boundary: only the expanded row waits for the events */}
 											<Suspense fallback={<p>Chargement…</p>}>
 												<ObjectEvents objectId={object.id} returnTo={location.pathname} />
@@ -164,62 +174,50 @@ function ObjectEvents({ objectId, returnTo }: { objectId: string; returnTo: stri
 	}
 
 	return (
-		<table className="list events">
-			<thead>
-				<tr>
-					<th>Type</th>
-					<th>Date</th>
-					<th>Détails</th>
-					<th>Actions</th>
-				</tr>
-			</thead>
-			<tbody>
-				{object.events.map((event) => (
-					<tr key={event.id}>
-						<td>{EVENT_TYPE_LABELS[event.type]}</td>
-						<td>{formatFullDate(event.date)}</td>
-						<td>
-							{event.cause && <span className="badge">{DISPOSE_CAUSE_LABELS[event.cause]}</span>}
-							{event.comment}
-						</td>
-						<td>
-							<button
-								type="button"
-								title="Modifier"
-								onClick={() =>
-									navigate({
-										to: "/lifespan/list/$objectId/event/$eventId/edit",
-										params: { objectId, eventId: event.id },
-										search: { returnTo },
-										replace: true,
-										resetScroll: false,
-										mask: { to: "/lifespan/list" },
-									})
-								}
-							>
-								<i className="fa-regular fa-pen-to-square"></i>
-							</button>
-							&nbsp;
-							<button
-								type="button"
-								title="Supprimer"
-								onClick={() =>
-									navigate({
-										to: "/lifespan/list/$objectId/event/$eventId/delete",
-										params: { objectId, eventId: event.id },
-										search: { returnTo },
-										replace: true,
-										resetScroll: false,
-										mask: { to: "/lifespan/list" },
-									})
-								}
-							>
-								<i className="fa-regular fa-trash-can"></i>
-							</button>
-						</td>
-					</tr>
-				))}
-			</tbody>
-		</table>
+		<ul className="events">
+			{object.events.map((event) => (
+				<li key={event.id}>
+					<b className="event-type">{EVENT_TYPE_LABELS[event.type]}</b> (
+					<span className="event-date">{formatFullDate(event.date)}</span>){" "}
+					<span className="event-details">
+						{event.cause && <span className="badge">{DISPOSE_CAUSE_LABELS[event.cause]}</span>}
+						{event.comment}
+					</span>{" "}
+					<button
+						type="button"
+						title="Modifier"
+						onClick={() =>
+							navigate({
+								to: "/lifespan/list/$objectId/event/$eventId/edit",
+								params: { objectId, eventId: event.id },
+								search: { returnTo },
+								replace: true,
+								resetScroll: false,
+								mask: { to: "/lifespan/list" },
+							})
+						}
+					>
+						<i className="fa-regular fa-pen-to-square"></i>
+					</button>
+					&nbsp;
+					<button
+						type="button"
+						title="Supprimer"
+						onClick={() =>
+							navigate({
+								to: "/lifespan/list/$objectId/event/$eventId/delete",
+								params: { objectId, eventId: event.id },
+								search: { returnTo },
+								replace: true,
+								resetScroll: false,
+								mask: { to: "/lifespan/list" },
+							})
+						}
+					>
+						<i className="fa-regular fa-trash-can"></i>
+					</button>
+				</li>
+			))}
+		</ul>
 	);
 }

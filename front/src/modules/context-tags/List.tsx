@@ -11,31 +11,33 @@ export default function ContextTagsList() {
 
 	return (
 		<>
-			<table className="list alternate">
+			<table className="list alternate responsive">
 				<thead>
 					<tr>
-						<th>Tag principal</th>
-						<th>Tags</th>
+						<th className="cell-index"></th>
+						<th className="cell-text">Tag principal</th>
+						<th className="cell-text">Tags</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
 				<tbody>
 					{contextTags.length === 0 && (
 						<tr>
-							<td colSpan={3}>Aucun tag.</td>
+							<td colSpan={4}>Aucun tag.</td>
 						</tr>
 					)}
-					{contextTags.map((contextTag) => (
+					{contextTags.map((contextTag, i) => (
 						<tr key={contextTag.id}>
-							<td>{contextTag.name}</td>
-							<td>
+							<td className="cell-index">{i + 1}</td>
+							<td className="cell-text">{contextTag.name}</td>
+							<td className="cell-text" data-label="Tags">
 								{contextTag.tags.map((tag) => (
 									<span key={tag} className="badge">
 										{tag}
 									</span>
 								))}
 							</td>
-							<td>
+							<td data-label="Actions">
 								<button
 									type="button"
 									title="Modifier"

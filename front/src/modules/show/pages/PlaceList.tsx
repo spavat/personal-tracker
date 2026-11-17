@@ -14,11 +14,11 @@ export default function PlaceList() {
 	const { query, headers, isPending } = useSortTable({
 		...placeListSort,
 		columnsList: [
-			null,
-			{ name: "Nom", colName: "name", isSortable: true },
-			{ name: "Pays", colName: "country", isSortable: true },
-			{ name: "Spectacle(s)", colName: "nbSpectacles", isSortable: true },
-			{ name: "Représentation(s)", colName: "nbPerformances", isSortable: true },
+			{ name: "", isSortable: false, className: "cell-index" },
+			{ name: "Nom", colName: "name", isSortable: true, className: "cell-text" },
+			{ name: "Pays", colName: "country", isSortable: true, className: "cell-icon" },
+			{ name: "Spectacle(s)", colName: "nbSpectacles", isSortable: true, className: "cell-number" },
+			{ name: "Représentation(s)", colName: "nbPerformances", isSortable: true, className: "cell-number" },
 			...(isOwner ? [{ name: "Actions", colName: "actions", isSortable: false }] : []),
 		],
 	});
@@ -36,19 +36,23 @@ export default function PlaceList() {
 					<tbody>
 						{query.data.map((place) => (
 							<tr key={`${place.id}`}>
-								<td className="smalltext">#{index++}</td>
-								<td>
+								<td className="cell-index">{index++}</td>
+								<td className="cell-text">
 									<b>
 										<Link to="/shows/places/$placeId" params={{ placeId: String(place.id) }}>
 											{place.name}
 										</Link>
 									</b>
 								</td>
-								<td data-label="Pays">
+								<td className="cell-icon" data-label="Pays">
 									<span className={`fi fi-${place.country}`}></span>
 								</td>
-								<td data-label="Spectacles">{place.nbSpectacles}</td>
-								<td data-label="Représentations">{place.nbPerformances}</td>
+								<td className="cell-number" data-label="Spectacles">
+									{place.nbSpectacles}
+								</td>
+								<td className="cell-number" data-label="Représentations">
+									{place.nbPerformances}
+								</td>
 								{isOwner && (
 									<td data-label="Actions">
 										<button

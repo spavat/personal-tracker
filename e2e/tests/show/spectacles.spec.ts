@@ -72,7 +72,7 @@ test.describe("Shows - Spectacles", () => {
 		await expect(performanceRows(page)).toHaveCount(3);
 		await expect(performanceRows(page).first().locator("td").nth(3)).toHaveText(places.chatelet.formerName);
 		// The canceled performance has no number
-		await expect(performanceRows(page).locator("td:first-child")).toHaveText(["#1", "", "#2"]);
+		await expect(performanceRows(page).locator("td:first-child")).toHaveText(["1", "", "2"]);
 
 		// The first cell toggles the cast row
 		await performanceRows(page).first().locator("td").first().click();

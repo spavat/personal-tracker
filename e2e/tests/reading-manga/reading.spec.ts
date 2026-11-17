@@ -8,9 +8,9 @@ function readingRows(page: Page) {
 	return page.locator("table.readings tbody tr");
 }
 
-// Fourth column holds the reading name
+// Third column holds the reading name
 function readingNames(page: Page) {
-	return readingRows(page).locator("td:nth-child(4)");
+	return readingRows(page).locator("td:nth-child(3)");
 }
 
 function readingRow(page: Page, name: string) {
@@ -76,9 +76,8 @@ test.describe("Reading Manga - Readings", () => {
 		await expect(dialog).not.toBeVisible();
 		await expect(readingRows(page)).toHaveCount(7);
 		await expect(readingRows(page).first().locator("td")).toHaveText([
-			"#1",
-			"mar.",
-			"20/10/26",
+			"1",
+			"mar. 20/10/26",
 			"T07 - Les trois capitaines train",
 			"Collector",
 			"fr",
@@ -130,7 +129,7 @@ test.describe("Reading Manga - Readings", () => {
 
 		await expect(dialog).not.toBeVisible();
 		await expect(readingRows(page)).toHaveCount(6);
-		await expect(readingRow(page, "T06b").locator("td").nth(6)).toHaveText("Livre");
+		await expect(readingRow(page, "T06b").locator("td").nth(5)).toHaveText("Livre");
 	});
 
 	test("delete a reading", async ({ page }) => {
@@ -158,9 +157,8 @@ test.describe("Reading Manga - Readings", () => {
 		await expect(readingRows(page)).toHaveCount(7);
 		const [year, month, day] = currentOrPreviousDate().split("-");
 		await expect(readingRows(page).first().locator("td")).toHaveText([
-			"#1",
-			/.+/,
-			`${day}/${month}/${year.slice(2)}`,
+			"1",
+			new RegExp(`${day}/${month}/${year.slice(2)}$`),
 			"T07",
 			"",
 			"fr",

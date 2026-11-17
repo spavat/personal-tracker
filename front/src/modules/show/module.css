@@ -76,97 +76,27 @@
 			}
 		}
 
-		/* PERFORMANCES */
-		.list.performances :is(td, th):nth-of-type(1) /* Position */ {
-			text-align: right;
-			font-variant-numeric: tabular-nums;
-		}
-		.list.performances :is(td, th):nth-of-type(3), /* Name */
-		.list.performances :is(td, th):nth-of-type(4), /* Place */
-		.list.performances :is(td, th):nth-of-type(6) /* Seat */ {
-			text-align: left;
-		}
-		.list.performances :is(td, th):nth-of-type(2), /* Date */
-		.list.performances :is(td, th):nth-of-type(5) /* Country */ {
-			text-align: center;
-			font-variant-numeric: tabular-nums;
-		}
-		.list.performances td[colspan]:nth-of-type(1) {
-			text-align: left;
-		}
-
-		/* PERFORMANCES WITH ROLE */
-		.list.performancesWithRole td:nth-of-type(1) {
-			text-align: right;
-		}
-		.list.performancesWithRole :is(td, th):nth-of-type(2) /* Date */ {
-			text-align: center;
-			font-variant-numeric: tabular-nums;
-		}
-		.list.performancesWithRole td[colspan]:nth-of-type(1) {
-			text-align: left;
-		}
-
 		/* ARTISTS */
-		.list.artists :is(td, th):nth-of-type(1), /* Position */
-		.list.artists :is(td, th):nth-of-type(3), /* Nb spectacles */
-		.list.artists :is(td, th):nth-of-type(4) /* Nb performances */ {
-			text-align: right;
-			font-variant-numeric: tabular-nums;
-		}
-		.list.artists :is(td, th):nth-of-type(2) /* Artist name */ {
-			text-align: left;
-		}
 		/* fixed layout (desktop only): widths come from the header, so they don't change as the
 		   virtualized rows come and go; the name column has no width and takes the rest */
 		@media (min-width: 769px) {
 			.list.artists {
 				table-layout: fixed;
 			}
-			.list.artists th:nth-of-type(1) /* Position */ {
-				width: 4rem;
+			.list.artists th {
+				&.cell-index {
+					width: 4rem;
+				}
+				&.col-spectacles {
+					width: 9rem;
+				}
+				&.col-performances {
+					width: 13rem;
+				}
+				&.col-actions {
+					width: 6rem;
+				}
 			}
-			.list.artists th:nth-of-type(3) /* Nb spectacles */ {
-				width: 9rem;
-			}
-			.list.artists th:nth-of-type(4) /* Nb performances */ {
-				width: 13rem;
-			}
-			.list.artists th:nth-of-type(5) /* Actions (owner only) */ {
-				width: 6rem;
-			}
-		}
-
-		/* PLACES */
-		.list.places :is(td, th):nth-of-type(1), /* Position */
-		.list.places :is(td, th):nth-of-type(4), /* Nb spectacles */
-		.list.places :is(td, th):nth-of-type(5) /* Nb performances */ {
-			text-align: right;
-			font-variant-numeric: tabular-nums;
-		}
-		.list.places :is(td, th):nth-of-type(2) /* Place name */ {
-			text-align: left;
-		}
-		.list.places :is(td, th):nth-of-type(3) /* Country */ {
-			text-align: center;
-		}
-
-		/* SPECTACLES */
-		.list.spectacles :is(td, th):nth-of-type(1), /* Position */
-		.list.spectacles :is(td, th):nth-of-type(3) /* Performances count */ {
-			text-align: right;
-			font-variant-numeric: tabular-nums;
-		}
-		.list.spectacles :is(td, th):nth-of-type(2), /* Spectacle name */
-		.list.spectacles :is(td, th):nth-of-type(4) /* Place name */ {
-			text-align: left;
-		}
-		.list.spectacles :is(td, th):nth-of-type(5) /* Dates */ {
-			text-align: left;
-			font-variant-numeric: tabular-nums;
-		}
-		.list.spectacles td[colspan]:nth-of-type(1) {
-			text-align: left;
 		}
 
 		/* WORKS */
@@ -176,11 +106,6 @@
 		.list.works td {
 			vertical-align: text-top;
 		}
-		/* by data-label, not nth-of-type: rowspan shifts the column positions in the following rows */
-		.list.works td:is([data-label="Spectacle"], [data-label="Lieu"], [data-label="Dates"]) {
-			text-align: left;
-		}
-
 		.list.works :is(td, th):first-child {
 			padding-left: var(--default-cell-padding);
 		}
@@ -206,13 +131,6 @@
 			tbody:hover {
 				background: var(--hover-background);
 			}
-		}
-
-		/* CASTING */
-		/* Position */
-		.list.casting td:nth-of-type(1):not([colspan]) {
-			text-align: right;
-			font-variant-numeric: tabular-nums;
 		}
 
 		/* ARTIST SEARCH SELECT */

@@ -120,45 +120,6 @@
 			}
 		}
 
-		/**
-		* BOOK LIST
-		*/
-		/* Position */
-		.list.books td:nth-of-type(1),
-		.list.books th:nth-of-type(1),
-		/* Reading count */
-		.list.books td:nth-of-type(6),
-		.list.books th:nth-of-type(6),
-		/* Page count */
-		.list.books td:nth-of-type(9),
-		.list.books th:nth-of-type(9) {
-			text-align: right;
-			font-variant-numeric: tabular-nums;
-		}
-		/* Book title*/
-		.list.books td:nth-of-type(2),
-		.list.books th:nth-of-type(2),
-		/* Author */
-		.list.books td:nth-of-type(3),
-		.list.books th:nth-of-type(3),
-		/* Language */
-		.list.books td:nth-of-type(4),
-		.list.books th:nth-of-type(4) {
-			text-align: left;
-		}
-		/* Country */
-		.list.books td:nth-of-type(5),
-		.list.books th:nth-of-type(5),
-		/* First Date */
-		.list.books td:nth-of-type(7),
-		.list.books th:nth-of-type(7),
-		/* Last Date */
-		.list.books td:nth-of-type(8),
-		.list.books th:nth-of-type(8) {
-			text-align: center;
-			font-variant-numeric: tabular-nums;
-		}
-
 		.sticky-helper {
 			position: sticky;
 			float: right;

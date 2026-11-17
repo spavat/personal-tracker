@@ -47,7 +47,7 @@ test.describe("Shows - Artists", () => {
 		await page.getByLabel("Affichage").selectOption("list");
 		await expect(artistNames(page)).toHaveText([artists.alice.name, artists.bob.name, artists.claire.name]);
 		await expect(artistRow(page, artists.bob.name).locator("td")).toHaveText([
-			"#2",
+			"2",
 			artists.bob.name,
 			"2",
 			"2",

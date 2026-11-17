@@ -25,12 +25,8 @@ const CATCH_UP_DATE_LABELS = {
 	"last-achievement": "dernier succès le",
 } as const;
 
-/** The play's date; a catch-up's date is marked with "*" (details in `catchUpTitle`), "Rattrapage" without date. */
-export function formatPlayDate({ date, catchUp }: Pick<GamePlay, "date" | "catchUp">) {
-	if (!catchUp) return formatFullDate(date);
-	if (catchUp === "unknown") return "Rattrapage";
-	return `${formatFullDate(date)}*`;
-}
+/** A play's date (or a game's last play date); the placeholder of a catch-up without a known date reads "Rattrapage". */
+export const formatPlayDate = (date: string) => (date === CATCH_UP_DATE ? "Rattrapage" : formatFullDate(date));
 
 /** Native tooltip (title) of a catch-up's date: what the playtime and the date are. */
 export function catchUpTitle({ date, catchUp }: Pick<GamePlay, "date" | "catchUp">) {
@@ -40,6 +36,3 @@ export function catchUpTitle({ date, catchUp }: Pick<GamePlay, "date" | "catchUp
 }
 export const formatPlayDay = ({ date, catchUp }: Pick<GamePlay, "date" | "catchUp">) =>
 	catchUp ? "" : formatDay(date);
-
-/** A game's last play date: the placeholder of a catch-up without a known date reads "Rattrapage". */
-export const formatLastPlayDate = (date: string) => (date === CATCH_UP_DATE ? "Rattrapage" : formatFullDate(date));

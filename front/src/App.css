@@ -739,6 +739,48 @@
 		padding-right: var(--default-cell-padding);
 	}
 
+	/* GENERAL CELL ALIGNMENT */
+	.list .cell-text {
+		text-align: left;
+	}
+	.list .cell-number,
+	.list .cell-duration {
+		white-space: nowrap;
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+	.list .cell-index {
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+		font-size: 12px;
+		&:not(:empty)::before {
+			content: "#";
+		}
+	}
+	.list .cell-icon {
+		text-align: center;
+	}
+	.list .cell-date {
+		text-align: center;
+		white-space: nowrap;
+		font-variant-numeric: tabular-nums;
+		& .weekday {
+			display: inline-block;
+			width: 4ch;
+			text-align: right;
+		}
+	}
+	/* GENERAL COLUMN SIZE */
+	.list th.cell-index {
+		width: 3%;
+	}
+	.list th.cell-icon {
+		width: 5%;
+	}
+	.list th.cell-date {
+		width: 10%;
+	}
+
 	/* TABLE */
 	.game .list,
 	.reading-book .list,
@@ -1281,6 +1323,8 @@
 			margin-right: 4px;
 		}
 		table.list.responsive thead tr th {
+			/* the column widths (shrink to fit) would wrap the chips */
+			width: auto;
 			padding: 2px 10px;
 			border: 1px solid white;
 			border-radius: 999px;

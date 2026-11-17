@@ -11,7 +11,7 @@ export default function GameCardGame({ game }: { game: Game }) {
 	let lastPlayString = "";
 	if (Array.isArray(game.plays) && game.plays.length > 0) {
 		const lastPlay = game.plays[game.plays.length - 1];
-		lastPlayString = `📅 ${formatPlayDate(lastPlay)}`;
+		lastPlayString = `📅 ${formatPlayDate(lastPlay.date)}`;
 	}
 	let totalDuration = "";
 	if (Array.isArray(game.plays) && game.plays.length > 0) {

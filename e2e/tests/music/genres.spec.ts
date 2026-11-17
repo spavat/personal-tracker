@@ -17,7 +17,7 @@ test.describe("Music - Genres", () => {
 
 	test("list shows the main genres", async ({ page }) => {
 		await page.goto("/music/genres");
-		await expect(genreRows(page).locator("td:first-child")).toHaveText([rock.name, electronic.name]);
+		await expect(genreRows(page).locator("td:nth-child(2)")).toHaveText([rock.name, electronic.name]);
 		await expect(genreRow(page, rock.name).locator(".badge")).toHaveText(["Rock", "Grunge", "Hard Rock"]);
 	});
 
@@ -77,6 +77,6 @@ test.describe("Music - Genres", () => {
 		await genreRow(page, electronic.name).getByRole("button", { name: "Supprimer" }).click();
 		await dialog.getByRole("button", { name: "Supprimer" }).click();
 		await expect(dialog).not.toBeVisible();
-		await expect(genreRows(page).locator("td:first-child")).toHaveText([rock.name]);
+		await expect(genreRows(page).locator("td:nth-child(2)")).toHaveText([rock.name]);
 	});
 });

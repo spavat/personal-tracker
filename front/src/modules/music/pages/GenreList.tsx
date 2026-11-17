@@ -11,31 +11,33 @@ export default function GenreList() {
 
 	return (
 		<>
-			<table className="list alternate">
+			<table className="list alternate responsive">
 				<thead>
 					<tr>
-						<th>Genre principal</th>
-						<th>Genres</th>
+						<th className="cell-index"></th>
+						<th className="cell-text">Genre principal</th>
+						<th className="cell-text">Genres</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
 				<tbody>
 					{musicGenres.length === 0 && (
 						<tr>
-							<td colSpan={3}>Aucun genre.</td>
+							<td colSpan={4}>Aucun genre.</td>
 						</tr>
 					)}
-					{musicGenres.map((musicGenre) => (
+					{musicGenres.map((musicGenre, i) => (
 						<tr key={musicGenre.id}>
-							<td>{musicGenre.name}</td>
-							<td>
+							<td className="cell-index">{i + 1}</td>
+							<td className="cell-text">{musicGenre.name}</td>
+							<td className="cell-text" data-label="Genres">
 								{musicGenre.genres.map((genre) => (
 									<span key={genre} className="badge">
 										{genre}
 									</span>
 								))}
 							</td>
-							<td>
+							<td data-label="Actions">
 								<button
 									type="button"
 									title="Modifier"

@@ -7,6 +7,7 @@ interface Columns {
 	name: string;
 	colName?: string;
 	isSortable: boolean;
+	className?: string;
 }
 // shared between the list component and its route loader
 export interface SortListConfig<T> {
@@ -69,10 +70,14 @@ export function useSortTable<T>({ columnsList, ...config }: SortTableParams<T>) 
 			return <th key="empty"></th>;
 		}
 		if (!col.isSortable) {
-			return <th key={col.name}>{col.name}</th>;
+			return (
+				<th key={col.name} className={col.className}>
+					{col.name}
+				</th>
+			);
 		}
 		return (
-			<th key={col.name}>
+			<th key={col.name} className={col.className}>
 				<a onClick={() => clickHeader(col.colName ?? col.name)}>{col.name}</a>
 				{sortField !== col.colName && <i className="fa-solid fa-sort"></i>}
 				{sortField === col.colName && (

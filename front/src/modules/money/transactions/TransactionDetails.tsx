@@ -115,32 +115,32 @@ export default function TransactionDetails({ transactionId }: { transactionId: n
 					<table className="list transactions alternate">
 						<thead>
 							<tr>
-								<th>Nom</th>
-								<th>Montant</th>
-								<th>Catégorie</th>
-								<th>Paiement</th>
-								<th>Tags</th>
+								<th className="cell-text">Nom</th>
+								<th className="cell-number">Montant</th>
+								<th className="cell-text">Catégorie</th>
+								<th className="cell-text">Paiement</th>
+								<th className="cell-text">Tags</th>
 							</tr>
 						</thead>
 						<tbody>
 							{transaction.children.map((child) => (
 								<tr key={child.id}>
-									<td>
+									<td className="cell-text">
 										{child.name}
 										{child.description && (
 											<span className="description"> - {child.description}</span>
 										)}
 									</td>
-									<td className={getAmountClassName(child.amount, transaction)}>
+									<td className={`cell-number ${getAmountClassName(child.amount, transaction)}`}>
 										{child.amount}&nbsp;€
 									</td>
-									<td>
+									<td className="cell-text">
 										<EntityBadge entity={child.category} />
 									</td>
-									<td>
+									<td className="cell-text">
 										<EntityBadge entity={child.paymentType} />
 									</td>
-									<td>
+									<td className="cell-text">
 										{(child.tags ?? []).map((t) => (
 											<EntityBadge key={t.id} entity={t} />
 										))}
