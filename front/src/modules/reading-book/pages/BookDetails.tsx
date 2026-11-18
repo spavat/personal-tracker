@@ -6,7 +6,7 @@ import { useIsOwner } from "../../../hooks/use-is-owner";
 import { bookDetailsQuery } from "../api";
 import EditionCard from "../components/EditionCard";
 import SeriesPath from "../components/SeriesPath";
-import { renderItemModel } from "../render-modele-fn";
+import { renderItemModel, truncateModel } from "../render-modele-fn";
 
 export default function BookDetails({ bookId }: { bookId: string }) {
 	const navigate = useNavigate();
@@ -183,7 +183,7 @@ export default function BookDetails({ bookId }: { bookId: string }) {
 								<li>
 									<details open>
 										<summary>Table des matières</summary>
-										<ul>{model.tree.map((item) => renderItemModel(item))}</ul>
+										<ul>{truncateModel(model.tree, 5).map((item) => renderItemModel(item))}</ul>
 									</details>
 								</li>
 							</ul>

@@ -53,6 +53,7 @@ export default function EditionCard({ book, edition }: { book: Book; edition: Ed
 						src={coverSrc(edition.cover)}
 						alt={`Couverture de ${edition.title ?? book.book}`}
 						className="cover"
+						style={{ viewTransitionName: `edition-cover-${edition.id}` }}
 					/>
 				) : (
 					<div className="cover cover-placeholder">

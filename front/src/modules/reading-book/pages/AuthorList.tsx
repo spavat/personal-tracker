@@ -51,7 +51,13 @@ export default function AuthorList() {
 					{authors.map((author) => (
 						<div key={author.id} className="card_item author">
 							{author.picture ? (
-								<img src={coverSrc(author.picture)} alt="" className="portrait-card" loading="lazy" />
+								<img
+									src={coverSrc(author.picture)}
+									alt=""
+									className="portrait-card"
+									loading="lazy"
+									style={{ viewTransitionName: `author-portrait-${author.id}` }}
+								/>
 							) : (
 								<div className="portrait-card">
 									<i className="fa-solid fa-user"></i>
@@ -59,7 +65,11 @@ export default function AuthorList() {
 							)}
 							<div>
 								<span className="title">
-									<Link to="/reading-book/authors/$authorId" params={{ authorId: author.id }}>
+									<Link
+										to="/reading-book/authors/$authorId"
+										params={{ authorId: author.id }}
+										viewTransition
+									>
 										{author.name}
 									</Link>
 								</span>

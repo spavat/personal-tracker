@@ -123,7 +123,8 @@ export type BookOverview = Omit<Book, "editions"> &
 		language: string;
 		pages: number | null;
 		cover: string | null;
-		// the title of the main edition, when it has its own
+		// the main edition, and its title when it has its own
+		editionId: string | null;
 		editionTitle: string | null;
 		nbReadings: number;
 		readings: Array<z.infer<typeof ReadingWithOptionalDetailsSchema> & ComputedBookProps & { language: string }>;

@@ -30,3 +30,24 @@ function renderLeaf(modeleItem: any) {
 		</li>
 	);
 }
+
+// The first `max` lines of a table of contents (sections and chapters, depth-first),
+// with a "…" line where it is cut
+export function truncateModel(tree: any[], max: number) {
+	let left = max;
+	function cut(items: any[]): any[] {
+		const kept: any[] = [];
+		for (const item of items) {
+			if (left <= 0) {
+				// once: the levels above stop without their own "…"
+				if (left === 0) kept.push({ id: `${item.id}-more`, title: "…" });
+				left = -1;
+				break;
+			}
+			left--;
+			kept.push(item.content?.length ? { ...item, content: cut(item.content) } : item);
+		}
+		return kept;
+	}
+	return cut(tree);
+}

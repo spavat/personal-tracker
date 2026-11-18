@@ -10,18 +10,29 @@ export default function CardBook({
 	book,
 	label,
 	readingOrder,
+	coverTransition = true,
 }: {
 	book: BookOverview;
 	label?: string | null;
 	readingOrder?: number;
+	// false when the book is shown twice on the page: a transition name must be unique
+	coverTransition?: boolean;
 }) {
 	return (
 		<div className="card_item">
-			{book.cover && <img src={coverSrc(book.cover)} alt="" className="card-cover" />}
+			{book.cover && (
+				<img
+					src={coverSrc(book.cover)}
+					alt=""
+					className="card-cover"
+					// moves to the same cover on the book page
+					style={coverTransition ? { viewTransitionName: `edition-cover-${book.editionId}` } : undefined}
+				/>
+			)}
 			{readingOrder !== undefined && <span className="reading-order smalltext">#{readingOrder}</span>}
 			{label && <span className="series-label">{label}</span>}
 			<span className="title">
-				<Link to="/reading-book/book/$bookId" params={{ bookId: book.id }}>
+				<Link to="/reading-book/book/$bookId" params={{ bookId: book.id }} viewTransition>
 					{/* the title of the edition shown by the cover, else the book's */}
 					{book.editionTitle ?? book.book}
 				</Link>

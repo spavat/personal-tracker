@@ -260,6 +260,7 @@ export class BookRepository {
 
 		return books.map(({ mainEditionId, coverKey, ...book }) => ({
 			...book,
+			editionId: mainEditionId,
 			originalLanguage: book.originalLanguage ?? "",
 			country: book.country ?? "",
 			language: book.language ?? "",

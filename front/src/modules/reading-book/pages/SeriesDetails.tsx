@@ -56,7 +56,7 @@ export default function SeriesDetails({ seriesId }: { seriesId: string }) {
 			<p>
 				{countBooks(series.items)} livre{countBooks(series.items) > 1 ? "s" : ""}
 			</p>
-			<SeriesLevel items={series.items} />
+			<SeriesLevel items={series.items} firstOrders={firstReadingOrders(series.items)} />
 
 			<Outlet />
 		</div>
@@ -67,7 +67,20 @@ const countBooks = (items: SeriesTreeItem[]): number =>
 	items.reduce((n, item) => n + (item.kind === "book" ? 1 : countBooks(item.items)), 0);
 
 // One level: consecutive books in a grid, a sub-series as an indented section of its own
-function SeriesLevel({ items }: { items: SeriesTreeItem[] }) {
+// the "#n" where each book shows first: a book in two sub-series shows twice, only its first card takes the
+// cover transition (a transition name must be unique on the page)
+function firstReadingOrders(items: SeriesTreeItem[], orders = new Map<string, number>()) {
+	for (const item of items) {
+		if (item.kind === "series") {
+			firstReadingOrders(item.items, orders);
+		} else if (!orders.has(item.book.id)) {
+			orders.set(item.book.id, item.readingOrder);
+		}
+	}
+	return orders;
+}
+
+function SeriesLevel({ items, firstOrders }: { items: SeriesTreeItem[]; firstOrders: Map<string, number> }) {
 	const blocks: Array<SeriesTreeItem[]> = [];
 	for (const item of items) {
 		const last = blocks.at(-1);
@@ -88,7 +101,7 @@ function SeriesLevel({ items }: { items: SeriesTreeItem[] }) {
 							{first.series.title}
 						</Link>
 					</h3>
-					<SeriesLevel items={first.items} />
+					<SeriesLevel items={first.items} firstOrders={firstOrders} />
 				</section>
 			);
 		}
@@ -102,6 +115,7 @@ function SeriesLevel({ items }: { items: SeriesTreeItem[] }) {
 								book={item.book}
 								label={item.positionLabel}
 								readingOrder={item.readingOrder}
+								coverTransition={firstOrders.get(item.book.id) === item.readingOrder}
 							/>
 						),
 				)}

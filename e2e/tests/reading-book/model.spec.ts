@@ -93,9 +93,15 @@ test.describe("Reading Book - Model", () => {
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 		await expect(dialog).not.toBeVisible();
 
+		// the card shows the first 5 lines, then "…"
 		const chapters = detailsModel(page).locator("ul ul > li");
-		await expect(chapters).toHaveCount(ROMAN_CHAPTERS + 1);
+		await expect(chapters).toHaveCount(6);
 		await expect(chapters.nth(1)).toHaveText("Nouveau chapitre");
+		await expect(chapters.last()).toHaveText("…");
+		// all of them are saved
+		await expect(column(await openModelModal(page, roman.id), "Saisie").getByRole("textbox")).toHaveCount(
+			ROMAN_CHAPTERS + 1,
+		);
 	});
 
 	test("delete a chapter", async ({ page }) => {
@@ -106,9 +112,10 @@ test.describe("Reading Book - Model", () => {
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 		await expect(dialog).not.toBeVisible();
 
-		const chapters = detailsModel(page).locator("ul ul > li");
-		await expect(chapters).toHaveCount(ROMAN_CHAPTERS - 1);
 		await expect(detailsModel(page)).not.toContainText("Au commencement était le printemps");
+		await expect(column(await openModelModal(page, roman.id), "Saisie").getByRole("textbox")).toHaveCount(
+			ROMAN_CHAPTERS - 1,
+		);
 	});
 
 	test("switch a chapter to a part and back", async ({ page }) => {
