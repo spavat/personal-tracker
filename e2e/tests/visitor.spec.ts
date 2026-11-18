@@ -296,12 +296,51 @@ test.describe("anonymous visitor", () => {
 			});
 		});
 
+		test.describe("series and authors", () => {
+			const SERIES_ID = "6b1d6a52-0c3e-4f5e-9d8a-2f4c1e7b9a01";
+			test.beforeEach(async () => {
+				await queryDb("INSERT INTO core.node (id, type, label) VALUES ($1, 'book_series', 'Wonderland')", [
+					SERIES_ID,
+				]);
+				await queryDb("INSERT INTO reading.series (id, title) VALUES ($1, 'Wonderland')", [SERIES_ID]);
+				await queryDb(
+					"INSERT INTO reading.series_item (series_id, position, position_label, book_id) VALUES ($1, 1, '1', $2)",
+					[SERIES_ID, alice.id],
+				);
+			});
+			test.afterEach(resetDb);
+
+			test("series list and page without owner buttons", async ({ page }) => {
+				await page.goto("/reading-book/history/2026");
+				await page.locator(".menu").getByRole("link", { name: "Séries" }).click();
+				await expect(page).toHaveURL("/reading-book/series");
+				await expect(page.getByTitle("Ajouter une série")).toHaveCount(0);
+
+				await page.getByRole("link", { name: "Wonderland" }).click();
+				await expect(page).toHaveURL(`/reading-book/series/${SERIES_ID}`);
+				await expect(page.getByRole("link", { name: alice.book })).toBeVisible();
+				await expect(page.getByTitle("Modifier")).toHaveCount(0);
+				await expect(page.getByTitle("Supprimer")).toHaveCount(0);
+			});
+
+			test("author list and page without owner buttons", async ({ page }) => {
+				await page.goto("/reading-book/authors");
+				await page.getByRole("link", { name: "Lewis Carroll" }).click();
+				await expect(page).toHaveURL(/\/reading-book\/authors\/[0-9a-f-]{36}$/);
+				await expect(page.getByRole("link", { name: alice.book })).toBeVisible();
+				await expect(page.getByTitle("Modifier")).toHaveCount(0);
+			});
+		});
+
 		for (const url of [
 			"/reading-book/list/add",
 			"/reading-book/history/2026/add",
 			`/reading-book/book/${alice.id}/edit`,
 			`/reading-book/book/${alice.id}/model/add`,
 			"/reading-book/series/add",
+			`/reading-book/series/${ALICE_READING_ID}/edit`,
+			`/reading-book/series/${ALICE_READING_ID}/delete`,
+			`/reading-book/authors/${ALICE_READING_ID}/edit`,
 			`/reading-book/book/${alice.id}/reading/${ALICE_READING_ID}/delete`,
 		]) {
 			test(`is sent back home from ${url}`, async ({ page }) => {
