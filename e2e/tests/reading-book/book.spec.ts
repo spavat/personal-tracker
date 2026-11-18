@@ -27,7 +27,9 @@ test.describe("Reading Book - Details", () => {
 
 		await expect(page.getByRole("heading", { name: "Lecture #1" })).toBeVisible();
 		const model = page.locator(".card_item.model");
-		await expect(model.locator("ul ul > li")).toHaveCount(12);
+		// its 12 chapters, cut to the first 5 and "…"
+		await expect(model.locator("ul ul > li")).toHaveCount(6);
+		await expect(model.locator("ul ul > li").last()).toHaveText("…");
 		await expect(model).toContainText("I: Down the Rabbit-Hole");
 	});
 
