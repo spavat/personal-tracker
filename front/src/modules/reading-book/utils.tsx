@@ -1,4 +1,4 @@
-import { BookOverview, EditionType } from "@personal-tracker/shared/reading-book";
+import { BookOverview, BookSeries, EditionType } from "@personal-tracker/shared/reading-book";
 
 import { API_BASE_URL } from "../../config";
 import { formatDate } from "../../utils";
@@ -264,4 +264,28 @@ export function getStatusIcon(item: any, { color }: { color: boolean }) {
 		status = <i className={`dev-abandoned${colorSuffix} fa-solid fa-ban`} style={{ color: "red" }}></i>;
 	}
 	return status;
+}
+
+// Books grouped by series (by title), each in the series' order with its label, then the books in no series.
+// A book in two series shows in both.
+export function seriesGroups(books: BookOverview[]) {
+	const groups = new Map<
+		string,
+		{ series: BookSeries; books: Array<{ book: BookOverview; label: string | null; position: number }> }
+	>();
+	for (const book of books) {
+		for (const series of book.series) {
+			const group = groups.get(series.id) ?? { series, books: [] };
+			group.books.push({ book, label: series.positionLabel, position: series.position });
+			groups.set(series.id, group);
+		}
+	}
+	const inSeries = [...groups.values()]
+		.toSorted((a, b) => a.series.title.localeCompare(b.series.title))
+		.map(({ series, books }) => ({
+			series: series as BookSeries | null,
+			books: books.toSorted((a, b) => a.position - b.position),
+		}));
+	const alone = books.filter((book) => !book.series.length).map((book) => ({ book, label: null, position: 0 }));
+	return alone.length ? [...inSeries, { series: null, books: alone }] : inSeries;
 }

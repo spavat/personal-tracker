@@ -4,6 +4,7 @@ export type EditionFormData = {
 	title: string;
 	// an organization
 	publisherId: string;
+	collection: string;
 	translators: Array<{ entityId: string; creditedAs: string }>;
 	language: string;
 	pages: string;
@@ -20,6 +21,7 @@ export function toEditionFormData(edition?: Edition, defaultModelId?: string): E
 	return {
 		title: edition?.title ?? "",
 		publisherId: edition?.publisher?.id ?? "",
+		collection: edition?.collection ?? "",
 		translators:
 			edition?.translators.map(({ entityId, creditedAs }) => ({ entityId, creditedAs: creditedAs ?? "" })) ?? [],
 		language: edition?.language ?? "",
@@ -40,6 +42,7 @@ export function toSaveEdition(data: EditionFormData, id?: string): SaveEditionRe
 		id,
 		title: textOrNull(data.title),
 		publisherId: data.publisherId || null,
+		collection: textOrNull(data.collection),
 		// a row left without person is dropped
 		translators: data.translators
 			.filter(({ entityId }) => entityId)

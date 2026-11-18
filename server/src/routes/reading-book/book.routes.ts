@@ -1,20 +1,23 @@
 import { FastifyPluginAsyncZod, ZodTypeProvider } from "@marcalexiei/fastify-type-provider-zod";
 import "@fastify/mongodb";
 import {
+	AuthorListResponseSchema,
+	AuthorParamsRequestSchema,
 	BookDetailsParamsSchema,
 	BookListRequestSchema,
 	DeleteReadingParamsRequestSchema,
 	EditionParamsRequestSchema,
 	GetReportQuerystringRequestSchema,
 	GetReportResponseSchema,
-	ReadingParamsRequestSchema,
-	SaveBookRequestSchema,
 	ModelParamsRequestSchema,
+	ReadingParamsRequestSchema,
 	SaveBookModelRequestSchema,
+	SaveBookRequestSchema,
 	SaveEditionRequestSchema,
 	SaveReadingRequestSchema,
-	AuthorListResponseSchema,
-	AuthorParamsRequestSchema,
+	SaveSeriesRequestSchema,
+	SeriesListResponseSchema,
+	SeriesParamsRequestSchema,
 } from "@personal-tracker/shared/reading-book";
 
 import { ContextTagRepository } from "../context-tags/context-tag.repository";
@@ -24,15 +27,19 @@ import {
 	DeleteEditionUseCase,
 	DeleteModelUseCase,
 	DeleteReadingUseCase,
+	DeleteSeriesUseCase,
+	GetAuthorUseCase,
 	GetBookUseCase,
 	GetReportUseCase,
-	GetAuthorUseCase,
-	ListBooksUseCase,
+	GetSeriesUseCase,
 	ListAuthorsUseCase,
+	ListBooksUseCase,
+	ListSeriesUseCase,
 	SaveBookUseCase,
 	SaveEditionUseCase,
 	SaveModelUseCase,
 	SaveReadingUseCase,
+	SaveSeriesUseCase,
 } from "./book.useCases";
 import { CoverStorageRepository } from "./cover-storage.repository";
 
@@ -53,6 +60,41 @@ const readingsBook: FastifyPluginAsyncZod = async (fastify): Promise<void> => {
 	const saveReading = new SaveReadingUseCase(repository);
 	const deleteReading = new DeleteReadingUseCase(repository);
 	const getReport = new GetReportUseCase(repository, contextTagRepository);
+	const listSeries = new ListSeriesUseCase(repository);
+	const getSeries = new GetSeriesUseCase(repository);
+	const saveSeries = new SaveSeriesUseCase(repository);
+	const deleteSeries = new DeleteSeriesUseCase(repository);
+
+	// public, like the books
+	fastify
+		.withTypeProvider<ZodTypeProvider>()
+		.get(
+			"/series",
+			{ config: { public: true }, schema: { response: { 200: SeriesListResponseSchema } } },
+			async (request) => listSeries.execute(request.log),
+		);
+	fastify
+		.withTypeProvider<ZodTypeProvider>()
+		.get(
+			"/series/:id",
+			{ config: { public: true }, schema: { params: SeriesParamsRequestSchema } },
+			async (request, reply) =>
+				(await getSeries.execute(request.params.id, request.log)) ?? reply.notFound("Série introuvable"),
+		);
+	// 201 on create, 200 on update, with the series' id
+	fastify
+		.withTypeProvider<ZodTypeProvider>()
+		.post("/series/save", { schema: { body: SaveSeriesRequestSchema } }, async (request, reply) => {
+			const saved = await saveSeries.execute(request.body, request.log);
+			return reply.code(request.body.id ? 200 : 201).send(saved);
+		});
+	fastify
+		.withTypeProvider<ZodTypeProvider>()
+		.delete("/series/:id", { schema: { params: SeriesParamsRequestSchema } }, async (request, reply) => {
+			await deleteSeries.execute(request.params.id, request.log);
+			return reply.code(204).send();
+		});
+
 	const listAuthors = new ListAuthorsUseCase(repository);
 	const getAuthor = new GetAuthorUseCase(repository);
 

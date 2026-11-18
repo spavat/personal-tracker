@@ -1,10 +1,10 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
 import { useIsOwner } from "../../../hooks/use-is-owner";
 import { authorDetailsQuery } from "../api";
 import CardBook from "../components/CardBook";
-import { coverSrc } from "../utils";
+import { coverSrc, seriesGroups } from "../utils";
 
 // A author and their books, in publication order
 export default function AuthorDetails({ authorId }: { authorId: string }) {
@@ -61,11 +61,25 @@ export default function AuthorDetails({ authorId }: { authorId: string }) {
 				</div>
 			</div>
 			<h2>Liste des livres</h2>
-			<div className="grid">
-				{author.books.map((book) => (
-					<CardBook key={book.id} book={book} />
-				))}
-			</div>
+			{seriesGroups(author.books).map(({ series, books }) => (
+				<section key={series?.id ?? "none"}>
+					{/* the books in no series come last, under their own heading when there are series */}
+					{series ? (
+						<h3>
+							<Link to="/reading-book/series/$seriesId" params={{ seriesId: series.id }}>
+								{series.title}
+							</Link>
+						</h3>
+					) : (
+						author.books.some((book) => book.series.length) && <h3>Hors série</h3>
+					)}
+					<div className="grid">
+						{books.map(({ book, label }) => (
+							<CardBook key={book.id} book={book} label={label} />
+						))}
+					</div>
+				</section>
+			))}
 
 			<Outlet />
 		</div>

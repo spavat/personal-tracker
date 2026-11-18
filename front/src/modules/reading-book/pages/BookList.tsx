@@ -6,6 +6,7 @@ import { useIsOwner } from "../../../hooks/use-is-owner";
 import { useSortTable } from "../../../hooks/use-sort-table";
 import { formatDate } from "../../../utils";
 import { bookListSort } from "../api";
+import SeriesPath from "../components/SeriesPath";
 
 export default function BookList() {
 	const navigate = useNavigate();
@@ -43,6 +44,11 @@ export default function BookList() {
 										<Link to="/reading-book/book/$bookId" params={{ bookId: book.id }}>
 											{book.book}
 										</Link>
+										{book.series.map((series) => (
+											<div key={series.id} className="smalltext">
+												<SeriesPath series={series} />
+											</div>
+										))}
 									</td>
 									<td className="cell-text" data-label="Auteur">
 										{book.authors.map((author, i) => (

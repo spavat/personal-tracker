@@ -5,6 +5,7 @@ import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useIsOwner } from "../../../hooks/use-is-owner";
 import { bookDetailsQuery } from "../api";
 import EditionCard from "../components/EditionCard";
+import SeriesPath from "../components/SeriesPath";
 import { renderItemModel } from "../render-modele-fn";
 
 export default function BookDetails({ bookId }: { bookId: string }) {
@@ -68,6 +69,12 @@ export default function BookDetails({ bookId }: { bookId: string }) {
 							</>
 						)}
 						Pays : {book.country} <span className={`fi fi-${book.country}`}></span>
+						{book.series.map((series) => (
+							<span key={series.id}>
+								<br />
+								Série : <SeriesPath series={series} />
+							</span>
+						))}
 					</div>
 				</div>
 				<div className="stats"></div>

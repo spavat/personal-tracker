@@ -22,7 +22,7 @@ async function addEdition(page: Page, fields: { title: string; cover?: string })
 	const dialog = page.getByRole("dialog", { name: "Ajouter une édition" });
 	await dialog.getByRole("textbox", { name: "Titre de l'édition" }).fill(fields.title);
 	if (fields.cover) {
-		await dialog.getByRole("textbox", { name: "Image" }).fill(fields.cover);
+		await dialog.getByRole("textbox", { name: "URL de la couverture" }).fill(fields.cover);
 	}
 	return dialog;
 }
@@ -32,7 +32,8 @@ test.describe("Reading Book - Editions", () => {
 
 	test("add an edition with its cover, publisher and translator, then read it", async ({ page }) => {
 		const dialog = await addEdition(page, { title: "Alice au pays des merveilles", cover: COVER_URL });
-		await pickEntity(dialog, "Éditeur", "Folio");
+		await pickEntity(dialog, "Éditeur", "Gallimard");
+		await dialog.getByRole("textbox", { name: "Collection" }).fill("Folio Classique");
 		await dialog.getByRole("combobox", { name: "Type" }).selectOption("Livre");
 		await dialog.getByRole("textbox", { name: "Langue" }).fill("fr");
 		await dialog.getByRole("spinbutton", { name: "Pages" }).fill("220");
@@ -44,7 +45,7 @@ test.describe("Reading Book - Editions", () => {
 		await expect(dialog).not.toBeVisible();
 
 		const card = edition(page, "Alice au pays des merveilles");
-		await expect(card).toContainText("Folio · Livre · fr · 220 pages · 1994");
+		await expect(card).toContainText("Gallimard · Folio Classique · Livre · fr · 220 pages · 1994");
 		await expect(card).toContainText("Traduction : H. Parisot");
 		const cover = card.getByRole("img", { name: "Couverture de Alice au pays des merveilles" });
 		await expect(cover).toHaveAttribute("src", /\/images\/reading-book\/edition\/[0-9a-f-]+\?v=[0-9a-f]+$/);
@@ -60,7 +61,7 @@ test.describe("Reading Book - Editions", () => {
 	test("upload a cover file, then remove it", async ({ page }) => {
 		const dialog = await addEdition(page, { title: "Édition numérique" });
 		await dialog
-			.getByLabel("Fichier de couverture")
+			.getByLabel("Fichier image")
 			.setInputFiles({ name: "cover.svg", mimeType: "image/svg+xml", buffer: SVG_COVER });
 		await expect(dialog.getByRole("img", { name: "Couverture" })).toBeVisible();
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();

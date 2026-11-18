@@ -9,6 +9,8 @@ import {
 	readingEntry,
 	readingModel,
 	readingReading,
+	readingSeries,
+	readingSeriesItem,
 } from "../../db/schema";
 import { makeFakeDrizzle } from "../../test-support/fake-drizzle";
 import { makeFakeMongo } from "../../test-support/fake-mongo";
@@ -21,6 +23,7 @@ const CHAPTER_UUID = "33333333-3333-4333-8333-333333333333";
 const EDITION_UUID = "44444444-4444-4444-8444-444444444444";
 const MODEL_UUID = "55555555-5555-4555-8555-555555555555";
 const ENTITY_UUID = "66666666-6666-4666-8666-666666666666";
+const SERIES_UUID = "77777777-7777-4777-8777-777777777777";
 
 const tablesOf = (fn: { mock: { calls: unknown[][] } }) => fn.mock.calls.map((call) => call[0]);
 
@@ -142,6 +145,7 @@ describe("reading-book routes", () => {
 				payload: {
 					title: null,
 					publisherId: ENTITY_UUID,
+					collection: "Folio SF",
 					translators: [{ entityId: ENTITY_UUID, creditedAs: "M. Demuth" }],
 					language: "fr",
 					pages: 830,
@@ -275,6 +279,42 @@ describe("reading-book routes", () => {
 
 		it("GET /authors/:id 404s on an unknown author", async () => {
 			const res = await ctx.app.inject({ method: "GET", url: `/authors/${ENTITY_UUID}` });
+			expect(res.statusCode).toBe(404);
+		});
+
+		it("POST /series/save creates the node, the series and its items in order", async () => {
+			await ctx.app.close();
+			// every select answers this row: 1 book and 1 sub-series found, and no item (no cycle)
+			ctx = await buildApp([{ id: SERIES_UUID, count: 1 }]);
+
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: "/series/save",
+				payload: {
+					title: "Terre du Milieu",
+					items: [
+						{ kind: "book", bookId: UUID, positionLabel: "1" },
+						{ kind: "series", seriesId: EDITION_UUID, positionLabel: null },
+					],
+				},
+			});
+
+			expect(res.statusCode).toBe(201);
+			expect(res.json()).toEqual({ id: SERIES_UUID });
+			expect(tablesOf(ctx.db.insert)).toEqual([coreNode, readingSeries, readingSeriesItem]);
+		});
+
+		it("POST /series/save rejects a series without title", async () => {
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: "/series/save",
+				payload: { title: " ", items: [] },
+			});
+			expect(res.statusCode).toBe(400);
+		});
+
+		it("GET /series/:id 404s on an unknown series, publicly", async () => {
+			const res = await ctx.app.inject({ method: "GET", url: `/series/${SERIES_UUID}` });
 			expect(res.statusCode).toBe(404);
 		});
 

@@ -28,8 +28,10 @@ test.describe("Reading Book - History", () => {
 
 		const aliceCard = bookCard(page, alice.book);
 		await expect(aliceCard).toContainText("Lewis Carroll");
-		await expect(aliceCard).toContainText("1 lecture");
+		// a single reading is shown directly, without its count nor its number
+		await expect(aliceCard.locator("details")).toHaveCount(0);
 		await expect(aliceCard).toContainText("05/02/26 - 08/03/26 - 5 jours");
+		await expect(aliceCard).not.toContainText("#1");
 		await expect(aliceCard.locator(".fa-circle-check")).toBeVisible();
 
 		await expect(bookCard(page, littleWomen.book).locator(".fa-ban")).toBeVisible();

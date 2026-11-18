@@ -79,6 +79,8 @@ import { Route as ReadingBookBookBookIdRouteImport } from './routes/reading-book
 import { Route as ReadingBookHistoryIndexRouteImport } from './routes/reading-book/history/index'
 import { Route as ReadingBookHistoryYearRouteImport } from './routes/reading-book/history/$year'
 import { Route as ReadingBookListListRouteImport } from './routes/reading-book/list/_list'
+import { Route as ReadingBookSeriesSeriesIdRouteImport } from './routes/reading-book/series/$seriesId'
+import { Route as ReadingBookSeriesListRouteImport } from './routes/reading-book/series/_list'
 import { Route as ReadingMangaHistoryIndexRouteImport } from './routes/reading-manga/history/index'
 import { Route as ReadingMangaHistoryYearRouteImport } from './routes/reading-manga/history/$year'
 import { Route as ReadingMangaListListRouteImport } from './routes/reading-manga/list/_list'
@@ -126,6 +128,9 @@ import { Route as ReadingBookAuthorsAuthorIdEditRouteImport } from './routes/rea
 import { Route as ReadingBookBookBookIdEditRouteImport } from './routes/reading-book/book/$bookId.edit'
 import { Route as ReadingBookHistoryYearAddRouteImport } from './routes/reading-book/history/$year.add'
 import { Route as ReadingBookListListAddRouteImport } from './routes/reading-book/list/_list.add'
+import { Route as ReadingBookSeriesSeriesIdDeleteRouteImport } from './routes/reading-book/series/$seriesId.delete'
+import { Route as ReadingBookSeriesSeriesIdEditRouteImport } from './routes/reading-book/series/$seriesId.edit'
+import { Route as ReadingBookSeriesListAddRouteImport } from './routes/reading-book/series/_list.add'
 import { Route as ReadingMangaHistoryYearAddRouteImport } from './routes/reading-manga/history/$year.add'
 import { Route as ReadingMangaListListAddRouteImport } from './routes/reading-manga/list/_list.add'
 import { Route as ReadingMangaMangaMangaIdEditRouteImport } from './routes/reading-manga/manga/$mangaId.edit'
@@ -569,6 +574,17 @@ const ReadingBookListListRoute = ReadingBookListListRouteImport.update({
   path: '/list',
   getParentRoute: () => ReadingBookRoute,
 } as any)
+const ReadingBookSeriesSeriesIdRoute =
+  ReadingBookSeriesSeriesIdRouteImport.update({
+    id: '/series/$seriesId',
+    path: '/series/$seriesId',
+    getParentRoute: () => ReadingBookRoute,
+  } as any)
+const ReadingBookSeriesListRoute = ReadingBookSeriesListRouteImport.update({
+  id: '/series/_list',
+  path: '/series',
+  getParentRoute: () => ReadingBookRoute,
+} as any)
 const ReadingMangaHistoryIndexRoute =
   ReadingMangaHistoryIndexRouteImport.update({
     id: '/history/',
@@ -820,6 +836,24 @@ const ReadingBookListListAddRoute = ReadingBookListListAddRouteImport.update({
   path: '/add',
   getParentRoute: () => ReadingBookListListRoute,
 } as any)
+const ReadingBookSeriesSeriesIdDeleteRoute =
+  ReadingBookSeriesSeriesIdDeleteRouteImport.update({
+    id: '/delete',
+    path: '/delete',
+    getParentRoute: () => ReadingBookSeriesSeriesIdRoute,
+  } as any)
+const ReadingBookSeriesSeriesIdEditRoute =
+  ReadingBookSeriesSeriesIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => ReadingBookSeriesSeriesIdRoute,
+  } as any)
+const ReadingBookSeriesListAddRoute =
+  ReadingBookSeriesListAddRouteImport.update({
+    id: '/add',
+    path: '/add',
+    getParentRoute: () => ReadingBookSeriesListRoute,
+  } as any)
 const ReadingMangaHistoryYearAddRoute =
   ReadingMangaHistoryYearAddRouteImport.update({
     id: '/add',
@@ -1396,6 +1430,8 @@ export interface FileRoutesByFullPath {
   '/reading-book/book/$bookId': typeof ReadingBookBookBookIdRouteWithChildren
   '/reading-book/history/$year': typeof ReadingBookHistoryYearRouteWithChildren
   '/reading-book/list': typeof ReadingBookListListRouteWithChildren
+  '/reading-book/series/$seriesId': typeof ReadingBookSeriesSeriesIdRouteWithChildren
+  '/reading-book/series': typeof ReadingBookSeriesListRouteWithChildren
   '/reading-manga/history/$year': typeof ReadingMangaHistoryYearRouteWithChildren
   '/reading-manga/list': typeof ReadingMangaListListRouteWithChildren
   '/reading-manga/manga/$mangaId': typeof ReadingMangaMangaMangaIdRouteWithChildren
@@ -1449,6 +1485,9 @@ export interface FileRoutesByFullPath {
   '/reading-book/book/$bookId/edit': typeof ReadingBookBookBookIdEditRoute
   '/reading-book/history/$year/add': typeof ReadingBookHistoryYearAddRoute
   '/reading-book/list/add': typeof ReadingBookListListAddRoute
+  '/reading-book/series/$seriesId/delete': typeof ReadingBookSeriesSeriesIdDeleteRoute
+  '/reading-book/series/$seriesId/edit': typeof ReadingBookSeriesSeriesIdEditRoute
+  '/reading-book/series/add': typeof ReadingBookSeriesListAddRoute
   '/reading-manga/history/$year/add': typeof ReadingMangaHistoryYearAddRoute
   '/reading-manga/list/add': typeof ReadingMangaListListAddRoute
   '/reading-manga/manga/$mangaId/edit': typeof ReadingMangaMangaMangaIdEditRoute
@@ -1585,6 +1624,8 @@ export interface FileRoutesByTo {
   '/reading-book/book/$bookId': typeof ReadingBookBookBookIdRouteWithChildren
   '/reading-book/history/$year': typeof ReadingBookHistoryYearRouteWithChildren
   '/reading-book/list': typeof ReadingBookListListRouteWithChildren
+  '/reading-book/series/$seriesId': typeof ReadingBookSeriesSeriesIdRouteWithChildren
+  '/reading-book/series': typeof ReadingBookSeriesListRouteWithChildren
   '/reading-manga/history/$year': typeof ReadingMangaHistoryYearRouteWithChildren
   '/reading-manga/list': typeof ReadingMangaListListRouteWithChildren
   '/reading-manga/manga/$mangaId': typeof ReadingMangaMangaMangaIdRouteWithChildren
@@ -1632,6 +1673,9 @@ export interface FileRoutesByTo {
   '/reading-book/book/$bookId/edit': typeof ReadingBookBookBookIdEditRoute
   '/reading-book/history/$year/add': typeof ReadingBookHistoryYearAddRoute
   '/reading-book/list/add': typeof ReadingBookListListAddRoute
+  '/reading-book/series/$seriesId/delete': typeof ReadingBookSeriesSeriesIdDeleteRoute
+  '/reading-book/series/$seriesId/edit': typeof ReadingBookSeriesSeriesIdEditRoute
+  '/reading-book/series/add': typeof ReadingBookSeriesListAddRoute
   '/reading-manga/history/$year/add': typeof ReadingMangaHistoryYearAddRoute
   '/reading-manga/list/add': typeof ReadingMangaListListAddRoute
   '/reading-manga/manga/$mangaId/edit': typeof ReadingMangaMangaMangaIdEditRoute
@@ -1785,6 +1829,8 @@ export interface FileRoutesById {
   '/reading-book/book/$bookId': typeof ReadingBookBookBookIdRouteWithChildren
   '/reading-book/history/$year': typeof ReadingBookHistoryYearRouteWithChildren
   '/reading-book/list/_list': typeof ReadingBookListListRouteWithChildren
+  '/reading-book/series/$seriesId': typeof ReadingBookSeriesSeriesIdRouteWithChildren
+  '/reading-book/series/_list': typeof ReadingBookSeriesListRouteWithChildren
   '/reading-manga/history/$year': typeof ReadingMangaHistoryYearRouteWithChildren
   '/reading-manga/list/_list': typeof ReadingMangaListListRouteWithChildren
   '/reading-manga/manga/$mangaId': typeof ReadingMangaMangaMangaIdRouteWithChildren
@@ -1838,6 +1884,9 @@ export interface FileRoutesById {
   '/reading-book/book/$bookId/edit': typeof ReadingBookBookBookIdEditRoute
   '/reading-book/history/$year/add': typeof ReadingBookHistoryYearAddRoute
   '/reading-book/list/_list/add': typeof ReadingBookListListAddRoute
+  '/reading-book/series/$seriesId/delete': typeof ReadingBookSeriesSeriesIdDeleteRoute
+  '/reading-book/series/$seriesId/edit': typeof ReadingBookSeriesSeriesIdEditRoute
+  '/reading-book/series/_list/add': typeof ReadingBookSeriesListAddRoute
   '/reading-manga/history/$year/add': typeof ReadingMangaHistoryYearAddRoute
   '/reading-manga/list/_list/add': typeof ReadingMangaListListAddRoute
   '/reading-manga/manga/$mangaId/edit': typeof ReadingMangaMangaMangaIdEditRoute
@@ -1993,6 +2042,8 @@ export interface FileRouteTypes {
     | '/reading-book/book/$bookId'
     | '/reading-book/history/$year'
     | '/reading-book/list'
+    | '/reading-book/series/$seriesId'
+    | '/reading-book/series'
     | '/reading-manga/history/$year'
     | '/reading-manga/list'
     | '/reading-manga/manga/$mangaId'
@@ -2046,6 +2097,9 @@ export interface FileRouteTypes {
     | '/reading-book/book/$bookId/edit'
     | '/reading-book/history/$year/add'
     | '/reading-book/list/add'
+    | '/reading-book/series/$seriesId/delete'
+    | '/reading-book/series/$seriesId/edit'
+    | '/reading-book/series/add'
     | '/reading-manga/history/$year/add'
     | '/reading-manga/list/add'
     | '/reading-manga/manga/$mangaId/edit'
@@ -2182,6 +2236,8 @@ export interface FileRouteTypes {
     | '/reading-book/book/$bookId'
     | '/reading-book/history/$year'
     | '/reading-book/list'
+    | '/reading-book/series/$seriesId'
+    | '/reading-book/series'
     | '/reading-manga/history/$year'
     | '/reading-manga/list'
     | '/reading-manga/manga/$mangaId'
@@ -2229,6 +2285,9 @@ export interface FileRouteTypes {
     | '/reading-book/book/$bookId/edit'
     | '/reading-book/history/$year/add'
     | '/reading-book/list/add'
+    | '/reading-book/series/$seriesId/delete'
+    | '/reading-book/series/$seriesId/edit'
+    | '/reading-book/series/add'
     | '/reading-manga/history/$year/add'
     | '/reading-manga/list/add'
     | '/reading-manga/manga/$mangaId/edit'
@@ -2381,6 +2440,8 @@ export interface FileRouteTypes {
     | '/reading-book/book/$bookId'
     | '/reading-book/history/$year'
     | '/reading-book/list/_list'
+    | '/reading-book/series/$seriesId'
+    | '/reading-book/series/_list'
     | '/reading-manga/history/$year'
     | '/reading-manga/list/_list'
     | '/reading-manga/manga/$mangaId'
@@ -2434,6 +2495,9 @@ export interface FileRouteTypes {
     | '/reading-book/book/$bookId/edit'
     | '/reading-book/history/$year/add'
     | '/reading-book/list/_list/add'
+    | '/reading-book/series/$seriesId/delete'
+    | '/reading-book/series/$seriesId/edit'
+    | '/reading-book/series/_list/add'
     | '/reading-manga/history/$year/add'
     | '/reading-manga/list/_list/add'
     | '/reading-manga/manga/$mangaId/edit'
@@ -3041,6 +3105,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReadingBookListListRouteImport
       parentRoute: typeof ReadingBookRoute
     }
+    '/reading-book/series/$seriesId': {
+      id: '/reading-book/series/$seriesId'
+      path: '/series/$seriesId'
+      fullPath: '/reading-book/series/$seriesId'
+      preLoaderRoute: typeof ReadingBookSeriesSeriesIdRouteImport
+      parentRoute: typeof ReadingBookRoute
+    }
+    '/reading-book/series/_list': {
+      id: '/reading-book/series/_list'
+      path: '/series'
+      fullPath: '/reading-book/series'
+      preLoaderRoute: typeof ReadingBookSeriesListRouteImport
+      parentRoute: typeof ReadingBookRoute
+    }
     '/reading-manga/history/': {
       id: '/reading-manga/history/'
       path: '/history'
@@ -3369,6 +3447,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/reading-book/list/add'
       preLoaderRoute: typeof ReadingBookListListAddRouteImport
       parentRoute: typeof ReadingBookListListRoute
+    }
+    '/reading-book/series/$seriesId/delete': {
+      id: '/reading-book/series/$seriesId/delete'
+      path: '/delete'
+      fullPath: '/reading-book/series/$seriesId/delete'
+      preLoaderRoute: typeof ReadingBookSeriesSeriesIdDeleteRouteImport
+      parentRoute: typeof ReadingBookSeriesSeriesIdRoute
+    }
+    '/reading-book/series/$seriesId/edit': {
+      id: '/reading-book/series/$seriesId/edit'
+      path: '/edit'
+      fullPath: '/reading-book/series/$seriesId/edit'
+      preLoaderRoute: typeof ReadingBookSeriesSeriesIdEditRouteImport
+      parentRoute: typeof ReadingBookSeriesSeriesIdRoute
+    }
+    '/reading-book/series/_list/add': {
+      id: '/reading-book/series/_list/add'
+      path: '/add'
+      fullPath: '/reading-book/series/add'
+      preLoaderRoute: typeof ReadingBookSeriesListAddRouteImport
+      parentRoute: typeof ReadingBookSeriesListRoute
     }
     '/reading-manga/history/$year/add': {
       id: '/reading-manga/history/$year/add'
@@ -4610,12 +4709,43 @@ const ReadingBookListListRouteChildren: ReadingBookListListRouteChildren = {
 const ReadingBookListListRouteWithChildren =
   ReadingBookListListRoute._addFileChildren(ReadingBookListListRouteChildren)
 
+interface ReadingBookSeriesSeriesIdRouteChildren {
+  ReadingBookSeriesSeriesIdDeleteRoute: typeof ReadingBookSeriesSeriesIdDeleteRoute
+  ReadingBookSeriesSeriesIdEditRoute: typeof ReadingBookSeriesSeriesIdEditRoute
+}
+
+const ReadingBookSeriesSeriesIdRouteChildren: ReadingBookSeriesSeriesIdRouteChildren =
+  {
+    ReadingBookSeriesSeriesIdDeleteRoute: ReadingBookSeriesSeriesIdDeleteRoute,
+    ReadingBookSeriesSeriesIdEditRoute: ReadingBookSeriesSeriesIdEditRoute,
+  }
+
+const ReadingBookSeriesSeriesIdRouteWithChildren =
+  ReadingBookSeriesSeriesIdRoute._addFileChildren(
+    ReadingBookSeriesSeriesIdRouteChildren,
+  )
+
+interface ReadingBookSeriesListRouteChildren {
+  ReadingBookSeriesListAddRoute: typeof ReadingBookSeriesListAddRoute
+}
+
+const ReadingBookSeriesListRouteChildren: ReadingBookSeriesListRouteChildren = {
+  ReadingBookSeriesListAddRoute: ReadingBookSeriesListAddRoute,
+}
+
+const ReadingBookSeriesListRouteWithChildren =
+  ReadingBookSeriesListRoute._addFileChildren(
+    ReadingBookSeriesListRouteChildren,
+  )
+
 interface ReadingBookRouteChildren {
   ReadingBookIndexRoute: typeof ReadingBookIndexRoute
   ReadingBookAuthorsAuthorIdRoute: typeof ReadingBookAuthorsAuthorIdRouteWithChildren
   ReadingBookBookBookIdRoute: typeof ReadingBookBookBookIdRouteWithChildren
   ReadingBookHistoryYearRoute: typeof ReadingBookHistoryYearRouteWithChildren
   ReadingBookListListRoute: typeof ReadingBookListListRouteWithChildren
+  ReadingBookSeriesSeriesIdRoute: typeof ReadingBookSeriesSeriesIdRouteWithChildren
+  ReadingBookSeriesListRoute: typeof ReadingBookSeriesListRouteWithChildren
   ReadingBookAuthorsIndexRoute: typeof ReadingBookAuthorsIndexRoute
   ReadingBookHistoryIndexRoute: typeof ReadingBookHistoryIndexRoute
 }
@@ -4626,6 +4756,8 @@ const ReadingBookRouteChildren: ReadingBookRouteChildren = {
   ReadingBookBookBookIdRoute: ReadingBookBookBookIdRouteWithChildren,
   ReadingBookHistoryYearRoute: ReadingBookHistoryYearRouteWithChildren,
   ReadingBookListListRoute: ReadingBookListListRouteWithChildren,
+  ReadingBookSeriesSeriesIdRoute: ReadingBookSeriesSeriesIdRouteWithChildren,
+  ReadingBookSeriesListRoute: ReadingBookSeriesListRouteWithChildren,
   ReadingBookAuthorsIndexRoute: ReadingBookAuthorsIndexRoute,
   ReadingBookHistoryIndexRoute: ReadingBookHistoryIndexRoute,
 }

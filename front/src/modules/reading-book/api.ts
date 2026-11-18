@@ -1,14 +1,17 @@
 import {
+	Author,
+	AuthorDetails,
 	Book,
 	BookOverview,
 	GetReportResponse,
-	SaveBookRequestSchema,
 	SaveBookModelRequest,
+	SaveBookRequestSchema,
 	SaveBookResponse,
 	SaveEditionRequest,
 	SaveEditionRequestSchema,
-	Author,
-	AuthorDetails,
+	SaveSeriesRequest,
+	Series,
+	SeriesDetails,
 } from "@personal-tracker/shared/reading-book";
 import { queryOptions } from "@tanstack/react-query";
 
@@ -73,6 +76,33 @@ export const authorDetailsQuery = (id: string) =>
 		queryKey: ["reading", "authors", id],
 		queryFn: () => fetchJson<AuthorDetails>(`${API_BASE_URL}/reading-book/authors/${id}`),
 	});
+
+export const seriesListQuery = () =>
+	queryOptions({
+		queryKey: ["reading", "series"],
+		queryFn: () => fetchJson<Series[]>(`${API_BASE_URL}/reading-book/series`),
+	});
+
+export const seriesDetailsQuery = (id: string) =>
+	queryOptions({
+		queryKey: ["reading", "series", id],
+		queryFn: () => fetchJson<SeriesDetails>(`${API_BASE_URL}/reading-book/series/${id}`),
+	});
+
+// every book, by title: the series form picks among them
+export const allBooksQuery = () =>
+	queryOptions({
+		queryKey: ["reading", "books", "all"],
+		queryFn: () => getBooks({ sortField: "book", sortDirection: "asc" }),
+	});
+
+export async function saveSeries(series: SaveSeriesRequest) {
+	return sendJson<{ id: string }>(`${API_BASE_URL}/reading-book/series/save`, "POST", series);
+}
+
+export async function deleteSeries(id: string) {
+	return sendJson(`${API_BASE_URL}/reading-book/series/${id}`, "DELETE");
+}
 
 export async function getReport({ from, to }: { from: string; to: string }) {
 	return fetchJson<GetReportResponse>(withQuery(`${API_BASE_URL}/reading-book/reports`, { from, to }));

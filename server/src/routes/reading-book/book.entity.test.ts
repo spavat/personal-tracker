@@ -128,6 +128,7 @@ describe("toBook", () => {
 		id: "e1",
 		title: "Dune (fr)",
 		publisher: { id: "pub", name: "Pocket" },
+		collection: "Science-fiction",
 		contributors: [
 			{ role: "translator", creditedAs: null, entity: { id: "t1", name: "Michel Demuth" } },
 			{ role: "translator", creditedAs: "M. D.", entity: { id: "t2", name: "Someone" } },
@@ -162,6 +163,14 @@ describe("toBook", () => {
 			{ role: "illustrator", creditedAs: null, entity: { id: "i1", name: "Someone" } },
 		],
 		models: [{ id: "m1", name: "VO", tree: [{ id: "c1", title: "I" }] }],
+		series: [
+			{
+				position: 2,
+				positionLabel: "1",
+				series: { id: "s2", title: "Dune", parentItems: [{ series: { id: "s1", title: "Chroniques" } }] },
+			},
+			{ position: 1, positionLabel: null, series: { id: "s1", title: "Chroniques", parentItems: [] } },
+		],
 		editions: [edition],
 	};
 
@@ -174,11 +183,23 @@ describe("toBook", () => {
 			originalYear: 1965,
 			country: "us",
 			models: [{ id: "m1", name: "VO", tree: [{ id: "c1", title: "I" }] }],
+			// by title
+			series: [
+				{ id: "s1", title: "Chroniques", position: 1, positionLabel: null, parents: [] },
+				{
+					id: "s2",
+					title: "Dune",
+					position: 2,
+					positionLabel: "1",
+					parents: [{ id: "s1", title: "Chroniques" }],
+				},
+			],
 			editions: [
 				{
 					id: "e1",
 					title: "Dune (fr)",
 					publisher: { id: "pub", name: "Pocket" },
+					collection: "Science-fiction",
 					translators: [
 						{ entityId: "t1", name: "Michel Demuth", creditedAs: null },
 						{ entityId: "t2", name: "Someone", creditedAs: "M. D." },

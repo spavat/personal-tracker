@@ -14,6 +14,8 @@ type SearchSelectProps<Id> = {
 	clearTitle?: string;
 	placeholder?: string;
 	"aria-label"?: string;
+	// also given the input: lets a form focus it (react-hook-form Controller's field.ref)
+	inputRef?: (input: HTMLInputElement | null) => void;
 };
 
 // A text input filtering a list of items, to pick one or create it
@@ -27,6 +29,7 @@ export default function SearchSelect<Id>({
 	clearTitle = "Effacer",
 	placeholder,
 	"aria-label": ariaLabel,
+	inputRef: externalInputRef,
 }: SearchSelectProps<Id>) {
 	const [search, setSearch] = useState("");
 	const [isOpen, setIsOpen] = useState(false);
@@ -89,7 +92,10 @@ export default function SearchSelect<Id>({
 		// a div, not a span: `.form-field span:first-of-type` styles the field labels
 		<div className="search-select">
 			<input
-				ref={inputRef}
+				ref={(input) => {
+					inputRef.current = input;
+					externalInputRef?.(input);
+				}}
 				type="text"
 				autoComplete="off"
 				placeholder={placeholder}

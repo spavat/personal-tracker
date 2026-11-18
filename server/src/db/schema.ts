@@ -527,6 +527,8 @@ export const readingEdition = reading.table(
 		title: text(),
 		// an organization entity
 		publisherId: uuid().references(() => coreEntity.id),
+		// the publisher's collection ("Folio Classique")
+		collection: text(),
 		language: text(),
 		pages: integer(),
 		type: readingEditionType(),
@@ -593,23 +595,28 @@ export const readingSeries = reading.table("series", {
 	title: text().notNull(),
 });
 
-export const readingSeriesBook = reading.table(
-	"series_book",
+// What a series holds, in order: books and sub-series (a series of its own, possibly in several parents).
+// The reading order over the whole tree ("#n") is computed, not stored.
+export const readingSeriesItem = reading.table(
+	"series_item",
 	{
 		seriesId: uuid()
 			.notNull()
 			.references(() => readingSeries.id, { onDelete: "cascade" }),
-		bookId: uuid()
-			.notNull()
-			.references(() => readingBook.id, { onDelete: "cascade" }),
-		// display order only, rewritten 1..n on reorder
+		// order within this level, rewritten 1..n on save
 		position: integer().notNull(),
-		// the only displayed value: "1", "2.5", "interlude"…
+		// the only displayed value of this level: "2", "interlude"…
 		positionLabel: text(),
+		bookId: uuid().references(() => readingBook.id, { onDelete: "cascade" }),
+		childSeriesId: uuid().references((): AnyPgColumn => readingSeries.id, { onDelete: "cascade" }),
 	},
 	(table) => [
-		primaryKey({ columns: [table.seriesId, table.bookId] }),
-		unique("series_book_series_id_position_key").on(table.seriesId, table.position),
+		primaryKey({ columns: [table.seriesId, table.position] }),
+		unique("series_item_series_id_book_id_key").on(table.seriesId, table.bookId),
+		unique("series_item_series_id_child_series_id_key").on(table.seriesId, table.childSeriesId),
 		index().on(table.bookId),
+		index().on(table.childSeriesId),
+		// a book or a sub-series
+		check("series_item_one_kind_check", sql`num_nonnulls(${table.bookId}, ${table.childSeriesId}) = 1`),
 	],
 );

@@ -24,6 +24,7 @@ export default function EditionCard({ book, edition }: { book: Book; edition: Ed
 
 	const facts = [
 		edition.publisher?.name,
+		edition.collection,
 		edition.type && EDITION_TYPE_LABELS[edition.type],
 		edition.language,
 		edition.pages !== null && `${edition.pages} pages`,

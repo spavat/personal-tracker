@@ -10,14 +10,18 @@ import {
 	DeleteEditionUseCase,
 	DeleteModelUseCase,
 	DeleteReadingUseCase,
+	DeleteSeriesUseCase,
+	GetAuthorUseCase,
 	GetBookUseCase,
 	GetReportUseCase,
-	GetAuthorUseCase,
+	GetSeriesUseCase,
 	ListBooksUseCase,
+	ListSeriesUseCase,
 	SaveBookUseCase,
 	SaveEditionUseCase,
 	SaveModelUseCase,
 	SaveReadingUseCase,
+	SaveSeriesUseCase,
 } from "./book.useCases";
 
 function fakeRepo() {
@@ -32,6 +36,13 @@ function fakeRepo() {
 		// every credited entity exists with the expected kind
 		countEntities: vi.fn((ids: string[]) => Promise.resolve(new Set(ids).size)),
 		findAuthors: vi.fn().mockResolvedValue([]),
+		findSeries: vi.fn().mockResolvedValue(undefined),
+		findAllSeries: vi.fn().mockResolvedValue([]),
+		findAllSeriesItems: vi.fn().mockResolvedValue([]),
+		countBooks: vi.fn((ids: string[]) => Promise.resolve(new Set(ids).size)),
+		countSeries: vi.fn((ids: string[]) => Promise.resolve(new Set(ids).size)),
+		saveSeries: vi.fn().mockResolvedValue("series-1"),
+		deleteSeries: vi.fn().mockResolvedValue(undefined),
 		findEntity: vi.fn().mockResolvedValue(undefined),
 		pushReading: vi.fn().mockResolvedValue(true),
 		findEdition: vi.fn().mockResolvedValue(undefined),
@@ -163,6 +174,155 @@ describe("GetAuthorUseCase", () => {
 	});
 });
 
+// Terre du Milieu: 1. Bilbo, 2. Le Seigneur des anneaux (1. Communauté)
+const SERIES = [
+	{ id: "lotr", title: "Le Seigneur des anneaux" },
+	{ id: "middle-earth", title: "Terre du Milieu" },
+];
+const SERIES_ITEMS = [
+	{ seriesId: "middle-earth", position: 1, positionLabel: "1", bookId: "hobbit", childSeriesId: null },
+	{ seriesId: "middle-earth", position: 2, positionLabel: "2", bookId: null, childSeriesId: "lotr" },
+	{ seriesId: "lotr", position: 1, positionLabel: "1", bookId: "fellowship", childSeriesId: null },
+];
+function seriesRepo() {
+	const repo = fakeRepo();
+	repo.findAllSeries.mockResolvedValue(SERIES);
+	repo.findAllSeriesItems.mockResolvedValue(SERIES_ITEMS);
+	return repo;
+}
+
+describe("ListSeriesUseCase", () => {
+	it("counts the books of the whole tree and gives the parents", async () => {
+		expect(await new ListSeriesUseCase(asRepo(seriesRepo())).execute(asLog(makeLog()))).toEqual([
+			{
+				id: "lotr",
+				title: "Le Seigneur des anneaux",
+				nbBooks: 1,
+				parents: [{ id: "middle-earth", title: "Terre du Milieu" }],
+			},
+			{ id: "middle-earth", title: "Terre du Milieu", nbBooks: 2, parents: [] },
+		]);
+	});
+});
+
+describe("GetSeriesUseCase", () => {
+	it("gives the tree, the books of every level loaded at once and numbered in reading order", async () => {
+		const repo = seriesRepo();
+		repo.findSeries.mockResolvedValue({ id: "middle-earth", title: "Terre du Milieu" });
+		repo.findAll.mockResolvedValue([{ id: "fellowship" }, { id: "hobbit" }]);
+
+		expect(await new GetSeriesUseCase(asRepo(repo)).execute("middle-earth", asLog(makeLog()))).toEqual({
+			id: "middle-earth",
+			title: "Terre du Milieu",
+			parents: [],
+			items: [
+				{ kind: "book", positionLabel: "1", readingOrder: 1, book: { id: "hobbit" } },
+				{
+					kind: "series",
+					positionLabel: "2",
+					series: { id: "lotr", title: "Le Seigneur des anneaux" },
+					items: [{ kind: "book", positionLabel: "1", readingOrder: 2, book: { id: "fellowship" } }],
+				},
+			],
+		});
+		expect(repo.findAll).toHaveBeenCalledWith({ withReadingsDetails: false, bookIds: ["hobbit", "fellowship"] });
+	});
+
+	it("doesn't load the books of an empty series", async () => {
+		const repo = seriesRepo();
+		repo.findSeries.mockResolvedValue({ id: "empty", title: "Vide" });
+		expect(await new GetSeriesUseCase(asRepo(repo)).execute("empty", asLog(makeLog()))).toMatchObject({
+			items: [],
+		});
+		expect(repo.findAll).not.toHaveBeenCalled();
+	});
+
+	it("is undefined for an unknown series", async () => {
+		const repo = seriesRepo();
+		expect(await new GetSeriesUseCase(asRepo(repo)).execute("nope", asLog(makeLog()))).toBeUndefined();
+	});
+});
+
+describe("SaveSeriesUseCase", () => {
+	const series = {
+		title: "Terre du Milieu",
+		items: [
+			{ kind: "book" as const, bookId: "hobbit", positionLabel: "1" },
+			{ kind: "series" as const, seriesId: "lotr", positionLabel: "2" },
+		],
+	};
+
+	it("saves the series and gives its id", async () => {
+		const repo = seriesRepo();
+		expect(await new SaveSeriesUseCase(asRepo(repo)).execute(series, asLog(makeLog()))).toEqual({ id: "series-1" });
+		expect(repo.saveSeries).toHaveBeenCalledWith(series);
+	});
+
+	it("refuses a book or a sub-series listed twice", async () => {
+		const repo = seriesRepo();
+		for (const twice of [series.items[0], series.items[1]]) {
+			await expect(
+				new SaveSeriesUseCase(asRepo(repo)).execute(
+					{ ...series, items: [...series.items, twice] },
+					asLog(makeLog()),
+				),
+			).rejects.toMatchObject({ statusCode: 400 });
+		}
+		expect(repo.saveSeries).not.toHaveBeenCalled();
+	});
+
+	it("refuses an unknown book or sub-series", async () => {
+		for (const unknown of ["countBooks", "countSeries"] as const) {
+			const repo = seriesRepo();
+			repo[unknown].mockResolvedValue(0);
+			await expect(new SaveSeriesUseCase(asRepo(repo)).execute(series, asLog(makeLog()))).rejects.toMatchObject({
+				statusCode: 400,
+			});
+		}
+	});
+
+	it("refuses a series holding itself, through a sub-series", async () => {
+		const repo = seriesRepo();
+		// Le Seigneur des anneaux holding Terre du Milieu, which holds it
+		await expect(
+			new SaveSeriesUseCase(asRepo(repo)).execute(
+				{
+					id: "lotr",
+					title: "Le Seigneur des anneaux",
+					items: [{ kind: "series", seriesId: "middle-earth", positionLabel: null }],
+				},
+				asLog(makeLog()),
+			),
+		).rejects.toMatchObject({ statusCode: 400 });
+		expect(repo.saveSeries).not.toHaveBeenCalled();
+	});
+
+	it("404s on an unknown series", async () => {
+		const repo = seriesRepo();
+		repo.saveSeries.mockResolvedValue(undefined);
+		await expect(
+			new SaveSeriesUseCase(asRepo(repo)).execute({ ...series, id: "nope" }, asLog(makeLog())),
+		).rejects.toMatchObject({ statusCode: 404 });
+	});
+});
+
+describe("DeleteSeriesUseCase", () => {
+	it("deletes a series", async () => {
+		const repo = fakeRepo();
+		repo.findSeries.mockResolvedValue({ id: "s1", title: "Percy Jackson" });
+		await new DeleteSeriesUseCase(asRepo(repo)).execute("s1", asLog(makeLog()));
+		expect(repo.deleteSeries).toHaveBeenCalledWith("s1");
+	});
+
+	it("404s on an unknown series", async () => {
+		const repo = fakeRepo();
+		await expect(new DeleteSeriesUseCase(asRepo(repo)).execute("nope", asLog(makeLog()))).rejects.toMatchObject({
+			statusCode: 404,
+		});
+		expect(repo.deleteSeries).not.toHaveBeenCalled();
+	});
+});
+
 describe("SaveModelUseCase", () => {
 	it("saves the model of the book", async () => {
 		const repo = fakeRepo();
@@ -235,6 +395,7 @@ describe("SaveEditionUseCase", () => {
 	const fields = {
 		title: null,
 		publisherId: null,
+		collection: null,
 		translators: [],
 		language: "fr",
 		pages: 200,

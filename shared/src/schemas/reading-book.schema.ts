@@ -70,6 +70,7 @@ export const EditionSchema = z.object({
 	// localized title, the book's when null
 	title: z.string().nullable(),
 	publisher: z.object({ id: z.uuid(), name: z.string() }).nullable(),
+	collection: z.string().nullable(),
 	translators: z.array(CreditSchema),
 	language: z.string().nullable(),
 	pages: z.number().int().nullable(),
@@ -84,6 +85,17 @@ export const EditionSchema = z.object({
 });
 export type Edition = z.infer<typeof EditionSchema>;
 
+const SeriesRefSchema = z.object({ id: z.uuid(), title: z.string() });
+
+// A series the book is directly in: its order in it, the only displayed value ("1", "2.5", "interlude"…),
+// and the series holding that one ("Terre du Milieu" for "Le Seigneur des anneaux")
+export const BookSeriesSchema = SeriesRefSchema.extend({
+	position: z.number().int(),
+	positionLabel: z.string().nullable(),
+	parents: z.array(SeriesRefSchema),
+});
+export type BookSeries = z.infer<typeof BookSeriesSchema>;
+
 export const BookSchema = z.object({
 	id: z.uuidv4(),
 	book: z.string().nonempty(),
@@ -93,6 +105,7 @@ export const BookSchema = z.object({
 	country: z.string(),
 	models: z.array(BookModelSchema),
 	editions: z.array(EditionSchema),
+	series: z.array(BookSeriesSchema),
 });
 
 export type Book = z.infer<typeof BookSchema>;
@@ -110,6 +123,8 @@ export type BookOverview = Omit<Book, "editions"> &
 		language: string;
 		pages: number | null;
 		cover: string | null;
+		// the title of the main edition, when it has its own
+		editionTitle: string | null;
 		nbReadings: number;
 		readings: Array<z.infer<typeof ReadingWithOptionalDetailsSchema> & ComputedBookProps & { language: string }>;
 	};
@@ -138,7 +153,7 @@ export const ReadingParamsRequestSchema = UUIDParamsSchema;
 //
 // Request
 export const SaveBookRequestSchema = BookSchema.partial({ id: true })
-	.omit({ editions: true, models: true, authors: true })
+	.omit({ editions: true, models: true, authors: true, series: true })
 	.extend({ authors: z.array(SaveCreditSchema).min(1) });
 // Response
 export const SaveBookResponseSchema = BookSchema;
@@ -160,6 +175,41 @@ export const EditionParamsRequestSchema = z.object({
 	id: z.uuid(),
 	editionId: z.uuid(),
 });
+
+//
+// SERIES: books and sub-series (series of their own, possibly in several parents), in a free order,
+// each with a free label. The reading order over the whole tree ("#n") is computed.
+//
+export const SeriesSchema = SeriesRefSchema.extend({
+	// in the whole tree
+	nbBooks: z.number(),
+	parents: z.array(SeriesRefSchema),
+});
+export type Series = z.infer<typeof SeriesSchema>;
+export const SeriesListResponseSchema = z.array(SeriesSchema);
+export const SeriesParamsRequestSchema = UUIDParamsSchema;
+
+export type SeriesTreeItem =
+	| { kind: "book"; positionLabel: string | null; readingOrder: number; book: BookOverview }
+	| { kind: "series"; positionLabel: string | null; series: { id: string; title: string }; items: SeriesTreeItem[] };
+export type SeriesDetails = z.infer<typeof SeriesRefSchema> & {
+	parents: Array<z.infer<typeof SeriesRefSchema>>;
+	items: SeriesTreeItem[];
+};
+
+// the direct items of the series, in their order (positions 1..n)
+const positionLabel = z.string().trim().nonempty().nullable();
+export const SaveSeriesItemSchema = z.discriminatedUnion("kind", [
+	z.object({ kind: z.literal("book"), bookId: z.uuid(), positionLabel }),
+	z.object({ kind: z.literal("series"), seriesId: z.uuid(), positionLabel }),
+]);
+export type SaveSeriesItem = z.infer<typeof SaveSeriesItemSchema>;
+export const SaveSeriesRequestSchema = z.object({
+	id: z.uuid().optional(),
+	title: z.string().trim().nonempty(),
+	items: z.array(SaveSeriesItemSchema),
+});
+export type SaveSeriesRequest = z.infer<typeof SaveSeriesRequestSchema>;
 
 //
 // AUTHORS (the people credited as author of a book)

@@ -27,10 +27,20 @@ export interface BookRow {
 	country: string | null;
 	contributors: CreditRow[];
 	models: Array<{ id: string; name: string; tree: ReadingModelItem[] }>;
+	series: Array<{
+		position: number;
+		positionLabel: string | null;
+		series: {
+			id: string;
+			title: string;
+			parentItems: Array<{ series: { id: string; title: string } | null }>;
+		} | null;
+	}>;
 	editions: Array<{
 		id: string;
 		title: string | null;
 		publisher: { id: string; name: string } | null;
+		collection: string | null;
 		contributors: CreditRow[];
 		language: string | null;
 		pages: number | null;
@@ -52,10 +62,24 @@ export function toBook(row: BookRow): Book {
 		originalYear: row.originalYear,
 		country: row.country ?? "",
 		models: row.models.map(({ id, name, tree }) => ({ id, name, tree })),
+		series: row.series
+			.filter(({ series }) => series)
+			.map(({ position, positionLabel, series }) => ({
+				id: series!.id,
+				title: series!.title,
+				position,
+				positionLabel,
+				// the series holding it
+				parents: series!.parentItems
+					.flatMap(({ series: parent }) => (parent ? [{ id: parent.id, title: parent.title }] : []))
+					.toSorted((a, b) => a.title.localeCompare(b.title)),
+			}))
+			.toSorted((a, b) => a.title.localeCompare(b.title)),
 		editions: row.editions.map((edition) => ({
 			id: edition.id,
 			title: edition.title,
 			publisher: edition.publisher && { id: edition.publisher.id, name: edition.publisher.name },
+			collection: edition.collection,
 			translators: credits(edition.contributors, "translator"),
 			language: edition.language,
 			pages: edition.pages,

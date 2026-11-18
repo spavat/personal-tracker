@@ -1,7 +1,9 @@
 import type {
 	BookModel,
 	BookOverview,
+	BookSeries,
 	Credit,
+	SaveSeriesItem,
 	ReadingDetails,
 	ReadingModelItem,
 } from "@personal-tracker/shared/reading-book";
@@ -15,6 +17,7 @@ import type { EditionType, ReadingStatus } from "./book.entity";
 import { createNode, type EntityKind, renameNode, type Tx } from "../../db/node";
 import {
 	coreEntity,
+	coreNode,
 	readingBook,
 	readingBookContributor,
 	readingEdition,
@@ -22,6 +25,8 @@ import {
 	readingEntry,
 	readingModel,
 	readingReading,
+	readingSeries,
+	readingSeriesItem,
 } from "../../db/schema";
 import { coverUrl, toBook, toDetails, toEntries } from "./book.entity";
 
@@ -34,6 +39,8 @@ interface BookListFilters {
 	limit?: number;
 	// only the books credited to this entity as author
 	authorId?: string;
+	// only these books (the books of a series' tree)
+	bookIds?: string[];
 }
 
 export type CreditFields = { entityId: string; creditedAs: string | null };
@@ -50,6 +57,7 @@ export interface EditionFields {
 	id: string;
 	title: string | null;
 	publisherId: string | null;
+	collection: string | null;
 	translators: CreditFields[];
 	language: string | null;
 	pages: number | null;
@@ -63,6 +71,8 @@ export interface EditionFields {
 const WITH_DETAILS = {
 	contributors: { with: { entity: true }, orderBy: { order: "asc" } },
 	models: { orderBy: { name: "asc" } },
+	// the series the book is directly in, and the series holding them
+	series: { with: { series: { with: { parentItems: { with: { series: true } } } } } },
 	editions: {
 		orderBy: { createdAt: "asc" },
 		with: {
@@ -88,6 +98,7 @@ export class BookRepository {
 		sortDirection = "asc",
 		limit,
 		authorId,
+		bookIds,
 	}: BookListFilters) {
 		const inPeriod = from && to ? between(readingEntry.date, from, to) : undefined;
 
@@ -143,8 +154,25 @@ export class BookRepository {
 				language: mainEdition.language,
 				country: readingBook.country,
 				pages: mainEdition.pages,
+				editionTitle: mainEdition.title,
 				mainEditionId: mainEdition.id,
 				coverKey: mainEdition.coverKey,
+				// the series the book is directly in, each with the series holding it
+				series: sql<BookSeries[]>`coalesce((
+					select json_agg(
+						json_build_object(
+							'id', s.id, 'title', s.title, 'position', si.position, 'positionLabel', si.position_label,
+							'parents', coalesce((
+								select json_agg(json_build_object('id', p.id, 'title', p.title) order by p.title)
+								from ${readingSeriesItem} pi join ${readingSeries} p on p.id = pi.series_id
+								where pi.child_series_id = s.id
+							), '[]')
+						)
+						order by s.title
+					)
+					from ${readingSeriesItem} si join ${readingSeries} s on s.id = si.series_id
+					where si.book_id = ${readingBook.id}
+				), '[]')`,
 				models: sql<BookModel[]>`coalesce((
 					select json_agg(json_build_object('id', m.id, 'name', m.name, 'tree', m.tree) order by m.name)
 					from ${readingModel} m where m.book_id = ${readingBook.id}
@@ -162,12 +190,15 @@ export class BookRepository {
 			.leftJoin(readingReading, eq(readingReading.editionId, readingEdition.id))
 			.leftJoin(readingEntry, and(eq(readingEntry.readingId, readingReading.id), inPeriod))
 			.where(
-				authorId
-					? sql`exists (
-						select 1 from ${readingBookContributor} bc
-						where bc.book_id = ${readingBook.id} and bc.role = 'author' and bc.entity_id = ${authorId}
-					)`
-					: undefined,
+				and(
+					authorId
+						? sql`exists (
+							select 1 from ${readingBookContributor} bc
+							where bc.book_id = ${readingBook.id} and bc.role = 'author' and bc.entity_id = ${authorId}
+						)`
+						: undefined,
+					bookIds ? inArray(readingBook.id, bookIds) : undefined,
+				),
 			)
 			.groupBy(readingBook.id, mainEdition.id)
 			.having(inPeriod ? sql`count(${readingEntry.date}) > 0` : undefined)
@@ -502,6 +533,99 @@ export class BookRepository {
 
 	async deleteReading(bookId: string, readingId: string) {
 		await this.db.delete(readingReading).where(this.readingOfBook(bookId, readingId));
+	}
+
+	findAllSeries() {
+		return this.db
+			.select({ id: readingSeries.id, title: readingSeries.title })
+			.from(readingSeries)
+			.orderBy(asc(readingSeries.title));
+	}
+
+	// all the items of all the series: the trees are built from them (series.entity.ts)
+	findAllSeriesItems() {
+		return this.db
+			.select({
+				seriesId: readingSeriesItem.seriesId,
+				position: readingSeriesItem.position,
+				positionLabel: readingSeriesItem.positionLabel,
+				bookId: readingSeriesItem.bookId,
+				childSeriesId: readingSeriesItem.childSeriesId,
+			})
+			.from(readingSeriesItem);
+	}
+
+	async findSeries(id: string) {
+		const [series] = await this.db
+			.select({ id: readingSeries.id, title: readingSeries.title })
+			.from(readingSeries)
+			.where(eq(readingSeries.id, id));
+		return series;
+	}
+
+	// how many of these books exist
+	async countBooks(ids: string[]) {
+		if (!ids.length) {
+			return 0;
+		}
+		const [{ count }] = await this.db
+			.select({ count: sql<number>`count(*)`.mapWith(Number) })
+			.from(readingBook)
+			.where(inArray(readingBook.id, [...new Set(ids)]));
+		return count;
+	}
+
+	// how many of these series exist
+	async countSeries(ids: string[]) {
+		if (!ids.length) {
+			return 0;
+		}
+		const [{ count }] = await this.db
+			.select({ count: sql<number>`count(*)`.mapWith(Number) })
+			.from(readingSeries)
+			.where(inArray(readingSeries.id, [...new Set(ids)]));
+		return count;
+	}
+
+	// The items are rewritten as a whole, positions 1..n in the given order.
+	// undefined when updating an unknown series, else its id.
+	saveSeries({ id, title, items }: { id?: string; title: string; items: SaveSeriesItem[] }) {
+		return this.db.transaction(async (tx) => {
+			let seriesId = id;
+			if (seriesId) {
+				const [updated] = await tx
+					.update(readingSeries)
+					.set({ title })
+					.where(eq(readingSeries.id, seriesId))
+					.returning({ id: readingSeries.id });
+				if (!updated) {
+					return undefined;
+				}
+				await renameNode(tx, seriesId, title);
+				await tx.delete(readingSeriesItem).where(eq(readingSeriesItem.seriesId, seriesId));
+			} else {
+				seriesId = await createNode(tx, { type: "book_series", label: title });
+				await tx.insert(readingSeries).values({ id: seriesId, title });
+			}
+			const savedId = seriesId;
+			if (items.length) {
+				await tx.insert(readingSeriesItem).values(
+					items.map((item, i) => ({
+						seriesId: savedId,
+						position: i + 1,
+						positionLabel: item.positionLabel,
+						bookId: item.kind === "book" ? item.bookId : null,
+						childSeriesId: item.kind === "series" ? item.seriesId : null,
+					})),
+				);
+			}
+			return seriesId;
+		});
+	}
+
+	// through its node: its items go with it, and it leaves the series holding it (its books and sub-series stay)
+	async deleteSeries(id: string) {
+		await this.db.delete(coreNode).where(and(eq(coreNode.id, id), eq(coreNode.type, "book_series")));
 	}
 
 	private readingOfBook(bookId: string, readingId: string) {

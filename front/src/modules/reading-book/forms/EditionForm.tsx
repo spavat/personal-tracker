@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 
 import EntitySearchSelect from "../../../components/EntitySearchSelect";
+import ImageDropZone from "../../../components/ImageDropZone";
 import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
 import { bookDetailsQuery, saveEdition } from "../api";
@@ -52,13 +53,6 @@ export default function EditionForm({
 		navigate({ to: returnTo, replace: true, resetScroll: false });
 	}
 
-	async function onCoverFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-		const file = e.target.files?.[0];
-		if (file) {
-			setValue("cover", await readImageFile(file), { shouldDirty: true });
-		}
-	}
-
 	const onSubmit = (data: EditionFormData) =>
 		saveMutation.mutate({
 			id: bookId,
@@ -99,6 +93,10 @@ export default function EditionForm({
 									)}
 								/>
 							</div>
+							<label className="form-field">
+								<span>Collection</span>
+								<input {...register("collection")} type="text" placeholder="Folio Classique" />
+							</label>
 							<label className="form-field">
 								<span>Type</span>
 								<select {...register("type")}>
@@ -190,15 +188,21 @@ export default function EditionForm({
 						<h3>Couverture</h3>
 						<div className="form-grid">
 							<div className="form-field full-width">
-								<label htmlFor="edition-cover">
-									<span>Image</span>
-								</label>
+								{/* the current cover, left of the zone that replaces it (dropped, picked or pasted) */}
+								<div className="cover-input">
+									{cover && <img src={coverSrc(cover)} alt="Couverture" className="cover-preview" />}
+									<ImageDropZone
+										onImage={async (file) =>
+											setValue("cover", await readImageFile(file), { shouldDirty: true })
+										}
+									/>
+								</div>
 								<div className="full-fields-row">
 									<input
-										id="edition-cover"
 										{...register("cover")}
 										type="text"
-										placeholder="https://…"
+										placeholder="ou https://…"
+										aria-label="URL de la couverture"
 										autoComplete="off"
 										className="flex"
 									/>
@@ -212,13 +216,6 @@ export default function EditionForm({
 										</button>
 									)}
 								</div>
-								<input
-									type="file"
-									accept="image/*"
-									onChange={onCoverFileChange}
-									aria-label="Fichier de couverture"
-								/>
-								{cover && <img src={coverSrc(cover)} alt="Couverture" className="cover-preview" />}
 							</div>
 						</div>
 					</div>

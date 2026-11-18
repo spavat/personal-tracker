@@ -197,9 +197,10 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.readingBook.id,
 			to: r.readingModel.bookId,
 		}),
-		series: r.many.readingSeriesBook({
+		// the series the book is directly in
+		series: r.many.readingSeriesItem({
 			from: r.readingBook.id,
-			to: r.readingSeriesBook.bookId,
+			to: r.readingSeriesItem.bookId,
 		}),
 	},
 	readingBookContributor: {
@@ -255,19 +256,28 @@ export const relations = defineRelations(schema, (r) => ({
 		}),
 	},
 	readingSeries: {
-		books: r.many.readingSeriesBook({
+		items: r.many.readingSeriesItem({
 			from: r.readingSeries.id,
-			to: r.readingSeriesBook.seriesId,
+			to: r.readingSeriesItem.seriesId,
+		}),
+		// the items where it is a sub-series: its parents
+		parentItems: r.many.readingSeriesItem({
+			from: r.readingSeries.id,
+			to: r.readingSeriesItem.childSeriesId,
 		}),
 	},
-	readingSeriesBook: {
+	readingSeriesItem: {
 		series: r.one.readingSeries({
-			from: r.readingSeriesBook.seriesId,
+			from: r.readingSeriesItem.seriesId,
 			to: r.readingSeries.id,
 		}),
 		book: r.one.readingBook({
-			from: r.readingSeriesBook.bookId,
+			from: r.readingSeriesItem.bookId,
 			to: r.readingBook.id,
+		}),
+		childSeries: r.one.readingSeries({
+			from: r.readingSeriesItem.childSeriesId,
+			to: r.readingSeries.id,
 		}),
 	},
 }));

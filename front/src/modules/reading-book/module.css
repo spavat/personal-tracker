@@ -62,7 +62,44 @@
 		.card_item.author {
 			display: flex;
 		}
-		.portrait-input {
+		.series-label {
+			margin-right: 6px;
+			padding: 0 6px;
+			border-radius: 4px;
+			font-size: 0.85em;
+			background: rgb(128 128 128 / 25%);
+		}
+		/* a sub-series in its parent's page, indented under its title */
+		.sub-series {
+			margin: 12px 0 12px 12px;
+			padding-left: 12px;
+			border-left: 2px solid rgb(128 128 128 / 40%);
+			h3 {
+				margin: 0 0 8px;
+			}
+		}
+		.reading-order {
+			float: right;
+			opacity: 0.7;
+		}
+		ul.series-books {
+			list-style: none;
+			padding: 0;
+			margin: 0 0 8px;
+			li {
+				align-items: center;
+				margin-bottom: 6px;
+			}
+			.drag-handle {
+				cursor: grab;
+			}
+			.series-label-input {
+				width: 6em;
+			}
+		}
+		/* an image's preview left of the drop zone that replaces it (author portrait, edition cover) */
+		.portrait-input,
+		.cover-input {
 			display: flex;
 			gap: 12px;
 			align-items: center;

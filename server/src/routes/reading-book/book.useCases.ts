@@ -5,6 +5,8 @@ import type {
 	SaveBookModelRequest,
 	SaveEditionRequest,
 	SaveReadingRequestSchema,
+	SaveSeriesRequest,
+	SeriesDetails,
 	AuthorDetails,
 } from "@personal-tracker/shared/reading-book";
 import type { FastifyBaseLogger } from "fastify";
@@ -20,6 +22,7 @@ import type { CoverStorageRepository } from "./cover-storage.repository";
 
 import { toEntityView } from "../entities/entity.entity";
 import { buildInitialReading, getLongestConsecutiveStreak, median } from "./book.entity";
+import { buildSeriesTree, createsCycle, parentsOf, treeBookIds } from "./series.entity";
 
 type BookListQuery = z.infer<typeof BookListRequestSchema>;
 type SaveBookBody = z.infer<typeof SaveBookRequestSchema>;
@@ -102,6 +105,83 @@ export class GetAuthorUseCase {
 			sortDirection: "asc",
 		});
 		return { ...toEntityView(author), books };
+	}
+}
+
+export class ListSeriesUseCase {
+	constructor(private repo: BookRepository) {}
+
+	async execute(log: FastifyBaseLogger) {
+		log.info("ListSeriesUseCase.execute");
+		const [series, items] = await Promise.all([this.repo.findAllSeries(), this.repo.findAllSeriesItems()]);
+		const seriesById = new Map(series.map((item) => [item.id, item]));
+		return series.map(({ id, title }) => ({
+			id,
+			title,
+			nbBooks: treeBookIds(id, items).length,
+			parents: parentsOf(id, items, seriesById),
+		}));
+	}
+}
+
+export class GetSeriesUseCase {
+	constructor(private repo: BookRepository) {}
+
+	async execute(id: string, log: FastifyBaseLogger): Promise<SeriesDetails | undefined> {
+		log.info("GetSeriesUseCase.execute");
+		const series = await this.repo.findSeries(id);
+		if (!series) {
+			return undefined;
+		}
+		const [allSeries, items] = await Promise.all([this.repo.findAllSeries(), this.repo.findAllSeriesItems()]);
+		const seriesById = new Map(allSeries.map((item) => [item.id, item]));
+		const bookIds = treeBookIds(id, items);
+		const books = bookIds.length ? await this.repo.findAll({ withReadingsDetails: false, bookIds }) : [];
+		return {
+			...series,
+			parents: parentsOf(id, items, seriesById),
+			items: buildSeriesTree(id, items, seriesById, new Map(books.map((book) => [book.id, book]))),
+		};
+	}
+}
+
+export class SaveSeriesUseCase {
+	constructor(private repo: BookRepository) {}
+
+	async execute(series: SaveSeriesRequest, log: FastifyBaseLogger) {
+		log.info("SaveSeriesUseCase.execute");
+		const bookIds = series.items.flatMap((item) => (item.kind === "book" ? [item.bookId] : []));
+		const childIds = series.items.flatMap((item) => (item.kind === "series" ? [item.seriesId] : []));
+		if (new Set(bookIds).size !== bookIds.length || new Set(childIds).size !== childIds.length) {
+			throw httpErrors.badRequest("Un livre ou une série n'est qu'une fois dans une série");
+		}
+		if ((await this.repo.countBooks(bookIds)) !== bookIds.length) {
+			throw httpErrors.badRequest("Livre inconnu");
+		}
+		if ((await this.repo.countSeries(childIds)) !== childIds.length) {
+			throw httpErrors.badRequest("Série inconnue");
+		}
+		// a new series is held by none: it can't be in its own tree
+		if (series.id && createsCycle(series.id, childIds, await this.repo.findAllSeriesItems())) {
+			throw httpErrors.badRequest("Une série ne peut pas se contenir elle-même, même par une sous-série");
+		}
+		const id = await this.repo.saveSeries(series);
+		if (!id) {
+			throw httpErrors.notFound("Série introuvable");
+		}
+		return { id };
+	}
+}
+
+export class DeleteSeriesUseCase {
+	constructor(private repo: BookRepository) {}
+
+	async execute(id: string, log: FastifyBaseLogger) {
+		log.info("DeleteSeriesUseCase.execute");
+		if (!(await this.repo.findSeries(id))) {
+			throw httpErrors.notFound("Série introuvable");
+		}
+		await this.repo.deleteSeries(id);
 	}
 }
 

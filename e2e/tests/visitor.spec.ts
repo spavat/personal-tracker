@@ -301,6 +301,7 @@ test.describe("anonymous visitor", () => {
 			"/reading-book/history/2026/add",
 			`/reading-book/book/${alice.id}/edit`,
 			`/reading-book/book/${alice.id}/model/add`,
+			"/reading-book/series/add",
 			`/reading-book/book/${alice.id}/reading/${ALICE_READING_ID}/delete`,
 		]) {
 			test(`is sent back home from ${url}`, async ({ page }) => {
@@ -313,6 +314,13 @@ test.describe("anonymous visitor", () => {
 			expect((await request.get(`${API}/reading-book/books`)).status()).toBe(200);
 			expect((await request.get(`${API}/reading-book/books/${alice.id}`)).status()).toBe(200);
 			expect((await request.get(`${API}/reading-book/authors`)).status()).toBe(200);
+			expect((await request.get(`${API}/reading-book/series`)).status()).toBe(200);
+			expect(
+				(
+					await request.post(`${API}/reading-book/series/save`, { data: { title: "Intrus", books: [] } })
+				).status(),
+			).toBe(401);
+			expect((await request.delete(`${API}/reading-book/series/${ALICE_READING_ID}`)).status()).toBe(401);
 			// the entities are only listed for the forms
 			expect((await request.get(`${API}/entities?kind=person`)).status()).toBe(401);
 			expect((await request.get(`${API}/reading-book/reports?from=2026-01-01&to=2026-12-31`)).status()).toBe(401);
