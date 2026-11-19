@@ -57,7 +57,8 @@ export class WorksRepository {
 		return work;
 	}
 
-	delete(id: number) {
-		return this.db.delete(showWork).where(eq(showWork.id, id));
+	// false for an unknown id
+	async delete(id: number) {
+		return (await this.db.delete(showWork).where(eq(showWork.id, id)).returning({ id: showWork.id })).length > 0;
 	}
 }

@@ -39,20 +39,20 @@ describe("entities routes", () => {
 		expect((await ctx.app.inject({ method: "GET", url: "/entities?kind=robot" })).statusCode).toBe(400);
 	});
 
-	it("POST /save rejects an empty name", async () => {
+	it("POST / rejects an empty name", async () => {
 		const res = await ctx.app.inject({
 			method: "POST",
-			url: "/entities/save",
+			url: "/entities",
 			payload: { kind: "person", name: " " },
 		});
 		expect(res.statusCode).toBe(400);
 	});
 
-	it("POST /save creates the node, the entity and its subtype row", async () => {
+	it("POST / creates the node, the entity and its subtype row", async () => {
 		await ctx.app.close();
 		ctx = await buildApp([CARROLL_ROW]);
 		const { id: _id, ...body } = CARROLL;
-		const res = await ctx.app.inject({ method: "POST", url: "/entities/save", payload: body });
+		const res = await ctx.app.inject({ method: "POST", url: "/entities", payload: body });
 		expect(res.statusCode).toBe(201);
 		expect(res.json()).toEqual(CARROLL_VIEW);
 		expect(ctx.db.insert.mock.calls.map((call: unknown[]) => call[0])).toEqual([
@@ -62,18 +62,18 @@ describe("entities routes", () => {
 		]);
 	});
 
-	it("POST /save renames an existing entity and its node", async () => {
+	it("PUT /:id renames an existing entity and its node", async () => {
 		await ctx.app.close();
 		ctx = await buildApp([CARROLL_ROW]);
-		const res = await ctx.app.inject({ method: "POST", url: "/entities/save", payload: CARROLL });
+		const res = await ctx.app.inject({ method: "PUT", url: `/entities/${ID}`, payload: CARROLL });
 		expect(res.statusCode).toBe(200);
 		expect(res.json()).toEqual(CARROLL_VIEW);
 		expect(ctx.db.update.mock.calls.map((call: unknown[]) => call[0])).toEqual([coreEntity, coreNode]);
 		expect(ctx.db.insert).not.toHaveBeenCalled();
 	});
 
-	it("POST /save 404s when no entity has this id and kind", async () => {
-		const res = await ctx.app.inject({ method: "POST", url: "/entities/save", payload: CARROLL });
+	it("PUT /:id 404s when no entity has this id and kind", async () => {
+		const res = await ctx.app.inject({ method: "PUT", url: `/entities/${ID}`, payload: CARROLL });
 		expect(res.statusCode).toBe(404);
 		expect(ctx.db.update).not.toHaveBeenCalled();
 	});

@@ -49,7 +49,8 @@ export class ModelsRepository {
 		return tx.insert(showModelRole).values(data).returning({ id: showModelRole.id });
 	}
 
-	deleteModel(tx: any, id: number) {
-		return tx.delete(showModel).where(eq(showModel.id, id));
+	// false for an unknown id
+	async deleteModel(tx: any, id: number) {
+		return (await tx.delete(showModel).where(eq(showModel.id, id)).returning({ id: showModel.id })).length > 0;
 	}
 }

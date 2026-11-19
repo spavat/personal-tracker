@@ -26,7 +26,7 @@ import { TransactionsModule } from "./transactions/transactions.module.js";
 					{ path: "accounts", module: AccountsModule },
 					{ path: "banks", module: BanksModule },
 					{ path: "categories", module: CategoriesModule },
-					{ path: "paymentTypes", module: PaymentTypesModule },
+					{ path: "payment-types", module: PaymentTypesModule },
 					{ path: "tags", module: TagsModule },
 					{ path: "transactions", module: TransactionsModule },
 				],

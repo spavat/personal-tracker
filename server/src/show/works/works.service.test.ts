@@ -10,7 +10,7 @@ function fakeRepo() {
 		findAllWithSpectaclesPerformancesAndPlaces: vi.fn().mockResolvedValue(null),
 		findByIdWithSpectacles: vi.fn().mockResolvedValue(null),
 		save: vi.fn().mockResolvedValue(undefined),
-		delete: vi.fn().mockResolvedValue(undefined),
+		delete: vi.fn().mockResolvedValue(true),
 	};
 }
 const asRepo = (r: ReturnType<typeof fakeRepo>) => r as unknown as WorksRepository;

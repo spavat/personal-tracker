@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query } from "@nestjs/common";
 import {
 	ArtistMediaIdParamsRequestSchema,
 	ArtistMediaParamsRequestSchema,
@@ -49,7 +49,7 @@ export class MediaController {
 		return this.service.upload({ spectacleId }, body);
 	}
 
-	@Post("spectacles/:spectacleId/order")
+	@Put("spectacles/:spectacleId/order")
 	@HttpCode(204)
 	async reorderSpectacle(
 		@Param({ schema: SpectacleMediaParamsRequestSchema }) { spectacleId }: { spectacleId: number },
@@ -58,8 +58,7 @@ export class MediaController {
 		await this.service.reorder({ spectacleId }, body);
 	}
 
-	@Post("spectacles/:spectacleId/:mediaId")
-	@HttpCode(204)
+	@Put("spectacles/:spectacleId/:mediaId")
 	updateSpectacle(
 		@Param({ schema: SpectacleMediaIdParamsRequestSchema }) {
 			spectacleId,
@@ -101,7 +100,7 @@ export class MediaController {
 		return this.service.upload({ artistId }, body);
 	}
 
-	@Post("artists/:artistId/order")
+	@Put("artists/:artistId/order")
 	@HttpCode(204)
 	async reorderArtist(
 		@Param({ schema: ArtistMediaParamsRequestSchema }) { artistId }: { artistId: number },
@@ -110,8 +109,7 @@ export class MediaController {
 		await this.service.reorder({ artistId }, body);
 	}
 
-	@Post("artists/:artistId/:mediaId")
-	@HttpCode(204)
+	@Put("artists/:artistId/:mediaId")
 	updateArtist(
 		@Param({ schema: ArtistMediaIdParamsRequestSchema }) {
 			artistId,
@@ -137,9 +135,9 @@ export class MediaController {
 	}
 
 	private async update(owner: MediaOwner, mediaId: string, body: Update) {
-		if (!(await this.service.update(owner, mediaId, body))) {
-			throw new NotFoundError("Média introuvable");
-		}
+		return (
+			(await this.service.update(owner, mediaId, body)) ?? Promise.reject(new NotFoundError("Média introuvable"))
+		);
 	}
 
 	private async delete(owner: MediaOwner, mediaId: string) {

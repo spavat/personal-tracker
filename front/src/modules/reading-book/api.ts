@@ -18,7 +18,7 @@ import { queryOptions } from "@tanstack/react-query";
 import type { SortListConfig } from "../../hooks/use-sort-table";
 import type { YearQueryConfig } from "../../hooks/use-year-changer";
 
-import { fetchJson, sendJson, withQuery } from "../../api-utils";
+import { fetchJson, saveJson, sendJson, withQuery } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
 
 export async function getBooks({
@@ -97,7 +97,7 @@ export const allBooksQuery = () =>
 	});
 
 export async function saveSeries(series: SaveSeriesRequest) {
-	return sendJson<{ id: string }>(`${API_BASE_URL}/reading-book/series/save`, "POST", series);
+	return saveJson<{ id: string }>(`${API_BASE_URL}/reading-book/series`, series);
 }
 
 export async function deleteSeries(id: string) {
@@ -110,11 +110,11 @@ export async function getReport({ from, to }: { from: string; to: string }) {
 
 export async function saveBook(data: any) {
 	const dataToSend = SaveBookRequestSchema.parse(data);
-	return sendJson<SaveBookResponse>(`${API_BASE_URL}/reading-book/save`, "POST", dataToSend);
+	return saveJson<SaveBookResponse>(`${API_BASE_URL}/reading-book/books`, dataToSend);
 }
 
 export async function saveModel({ id, model }: { id: string; model: SaveBookModelRequest }) {
-	return sendJson(`${API_BASE_URL}/reading-book/books/${id}/models/save`, "POST", model);
+	return saveJson(`${API_BASE_URL}/reading-book/books/${id}/models`, model);
 }
 
 export async function deleteModel({ id, modelId }: { id: string; modelId: string }) {
@@ -123,7 +123,7 @@ export async function deleteModel({ id, modelId }: { id: string; modelId: string
 
 export async function saveEdition({ id, edition }: { id: string; edition: SaveEditionRequest }) {
 	const dataToSend = SaveEditionRequestSchema.parse(edition);
-	return sendJson(`${API_BASE_URL}/reading-book/books/${id}/editions/save`, "POST", dataToSend);
+	return saveJson(`${API_BASE_URL}/reading-book/books/${id}/editions`, dataToSend);
 }
 
 export async function deleteEdition({ id, editionId }: { id: string; editionId: string }) {
@@ -135,7 +135,7 @@ export async function addReading({ id, editionId }: { id: string; editionId: str
 }
 
 export async function saveReading({ id, reading }: { id: string; reading: any }) {
-	return sendJson(`${API_BASE_URL}/reading-book/books/${id}/saveReading`, "POST", reading);
+	return sendJson(`${API_BASE_URL}/reading-book/books/${id}/readings/${reading.id}`, "PUT", reading);
 }
 
 export async function deleteReading({ id, readingId }: { id: string; readingId: string }) {

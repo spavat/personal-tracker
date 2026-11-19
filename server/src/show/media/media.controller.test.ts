@@ -45,19 +45,19 @@ describe("show/media routes", () => {
 		);
 	});
 
-	it("POST /spectacles/:spectacleId/order is not taken for a media id", async () => {
+	it("PUT /spectacles/:spectacleId/order is not taken for a media id", async () => {
 		// empty gallery and empty list: a valid reorder
 		const res = await ctx.app.inject({
-			method: "POST",
+			method: "PUT",
 			url: "/show/media/spectacles/7/order",
 			payload: { mediaIds: [] },
 		});
 		expect(res.statusCode).toBe(204);
 	});
 
-	it("POST /artists/:artistId/order rejects non-uuid ids", async () => {
+	it("PUT /artists/:artistId/order rejects non-uuid ids", async () => {
 		const res = await ctx.app.inject({
-			method: "POST",
+			method: "PUT",
 			url: "/show/media/artists/3/order",
 			payload: { mediaIds: ["1"] },
 		});
@@ -83,9 +83,9 @@ describe("show/media routes", () => {
 		expect(res.statusCode).toBe(400);
 	});
 
-	it("POST /spectacles/:spectacleId/:mediaId 404s for a media of another spectacle", async () => {
+	it("PUT /spectacles/:spectacleId/:mediaId 404s for a media of another spectacle", async () => {
 		const res = await ctx.app.inject({
-			method: "POST",
+			method: "PUT",
 			url: "/show/media/spectacles/7/0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e",
 			payload: { label: "x" },
 		});
@@ -118,13 +118,18 @@ describe("show/media routes (existing link)", () => {
 		await ctx.app.close();
 	});
 
-	it("POST /artists/:artistId/:mediaId updates the media", async () => {
+	it("PUT /artists/:artistId/:mediaId updates the media and answers it", async () => {
+		const mediaId = "0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e";
+		ctx.table("showArtistMedia").findMany.mockResolvedValue([
+			{ spectacleId: 7, media: { id: mediaId, key: "k", label: "Seymour", contentType: "image/avif" } },
+		]);
 		const res = await ctx.app.inject({
-			method: "POST",
-			url: "/show/media/artists/3/0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e",
+			method: "PUT",
+			url: `/show/media/artists/3/${mediaId}`,
 			payload: { label: "Seymour", spectacleId: 7 },
 		});
-		expect(res.statusCode).toBe(204);
+		expect(res.statusCode).toBe(200);
+		expect(res.json()).toMatchObject({ id: mediaId, label: "Seymour" });
 		expect(ctx.db.update).toHaveBeenCalled();
 	});
 

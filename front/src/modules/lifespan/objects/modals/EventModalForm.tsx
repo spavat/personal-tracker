@@ -5,7 +5,7 @@ import { SubmitHandler, useForm, useWatch } from "react-hook-form";
 
 import Modal from "../../../../components/Modal";
 import MutationError from "../../../../components/MutationError";
-import { objectDetailsQuery, saveObject } from "../../api";
+import { objectDetailsQuery, saveEvent } from "../../api";
 import { DISPOSE_CAUSE_LABELS, EVENT_TYPE_LABELS } from "../../labels";
 
 type EventFormInputs = {
@@ -57,7 +57,7 @@ export default function EventModalForm({
 	});
 
 	const saveMutation = useMutation({
-		mutationFn: saveObject,
+		mutationFn: saveEvent,
 		onSuccess: () => {
 			reset(defaultValues);
 			queryClient.invalidateQueries({ queryKey: ["lifespan", "objects"] });

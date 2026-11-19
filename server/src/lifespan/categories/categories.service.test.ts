@@ -1,7 +1,7 @@
 import { Test } from "@nestjs/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ConflictError } from "../../common/errors.js";
+import { ConflictError, NotFoundError } from "../../common/errors.js";
 import { LifespanCategoriesRepository } from "./categories.repository.js";
 import { LifespanCategoriesService } from "./categories.service.js";
 
@@ -27,11 +27,12 @@ describe("LifespanCategoriesService", () => {
 		service = ref.get(LifespanCategoriesService);
 	});
 
-	describe("save", () => {
-		it("updates when an id is present", async () => {
-			const category = { id: "cat-1", name: "Shoes", parentId: "cat-clothes" };
+	describe("create / update", () => {
+		it("updates the category of the path", async () => {
+			const category = { name: "Shoes", parentId: "cat-clothes" };
+			repo.update.mockResolvedValue({ id: "cat-1", ...category });
 
-			await service.save(category);
+			expect(await service.update("cat-1", category)).toEqual({ id: "cat-1", ...category });
 
 			expect(repo.update).toHaveBeenCalledWith("cat-1", category);
 			expect(repo.insert).not.toHaveBeenCalled();
@@ -44,14 +45,21 @@ describe("LifespanCategoriesService", () => {
 				{ id: "cat-3", name: "Boots", parentId: "cat-2" },
 			]);
 
-			await expect(service.save({ id: "cat-1", name: "Clothes", parentId: "cat-3" })).rejects.toBeInstanceOf(
+			await expect(service.update("cat-1", { name: "Clothes", parentId: "cat-3" })).rejects.toBeInstanceOf(
 				ConflictError,
 			);
 			expect(repo.update).not.toHaveBeenCalled();
 		});
 
-		it("inserts a built category with a fresh id when there is no id", async () => {
-			await service.save({ name: "Shoes", parentId: null });
+		it("answers NotFoundError for an unknown category", async () => {
+			repo.update.mockResolvedValue(null);
+			await expect(service.update("cat-1", { name: "Shoes", parentId: null })).rejects.toBeInstanceOf(
+				NotFoundError,
+			);
+		});
+
+		it("inserts a built category with a fresh id", async () => {
+			await service.create({ name: "Shoes", parentId: null });
 
 			expect(repo.update).not.toHaveBeenCalled();
 			expect(repo.insert.mock.calls[0][0]).toMatchObject({ name: "Shoes", parentId: null });
@@ -63,19 +71,20 @@ describe("LifespanCategoriesService", () => {
 		it("refuses to delete when sub-categories exist", async () => {
 			repo.findSubCategories.mockResolvedValue([{ id: "sub-1" }]);
 
-			expect(await service.delete("cat-1")).toEqual({ deleted: false, reason: "has_children" });
+			await expect(service.delete("cat-1")).rejects.toThrow(/sous-catégories/);
 			expect(repo.delete).not.toHaveBeenCalled();
 		});
 
 		it("refuses to delete when objects still reference the category", async () => {
 			repo.findObjectsUsingCategory.mockResolvedValue([{ id: "obj-1" }]);
 
-			expect(await service.delete("cat-1")).toEqual({ deleted: false, reason: "in_use" });
+			await expect(service.delete("cat-1")).rejects.toThrow(/objets/);
 			expect(repo.delete).not.toHaveBeenCalled();
 		});
 
 		it("deletes the category once it has no children and no objects", async () => {
-			expect(await service.delete("cat-1")).toEqual({ deleted: true });
+			repo.delete.mockResolvedValue(true);
+			await expect(service.delete("cat-1")).resolves.toBeUndefined();
 			expect(repo.delete).toHaveBeenCalledWith("cat-1");
 		});
 	});

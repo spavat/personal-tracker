@@ -97,7 +97,10 @@ export class ArtistsRepository {
 		return artist;
 	}
 
-	delete(id: number) {
-		return this.db.delete(showArtist).where(eq(showArtist.id, id));
+	// false for an unknown id
+	async delete(id: number) {
+		return (
+			(await this.db.delete(showArtist).where(eq(showArtist.id, id)).returning({ id: showArtist.id })).length > 0
+		);
 	}
 }

@@ -35,25 +35,27 @@ describe("show/works routes", () => {
 		expect((await ctx.app.inject({ method: "GET", url: "/show/works/abc" })).statusCode).toBe(400);
 	});
 
-	it("POST /save rejects an empty body then persists a valid one", async () => {
-		expect((await ctx.app.inject({ method: "POST", url: "/show/works/save", payload: {} })).statusCode).toBe(400);
+	it("POST / rejects an empty body then persists a valid one", async () => {
+		expect((await ctx.app.inject({ method: "POST", url: "/show/works", payload: {} })).statusCode).toBe(400);
 
 		await ctx.app.close();
 		ctx = await buildApp([{ id: 4, name: "Tosca" }]);
-		const res = await ctx.app.inject({ method: "POST", url: "/show/works/save", payload: { name: "Tosca" } });
+		const res = await ctx.app.inject({ method: "POST", url: "/show/works", payload: { name: "Tosca" } });
 		expect(res.statusCode).toBe(201);
 		expect(res.json()).toEqual({ id: 4, name: "Tosca" });
 		expect(ctx.db.insert).toHaveBeenCalled();
 	});
 
-	it("POST /save 404s when updating an unknown work", async () => {
+	it("PUT /:id 404s when updating an unknown work", async () => {
 		expect(
-			(await ctx.app.inject({ method: "POST", url: "/show/works/save", payload: { id: 4, name: "Tosca" } }))
+			(await ctx.app.inject({ method: "PUT", url: "/show/works/4", payload: { id: 4, name: "Tosca" } }))
 				.statusCode,
 		).toBe(404);
 	});
 
 	it("DELETE /:id answers 204", async () => {
+		await ctx.app.close();
+		ctx = await buildApp([{ id: 4 }]);
 		expect((await ctx.app.inject({ method: "DELETE", url: "/show/works/4" })).statusCode).toBe(204);
 		expect(ctx.db.delete).toHaveBeenCalled();
 	});

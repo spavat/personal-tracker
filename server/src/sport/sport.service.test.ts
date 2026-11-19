@@ -62,26 +62,28 @@ describe("SportService", () => {
 		});
 	});
 
-	describe("save", () => {
+	describe("create / update", () => {
 		const body = {
 			name: "Morning run",
 			type: "running",
 			details: { totalDuration: 0, movingDuration: 0, distance: 0, pace: 0 },
 		};
 
-		it("updates the activity when an id is given, removing a comment left out", async () => {
-			await service.save({ id: "a1", ...body });
+		it("updates the activity, removing a comment left out", async () => {
+			repo.update.mockResolvedValue({ id: "a1" });
+			await service.update("a1", body);
 			expect(repo.update).toHaveBeenCalledWith("a1", body, ["comment"]);
 			expect(repo.insert).not.toHaveBeenCalled();
 		});
 
 		it("keeps the comment sent on update", async () => {
-			await service.save({ id: "a1", ...body, comment: "Nice" });
+			repo.update.mockResolvedValue({ id: "a1" });
+			await service.update("a1", { ...body, comment: "Nice" });
 			expect(repo.update).toHaveBeenCalledWith("a1", { ...body, comment: "Nice" }, []);
 		});
 
 		it("inserts a new activity with a generated id", async () => {
-			await service.save({ ...body, date: "2024-06-01T10:00:00" });
+			await service.create({ ...body, date: "2024-06-01T10:00:00" });
 
 			expect(repo.insert).toHaveBeenCalledWith({
 				id: expect.any(String),
@@ -92,12 +94,12 @@ describe("SportService", () => {
 		});
 
 		it("refuses a new activity without date nor GPX file", async () => {
-			await expect(service.save(body)).rejects.toBeInstanceOf(BadRequestError);
+			await expect(service.create(body)).rejects.toBeInstanceOf(BadRequestError);
 			expect(repo.insert).not.toHaveBeenCalled();
 		});
 
 		it("stores the GPX file and its thumbnail, and takes the date and details from the GPX", async () => {
-			await service.save({ ...body, rawData: gpxFile() });
+			await service.create({ ...body, rawData: gpxFile() });
 
 			const [gpxKey, rawData] = files.uploadGpx.mock.calls[0];
 			expect(gpxKey).toMatch(/^personal-tracker\/sport\/2024\/2024-06-01-.+\.gpx$/);
@@ -116,7 +118,7 @@ describe("SportService", () => {
 
 		it("refuses a GPX file without a date, before storing anything", async () => {
 			const noTime = gpxFile().replace(/<time>[^<]*<\/time>/g, "");
-			await expect(service.save({ ...body, rawData: noTime })).rejects.toBeInstanceOf(BadRequestError);
+			await expect(service.create({ ...body, rawData: noTime })).rejects.toBeInstanceOf(BadRequestError);
 			expect(files.uploadGpx).not.toHaveBeenCalled();
 		});
 	});
@@ -125,7 +127,7 @@ describe("SportService", () => {
 		it("deletes the activity, then its GPX file and thumbnail", async () => {
 			repo.delete.mockResolvedValue({ id: "a1", gpxKey: "g/a1.gpx", thumbnailKey: "t/a1.avif" });
 
-			expect(await service.delete("a1")).toMatchObject({ id: "a1" });
+			await service.delete("a1");
 			expect(files.delete.mock.calls).toEqual([["g/a1.gpx"], ["t/a1.avif"]]);
 		});
 
@@ -154,6 +156,7 @@ describe("SportService", () => {
 
 		it("saves the cropped range, without a thumbnail when there was none", async () => {
 			repo.findById.mockResolvedValue({ points: POINTS });
+			repo.update.mockResolvedValue({ id: "a1" });
 
 			await service.crop("a1", 0, 1);
 
@@ -166,6 +169,7 @@ describe("SportService", () => {
 
 		it("regenerates the thumbnail at its existing key", async () => {
 			repo.findById.mockResolvedValue({ points: POINTS, thumbnailKey: "t/a1.avif" });
+			repo.update.mockResolvedValue({ id: "a1" });
 
 			await service.crop("a1", 0, 1);
 
@@ -174,6 +178,7 @@ describe("SportService", () => {
 	});
 
 	it("updateSegments sorts the segments by time", async () => {
+		repo.update.mockResolvedValue({ id: "a1" });
 		await service.updateSegments("a1", [
 			{ time: 80, type: "running" },
 			{ time: 0, type: "running" },

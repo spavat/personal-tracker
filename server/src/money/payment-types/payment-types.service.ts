@@ -45,7 +45,6 @@ export class PaymentTypesService {
 			throw new ConflictError(`Le moyen de paiement est encore utilisé par ${transactions.length} transactions`);
 		}
 		await this.repo.destroy(id);
-		return { deleted: true };
 	}
 }
 

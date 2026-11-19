@@ -89,27 +89,33 @@ export class LifespanObjectsRepository {
 		return object ?? null;
 	}
 
-	insert(object: LifespanObjectMongo) {
-		return this.collection.insertOne(object);
+	// a copy: the driver adds `_id` to the document it inserts
+	async insert(object: LifespanObjectMongo) {
+		await this.collection.insertOne({ ...object });
+		return object;
 	}
 
-	// `unset`: optional fields removed from the object, which $set alone would keep
+	// the updated object, null for an unknown id. `unset`: optional fields removed from the object, which $set alone
+	// would keep
 	update(id: string, object: Partial<LifespanObjectMongo>, unset: string[] = []) {
 		const update: UpdateFilter<LifespanObjectMongo> = { $set: object };
 		if (unset.length > 0) update.$unset = Object.fromEntries(unset.map((field) => [field, ""]));
-		return this.collection.updateOne({ id }, update, { upsert: false });
+		return this.collection.findOneAndUpdate({ id }, update, { projection: { _id: 0 }, returnDocument: "after" });
 	}
 
-	delete(id: string) {
-		return this.collection.deleteOne({ id });
+	// false for an unknown id
+	async delete(id: string) {
+		return (await this.collection.deleteOne({ id })).deletedCount > 0;
 	}
 
-	pushEvent(objectId: string, event: LifespanEventMongo) {
-		return this.collection.updateOne({ id: objectId }, { $push: { events: event } });
+	// false for an unknown object
+	async pushEvent(objectId: string, event: LifespanEventMongo) {
+		return (await this.collection.updateOne({ id: objectId }, { $push: { events: event } })).matchedCount > 0;
 	}
 
 	// `unset`: optional fields removed from the event (e.g. the cause of an event no longer a dispose)
-	updateEvent(objectId: string, event: LifespanEventMongo, unset: string[] = []) {
+	// false for an unknown object or event
+	async updateEvent(objectId: string, event: LifespanEventMongo, unset: string[] = []) {
 		const setFields = Object.fromEntries(
 			Object.entries(event).map(([key, value]) => [`events.$[element].${key}`, value]),
 		);
@@ -117,10 +123,19 @@ export class LifespanObjectsRepository {
 		if (unset.length > 0) {
 			update.$unset = Object.fromEntries(unset.map((field) => [`events.$[element].${field}`, ""]));
 		}
-		return this.collection.updateOne({ id: objectId }, update, { arrayFilters: [{ "element.id": event.id }] });
+		// the filter matches the event too: an unknown object or event updates nothing
+		const result = await this.collection.updateOne({ id: objectId, "events.id": event.id }, update, {
+			arrayFilters: [{ "element.id": event.id }],
+		});
+		return result.matchedCount > 0;
 	}
 
-	deleteEvent(objectId: string, eventId: string) {
-		return this.collection.updateOne({ id: objectId }, { $pull: { events: { id: eventId } } });
+	// false for an unknown object or event
+	async deleteEvent(objectId: string, eventId: string) {
+		const result = await this.collection.updateOne(
+			{ id: objectId, "events.id": eventId },
+			{ $pull: { events: { id: eventId } } },
+		);
+		return result.modifiedCount > 0;
 	}
 }

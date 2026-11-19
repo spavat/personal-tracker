@@ -54,7 +54,8 @@ export class SyncRepository {
 		return this.collection.replaceOne({ id: proposal.id }, proposal);
 	}
 
-	delete(id: string) {
-		return this.collection.deleteOne({ id });
+	// false for an unknown id
+	async delete(id: string) {
+		return (await this.collection.deleteOne({ id })).deletedCount > 0;
 	}
 }

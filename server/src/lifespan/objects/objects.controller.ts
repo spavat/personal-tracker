@@ -1,7 +1,10 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query } from "@nestjs/common";
 import {
 	LifespanEventDeleteParamsRequestSchema,
 	type LifespanEventDeleteParamsRequestType,
+	LifespanEventParamsRequestSchema,
+	LifespanEventSaveBodyRequestSchema,
+	type LifespanEventSaveType,
 	LifespanObjectDeleteParamsRequestSchema,
 	LifespanObjectDetailsParamsRequestSchema,
 	LifespanObjectListQuerystringRequestSchema,
@@ -28,24 +31,53 @@ export class LifespanObjectsController {
 		return this.service.get(id);
 	}
 
-	@Post("save")
-	@HttpCode(200)
-	save(@Body({ schema: LifespanObjectSaveBodyRequestSchema }) body: LifespanObjectSaveBodyRequestType) {
-		return this.service.save(body);
+	// the object, with its first events
+	@Post()
+	create(@Body({ schema: LifespanObjectSaveBodyRequestSchema }) body: LifespanObjectSaveBodyRequestType) {
+		return this.service.create(body);
+	}
+
+	@Put(":id")
+	update(
+		@Param({ schema: LifespanObjectDeleteParamsRequestSchema }) { id }: { id: string },
+		@Body({ schema: LifespanObjectSaveBodyRequestSchema }) body: LifespanObjectSaveBodyRequestType,
+	) {
+		return this.service.update(id, body);
+	}
+
+	@Delete(":id")
+	@HttpCode(204)
+	async delete(@Param({ schema: LifespanObjectDeleteParamsRequestSchema }) { id }: { id: string }) {
+		await this.service.delete(id);
+	}
+
+	@Post(":objectId/events")
+	createEvent(
+		@Param({ schema: LifespanEventParamsRequestSchema }) { objectId }: { objectId: string },
+		@Body({ schema: LifespanEventSaveBodyRequestSchema }) event: LifespanEventSaveType,
+	) {
+		return this.service.createEvent(objectId, event);
+	}
+
+	@Put(":objectId/events/:eventId")
+	updateEvent(
+		@Param({ schema: LifespanEventDeleteParamsRequestSchema }) {
+			objectId,
+			eventId,
+		}: LifespanEventDeleteParamsRequestType,
+		@Body({ schema: LifespanEventSaveBodyRequestSchema }) event: LifespanEventSaveType,
+	) {
+		return this.service.updateEvent(objectId, eventId, event);
 	}
 
 	@Delete(":objectId/events/:eventId")
-	deleteEvent(
+	@HttpCode(204)
+	async deleteEvent(
 		@Param({ schema: LifespanEventDeleteParamsRequestSchema }) {
 			objectId,
 			eventId,
 		}: LifespanEventDeleteParamsRequestType,
 	) {
-		return this.service.deleteEvent(objectId, eventId);
-	}
-
-	@Delete(":id")
-	delete(@Param({ schema: LifespanObjectDeleteParamsRequestSchema }) { id }: { id: string }) {
-		return this.service.delete(id);
+		await this.service.deleteEvent(objectId, eventId);
 	}
 }

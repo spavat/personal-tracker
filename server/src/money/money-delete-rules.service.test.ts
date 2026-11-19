@@ -46,7 +46,7 @@ describe("AccountsService.delete", () => {
 
 	it("deletes an account with neither", async () => {
 		const { service, repo } = await accounts({ id: 1, history: [], paymentTypes: [] });
-		expect(await service.delete(1)).toEqual({ deleted: true });
+		await expect(service.delete(1)).resolves.toBeUndefined();
 		expect(repo.destroy).toHaveBeenCalledWith(1);
 	});
 });
@@ -65,7 +65,7 @@ describe("PaymentTypesService.delete", () => {
 
 	it("deletes an unused payment type", async () => {
 		const { service, repo } = await paymentTypes({ id: 1 });
-		expect(await service.delete(1)).toEqual({ deleted: true });
+		await expect(service.delete(1)).resolves.toBeUndefined();
 		expect(repo.destroy).toHaveBeenCalledWith(1);
 	});
 });

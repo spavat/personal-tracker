@@ -83,19 +83,14 @@ export const MangaDetailsParamsSchema = UUIDParamsSchema;
 export const SaveMangaBodyRequestSchema = MangaSchema.partial({ id: true }).omit({ readings: true });
 export const SaveReadingBodyRequestSchema = ReadingSchema.partial({ id: true });
 
-export const SaveBodyRequestSchema = z
-	.object({
-		manga: SaveMangaBodyRequestSchema.optional(),
-		reading: SaveReadingBodyRequestSchema.optional(),
-		mangaId: z.uuid().optional(),
-	})
-	.refine(({ manga, reading, mangaId }) => {
-		if (manga) {
-			return !mangaId; // Add or update a manga (with or without reading)
-		}
-		return !!(reading && mangaId); // Add or update a reading only
-	}, "Expected either a manga (without mangaId), or a reading with its mangaId");
+// POST /mangas (with an optional first reading), PUT /mangas/:id (the reading is ignored)
+export const SaveBodyRequestSchema = z.object({
+	manga: SaveMangaBodyRequestSchema,
+	reading: SaveReadingBodyRequestSchema.optional(),
+});
 export type SaveBodyRequestType = z.infer<typeof SaveBodyRequestSchema>;
+// POST /mangas/:id/readings, PUT /mangas/:id/readings/:readingId
+export type SaveReadingBodyRequestType = z.infer<typeof SaveReadingBodyRequestSchema>;
 export const SaveParamsRequestSchema = UUIDParamsSchema;
 
 // Response

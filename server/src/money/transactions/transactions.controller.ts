@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query } from "@nestjs/common";
 import * as z from "zod";
 
 import type { TransactionBody } from "./transaction.entity.js";
@@ -6,7 +6,6 @@ import type { TransactionBody } from "./transaction.entity.js";
 import { type ListTransactionsQuery, TransactionsService } from "./transactions.service.js";
 
 const IdParams = z.object({ id: z.coerce.number() });
-const UpdateParams = IdParams.extend({ type: z.string() });
 const AccountParams = z.object({ accountId: z.coerce.number() });
 const CategoryParams = z.object({ categoryId: z.coerce.number() });
 const TagParams = z.object({ tagId: z.coerce.number() });
@@ -41,15 +40,19 @@ export class TransactionsController {
 		return this.service.get(id);
 	}
 
-	@Post() // 201 by default for a POST, as the Fastify route
+	@Post()
 	create(@Body() body: TransactionBody) {
 		return this.service.create(body);
 	}
 
-	@Post(":id/:type")
-	@HttpCode(200)
-	update(@Param({ schema: UpdateParams }) { id, type }: { id: number; type: string }, @Body() body: TransactionBody) {
-		return this.service.update(id, type, body);
+	@Put(":id")
+	update(@Param({ schema: IdParams }) { id }: { id: number }, @Body() body: TransactionBody) {
+		return this.service.update(id, body);
+	}
+
+	@Patch(":id")
+	patch(@Param({ schema: IdParams }) { id }: { id: number }, @Body() body: TransactionBody) {
+		return this.service.patch(id, body);
 	}
 
 	@Delete(":id")

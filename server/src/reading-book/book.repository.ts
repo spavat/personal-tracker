@@ -479,21 +479,25 @@ export class BookRepository {
 	}
 
 	// false when the book (on create) or the model (on update) doesn't exist
+	// the model's id, undefined for an unknown book or model
 	async saveModel(bookId: string, { id, name, tree }: { id?: string; name: string; tree: ReadingModelItem[] }) {
 		if (id) {
-			const updated = await this.db
+			const [updated] = await this.db
 				.update(readingModel)
 				.set({ name, tree })
 				.where(and(eq(readingModel.id, id), eq(readingModel.bookId, bookId)))
 				.returning({ id: readingModel.id });
-			return updated.length > 0;
+			return updated?.id;
 		}
 		const [book] = await this.db.select({ id: readingBook.id }).from(readingBook).where(eq(readingBook.id, bookId));
 		if (!book) {
-			return false;
+			return undefined;
 		}
-		await this.db.insert(readingModel).values({ bookId, name, tree });
-		return true;
+		const [created] = await this.db
+			.insert(readingModel)
+			.values({ bookId, name, tree })
+			.returning({ id: readingModel.id });
+		return created.id;
 	}
 
 	// the editions using it are left without model
@@ -516,6 +520,7 @@ export class BookRepository {
 		return true;
 	}
 
+	// false when the book has no such reading
 	updateReading(bookId: string, reading: { id: string; status: ReadingStatus; details: ReadingDetails[] }) {
 		return this.db.transaction(async (tx) => {
 			const [updated] = await tx
@@ -524,7 +529,7 @@ export class BookRepository {
 				.where(this.readingOfBook(bookId, reading.id))
 				.returning({ id: readingReading.id });
 			if (!updated) {
-				return;
+				return false;
 			}
 			// the entries are replaced as a whole
 			await tx.delete(readingEntry).where(eq(readingEntry.readingId, reading.id));
@@ -532,11 +537,17 @@ export class BookRepository {
 			if (entries.length) {
 				await tx.insert(readingEntry).values(entries);
 			}
+			return true;
 		});
 	}
 
+	// false when the book has no such reading
 	async deleteReading(bookId: string, readingId: string) {
-		await this.db.delete(readingReading).where(this.readingOfBook(bookId, readingId));
+		const deleted = await this.db
+			.delete(readingReading)
+			.where(this.readingOfBook(bookId, readingId))
+			.returning({ id: readingReading.id });
+		return deleted.length > 0;
 	}
 
 	findAllSeries() {

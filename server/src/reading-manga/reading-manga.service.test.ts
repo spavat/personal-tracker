@@ -65,14 +65,15 @@ describe("ReadingMangaService", () => {
 		});
 	});
 
-	describe("save", () => {
+	describe("create / update", () => {
 		it("updates an existing manga", async () => {
 			const manga = { id: "m1", title: "One", status: "in-progress" };
+			repo.update.mockResolvedValue(manga);
 			repo.findById.mockResolvedValue(manga);
 
-			const result = await service.save({ manga } as never);
+			const result = await service.update("m1", { manga: { title: "One", status: "in-progress" } } as never);
 
-			expect(repo.update).toHaveBeenCalledWith("m1", manga);
+			expect(repo.update).toHaveBeenCalledWith("m1", { title: "One", status: "in-progress" });
 			expect(repo.insert).not.toHaveBeenCalled();
 			expect(repo.findById).toHaveBeenCalledWith("m1");
 			expect(result).toEqual(manga);
@@ -82,7 +83,7 @@ describe("ReadingMangaService", () => {
 			const saved = { id: "generated", title: "One" };
 			repo.findById.mockResolvedValue(saved);
 
-			const result = await service.save({ manga: { title: "One", status: "in-progress" } } as never);
+			const result = await service.create({ manga: { title: "One", status: "in-progress" } } as never);
 
 			const inserted = repo.insert.mock.calls[0][0];
 			expect(inserted).toMatchObject({ title: "One", readings: [] });
@@ -92,7 +93,8 @@ describe("ReadingMangaService", () => {
 		});
 
 		it("inserts a new manga with an initial reading", async () => {
-			await service.save({
+			repo.findById.mockResolvedValue({ id: "generated" });
+			await service.create({
 				manga: { title: "One", status: "in-progress" },
 				reading: { name: "Vol. 1", language: "fr", date: "2024-06-01" },
 			} as never);
@@ -101,20 +103,22 @@ describe("ReadingMangaService", () => {
 			expect(inserted.readings).toHaveLength(1);
 			expect(inserted.readings[0]).toMatchObject({ name: "Vol. 1" });
 		});
+	});
 
-		it("updates an existing reading when it carries an id", async () => {
+	describe("readings", () => {
+		it("updates an existing reading and answers the stored one", async () => {
 			const reading = { id: "r1", name: "Vol. 1" };
+			repo.updateReading.mockResolvedValue(true);
+			repo.findById.mockResolvedValue({ id: "m1", readings: [reading] });
 
-			await service.save({ mangaId: "m1", reading } as never);
+			expect(await service.updateReading("m1", "r1", { name: "Vol. 1" } as never)).toEqual(reading);
 
 			expect(repo.updateReading).toHaveBeenCalledWith("m1", reading);
 		});
 
-		it("pushes a freshly built reading when it has no id", async () => {
-			await service.save({
-				mangaId: "m1",
-				reading: { name: "Vol. 1", language: "fr", date: "2024-06-01" },
-			} as never);
+		it("pushes a freshly built reading", async () => {
+			repo.pushReading.mockResolvedValue(true);
+			await service.createReading("m1", { name: "Vol. 1", language: "fr", date: "2024-06-01" } as never);
 
 			const [mangaId, built] = repo.pushReading.mock.calls[0];
 			expect(mangaId).toBe("m1");
@@ -124,8 +128,9 @@ describe("ReadingMangaService", () => {
 	});
 
 	describe("deleteReading", () => {
-		it("deletes the reading by manga and reading id", () => {
-			service.deleteReading("m1", "r1");
+		it("deletes the reading by manga and reading id", async () => {
+			repo.deleteReading.mockResolvedValue(true);
+			await service.deleteReading("m1", "r1");
 
 			expect(repo.deleteReading).toHaveBeenCalledWith("m1", "r1");
 		});

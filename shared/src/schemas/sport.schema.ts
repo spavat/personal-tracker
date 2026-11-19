@@ -87,7 +87,6 @@ export type DeleteParamsRequest = z.infer<typeof DeleteParamsRequestSchema>;
 //
 export const UpdateSegmentsBodyRequestSchema = z
 	.object({
-		id: z.uuidv4(),
 		segments: z.array(SegmentSchema),
 	})
 	.refine((data) => new Set(data.segments.map((s) => s.time)).size === data.segments.length, {
@@ -101,7 +100,6 @@ export type UpdateSegmentsBodyRequest = z.infer<typeof UpdateSegmentsBodyRequest
 //
 export const CropBodyRequestSchema = z
 	.object({
-		id: z.uuidv4(),
 		startIndex: z.number().int().nonnegative(),
 		endIndex: z.number().int().nonnegative(),
 	})

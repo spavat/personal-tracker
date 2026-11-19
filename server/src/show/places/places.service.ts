@@ -4,6 +4,7 @@ import { Injectable, Logger } from "@nestjs/common";
 
 import type { SavePlaceBody } from "./place.entity.js";
 
+import { NotFoundError } from "../../common/errors.js";
 import { toPerformanceView } from "../performances/performance.entity.js";
 import { PlacesRepository } from "./places.repository.js";
 
@@ -83,6 +84,8 @@ export class PlacesService {
 
 	async delete(id: number) {
 		this.logger.log("delete");
-		await this.repo.delete(id);
+		if (!(await this.repo.delete(id))) {
+			throw new NotFoundError("Salle introuvable");
+		}
 	}
 }

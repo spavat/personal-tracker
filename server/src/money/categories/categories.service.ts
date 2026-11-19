@@ -38,7 +38,7 @@ export class CategoriesService {
 		return result;
 	}
 
-	async delete(id: number): Promise<{ deleted: boolean }> {
+	async delete(id: number) {
 		this.logger.log("delete");
 		const subCategories = await this.repo.findSubCategories(id);
 		if (subCategories.length) {
@@ -54,7 +54,5 @@ export class CategoriesService {
 		if (!deleted) {
 			throw new NotFoundError("Catégorie introuvable");
 		}
-
-		return { deleted: true };
 	}
 }

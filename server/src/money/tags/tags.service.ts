@@ -46,7 +46,6 @@ export class TagsService {
 		if (!(await this.repo.destroy(id))) {
 			notFound();
 		}
-		return { deleted: true };
 	}
 
 	async analytics(splitParent: boolean): Promise<Array<Analytic>> {

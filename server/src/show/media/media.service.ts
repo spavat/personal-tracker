@@ -72,7 +72,8 @@ export class MediaService {
 			}
 		});
 
-		return true;
+		// the updated media, as the gallery lists it
+		return (await this.list(owner, undefined)).find((media) => media.id === mediaId) ?? null;
 	}
 
 	async reorder(owner: MediaOwner, { mediaIds }: ReorderMediaBodyRequest) {

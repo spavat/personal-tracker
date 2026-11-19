@@ -88,19 +88,30 @@ export const DetailsProgramParamsRequestSchema = z.object({
 //
 // SAVE
 //
-export const SaveBodyRequestSchema = z
+// POST /programs (with an optional first episode), PUT /programs/:programId (the episode is ignored)
+export const SaveProgramBodyRequestSchema = ProgramSchema.partial({ id: true }).omit({ episodes: true });
+export const SaveEpisodeBodyRequestSchema = EpisodeSchema.partial({ id: true });
+export type SaveEpisodeBodyRequestType = z.infer<typeof SaveEpisodeBodyRequestSchema>;
+export const SaveBodyRequestSchema = z.object({
+	program: SaveProgramBodyRequestSchema,
+	episode: SaveEpisodeBodyRequestSchema.optional(),
+});
+export type SaveBodyRequestType = z.infer<typeof SaveBodyRequestSchema>;
+// POST /programs/:programId/episodes, PUT /programs/:programId/episodes/:episodeId: DetailsProgramParamsRequestSchema
+// and DeleteParamsRequestSchema
+
+// POST /sync/:id/validate: a proposal becomes a new program with its episode, or an episode of `programId`
+export const SyncValidateBodyRequestSchema = z
 	.object({
-		program: ProgramSchema.partial({ id: true }).omit({ episodes: true }).optional(),
-		episode: EpisodeSchema.partial({ id: true }).optional(),
+		program: SaveProgramBodyRequestSchema.optional(),
+		episode: SaveEpisodeBodyRequestSchema,
+		// the form sends "" with a new program
 		programId: z.string().optional(),
 	})
-	.refine(({ program, episode, programId }) => {
-		if (program) {
-			return !programId; // Add or update a program (with or without episode)
-		}
-		return !!(episode && programId); // Add or update an episode only
-	}, "Expected either a program (without programId), or an episode with its programId");
-export type SaveBodyRequestType = z.infer<typeof SaveBodyRequestSchema>;
+	.refine(({ program, programId }) => Boolean(program) !== Boolean(programId), {
+		message: "Expected either a new program, or the programId of an existing one",
+	});
+export type SyncValidateBodyRequestType = z.infer<typeof SyncValidateBodyRequestSchema>;
 
 //
 // DELETE

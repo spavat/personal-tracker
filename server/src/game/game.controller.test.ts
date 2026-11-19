@@ -28,7 +28,7 @@ describe("GameModule controllers", () => {
 
 		expect((await app.inject({ method: "GET", url: "/game/games" })).statusCode).toBe(200);
 		expect((await app.inject({ method: "GET", url: "/game/plays" })).statusCode).toBe(200);
-		expect((await app.inject({ method: "POST", url: "/game/save", payload: {} })).statusCode).toBe(401);
+		expect((await app.inject({ method: "POST", url: "/game/games", payload: {} })).statusCode).toBe(401);
 		expect((await app.inject({ method: "GET", url: "/game/sync/status" })).statusCode).toBe(401);
 	});
 
@@ -37,22 +37,27 @@ describe("GameModule controllers", () => {
 		expect((await app.inject({ method: "GET", url: `/game/games/${GAME}` })).statusCode).toBe(404);
 	});
 
-	it("rejects a save body mixing a game with a gameId", async () => {
+	it("rejects a game body without its game", async () => {
 		const ctx = await setup();
 		app = ctx.app;
 
-		const res = await app.inject({
-			method: "POST",
-			url: "/game/save",
-			payload: {
-				game: { id: GAME, name: "X", developper: "D", editor: "E" },
-				gameId: GAME,
-				play: { date: "2026-11-01" },
-			},
-		});
+		const res = await app.inject({ method: "POST", url: "/game/games", payload: { play: { date: "2026-11-01" } } });
 
 		expect(res.statusCode).toBe(400);
-		expect(ctx.games.updateOne).not.toHaveBeenCalled();
+		expect(ctx.games.insertOne).not.toHaveBeenCalled();
+	});
+
+	it("POST /games/:gameId/plays answers 201 with the play, 404 for an unknown game", async () => {
+		const ctx = await setup();
+		app = ctx.app;
+		const url = `/game/games/${GAME}/plays`;
+
+		const res = await app.inject({ method: "POST", url, payload: { date: "2026-11-01", duration: 30 } });
+		expect(res.statusCode).toBe(201);
+		expect(res.json()).toMatchObject({ id: expect.any(String), date: "2026-11-01", duration: 30 });
+
+		ctx.games.updateOne.mockResolvedValueOnce({ acknowledged: true, matchedCount: 0, modifiedCount: 0 });
+		expect((await app.inject({ method: "POST", url, payload: { date: "2026-11-01" } })).statusCode).toBe(404);
 	});
 
 	it("DELETE /games/:gameId/plays/:playId pulls the play", async () => {
@@ -61,8 +66,11 @@ describe("GameModule controllers", () => {
 
 		const res = await app.inject({ method: "DELETE", url: `/game/games/${GAME}/plays/${OTHER}` });
 
-		expect(res.statusCode).toBe(200);
-		expect(ctx.games.updateOne).toHaveBeenCalledWith({ id: GAME }, { $pull: { plays: { id: OTHER } } });
+		expect(res.statusCode).toBe(204);
+		expect(ctx.games.updateOne).toHaveBeenCalledWith(
+			{ id: GAME, "plays.id": OTHER },
+			{ $pull: { plays: { id: OTHER } } },
+		);
 	});
 
 	describe("sync", () => {

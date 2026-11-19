@@ -45,7 +45,6 @@ export class AccountsService {
 			throw new ConflictError(`Le compte a des moyens de paiement (${account.paymentTypes.length})`);
 		}
 		await this.repo.destroy(id);
-		return { deleted: true };
 	}
 }
 

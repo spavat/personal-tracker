@@ -44,7 +44,7 @@ describe("ReadingMangaController", () => {
 
 			const res = await app.inject({
 				method: "POST",
-				url: "/reading-manga/save",
+				url: "/reading-manga/mangas",
 				payload: { manga: { title: "One", status: "in-progress" } },
 			});
 
@@ -62,26 +62,22 @@ describe("ReadingMangaController", () => {
 			expect(res.statusCode).toBe(400);
 		});
 
-		it("rejects a save body that is neither a manga nor a reading+mangaId", async () => {
+		it("rejects a manga body without its manga", async () => {
 			({ app } = await setup());
 
-			const res = await app.inject({ method: "POST", url: "/reading-manga/save", payload: {} });
+			const res = await app.inject({ method: "POST", url: "/reading-manga/mangas", payload: {} });
 
 			expect(res.statusCode).toBe(400);
 		});
 
-		it("rejects a save body mixing a manga with a mangaId", async () => {
+		it("rejects a reading body without its date", async () => {
 			const ctx = await setup();
 			app = ctx.app;
 
 			const res = await app.inject({
 				method: "POST",
-				url: "/reading-manga/save",
-				payload: {
-					manga: { id: MANGA_UUID, title: "One", status: "in-progress" },
-					reading: { name: "Vol. 1", language: "fr", origin: "Livre", type: "volume", date: "2024-06-01" },
-					mangaId: MANGA_UUID,
-				},
+				url: `/reading-manga/mangas/${MANGA_UUID}/readings`,
+				payload: { name: "Vol. 1", language: "fr", origin: "Livre", type: "volume" },
 			});
 
 			expect(res.statusCode).toBe(400);
@@ -123,17 +119,21 @@ describe("ReadingMangaController", () => {
 			expect(res.json()).toMatchObject({ statusCode: 404, message: "Manga introuvable" });
 		});
 
-		it("POST /save inserts a new manga", async () => {
+		it("POST /mangas inserts a new manga and answers 201 with it", async () => {
 			const ctx = await setup();
 			app = ctx.app;
+			ctx.mangas.aggregate.mockImplementationOnce(() =>
+				makeCursor([{ id: MANGA_UUID, title: "One", status: "in-progress", readings: [] }]),
+			);
 
 			const res = await app.inject({
 				method: "POST",
-				url: "/reading-manga/save",
+				url: "/reading-manga/mangas",
 				payload: { manga: { title: "One", status: "in-progress" } },
 			});
 
-			expect(res.statusCode).toBe(200);
+			expect(res.statusCode).toBe(201);
+			expect(res.json()).toMatchObject({ title: "One" });
 			expect(ctx.mangas.insertOne).toHaveBeenCalledTimes(1);
 			expect(ctx.mangas.insertOne.mock.calls[0][0]).toMatchObject({ title: "One", readings: [] });
 		});
@@ -147,9 +147,9 @@ describe("ReadingMangaController", () => {
 				url: `/reading-manga/mangas/${MANGA_UUID}/readings/${READING_UUID}`,
 			});
 
-			expect(res.statusCode).toBe(200);
+			expect(res.statusCode).toBe(204);
 			expect(ctx.mangas.updateOne).toHaveBeenCalledWith(
-				{ id: MANGA_UUID },
+				{ id: MANGA_UUID, "readings.id": READING_UUID },
 				{ $pull: { readings: { id: READING_UUID } } },
 			);
 		});

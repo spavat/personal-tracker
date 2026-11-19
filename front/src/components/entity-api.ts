@@ -2,7 +2,7 @@ import type { Entity, EntityKind, SaveEntityBody } from "@personal-tracker/share
 
 import { queryOptions } from "@tanstack/react-query";
 
-import { fetchJson, sendJson, withQuery } from "../api-utils";
+import { fetchJson, saveJson, withQuery } from "../api-utils";
 import { API_BASE_URL } from "../config";
 
 // People, groups and organizations shared by every module (core entities)
@@ -14,5 +14,5 @@ export const entitiesQuery = (kind: EntityKind) =>
 
 // `picture`: the URL given by the server or left out = unchanged, an image URL or a data URI = new, null = none
 export function saveEntity(entity: SaveEntityBody) {
-	return sendJson<Entity>(`${API_BASE_URL}/entities/save`, "POST", entity);
+	return saveJson<Entity>(`${API_BASE_URL}/entities`, entity);
 }

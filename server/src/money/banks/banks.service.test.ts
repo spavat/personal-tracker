@@ -41,7 +41,7 @@ describe("BanksService", () => {
 
 		it("deletes a bank with no accounts", async () => {
 			repo.findByIdWithAccountsForDelete.mockResolvedValue({ id: 1, accounts: [] });
-			expect(await service.delete(1)).toEqual({ deleted: true });
+			await expect(service.delete(1)).resolves.toBeUndefined();
 			expect(repo.destroy).toHaveBeenCalledWith(1);
 		});
 	});

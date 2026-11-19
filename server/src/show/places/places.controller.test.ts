@@ -31,21 +31,20 @@ describe("show/places routes", () => {
 		expect((await ctx.app.inject({ method: "GET", url: "/show/places/abc" })).statusCode).toBe(400);
 	});
 
-	it("POST /save rejects a body missing address/country", async () => {
+	it("POST / rejects a body missing address/country", async () => {
 		expect(
-			(await ctx.app.inject({ method: "POST", url: "/show/places/save", payload: { name: "Bastille" } }))
-				.statusCode,
+			(await ctx.app.inject({ method: "POST", url: "/show/places", payload: { name: "Bastille" } })).statusCode,
 		).toBe(400);
 	});
 
-	it("POST /save persists a valid place and replaces its former names", async () => {
+	it("PUT /:id persists a valid place and replaces its former names", async () => {
 		const place = { id: 3, name: "Bastille", address: "Paris", country: "fr", link: null };
 		await ctx.app.close();
 		ctx = await buildApp([place]);
 		const formerNames = [{ name: "Old Bastille", untilDate: "2027-01-01" }];
 		const res = await ctx.app.inject({
-			method: "POST",
-			url: "/show/places/save",
+			method: "PUT",
+			url: "/show/places/3",
 			payload: { ...place, formerNames },
 		});
 		expect(res.statusCode).toBe(200);
@@ -55,20 +54,20 @@ describe("show/places routes", () => {
 		expect(ctx.db.insert).toHaveBeenCalled();
 	});
 
-	it("POST /save 404s when updating an unknown place", async () => {
+	it("PUT /:id 404s when updating an unknown place", async () => {
 		const res = await ctx.app.inject({
-			method: "POST",
-			url: "/show/places/save",
+			method: "PUT",
+			url: "/show/places/3",
 			payload: { id: 3, name: "Bastille", address: "Paris", country: "fr", formerNames: [] },
 		});
 		expect(res.statusCode).toBe(404);
 		expect(ctx.db.delete).not.toHaveBeenCalled();
 	});
 
-	it("POST /save rejects two former names ending on the same date", async () => {
+	it("POST / rejects two former names ending on the same date", async () => {
 		const res = await ctx.app.inject({
 			method: "POST",
-			url: "/show/places/save",
+			url: "/show/places",
 			payload: {
 				name: "Bastille",
 				address: "Paris",
@@ -83,6 +82,8 @@ describe("show/places routes", () => {
 	});
 
 	it("DELETE /:id answers 204", async () => {
+		await ctx.app.close();
+		ctx = await buildApp([{ id: 3 }]);
 		const res = await ctx.app.inject({ method: "DELETE", url: "/show/places/3" });
 		expect(res.statusCode).toBe(204);
 		expect(ctx.db.delete).toHaveBeenCalled();

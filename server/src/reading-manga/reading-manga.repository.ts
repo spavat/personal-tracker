@@ -86,32 +86,47 @@ export class ReadingMangaRepository {
 			.next();
 	}
 
-	insert(manga: Manga) {
-		return this.collection.insertOne(manga);
+	// a copy: the driver adds `_id` to the document it inserts
+	async insert(manga: Manga) {
+		await this.collection.insertOne({ ...manga });
+		return manga;
 	}
 
+	// the updated manga, null for an unknown id
 	update(id: string, manga: Partial<Manga>) {
-		return this.collection.updateOne({ id }, { $set: manga }, { upsert: false });
+		return this.collection.findOneAndUpdate(
+			{ id },
+			{ $set: manga },
+			{ projection: { _id: 0 }, returnDocument: "after" },
+		);
 	}
 
-	pushReading(mangaId: string, reading: Reading) {
-		return this.collection.updateOne({ id: mangaId }, { $push: { readings: reading } });
+	// false for an unknown manga
+	async pushReading(mangaId: string, reading: Reading) {
+		return (await this.collection.updateOne({ id: mangaId }, { $push: { readings: reading } })).matchedCount > 0;
 	}
 
-	updateReading(mangaId: string, reading: Reading) {
+	// false for an unknown manga or reading
+	async updateReading(mangaId: string, reading: Reading) {
 		// Transform reading fields to dot notation
 		const setFields = Object.fromEntries(
 			Object.entries(reading).map(([key, value]) => [`readings.$[element].${key}`, value]),
 		);
 
-		return this.collection.updateOne(
-			{ id: mangaId },
+		const result = await this.collection.updateOne(
+			{ id: mangaId, "readings.id": reading.id },
 			{ $set: setFields },
 			{ arrayFilters: [{ "element.id": reading.id }] },
 		);
+		return result.matchedCount > 0;
 	}
 
-	deleteReading(mangaId: string, readingId: string) {
-		return this.collection.updateOne({ id: mangaId }, { $pull: { readings: { id: readingId } } });
+	// false for an unknown manga or reading
+	async deleteReading(mangaId: string, readingId: string) {
+		const result = await this.collection.updateOne(
+			{ id: mangaId, "readings.id": readingId },
+			{ $pull: { readings: { id: readingId } } },
+		);
+		return result.modifiedCount > 0;
 	}
 }

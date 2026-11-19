@@ -171,10 +171,13 @@ export class GameRepository {
 		return this.collection.findOne({ id });
 	}
 
-	insert(game: GameMongo) {
-		return this.collection.insertOne(game);
+	// a copy: the driver adds `_id` to the document it inserts
+	async insert(game: GameMongo) {
+		await this.collection.insertOne({ ...game });
+		return game;
 	}
 
+	// the updated game, null for an unknown id
 	update(id: string, game: Partial<GameMongo>) {
 		// Lists left out when empty (see cleanGame): removed from the game
 		const unsetFields = Object.fromEntries(
@@ -182,26 +185,34 @@ export class GameRepository {
 		);
 		const update: UpdateFilter<GameMongo> = { $set: game };
 		if (Object.keys(unsetFields).length > 0) update.$unset = unsetFields;
-		return this.collection.updateOne({ id }, update, { upsert: false });
+		return this.collection.findOneAndUpdate({ id }, update, { projection: { _id: 0 }, returnDocument: "after" });
 	}
 
-	pushPlay(gameId: string, play: PlayMongo) {
-		return this.collection.updateOne({ id: gameId }, { $push: { plays: play } });
+	// false for an unknown game
+	async pushPlay(gameId: string, play: PlayMongo) {
+		return (await this.collection.updateOne({ id: gameId }, { $push: { plays: play } })).matchedCount > 0;
 	}
 
-	updatePlay(gameId: string, play: Partial<PlayMongo> & { id: string }) {
+	// false for an unknown game or play
+	async updatePlay(gameId: string, play: Partial<PlayMongo> & { id: string }) {
 		const setFields = Object.fromEntries(
 			Object.entries(play).map(([key, value]) => [`plays.$[element].${key}`, value]),
 		);
-		return this.collection.updateOne(
-			{ id: gameId },
+		const result = await this.collection.updateOne(
+			{ id: gameId, "plays.id": play.id },
 			{ $set: setFields },
 			{ arrayFilters: [{ "element.id": play.id }] },
 		);
+		return result.matchedCount > 0;
 	}
 
-	deletePlay(gameId: string, playId: string) {
-		return this.collection.updateOne({ id: gameId }, { $pull: { plays: { id: playId } } });
+	// false for an unknown game or play
+	async deletePlay(gameId: string, playId: string) {
+		const result = await this.collection.updateOne(
+			{ id: gameId, "plays.id": playId },
+			{ $pull: { plays: { id: playId } } },
+		);
+		return result.modifiedCount > 0;
 	}
 
 	// --- store sync ---

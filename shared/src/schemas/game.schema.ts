@@ -101,19 +101,18 @@ export const DetailsGameParamsRequestSchema = z.object({
 // SAVE
 //
 // Request
-export const GameSaveBodyRequestSchema = z
-	.object({
-		game: GameSchema.partial({ id: true }).omit({ plays: true }).optional(),
-		play: GamePlaySchema.partial({ id: true }).optional(),
-		gameId: z.string().optional(),
-	})
-	.refine(({ game, play, gameId }) => {
-		if (game) {
-			return !gameId; // Add or update a game (with or without play)
-		}
-		return !!(play && gameId); // Add or update a play only
-	}, "Expected either a game (without gameId), or a play with its gameId");
+// POST /games (with an optional first play), PUT /games/:id (the play is ignored)
+export const GameSaveBodyRequestSchema = z.object({
+	game: GameSchema.partial({ id: true }).omit({ plays: true }),
+	play: GamePlaySchema.partial({ id: true }).optional(),
+});
 export type GameSaveBodyRequestType = z.infer<typeof GameSaveBodyRequestSchema>;
+export const GameParamsRequestSchema = z.object({ id: z.uuid() });
+
+// POST /games/:gameId/plays, PUT /games/:gameId/plays/:playId
+export const GamePlaySaveBodyRequestSchema = GamePlaySchema.partial({ id: true });
+export type GamePlaySaveBodyRequestType = z.infer<typeof GamePlaySaveBodyRequestSchema>;
+export const GamePlayParamsRequestSchema = z.object({ gameId: z.uuid() });
 
 //
 // DELETE

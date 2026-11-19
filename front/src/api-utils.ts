@@ -25,6 +25,11 @@ export async function sendJson<T = any>(url: string, method: "POST" | "PUT" | "P
 	);
 }
 
+// a resource without an id is created (POST url), with one it's updated (PUT url/:id)
+export async function saveJson<T = any>(url: string, body: { id?: string | number | null }) {
+	return body.id ? sendJson<T>(`${url}/${body.id}`, "PUT", body) : sendJson<T>(url, "POST", body);
+}
+
 type QueryValue = string | number | boolean | null | undefined;
 
 // encodes values and drops null/undefined/empty ones; arrays repeat the key (?sort=a&sort=b)

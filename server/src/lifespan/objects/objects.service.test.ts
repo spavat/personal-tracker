@@ -69,17 +69,26 @@ describe("LifespanObjectsService", () => {
 		});
 	});
 
-	describe("save", () => {
-		it("updates an existing object, removing a description left out", () => {
-			const object = { id: "o1", name: "Phone", categoryId: "cat-1" };
-			service.save({ object });
+	describe("create / update", () => {
+		it("updates an existing object, removing a description left out", async () => {
+			const object = { name: "Phone", categoryId: "cat-1" };
+			repo.update.mockResolvedValue({ id: "o1", ...object });
+			await service.update("o1", { object });
 			expect(repo.update).toHaveBeenCalledWith("o1", object, ["description"]);
 		});
 
-		it("keeps the description sent on update", () => {
-			const object = { id: "o1", name: "Phone", categoryId: "cat-1", description: "Mine" };
-			service.save({ object });
+		it("keeps the description sent on update", async () => {
+			const object = { name: "Phone", categoryId: "cat-1", description: "Mine" };
+			repo.update.mockResolvedValue({ id: "o1", ...object });
+			await service.update("o1", { object });
 			expect(repo.update).toHaveBeenCalledWith("o1", object, []);
+		});
+
+		it("answers NotFoundError for an unknown object", async () => {
+			repo.update.mockResolvedValue(null);
+			await expect(
+				service.update("o1", { object: { name: "Phone", categoryId: "cat-1" } }),
+			).rejects.toBeInstanceOf(NotFoundError);
 		});
 
 		it("replaces the events of an existing object, keeping created of known events", async () => {
@@ -90,9 +99,10 @@ describe("LifespanObjectsService", () => {
 					{ id: "e2", type: "start_usage", date: "2024-01-02", created: "2024-01-02T10:00:00" },
 				],
 			});
-			const object = { id: "o1", name: "Phone", categoryId: "cat-1" };
+			const object = { name: "Phone", categoryId: "cat-1" };
+			repo.update.mockResolvedValue({ id: "o1", ...object });
 
-			await service.save({
+			await service.update("o1", {
 				object,
 				events: [
 					{ id: "e1", type: "received", date: "2024-01-05" },
@@ -117,9 +127,10 @@ describe("LifespanObjectsService", () => {
 
 		it("builds an event with an unknown id as a new event", async () => {
 			repo.findById.mockResolvedValue({ id: "o1", events: [] });
+			repo.update.mockResolvedValue({ id: "o1" });
 
-			await service.save({
-				object: { id: "o1", name: "Phone", categoryId: "cat-1" },
+			await service.update("o1", {
+				object: { name: "Phone", categoryId: "cat-1" },
 				events: [{ id: "ghost", type: "note", date: "2024-02-01" }],
 			});
 
@@ -129,7 +140,7 @@ describe("LifespanObjectsService", () => {
 		});
 
 		it("inserts a new object with a generated id and its initial events", () => {
-			service.save({
+			service.create({
 				object: { name: "Phone", categoryId: "cat-1" },
 				events: [
 					{ type: "bought", date: "2024-06-01" },
@@ -145,29 +156,46 @@ describe("LifespanObjectsService", () => {
 		});
 
 		it("inserts a new object with no events", () => {
-			service.save({ object: { name: "Phone", categoryId: "cat-1" } });
+			service.create({ object: { name: "Phone", categoryId: "cat-1" } });
 			expect(repo.insert.mock.calls[0][0].events).toEqual([]);
 		});
+	});
 
-		it("updates an existing event, removing the optional fields left out", () => {
-			const event = { id: "e1", type: "note" as const, date: "2024-06-01" };
-			service.save({ objectId: "o1", event });
-			expect(repo.updateEvent).toHaveBeenCalledWith("o1", event, ["cause", "comment"]);
+	describe("events", () => {
+		it("updates an existing event, removing the optional fields left out, and answers the stored event", async () => {
+			const event = { type: "note" as const, date: "2024-06-01" };
+			const stored = { id: "e1", ...event, created: "2024-01-01T10:00:00" };
+			repo.updateEvent.mockResolvedValue(true);
+			repo.findById.mockResolvedValue({ id: "o1", events: [stored] });
+
+			expect(await service.updateEvent("o1", "e1", event)).toEqual(stored);
+			expect(repo.updateEvent).toHaveBeenCalledWith("o1", { ...event, id: "e1" }, ["cause", "comment"]);
 		});
 
-		it("pushes a freshly built event when the event has no id", () => {
-			service.save({ objectId: "o1", event: { type: "note", date: "2024-06-01" } });
+		it("answers NotFoundError for an unknown event", async () => {
+			repo.updateEvent.mockResolvedValue(false);
+			await expect(service.updateEvent("o1", "e1", { type: "note", date: "2024-06-01" })).rejects.toBeInstanceOf(
+				NotFoundError,
+			);
+		});
+
+		it("pushes a freshly built event and answers it", async () => {
+			repo.pushEvent.mockResolvedValue(true);
+			const created = await service.createEvent("o1", { type: "note", date: "2024-06-01" });
 
 			const [objectId, built] = repo.pushEvent.mock.calls[0];
 			expect(objectId).toBe("o1");
 			expect(built).toMatchObject({ type: "note", date: "2024-06-01" });
 			expect(built.id).toEqual(expect.any(String));
+			expect(created).toEqual(built);
 		});
 	});
 
-	it("deleteEvent / delete forward the ids", () => {
-		service.deleteEvent("o1", "e1");
-		service.delete("o1");
+	it("deleteEvent / delete forward the ids", async () => {
+		repo.deleteEvent.mockResolvedValue(true);
+		repo.delete.mockResolvedValue(true);
+		await service.deleteEvent("o1", "e1");
+		await service.delete("o1");
 		expect(repo.deleteEvent).toHaveBeenCalledWith("o1", "e1");
 		expect(repo.delete).toHaveBeenCalledWith("o1");
 	});

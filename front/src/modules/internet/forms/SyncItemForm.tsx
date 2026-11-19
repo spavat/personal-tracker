@@ -1,4 +1,4 @@
-import { SaveBodyRequestType, SyncResponse } from "@personal-tracker/shared/internet";
+import { SyncResponse, SyncValidateBodyRequestType } from "@personal-tracker/shared/internet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
@@ -48,7 +48,7 @@ export default function SyncItemForm({ item, onDone }: { item: SyncItem; onDone:
 	});
 
 	const saveMutation = useMutation({
-		mutationFn: (data: SaveBodyRequestType) => validateSyncProposal(item.id, data),
+		mutationFn: (data: SyncValidateBodyRequestType) => validateSyncProposal(item.id, data),
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({ queryKey: ["programs"] });
 			if (variables.programId) {

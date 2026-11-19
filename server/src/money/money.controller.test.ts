@@ -52,12 +52,19 @@ describe("MoneyModule controllers", () => {
 	});
 
 	describe("status codes", () => {
-		it("answers 200 to a create, as the Fastify routes did", async () => {
-			({ app } = await setup(OWNER, [{ id: 1 }]));
+		it("answers 201 to a create, 200 to an update and 204 to a delete", async () => {
+			const ctx = await setup(OWNER, [{ id: 1 }]);
+			app = ctx.app;
 
 			const res = await app.inject({ method: "POST", url: "/money/banks", payload: { name: "Bank" } });
+			expect(res.statusCode).toBe(201);
 
-			expect(res.statusCode).toBe(200);
+			ctx.table("moneyBank").findFirst.mockResolvedValue({ id: 1, accounts: [] });
+			const updated = await app.inject({ method: "PUT", url: "/money/banks/1", payload: { name: "Bank" } });
+			expect(updated.statusCode).toBe(200);
+
+			const deleted = await app.inject({ method: "DELETE", url: "/money/banks/1" });
+			expect(deleted.statusCode).toBe(204);
 		});
 
 		it("answers 201 to a transaction create and 204 to a transaction delete", async () => {
@@ -90,7 +97,7 @@ describe("MoneyModule controllers", () => {
 			({ app } = await setup());
 
 			for (const url of [
-				"/money/paymentTypes/abc",
+				"/money/payment-types/abc",
 				"/money/transactions/abc",
 				"/money/transactions/account/abc",
 			]) {

@@ -3,6 +3,7 @@ import type { EntityKind, SaveEntityBody } from "@personal-tracker/shared/entity
 import { Injectable, Logger } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 
+import { NotFoundError } from "../common/errors.js";
 import { EntitiesRepository } from "./entities.repository.js";
 import { toEntityView } from "./entity.entity.js";
 import { PortraitStorage } from "./portrait.storage.js";
@@ -21,9 +22,19 @@ export class EntitiesService {
 		return (await this.repo.findAll(query)).map(toEntityView);
 	}
 
+	create({ id: _, ...body }: SaveEntityBody) {
+		this.logger.log("create");
+		return this.write(undefined, body);
+	}
+
+	// 404 for an unknown entity, or one of another kind
+	async update(id: string, { id: _, ...body }: SaveEntityBody) {
+		this.logger.log("update");
+		return (await this.write(id, body)) ?? notFound();
+	}
+
 	// undefined when updating an unknown entity (or with another kind)
-	async save({ id, picture, ...entity }: SaveEntityBody) {
-		this.logger.log("save");
+	private async write(id: string | undefined, { picture, ...entity }: Omit<SaveEntityBody, "id">) {
 		const current = id ? await this.repo.findById(id) : undefined;
 		if (id && current?.kind !== entity.kind) {
 			return undefined;
@@ -61,4 +72,8 @@ export class EntitiesService {
 			this.logger.warn(`portrait not deleted (${key}): ${String(error)}`);
 		}
 	}
+}
+
+function notFound(): never {
+	throw new NotFoundError("Entité introuvable");
 }

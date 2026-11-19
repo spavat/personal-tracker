@@ -41,34 +41,37 @@ describe("show/artists routes", () => {
 		expect(ctx.table("showArtist").findFirst).toHaveBeenCalled();
 	});
 
-	it("POST /save rejects an empty body", async () => {
-		expect((await ctx.app.inject({ method: "POST", url: "/show/artists/save", payload: {} })).statusCode).toBe(400);
+	it("POST / rejects an empty body", async () => {
+		expect((await ctx.app.inject({ method: "POST", url: "/show/artists", payload: {} })).statusCode).toBe(400);
 	});
 
-	it("POST /save creates an artist: 201 with the created artist", async () => {
+	it("POST / creates an artist: 201 with the created artist", async () => {
 		await ctx.app.close();
 		ctx = await buildApp([callas]);
-		const res = await ctx.app.inject({ method: "POST", url: "/show/artists/save", payload: { name: "Callas" } });
+		const res = await ctx.app.inject({ method: "POST", url: "/show/artists", payload: { name: "Callas" } });
 		expect(res.statusCode).toBe(201);
 		expect(res.json()).toEqual({ ...callas, pictureUrl: null });
 		expect(ctx.db.insert).toHaveBeenCalled();
 	});
 
-	it("POST /save updates an artist: 200 with the updated artist", async () => {
+	it("PUT /:id updates an artist: 200 with the updated artist", async () => {
 		await ctx.app.close();
 		ctx = await buildApp([callas]);
-		const res = await ctx.app.inject({ method: "POST", url: "/show/artists/save", payload: callas });
+		const res = await ctx.app.inject({ method: "PUT", url: "/show/artists/7", payload: callas });
 		expect(res.statusCode).toBe(200);
 		expect(res.json()).toEqual({ ...callas, pictureUrl: null });
 		expect(ctx.db.update).toHaveBeenCalled();
 	});
 
-	it("POST /save 404s when updating an unknown artist", async () => {
-		const res = await ctx.app.inject({ method: "POST", url: "/show/artists/save", payload: callas });
+	it("PUT /:id 404s when updating an unknown artist", async () => {
+		const res = await ctx.app.inject({ method: "PUT", url: "/show/artists/7", payload: callas });
 		expect(res.statusCode).toBe(404);
 	});
 
-	it("DELETE /:id answers 204 without body", async () => {
+	it("DELETE /:id answers 204 without body, 404 for an unknown artist", async () => {
+		expect((await ctx.app.inject({ method: "DELETE", url: "/show/artists/5" })).statusCode).toBe(404);
+		await ctx.app.close();
+		ctx = await buildApp([{ id: 5 }]);
 		const res = await ctx.app.inject({ method: "DELETE", url: "/show/artists/5" });
 		expect(res.statusCode).toBe(204);
 		expect(res.body).toBe("");

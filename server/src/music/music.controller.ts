@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, SerializeOptions } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, SerializeOptions } from "@nestjs/common";
 import {
 	DeleteParamsRequestSchema,
 	DetailsQuerystringRequestSchema,
@@ -54,15 +54,25 @@ export class MusicController {
 		return this.service.get(id);
 	}
 
-	@Post("save")
-	@HttpCode(200)
-	save(@Body({ schema: SaveBodyRequestSchema }) body: SaveListeningBody) {
-		return this.service.save(body);
+	@Post()
+	@SerializeOptions({ schema: DetailsResponseSchema })
+	create(@Body({ schema: SaveBodyRequestSchema }) body: SaveListeningBody) {
+		return this.service.create(body);
+	}
+
+	@Put(":id")
+	@SerializeOptions({ schema: DetailsResponseSchema })
+	update(
+		@Param({ schema: DeleteParamsRequestSchema }) { id }: { id: string },
+		@Body({ schema: SaveBodyRequestSchema }) body: SaveListeningBody,
+	) {
+		return this.service.update(id, body);
 	}
 
 	@Delete(":id")
-	delete(@Param({ schema: DeleteParamsRequestSchema }) { id }: { id: string }) {
-		return this.service.delete(id);
+	@HttpCode(204)
+	async delete(@Param({ schema: DeleteParamsRequestSchema }) { id }: { id: string }) {
+		await this.service.delete(id);
 	}
 
 	@Get("stats")

@@ -1,7 +1,6 @@
-import type { ServerResponse } from "node:http";
 import type { z } from "zod";
 
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, Res, SerializeOptions } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, SerializeOptions } from "@nestjs/common";
 import {
 	DeletePlaceParamsRequestSchema,
 	PlaceDetailsParamsRequestSchema,
@@ -14,7 +13,7 @@ import {
 import type { SavePlaceBody } from "./place.entity.js";
 
 import { Public } from "../../auth/public.decorator.js";
-import { orNotFound, savedOr404 } from "../show-reply.utils.js";
+import { orNotFound } from "../show-reply.utils.js";
 import { PlacesService } from "./places.service.js";
 
 @Controller()
@@ -44,13 +43,19 @@ export class PlacesController {
 		);
 	}
 
-	@Post("save")
+	@Post()
 	@SerializeOptions({ schema: SavePlaceResponseSchema })
-	save(
+	create(@Body({ schema: SavePlaceBodyRequestSchema }) body: SavePlaceBody) {
+		return orNotFound(this.service.save({ ...body, id: undefined }), "Salle introuvable");
+	}
+
+	@Put(":id")
+	@SerializeOptions({ schema: SavePlaceResponseSchema })
+	update(
+		@Param({ schema: PlaceDetailsParamsRequestSchema }) { id }: { id: number },
 		@Body({ schema: SavePlaceBodyRequestSchema }) body: SavePlaceBody,
-		@Res({ passthrough: true }) response: ServerResponse,
 	) {
-		return savedOr404(response, Boolean(body.id), this.service.save(body), "Salle introuvable");
+		return orNotFound(this.service.save({ ...body, id }), "Salle introuvable");
 	}
 
 	@Delete(":id")

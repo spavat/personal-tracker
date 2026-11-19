@@ -1,7 +1,6 @@
-import type { ServerResponse } from "node:http";
 import type { z } from "zod";
 
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Res, SerializeOptions } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, SerializeOptions } from "@nestjs/common";
 import {
 	DeleteModelParamsRequestSchema,
 	ModelDetailsParamsRequestSchema,
@@ -22,14 +21,19 @@ export class ModelsController {
 	}
 
 	// 201 on create, 200 on update (an unknown model throws NotFoundError)
-	@Post("save")
+	@Post()
 	@SerializeOptions({ schema: SaveModelResponseSchema })
-	save(
+	create(@Body({ schema: SaveModelBodyRequestSchema }) body: z.infer<typeof SaveModelBodyRequestSchema>) {
+		return this.service.save({ ...body, id: undefined });
+	}
+
+	@Put(":id")
+	@SerializeOptions({ schema: SaveModelResponseSchema })
+	update(
+		@Param({ schema: ModelDetailsParamsRequestSchema }) { id }: { id: number },
 		@Body({ schema: SaveModelBodyRequestSchema }) body: z.infer<typeof SaveModelBodyRequestSchema>,
-		@Res({ passthrough: true }) response: ServerResponse,
 	) {
-		response.statusCode = body.id ? 200 : 201;
-		return this.service.save(body);
+		return this.service.save({ ...body, id });
 	}
 
 	@Delete(":id")

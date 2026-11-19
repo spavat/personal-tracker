@@ -4,9 +4,11 @@ import {
 	ExtractedData,
 	ProgramDetails,
 	SaveBodyRequestSchema,
+	SaveEpisodeBodyRequestSchema,
 	DeleteParamsRequestSchema,
 	DeleteParamsRequest,
-	SaveBodyRequestType,
+	SyncValidateBodyRequestSchema,
+	SyncValidateBodyRequestType,
 	StatsArrayResponse,
 	LatestEpisodesResponse,
 	FortnightStatsRespons,
@@ -28,7 +30,7 @@ import type { MonthQueryConfig } from "../../hooks/use-month-changer";
 import type { SortListConfig } from "../../hooks/use-sort-table";
 import type { YearQueryConfig } from "../../hooks/use-year-changer";
 
-import { fetchJson, sendJson, withQuery } from "../../api-utils";
+import { fetchJson, saveJson, sendJson, withQuery } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
 
 async function getProgramListYear(from: string, to: string) {
@@ -97,9 +99,18 @@ export const reviewQuery = () =>
 		queryFn: () => getReview(),
 	});
 
-export async function save(data: SaveBodyRequestType) {
-	const sentData = SaveBodyRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/internet/save`, "POST", sentData);
+// a program (with an optional first episode), or an episode of the program `programId`
+export async function save({ program, episode, programId }: any) {
+	if (program) {
+		const sentData = SaveBodyRequestSchema.parse({ program, episode });
+		return sentData.program.id
+			? sendJson(`${API_BASE_URL}/internet/programs/${sentData.program.id}`, "PUT", sentData)
+			: sendJson(`${API_BASE_URL}/internet/programs`, "POST", sentData);
+	}
+	return saveJson(
+		`${API_BASE_URL}/internet/programs/${programId}/episodes`,
+		SaveEpisodeBodyRequestSchema.parse(episode),
+	);
 }
 
 export async function deleteItem(data: DeleteParamsRequest) {
@@ -167,9 +178,9 @@ export async function reprocessSync(rssUrl?: string) {
 	return sendJson(`${API_BASE_URL}/internet/sync/reprocess`, "POST", rssUrl ? { rssUrl } : undefined);
 }
 
-export async function validateSyncProposal(id: string, data: SaveBodyRequestType) {
-	const sentData = SaveBodyRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/internet/sync/validate/${id}`, "POST", sentData);
+export async function validateSyncProposal(id: string, data: SyncValidateBodyRequestType) {
+	const sentData = SyncValidateBodyRequestSchema.parse(data);
+	return sendJson(`${API_BASE_URL}/internet/sync/${id}/validate`, "POST", sentData);
 }
 
 export async function deleteSyncProposal(data: SyncDeleteParamsRequest) {

@@ -1,5 +1,5 @@
 import type {
-	SaveBodyRequestType,
+	SyncValidateBodyRequestType,
 	SyncCreateResponse,
 	SyncGopodderStatusResponse,
 	SyncUnknownFeedsResponse,
@@ -134,17 +134,22 @@ export class SyncService {
 		return { count: result.deletedCount };
 	}
 
-	// Saves the (possibly edited) proposal as an episode, then drops the proposal
-	async validate(id: string, body: SaveBodyRequestType) {
+	// Saves the (possibly edited) proposal as a new program with its episode, or an episode of an existing program,
+	// then drops the proposal
+	async validate(id: string, { program, episode, programId }: SyncValidateBodyRequestType) {
 		this.logger.log("validate");
-		const result = await this.internet.save(body);
+		const result = program
+			? await this.internet.createProgram({ program, episode })
+			: await this.internet.createEpisode(programId!, episode);
 		await this.syncRepo.delete(id);
 		return result;
 	}
 
-	delete(id: string) {
+	async delete(id: string) {
 		this.logger.log("delete");
-		return this.syncRepo.delete(id);
+		if (!(await this.syncRepo.delete(id))) {
+			throw new NotFoundError("Proposition introuvable");
+		}
 	}
 
 	private async assertNoSyncInProgress() {

@@ -1,6 +1,4 @@
-import type { ServerResponse } from "node:http";
-
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, Res, SerializeOptions } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, SerializeOptions } from "@nestjs/common";
 import {
 	AuthorListResponseSchema,
 	AuthorParamsRequestSchema,
@@ -34,7 +32,6 @@ import {
 
 type IdParams = { id: string };
 
-// The writes on a book's parts answer 204 (no body), as the Fastify routes did
 @Controller("reading-book")
 export class ReadingBookController {
 	constructor(private readonly service: ReadingBookService) {}
@@ -54,15 +51,17 @@ export class ReadingBookController {
 		return this.service.getSeries(id);
 	}
 
-	// 201 on create, 200 on update: the status depends on the body. `passthrough` sets the status on the
-	// response and lets Nest send the returned value as usual.
-	@Post("series/save")
-	saveSeries(
+	@Post("series")
+	createSeries(@Body({ schema: SaveSeriesRequestSchema }) series: SaveSeriesRequest) {
+		return this.service.saveSeries({ ...series, id: undefined });
+	}
+
+	@Put("series/:id")
+	updateSeries(
+		@Param({ schema: SeriesParamsRequestSchema }) { id }: IdParams,
 		@Body({ schema: SaveSeriesRequestSchema }) series: SaveSeriesRequest,
-		@Res({ passthrough: true }) response: ServerResponse,
 	) {
-		response.statusCode = series.id ? 200 : 201;
-		return this.service.saveSeries(series);
+		return this.service.saveSeries({ ...series, id });
 	}
 
 	@Delete("series/:id")
@@ -100,19 +99,33 @@ export class ReadingBookController {
 		return this.service.getBook(id);
 	}
 
-	@Post("save")
-	@HttpCode(200)
-	saveBook(@Body({ schema: SaveBookRequestSchema }) book: SaveBookBody) {
-		return this.service.saveBook(book);
+	@Post("books")
+	createBook(@Body({ schema: SaveBookRequestSchema }) book: SaveBookBody) {
+		return this.service.saveBook({ ...book, id: undefined });
 	}
 
-	@Post("books/:id/models/save")
-	@HttpCode(204)
-	async saveModel(
+	@Put("books/:id")
+	updateBook(
+		@Param({ schema: BookDetailsParamsSchema }) { id }: IdParams,
+		@Body({ schema: SaveBookRequestSchema }) book: SaveBookBody,
+	) {
+		return this.service.saveBook({ ...book, id });
+	}
+
+	@Post("books/:id/models")
+	createModel(
 		@Param({ schema: ReadingParamsRequestSchema }) { id }: IdParams,
 		@Body({ schema: SaveBookModelRequestSchema }) model: SaveBookModelRequest,
 	) {
-		await this.service.saveModel(id, model);
+		return this.service.saveModel(id, { ...model, id: undefined });
+	}
+
+	@Put("books/:id/models/:modelId")
+	updateModel(
+		@Param({ schema: ModelParamsRequestSchema }) { id, modelId }: { id: string; modelId: string },
+		@Body({ schema: SaveBookModelRequestSchema }) model: SaveBookModelRequest,
+	) {
+		return this.service.saveModel(id, { ...model, id: modelId });
 	}
 
 	@Delete("books/:id/models/:modelId")
@@ -122,13 +135,20 @@ export class ReadingBookController {
 	}
 
 	// the cover can be sent as a base64 data URI: within the 15mb JSON limit (body-parsers.ts)
-	@Post("books/:id/editions/save")
-	@HttpCode(204)
-	async saveEdition(
+	@Post("books/:id/editions")
+	createEdition(
 		@Param({ schema: ReadingParamsRequestSchema }) { id }: IdParams,
 		@Body({ schema: SaveEditionRequestSchema }) edition: SaveEditionRequest,
 	) {
-		await this.service.saveEdition(id, edition);
+		return this.service.saveEdition(id, { ...edition, id: undefined });
+	}
+
+	@Put("books/:id/editions/:editionId")
+	updateEdition(
+		@Param({ schema: EditionParamsRequestSchema }) { id, editionId }: { id: string; editionId: string },
+		@Body({ schema: SaveEditionRequestSchema }) edition: SaveEditionRequest,
+	) {
+		return this.service.saveEdition(id, { ...edition, id: editionId });
 	}
 
 	@Delete("books/:id/editions/:editionId")
@@ -139,21 +159,18 @@ export class ReadingBookController {
 		await this.service.deleteEdition(id, editionId);
 	}
 
+	// a new reading of the edition, not started
 	@Post("books/:id/editions/:editionId/readings")
-	@HttpCode(204)
-	async addReading(
-		@Param({ schema: EditionParamsRequestSchema }) { id, editionId }: { id: string; editionId: string },
-	) {
-		await this.service.addReading(id, editionId);
+	addReading(@Param({ schema: EditionParamsRequestSchema }) { id, editionId }: { id: string; editionId: string }) {
+		return this.service.addReading(id, editionId);
 	}
 
-	@Post("books/:id/saveReading")
-	@HttpCode(204)
-	async saveReading(
-		@Param({ schema: ReadingParamsRequestSchema }) { id }: IdParams,
+	@Put("books/:id/readings/:readingId")
+	saveReading(
+		@Param({ schema: DeleteReadingParamsRequestSchema }) { id, readingId }: { id: string; readingId: string },
 		@Body({ schema: SaveReadingRequestSchema }) reading: SaveReadingBody,
 	) {
-		await this.service.saveReading(id, reading);
+		return this.service.saveReading(id, { ...reading, id: readingId });
 	}
 
 	@Delete("books/:id/readings/:readingId")

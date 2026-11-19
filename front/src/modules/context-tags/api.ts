@@ -6,7 +6,7 @@ import {
 } from "@personal-tracker/shared/context-tag";
 import { queryOptions } from "@tanstack/react-query";
 
-import { fetchJson, sendJson } from "../../api-utils";
+import { fetchJson, saveJson, sendJson } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
 
 async function getContextTags(): Promise<Array<ContextTag>> {
@@ -26,7 +26,7 @@ export const contextTagsQuery = () =>
 
 export async function save(data: any) {
 	const sentData = SaveContextTagRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/context-tags/save`, "POST", sentData);
+	return saveJson(`${API_BASE_URL}/context-tags`, sentData);
 }
 
 export async function deleteItem(data: any) {

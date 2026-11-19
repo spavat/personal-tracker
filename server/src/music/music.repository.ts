@@ -41,20 +41,24 @@ export class MusicRepository {
 		return this.listenings.findOne({ id });
 	}
 
-	insert(listening: StoredListening) {
-		return this.listenings.insertOne(listening);
+	// a copy: the driver adds `_id` to the document it inserts
+	async insert(listening: StoredListening) {
+		await this.listenings.insertOne({ ...listening });
+		return listening;
 	}
 
+	// the updated listening, null for an unknown id
 	update(id: string, data: Partial<StoredListening>) {
 		// contextTags is left out when empty (see cleanListening): removed from the listening
-		return this.listenings.updateOne(
+		return this.listenings.findOneAndUpdate(
 			{ id },
 			{ $set: data, ...(!("contextTags" in data) ? { $unset: { contextTags: "" as const } } : {}) },
-			{ upsert: false },
+			{ projection: { _id: 0 }, returnDocument: "after" },
 		);
 	}
 
-	delete(id: string) {
-		return this.listenings.deleteOne({ id });
+	// false for an unknown id
+	async delete(id: string) {
+		return (await this.listenings.deleteOne({ id })).deletedCount > 0;
 	}
 }

@@ -1,5 +1,6 @@
 import type {
 	LifespanEvent,
+	LifespanEventSaveType,
 	LifespanObjectListQuerystringRequestType,
 	LifespanObjectSaveBodyRequestType,
 } from "@personal-tracker/shared/lifespan";
@@ -14,7 +15,7 @@ import { LifespanObjectsRepository } from "./objects.repository.js";
 const CLEARABLE_OBJECT_FIELDS = ["description"] as const;
 const CLEARABLE_EVENT_FIELDS = ["cause", "comment"] as const;
 
-type SaveObject = NonNullable<LifespanObjectSaveBodyRequestType["object"]>;
+type SaveObject = Omit<LifespanObjectSaveBodyRequestType["object"], "id">;
 type SaveEvents = NonNullable<LifespanObjectSaveBodyRequestType["events"]>;
 
 @Injectable()
@@ -30,50 +31,55 @@ export class LifespanObjectsService {
 
 	async get(id: string) {
 		this.logger.log("get");
-		const object = await this.repo.findById(id);
-		if (!object) {
-			throw new NotFoundError("Objet introuvable");
-		}
-		const { events, ...rest } = object;
+		const { events, ...rest } = (await this.repo.findById(id)) ?? objectNotFound();
 		return { ...rest, events: events?.toSorted(sortEventsDesc) ?? [] };
 	}
 
-	// The body schema's refine guarantees either an object (with optional events), or an event with its objectId
-	save({ object, event, events, objectId }: LifespanObjectSaveBodyRequestType) {
-		this.logger.log("save");
-		if (object) {
-			if (object.id) {
-				// Update existing object
-				return events
-					? this.updateObjectWithEvents(object.id, object, events)
-					: this.repo.update(object.id, object, missingFields(object, CLEARABLE_OBJECT_FIELDS));
-			}
-			// Add new object
-			return this.repo.insert({ id: randomUUID(), ...object, events: (events ?? []).map(buildLifespanEvent) });
-		}
-
-		if (event && objectId) {
-			if (event.id) {
-				// Update existing event
-				return this.repo.updateEvent(
-					objectId,
-					event as LifespanEvent,
-					missingFields(event, CLEARABLE_EVENT_FIELDS),
-				);
-			}
-			// Add new event to existing object
-			return this.repo.pushEvent(objectId, buildLifespanEvent(event));
-		}
+	create({ object: { id: _, ...object }, events }: LifespanObjectSaveBodyRequestType) {
+		this.logger.log("create");
+		return this.repo.insert({ id: randomUUID(), ...object, events: (events ?? []).map(buildLifespanEvent) });
 	}
 
-	deleteEvent(objectId: string, eventId: string) {
-		this.logger.log("deleteEvent");
-		return this.repo.deleteEvent(objectId, eventId);
+	// the events, when sent, replace the whole list
+	async update(id: string, { object: { id: _, ...object }, events }: LifespanObjectSaveBodyRequestType) {
+		this.logger.log("update");
+		const updated = events
+			? await this.updateObjectWithEvents(id, object, events)
+			: await this.repo.update(id, object, missingFields(object, CLEARABLE_OBJECT_FIELDS));
+		return updated ?? objectNotFound();
 	}
 
-	delete(id: string) {
+	async delete(id: string) {
 		this.logger.log("delete");
-		return this.repo.delete(id);
+		if (!(await this.repo.delete(id))) {
+			objectNotFound();
+		}
+	}
+
+	async createEvent(objectId: string, { id: _, ...fields }: LifespanEventSaveType) {
+		this.logger.log("createEvent");
+		const event = buildLifespanEvent(fields);
+		if (!(await this.repo.pushEvent(objectId, event))) {
+			objectNotFound();
+		}
+		return event;
+	}
+
+	async updateEvent(objectId: string, eventId: string, { id: _, ...fields }: LifespanEventSaveType) {
+		this.logger.log("updateEvent");
+		const event = { ...fields, id: eventId } as LifespanEvent;
+		if (!(await this.repo.updateEvent(objectId, event, missingFields(fields, CLEARABLE_EVENT_FIELDS)))) {
+			eventNotFound();
+		}
+		// the stored event: its "created" is kept
+		return (await this.repo.findById(objectId))?.events.find((e) => e.id === eventId) ?? eventNotFound();
+	}
+
+	async deleteEvent(objectId: string, eventId: string) {
+		this.logger.log("deleteEvent");
+		if (!(await this.repo.deleteEvent(objectId, eventId))) {
+			eventNotFound();
+		}
 	}
 
 	// The provided events replace the whole list (missing ones are deleted).
@@ -87,4 +93,12 @@ export class LifespanObjectsService {
 		});
 		return this.repo.update(id, { ...object, events: nextEvents }, missingFields(object, CLEARABLE_OBJECT_FIELDS));
 	}
+}
+
+function objectNotFound(): never {
+	throw new NotFoundError("Objet introuvable");
+}
+
+function eventNotFound(): never {
+	throw new NotFoundError("Événement introuvable");
 }

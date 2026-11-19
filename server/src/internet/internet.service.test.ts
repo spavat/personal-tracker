@@ -109,11 +109,16 @@ describe("InternetService", () => {
 		expect(await service.extract({ url: "https://www.france.tv/x/1-y.html" })).toEqual({});
 	});
 
-	describe("save", () => {
+	describe("programs and episodes", () => {
 		it("adds an episode with a generated id, without its empty tag lists", async () => {
-			await service.save({
-				programId: PROGRAM,
-				episode: { name: "Ep", duration: 30, date: "2026-10-01", type: "podcast", tags: [], contextTags: [] },
+			repo.pushEpisode.mockResolvedValue(true);
+			await service.createEpisode(PROGRAM, {
+				name: "Ep",
+				duration: 30,
+				date: "2026-10-01",
+				type: "podcast",
+				tags: [],
+				contextTags: [],
 			} as never);
 
 			const [programId, episode] = repo.pushEpisode.mock.calls[0];
@@ -122,13 +127,19 @@ describe("InternetService", () => {
 			expect(episode).not.toHaveProperty("tags");
 		});
 
-		it("updates an episode that carries an id", async () => {
-			await service.save({ programId: PROGRAM, episode: { id: "e1", name: "Ep" } } as never);
+		it("updates the episode of the path and answers the stored one", async () => {
+			repo.updateEpisode.mockResolvedValue(true);
+			repo.findById.mockResolvedValue({ id: PROGRAM, episodes: [{ id: "e1", name: "Ep" }] });
+			expect(await service.updateEpisode(PROGRAM, "e1", { name: "Ep" } as never)).toEqual({
+				id: "e1",
+				name: "Ep",
+			});
 			expect(repo.updateEpisode).toHaveBeenCalledWith(PROGRAM, expect.objectContaining({ id: "e1" }));
 		});
 
 		it("stores the images of a new program given as outside URLs", async () => {
-			await service.save({ program: { name: "Prog", profile: "https://cdn/p.jpg" } } as never);
+			repo.findById.mockResolvedValue({ id: PROGRAM, name: "Prog", episodes: [] });
+			await service.createProgram({ program: { name: "Prog", profile: "https://cdn/p.jpg" } } as never);
 
 			const inserted = repo.insertProgram.mock.calls[0][0];
 			expect(images.uploadFromSource).toHaveBeenCalledWith(inserted.id, "https://cdn/p.jpg", "profile");
@@ -137,14 +148,14 @@ describe("InternetService", () => {
 
 		it("keeps the stored image of a program sent back with its proxy URL", async () => {
 			repo.findById.mockResolvedValue({ id: PROGRAM, profile: "stored/key.avif" });
+			repo.updateProgram.mockResolvedValue({ id: PROGRAM });
 
-			await service.save({
-				program: { id: PROGRAM, name: "Prog", profile: `/images/internet/${PROGRAM}.profile` },
+			await service.updateProgram(PROGRAM, {
+				program: { name: "Prog", profile: `/images/internet/${PROGRAM}.profile` },
 			} as never);
 
 			expect(images.uploadFromSource).not.toHaveBeenCalled();
 			expect(repo.updateProgram).toHaveBeenCalledWith(PROGRAM, {
-				id: PROGRAM,
 				name: "Prog",
 				profile: "stored/key.avif",
 			});
@@ -153,7 +164,8 @@ describe("InternetService", () => {
 		it("fetches the cover of a new podcast without images from its feed", async () => {
 			vi.mocked(getPodcastCoverImageUrl).mockResolvedValue("https://feed/cover.jpg");
 
-			await service.save({ program: { name: "Prog", refs: { rss: "https://feed" } } } as never);
+			repo.findById.mockResolvedValue({ id: PROGRAM, name: "Prog", episodes: [] });
+			await service.createProgram({ program: { name: "Prog", refs: { rss: "https://feed" } } } as never);
 
 			expect(repo.insertProgram.mock.calls[0][0].profile).toMatch(/\.profile$/);
 			expect(images.uploadFromSource).toHaveBeenCalledWith(

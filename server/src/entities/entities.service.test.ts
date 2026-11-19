@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { EntitiesRepository } from "./entities.repository.js";
 import type { PortraitStorage } from "./portrait.storage.js";
 
+import { NotFoundError } from "../common/errors.js";
 import { EntitiesService } from "./entities.service.js";
 
 const ID = "0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e";
@@ -29,7 +30,7 @@ function build(current?: { pictureKey: string | null; kind?: "person" | "organiz
 describe("EntitiesService.save", () => {
 	it("creates an entity without portrait (the pickers)", async () => {
 		const { repo, portraits, service } = build();
-		const entity = await service.save(CARROLL);
+		const entity = await service.create(CARROLL);
 		expect(repo.create).toHaveBeenCalledWith({ ...CARROLL, id: expect.any(String), pictureKey: null });
 		expect(portraits.upload).not.toHaveBeenCalled();
 		expect(entity).toMatchObject({ ...CARROLL, picture: null });
@@ -38,7 +39,7 @@ describe("EntitiesService.save", () => {
 	it("keeps the portrait when left out or sent back as the server's URL", async () => {
 		for (const picture of [undefined, `/images/entity/${ID}?v=old`]) {
 			const { repo, portraits, service } = build({ pictureKey: OLD_KEY });
-			await service.save({ ...CARROLL, id: ID, picture });
+			await service.update(ID, { ...CARROLL, picture });
 			expect(repo.update).toHaveBeenCalledWith(expect.objectContaining({ pictureKey: OLD_KEY }));
 			expect(portraits.upload).not.toHaveBeenCalled();
 			expect(portraits.deleteObject).not.toHaveBeenCalled();
@@ -47,7 +48,7 @@ describe("EntitiesService.save", () => {
 
 	it("replaces the portrait and deletes the former one", async () => {
 		const { repo, portraits, service } = build({ pictureKey: OLD_KEY });
-		const entity = await service.save({ ...CARROLL, id: ID, picture: "data:image/jpeg;base64,AAAA" });
+		const entity = await service.update(ID, { ...CARROLL, picture: "data:image/jpeg;base64,AAAA" });
 		expect(portraits.upload).toHaveBeenCalledWith(ID, "data:image/jpeg;base64,AAAA");
 		expect(repo.update).toHaveBeenCalledWith(expect.objectContaining({ pictureKey: NEW_KEY }));
 		expect(portraits.deleteObject).toHaveBeenCalledWith(OLD_KEY);
@@ -56,15 +57,17 @@ describe("EntitiesService.save", () => {
 
 	it("removes the portrait", async () => {
 		const { repo, portraits, service } = build({ pictureKey: OLD_KEY });
-		await service.save({ ...CARROLL, id: ID, picture: null });
+		await service.update(ID, { ...CARROLL, picture: null });
 		expect(repo.update).toHaveBeenCalledWith(expect.objectContaining({ pictureKey: null }));
 		expect(portraits.deleteObject).toHaveBeenCalledWith(OLD_KEY);
 	});
 
-	it("is undefined for an unknown entity or another kind, before uploading anything", async () => {
+	it("404s on an unknown entity or another kind, before uploading anything", async () => {
 		for (const current of [undefined, { pictureKey: null, kind: "organization" as const }]) {
 			const { repo, portraits, service } = build(current);
-			expect(await service.save({ ...CARROLL, id: ID, picture: "https://example.com/p.jpg" })).toBeUndefined();
+			await expect(
+				service.update(ID, { ...CARROLL, picture: "https://example.com/p.jpg" }),
+			).rejects.toBeInstanceOf(NotFoundError);
 			expect(portraits.upload).not.toHaveBeenCalled();
 			expect(repo.update).not.toHaveBeenCalled();
 		}

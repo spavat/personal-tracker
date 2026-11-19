@@ -7,14 +7,22 @@ import type { CoverStorage } from "./cover.storage.js";
 import { BadRequestError, ConflictError, NotFoundError } from "../common/errors.js";
 import { ReadingBookService } from "./reading-book.service.js";
 
+// The book the writes read back: it holds whatever model, edition or reading they answer
+function anyParts() {
+	const parts: any = [];
+	parts.find = () => ({ id: "part" });
+	parts.flatMap = () => anyParts();
+	return parts;
+}
+
 function fakeRepo() {
 	return {
 		findAll: vi.fn().mockResolvedValue([]),
-		findById: vi.fn().mockResolvedValue(null),
+		findById: vi.fn().mockResolvedValue({ id: "book-1", models: anyParts(), editions: anyParts() }),
 		insert: vi.fn().mockResolvedValue({ acknowledged: true }),
 		update: vi.fn().mockResolvedValue({ acknowledged: true }),
 		findModel: vi.fn().mockResolvedValue(undefined),
-		saveModel: vi.fn().mockResolvedValue(true),
+		saveModel: vi.fn().mockResolvedValue("model-1"),
 		deleteModel: vi.fn().mockResolvedValue(undefined),
 		// every credited entity exists with the expected kind
 		countEntities: vi.fn((ids: string[]) => Promise.resolve(new Set(ids).size)),
@@ -31,8 +39,8 @@ function fakeRepo() {
 		findEdition: vi.fn().mockResolvedValue(undefined),
 		saveEdition: vi.fn().mockResolvedValue(true),
 		deleteEdition: vi.fn().mockResolvedValue(undefined),
-		updateReading: vi.fn().mockResolvedValue({ acknowledged: true }),
-		deleteReading: vi.fn().mockResolvedValue({ acknowledged: true }),
+		updateReading: vi.fn().mockResolvedValue(true),
+		deleteReading: vi.fn().mockResolvedValue(true),
 	};
 }
 
@@ -232,9 +240,10 @@ describe("ReadingBookService.saveSeries", () => {
 		],
 	};
 
-	it("saves the series and gives its id", async () => {
+	it("saves the series and gives it back", async () => {
 		const repo = seriesRepo();
-		expect(await buildService(repo).saveSeries(series)).toEqual({ id: "series-1" });
+		repo.findSeries.mockResolvedValue({ id: "series-1", title: "Percy Jackson" });
+		expect(await buildService(repo).saveSeries(series)).toMatchObject({ id: "series-1" });
 		expect(repo.saveSeries).toHaveBeenCalledWith(series);
 	});
 

@@ -64,7 +64,7 @@ describe("SyncService", () => {
 	};
 	const stateRepo = { getGopodderSince: vi.fn(), setGopodderSince: vi.fn() };
 	const cache = { get: vi.fn(), set: vi.fn() };
-	const internet = { save: vi.fn() };
+	const internet = { createProgram: vi.fn(), createEpisode: vi.fn() };
 	// an injected provider: no module mock needed
 	const gopodder = { fetchEpisodeActions: vi.fn() };
 
@@ -215,12 +215,23 @@ describe("SyncService", () => {
 	});
 
 	it("validate saves the episode, then drops the proposal", async () => {
-		const body = { programId: PROGRAM, episode: { name: "Ep" } };
-		internet.save.mockResolvedValue({ acknowledged: true });
+		const episode = { name: "Ep" };
+		internet.createEpisode.mockResolvedValue({ id: "e1", ...episode });
 
-		expect(await service.validate("s1", body as never)).toEqual({ acknowledged: true });
-		expect(internet.save).toHaveBeenCalledWith(body);
+		expect(await service.validate("s1", { programId: PROGRAM, episode } as never)).toEqual({
+			id: "e1",
+			...episode,
+		});
+		expect(internet.createEpisode).toHaveBeenCalledWith(PROGRAM, episode);
 		expect(syncRepo.delete).toHaveBeenCalledWith("s1");
+	});
+
+	it("validate creates a new program with its episode", async () => {
+		const body = { program: { name: "Prog" }, episode: { name: "Ep" } };
+		internet.createProgram.mockResolvedValue({ id: PROGRAM });
+
+		await service.validate("s1", body as never);
+		expect(internet.createProgram).toHaveBeenCalledWith(body);
 	});
 
 	describe("gopodder", () => {

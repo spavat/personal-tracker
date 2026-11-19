@@ -36,3 +36,4 @@ export const SaveEntityBodyRequestSchema = EntitySchema.partial({ id: true }).ex
 });
 export type SaveEntityBody = z.infer<typeof SaveEntityBodyRequestSchema>;
 export const SaveEntityResponseSchema = EntitySchema;
+export const EntityParamsRequestSchema = z.object({ id: z.uuid() });

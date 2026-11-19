@@ -25,7 +25,7 @@ export function makeCollection() {
 		findOne: vi.fn().mockResolvedValue(null),
 		insertOne: vi.fn().mockResolvedValue({ acknowledged: true }),
 		insertMany: vi.fn().mockResolvedValue({ acknowledged: true }),
-		updateOne: vi.fn().mockResolvedValue({ acknowledged: true, modifiedCount: 1 }),
+		updateOne: vi.fn().mockResolvedValue({ acknowledged: true, matchedCount: 1, modifiedCount: 1 }),
 		updateMany: vi.fn().mockResolvedValue({ acknowledged: true, modifiedCount: 1 }),
 		deleteOne: vi.fn().mockResolvedValue({ acknowledged: true, deletedCount: 1 }),
 		deleteMany: vi.fn().mockResolvedValue({ acknowledged: true, deletedCount: 1 }),

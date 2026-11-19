@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, HttpCode, Body, SerializeOptions } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, SerializeOptions } from "@nestjs/common";
 import {
 	ContextTagSchema,
 	DeleteContextTagParamsRequestSchema,
@@ -18,14 +18,24 @@ export class ContextTagsController {
 		return this.service.list();
 	}
 
-	@Post("save")
-	@HttpCode(200)
-	save(@Body({ schema: SaveContextTagRequestSchema }) body: SaveContextTagBody) {
-		return this.service.save(body);
+	@Post()
+	@SerializeOptions({ schema: ContextTagSchema })
+	create(@Body({ schema: SaveContextTagRequestSchema }) body: SaveContextTagBody) {
+		return this.service.create(body);
+	}
+
+	@Put(":id")
+	@SerializeOptions({ schema: ContextTagSchema })
+	update(
+		@Param({ schema: DeleteContextTagParamsRequestSchema }) { id }: { id: string },
+		@Body({ schema: SaveContextTagRequestSchema }) body: SaveContextTagBody,
+	) {
+		return this.service.update(id, body);
 	}
 
 	@Delete(":id")
-	delete(@Param({ schema: DeleteContextTagParamsRequestSchema }) { id }: { id: string }) {
-		return this.service.delete(id);
+	@HttpCode(204)
+	async delete(@Param({ schema: DeleteContextTagParamsRequestSchema }) { id }: { id: string }) {
+		await this.service.delete(id);
 	}
 }

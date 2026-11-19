@@ -36,9 +36,9 @@ describe("LifespanObjectsController", () => {
 			expect((await app.inject({ method: "GET", url: "/lifespan/objects/not-a-uuid" })).statusCode).toBe(400);
 		});
 
-		it("rejects a save body that is neither an object nor an event+objectId", async () => {
+		it("rejects an object body without its object", async () => {
 			({ app } = await setup());
-			const res = await app.inject({ method: "POST", url: "/lifespan/objects/save", payload: {} });
+			const res = await app.inject({ method: "POST", url: "/lifespan/objects", payload: {} });
 			expect(res.statusCode).toBe(400);
 		});
 
@@ -46,8 +46,8 @@ describe("LifespanObjectsController", () => {
 			({ app } = await setup());
 			const res = await app.inject({
 				method: "POST",
-				url: "/lifespan/objects/save",
-				payload: { objectId: OBJECT_UUID, event: { type: "dispose", date: "2024-06-01" } },
+				url: `/lifespan/objects/${OBJECT_UUID}/events`,
+				payload: { type: "dispose", date: "2024-06-01" },
 			});
 			expect(res.statusCode).toBe(400);
 		});
@@ -100,18 +100,27 @@ describe("LifespanObjectsController", () => {
 			expect(res.json()).toMatchObject({ message: "Objet introuvable" });
 		});
 
-		it("POST /save keeps the free text type on update", async () => {
+		it("PUT /:id keeps the free text type on update and answers the updated object", async () => {
 			const ctx = await setup();
 			app = ctx.app;
+			const object = {
+				id: OBJECT_UUID,
+				name: "MX Master",
+				type: "souris",
+				categoryId: CATEGORY_UUID,
+				events: [],
+			};
+			ctx.objects.findOneAndUpdate.mockResolvedValueOnce(object);
 
 			const res = await app.inject({
-				method: "POST",
-				url: "/lifespan/objects/save",
-				payload: { object: { id: OBJECT_UUID, name: "MX Master", type: "souris", categoryId: CATEGORY_UUID } },
+				method: "PUT",
+				url: `/lifespan/objects/${OBJECT_UUID}`,
+				payload: { object: { name: "MX Master", type: "souris", categoryId: CATEGORY_UUID } },
 			});
 
 			expect(res.statusCode).toBe(200);
-			expect(ctx.objects.updateOne.mock.calls[0][1]).toMatchObject({
+			expect(res.json()).toEqual(object);
+			expect(ctx.objects.findOneAndUpdate.mock.calls[0][1]).toMatchObject({
 				$set: expect.objectContaining({ type: "souris" }),
 			});
 		});
@@ -125,9 +134,9 @@ describe("LifespanObjectsController", () => {
 				url: `/lifespan/objects/${OBJECT_UUID}/events/${EVENT_UUID}`,
 			});
 
-			expect(res.statusCode).toBe(200);
+			expect(res.statusCode).toBe(204);
 			expect(ctx.objects.updateOne).toHaveBeenCalledWith(
-				{ id: OBJECT_UUID },
+				{ id: OBJECT_UUID, "events.id": EVENT_UUID },
 				{ $pull: { events: { id: EVENT_UUID } } },
 			);
 			expect(ctx.objects.deleteOne).not.toHaveBeenCalled();
@@ -139,7 +148,7 @@ describe("LifespanObjectsController", () => {
 
 			const res = await app.inject({ method: "DELETE", url: `/lifespan/objects/${OBJECT_UUID}` });
 
-			expect(res.statusCode).toBe(200);
+			expect(res.statusCode).toBe(204);
 			expect(ctx.objects.deleteOne).toHaveBeenCalledWith({ id: OBJECT_UUID });
 		});
 	});

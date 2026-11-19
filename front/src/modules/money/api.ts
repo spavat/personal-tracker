@@ -44,6 +44,10 @@ async function getAnalytics(splitParent: boolean) {
 	return fetchJson<Array<Money.Analytic>>(withQuery(`${API_BASE_URL}/money/tags/analytics`, { splitParent }));
 }
 
+// no id: created (POST), an id: updated (PUT /:id)
+function saveMoney(url: string, id: number | undefined, data: unknown) {
+	return id ? sendJson(`${url}/${id}`, "PUT", data) : sendJson(url, "POST", data);
+}
 //
 // TRANSACTIONS
 //
@@ -79,15 +83,12 @@ export async function saveTransaction({ transactionId, data }: { transactionId?:
 	} else {
 		dataToSend.children = [];
 	}
-	let urlEnd = "";
-	if (transactionId) {
-		urlEnd = `${transactionId}/full`;
-	}
-	return sendJson(`${API_BASE_URL}/money/transactions/${urlEnd}`, "POST", dataToSend);
+	return saveMoney(`${API_BASE_URL}/money/transactions`, transactionId, dataToSend);
 }
 
+// the fields sent only (PATCH): the children and tags stay as they are
 export async function quickSaveTransaction(data: any) {
-	return sendJson(`${API_BASE_URL}/money/transactions/${data.id}/quick`, "POST", data);
+	return sendJson(`${API_BASE_URL}/money/transactions/${data.id}`, "PATCH", data);
 }
 
 export async function deleteTransaction(transactionId: number) {
@@ -107,7 +108,7 @@ async function getBanks() {
 }
 
 export async function updateBank({ bankId, data }: { bankId?: number; data: any }) {
-	return sendJson(`${API_BASE_URL}/money/banks/${bankId ?? ""}`, "POST", data);
+	return saveMoney(`${API_BASE_URL}/money/banks`, bankId, data);
 }
 
 export async function deleteBank(bankId: number) {
@@ -128,7 +129,7 @@ async function getAccountDetails(accountId: string) {
 }
 
 export async function updateAccount({ accountId, data }: { accountId?: number; data: any }) {
-	return sendJson(`${API_BASE_URL}/money/accounts/${accountId ?? ""}`, "POST", data);
+	return saveMoney(`${API_BASE_URL}/money/accounts`, accountId, data);
 }
 
 export async function deleteAccount(accountId: number) {
@@ -142,19 +143,19 @@ export async function deleteAccount(accountId: number) {
 //
 
 async function getPaymentTypes() {
-	return fetchJson<Array<Money.PaymentType>>(`${API_BASE_URL}/money/paymentTypes`);
+	return fetchJson<Array<Money.PaymentType>>(`${API_BASE_URL}/money/payment-types`);
 }
 async function getPaymentType(paymentTypeId: number) {
-	return fetchJson<Money.PaymentType>(`${API_BASE_URL}/money/paymentTypes/${paymentTypeId}`);
+	return fetchJson<Money.PaymentType>(`${API_BASE_URL}/money/payment-types/${paymentTypeId}`);
 }
 async function getPaymentTypeDetails(paymentTypeId: number) {
-	return fetchJson<Money.PaymentTypeWithDetails>(`${API_BASE_URL}/money/paymentTypes/${paymentTypeId}/details`);
+	return fetchJson<Money.PaymentTypeWithDetails>(`${API_BASE_URL}/money/payment-types/${paymentTypeId}/details`);
 }
 export async function updatePaymentType({ paymentTypeId, data }: { paymentTypeId?: number; data: any }) {
-	return sendJson(`${API_BASE_URL}/money/paymentTypes/${paymentTypeId ?? ""}`, "POST", data);
+	return saveMoney(`${API_BASE_URL}/money/payment-types`, paymentTypeId, data);
 }
 export async function deletePaymentType(paymentTypeId: number) {
-	return fetchJson(`${API_BASE_URL}/money/paymentTypes/${paymentTypeId}`, {
+	return fetchJson(`${API_BASE_URL}/money/payment-types/${paymentTypeId}`, {
 		method: "DELETE",
 	});
 }
@@ -174,7 +175,7 @@ async function getCategory(categoryId: number) {
 }
 
 export async function updateCategory({ categoryId, data }: { categoryId?: number; data: any }) {
-	return sendJson(`${API_BASE_URL}/money/categories/${categoryId ?? ""}`, "POST", data);
+	return saveMoney(`${API_BASE_URL}/money/categories`, categoryId, data);
 }
 
 export async function deleteCategory(categoryId: number) {
@@ -198,7 +199,7 @@ async function getTag(tagId: number) {
 }
 
 export async function updateTag({ tagId, data }: { tagId?: number; data: any }) {
-	return sendJson(`${API_BASE_URL}/money/tags/${tagId ?? ""}`, "POST", data);
+	return saveMoney(`${API_BASE_URL}/money/tags`, tagId, data);
 }
 
 export async function deleteTag(tagId: number) {

@@ -2,11 +2,9 @@ import type { LifespanCategorySaveBodyRequestType } from "@personal-tracker/shar
 
 import { Injectable, Logger } from "@nestjs/common";
 
-import { ConflictError } from "../../common/errors.js";
+import { ConflictError, NotFoundError } from "../../common/errors.js";
 import { LifespanCategoriesRepository } from "./categories.repository.js";
 import { buildLifespanCategory, isOwnDescendant } from "./category.entity.js";
-
-export type DeleteLifespanCategoryResult = { deleted: true } | { deleted: false; reason: "has_children" | "in_use" };
 
 @Injectable()
 export class LifespanCategoriesService {
@@ -18,33 +16,44 @@ export class LifespanCategoriesService {
 		return this.repo.findAll();
 	}
 
-	async save(category: LifespanCategorySaveBodyRequestType) {
-		this.logger.log("save");
-		if (category.id && category.parentId) {
-			const categories = await this.repo.findAll();
-			if (isOwnDescendant(category.id, category.parentId, categories)) {
-				throw new ConflictError("Une catégorie ne peut pas être rangée sous une de ses sous-catégories");
-			}
-		}
-		if (category.id) {
-			return this.repo.update(category.id, category);
-		}
+	create({ id: _, ...category }: LifespanCategorySaveBodyRequestType) {
+		this.logger.log("create");
 		return this.repo.insert(buildLifespanCategory(category));
 	}
 
-	async delete(id: string): Promise<DeleteLifespanCategoryResult> {
+	async update(id: string, { id: _, ...category }: LifespanCategorySaveBodyRequestType) {
+		this.logger.log("update");
+		if (category.parentId) {
+			const categories = await this.repo.findAll();
+			if (isOwnDescendant(id, category.parentId, categories)) {
+				throw new ConflictError("Une catégorie ne peut pas être rangée sous une de ses sous-catégories");
+			}
+		}
+		return (await this.repo.update(id, category)) ?? notFound();
+	}
+
+	async delete(id: string) {
 		this.logger.log("delete");
 		const subCategories = await this.repo.findSubCategories(id);
 		if (subCategories.length) {
-			return { deleted: false, reason: "has_children" };
+			throw new ConflictError(
+				"Cette catégorie a des sous-catégories. Supprimez-les ou déplacez-les avant de continuer.",
+			);
 		}
 
 		const objects = await this.repo.findObjectsUsingCategory(id);
 		if (objects.length) {
-			return { deleted: false, reason: "in_use" };
+			throw new ConflictError(
+				"Des objets sont encore rattachés à cette catégorie. Déplacez-les avant de continuer.",
+			);
 		}
 
-		await this.repo.delete(id);
-		return { deleted: true };
+		if (!(await this.repo.delete(id))) {
+			notFound();
+		}
 	}
+}
+
+function notFound(): never {
+	throw new NotFoundError("Catégorie introuvable");
 }

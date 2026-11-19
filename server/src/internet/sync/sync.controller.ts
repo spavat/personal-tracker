@@ -2,8 +2,6 @@ import type { z } from "zod";
 
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, SerializeOptions } from "@nestjs/common";
 import {
-	SaveBodyRequestSchema,
-	type SaveBodyRequestType,
 	SyncCreateResponseSchema,
 	SyncDeleteParamsRequestSchema,
 	SyncFeedBodyRequestSchema,
@@ -16,6 +14,8 @@ import {
 	SyncResponseSchema,
 	SyncUnknownFeedsResponseSchema,
 	SyncUploadBodyRequestSchema,
+	SyncValidateBodyRequestSchema,
+	type SyncValidateBodyRequestType,
 } from "@personal-tracker/shared/internet";
 
 import { SyncService } from "./sync.service.js";
@@ -75,17 +75,19 @@ export class SyncController {
 		return this.service.reprocess(body?.rssUrl);
 	}
 
-	@Post("validate/:id")
+	// an action on the proposal: 200 with the program (a new one) or the episode created from it
+	@Post(":id/validate")
 	@HttpCode(200)
 	validate(
 		@Param({ schema: SyncProposalParamsRequestSchema }) { id }: { id: string },
-		@Body({ schema: SaveBodyRequestSchema }) body: SaveBodyRequestType,
+		@Body({ schema: SyncValidateBodyRequestSchema }) body: SyncValidateBodyRequestType,
 	) {
 		return this.service.validate(id, body);
 	}
 
 	@Delete(":id")
-	delete(@Param({ schema: SyncDeleteParamsRequestSchema }) { id }: { id: string }) {
-		return this.service.delete(id);
+	@HttpCode(204)
+	async delete(@Param({ schema: SyncDeleteParamsRequestSchema }) { id }: { id: string }) {
+		await this.service.delete(id);
 	}
 }

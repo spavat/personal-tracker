@@ -1,7 +1,11 @@
 import type { z } from "zod";
 
-import { Body, Controller, Delete, Get, HttpCode, Param, Post } from "@nestjs/common";
-import { DeleteGenreParamsRequestSchema, SaveGenreRequestSchema } from "@personal-tracker/shared/music";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, SerializeOptions } from "@nestjs/common";
+import {
+	DeleteGenreParamsRequestSchema,
+	MusicGenreSchema,
+	SaveGenreRequestSchema,
+} from "@personal-tracker/shared/music";
 
 import { GenresService } from "./genres.service.js";
 
@@ -14,14 +18,24 @@ export class GenresController {
 		return this.service.list();
 	}
 
-	@Post("save")
-	@HttpCode(200)
-	save(@Body({ schema: SaveGenreRequestSchema }) body: z.infer<typeof SaveGenreRequestSchema>) {
-		return this.service.save(body);
+	@Post()
+	@SerializeOptions({ schema: MusicGenreSchema })
+	create(@Body({ schema: SaveGenreRequestSchema }) body: z.infer<typeof SaveGenreRequestSchema>) {
+		return this.service.create(body);
+	}
+
+	@Put(":id")
+	@SerializeOptions({ schema: MusicGenreSchema })
+	update(
+		@Param({ schema: DeleteGenreParamsRequestSchema }) { id }: { id: string },
+		@Body({ schema: SaveGenreRequestSchema }) body: z.infer<typeof SaveGenreRequestSchema>,
+	) {
+		return this.service.update(id, body);
 	}
 
 	@Delete(":id")
-	delete(@Param({ schema: DeleteGenreParamsRequestSchema }) { id }: { id: string }) {
-		return this.service.delete(id);
+	@HttpCode(204)
+	async delete(@Param({ schema: DeleteGenreParamsRequestSchema }) { id }: { id: string }) {
+		await this.service.delete(id);
 	}
 }

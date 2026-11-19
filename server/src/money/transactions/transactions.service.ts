@@ -51,14 +51,19 @@ export class TransactionsService {
 	}
 
 	// "quick" only updates the parent's own fields; any other type rewrites tags and children
-	async update(id: number, type: string, body: TransactionBody) {
-		this.logger.log(`update ${id} (${type})`);
-		const transaction = (await this.repo.findByIdWithChildren(id)) ?? notFound();
-
-		if (type === "quick") {
-			await this.repo.update(id, normalizeTransactionRefs(body));
-			return this.repo.findByIdWithChildren(id);
+	// the fields sent only: its children and tags are left as they are
+	async patch(id: number, body: TransactionBody) {
+		this.logger.log(`patch ${id}`);
+		if (!(await this.repo.findByIdWithChildren(id))) {
+			notFound();
 		}
+		await this.repo.update(id, normalizeTransactionRefs(body));
+		return this.repo.findByIdWithChildren(id);
+	}
+
+	async update(id: number, body: TransactionBody) {
+		this.logger.log(`update ${id}`);
+		const transaction = (await this.repo.findByIdWithChildren(id)) ?? notFound();
 
 		const transactionIds = [id, ...transaction.children.map((c) => c.id)];
 		// Children inherit the parent's date

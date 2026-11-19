@@ -123,7 +123,8 @@ export class PlacesRepository {
 		});
 	}
 
-	delete(id: number) {
-		return this.db.delete(showPlace).where(eq(showPlace.id, id));
+	// false for an unknown id
+	async delete(id: number) {
+		return (await this.db.delete(showPlace).where(eq(showPlace.id, id)).returning({ id: showPlace.id })).length > 0;
 	}
 }

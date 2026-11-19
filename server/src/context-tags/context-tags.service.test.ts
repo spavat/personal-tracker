@@ -40,27 +40,28 @@ describe("ContextTagsService", () => {
 		});
 	});
 
-	describe("save", () => {
-		it("inserts a new tag with a generated id when there is no id", async () => {
+	describe("create", () => {
+		it("inserts a new tag with a generated id", async () => {
 			// Arrange
-			const tags = [{ id: UUID, name: "Genre", tags: ["scifi"] }];
+			const tags = { id: UUID, name: "Genre", tags: ["scifi"] };
 			fakeRepo.insert.mockResolvedValue(tags);
 
 			// Act
-			const result = await service.save({ name: "Genre", tags: ["scifi"] });
+			const result = await service.create({ name: "Genre", tags: ["scifi"] });
 
 			// Assert
 			expect(fakeRepo.insert).toHaveBeenCalledWith({ id: expect.any(String), name: "Genre", tags: ["scifi"] });
 			expect(result).toEqual(tags);
 		});
+	});
 
+	describe("update", () => {
 		it("rejects with NotFoundError when the id matches nothing", async () => {
 			// Arrange
-			const tags = { id: UUID, name: "Genre", tags: ["scifi"] };
-			fakeRepo.update.mockResolvedValue({ matchedCount: 0 });
+			fakeRepo.update.mockResolvedValue(null);
 
 			// Act
-			const result = service.save(tags);
+			const result = service.update(UUID, { name: "Genre", tags: ["scifi"] });
 
 			// Assert
 			expect(fakeRepo.update).toHaveBeenCalledWith(UUID, { name: "Genre", tags: ["scifi"] });
@@ -71,7 +72,7 @@ describe("ContextTagsService", () => {
 	describe("delete", () => {
 		it("rejects with NotFoundError when nothing was deleted", async () => {
 			// Arrange
-			fakeRepo.delete.mockResolvedValue({ deletedCount: 0 });
+			fakeRepo.delete.mockResolvedValue(false);
 
 			// Act
 			const result = service.delete(UUID);

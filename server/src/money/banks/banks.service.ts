@@ -42,7 +42,6 @@ export class BanksService {
 			throw new ConflictError(`La banque a encore des comptes (${bank.accounts.length})`);
 		}
 		await this.repo.destroy(id);
-		return { deleted: true };
 	}
 
 	tree() {

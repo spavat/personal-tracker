@@ -38,13 +38,11 @@ describe("show/performances routes", () => {
 		expect((await ctx.app.inject({ method: "GET", url: "/show/performances/abc" })).statusCode).toBe(400);
 	});
 
-	it("POST /save rejects an empty body", async () => {
-		expect((await ctx.app.inject({ method: "POST", url: "/show/performances/save", payload: {} })).statusCode).toBe(
-			400,
-		);
+	it("POST / rejects an empty body", async () => {
+		expect((await ctx.app.inject({ method: "POST", url: "/show/performances", payload: {} })).statusCode).toBe(400);
 	});
 
-	it("POST /save creates a performance: 201 with the saved row", async () => {
+	it("POST / creates a performance: 201 with the saved row", async () => {
 		const saved = {
 			id: 11,
 			date: "2024-01-01T20:00:00",
@@ -60,7 +58,7 @@ describe("show/performances routes", () => {
 		ctx = await buildApp([saved]);
 		const res = await ctx.app.inject({
 			method: "POST",
-			url: "/show/performances/save",
+			url: "/show/performances",
 			payload: {
 				performance: { date: "2024-01-01T20:00", canceled: false, seat: "A1", placeId: 7, spectacleId: 100 },
 			},
@@ -69,10 +67,10 @@ describe("show/performances routes", () => {
 		expect(res.json()).toEqual(saved);
 	});
 
-	it("POST /save rejects a new spectacle without work", async () => {
+	it("POST / rejects a new spectacle without work", async () => {
 		const res = await ctx.app.inject({
 			method: "POST",
-			url: "/show/performances/save",
+			url: "/show/performances",
 			payload: {
 				spectacle: { name: "Tosca", workId: 0 },
 				performance: { date: "2024-01-01T20:00", canceled: false, seat: "", placeId: 7, spectacleId: 0 },
@@ -82,10 +80,10 @@ describe("show/performances routes", () => {
 		expect(res.json().message).toContain("A new spectacle needs a work");
 	});
 
-	it("POST /saveCasting runs inside a transaction and answers 204", async () => {
+	it("PUT /:id/casting runs inside a transaction and answers 204", async () => {
 		const res = await ctx.app.inject({
-			method: "POST",
-			url: "/show/performances/saveCasting",
+			method: "PUT",
+			url: "/show/performances/10/casting",
 			payload: { performanceId: 10, roles: [] },
 		});
 		expect(res.statusCode).toBe(204);

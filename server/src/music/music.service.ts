@@ -27,28 +27,31 @@ export class MusicService {
 
 	async get(id: string) {
 		this.logger.log("get");
-		const listening = await this.repo.findById(id);
-		if (!listening) {
-			throw new NotFoundError("Écoute introuvable");
-		}
-		return listening;
+		return (await this.repo.findById(id)) ?? notFound();
 	}
 
-	save({ id, ...data }: SaveListeningBody) {
-		this.logger.log("save");
-		const cleanedListening = cleanListening(data);
-		if (id) {
-			return this.repo.update(id, cleanedListening);
-		}
+	create({ id: _, ...data }: SaveListeningBody) {
+		this.logger.log("create");
 		return this.repo.insert({
 			id: randomUUID(),
 			created: Temporal.Now.plainDateTimeISO().toString(),
-			...cleanedListening,
+			...cleanListening(data),
 		});
 	}
 
-	delete(id: string) {
-		this.logger.log("delete");
-		return this.repo.delete(id);
+	async update(id: string, { id: _, ...data }: SaveListeningBody) {
+		this.logger.log("update");
+		return (await this.repo.update(id, cleanListening(data))) ?? notFound();
 	}
+
+	async delete(id: string) {
+		this.logger.log("delete");
+		if (!(await this.repo.delete(id))) {
+			notFound();
+		}
+	}
+}
+
+function notFound(): never {
+	throw new NotFoundError("Écoute introuvable");
 }

@@ -3,15 +3,15 @@ import {
 	// SaveMangaRequestSchema,
 	ListMangaOverview,
 	MangaOverview,
-	SaveBodyRequestType,
 	SaveBodyRequestSchema,
+	SaveReadingBodyRequestSchema,
 } from "@personal-tracker/shared/reading-manga";
 import { queryOptions } from "@tanstack/react-query";
 
 import type { SortListConfig } from "../../hooks/use-sort-table";
 import type { YearQueryConfig } from "../../hooks/use-year-changer";
 
-import { fetchJson, sendJson, withQuery } from "../../api-utils";
+import { fetchJson, saveJson, sendJson, withQuery } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
 
 export async function getMangas({
@@ -82,9 +82,18 @@ export const mangaDetailsQuery = (id: string) =>
 // 	return result;
 // }
 
-export async function save(data: SaveBodyRequestType) {
-	const sentData = SaveBodyRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/reading-manga/save`, "POST", sentData);
+// a manga (with an optional first reading), or a reading of the manga `mangaId`
+export async function save({ manga, reading, mangaId }: any) {
+	if (manga) {
+		const sentData = SaveBodyRequestSchema.parse({ manga, reading });
+		return sentData.manga.id
+			? sendJson(`${API_BASE_URL}/reading-manga/mangas/${sentData.manga.id}`, "PUT", sentData)
+			: sendJson(`${API_BASE_URL}/reading-manga/mangas`, "POST", sentData);
+	}
+	return saveJson(
+		`${API_BASE_URL}/reading-manga/mangas/${mangaId}/readings`,
+		SaveReadingBodyRequestSchema.parse(reading),
+	);
 }
 
 export async function deleteReading({ id, readingId }: { id: string; readingId: string }) {

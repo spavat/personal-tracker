@@ -15,24 +15,24 @@ export class ContextTagsService {
 		return this.repo.findAll();
 	}
 
-	async save({ id, ...fields }: SaveContextTagBody) {
-		this.logger.log("save");
-		if (id) {
-			const result = await this.repo.update(id, fields);
-			if (result.matchedCount === 0) {
-				throw new NotFoundError("Tag de contexte introuvable");
-			}
-			return result;
-		}
-		return await this.repo.insert(buildContextTag(fields));
+	create({ id: _, ...fields }: SaveContextTagBody) {
+		this.logger.log("create");
+		return this.repo.insert(buildContextTag(fields));
+	}
+
+	async update(id: string, { id: _, ...fields }: SaveContextTagBody) {
+		this.logger.log("update");
+		return (await this.repo.update(id, fields)) ?? notFound();
 	}
 
 	async delete(id: string) {
 		this.logger.log("delete");
-		const result = await this.repo.delete(id);
-		if (result.deletedCount === 0) {
-			throw new NotFoundError("Tag de contexte introuvable");
+		if (!(await this.repo.delete(id))) {
+			notFound();
 		}
-		return result;
 	}
+}
+
+function notFound(): never {
+	throw new NotFoundError("Tag de contexte introuvable");
 }

@@ -3,6 +3,7 @@ import type {
 	ExtractQuerystringRequest,
 	ProgramListQuerystringRequestSchema,
 	SaveBodyRequestType,
+	SaveEpisodeBodyRequestType,
 } from "@personal-tracker/shared/internet";
 import type { z } from "zod";
 
@@ -78,42 +79,58 @@ export class InternetService {
 		return {};
 	}
 
-	// A program with neither image, or a profile given as an outside URL / data URI, gets its images stored in S3
-	async save({ program, episode, programId }: SaveBodyRequestType) {
-		this.logger.log("save");
-		const episodeData = episode ? cleanEpisode(episode) : null;
-
-		if (program) {
-			const id = program.id ?? randomUUID();
-			const { profile, banner, ...programRest } = program;
-			const current = program.id ? await this.repo.findById(program.id) : null;
-			let images = await this.uploadGivenImages(id, current, { profile, banner });
-
-			if (!program.id && !images.profile && !images.banner) {
-				images = await this.fetchImagesFromRefs(id, program.refs);
-			}
-
-			if (program.id) {
-				return this.repo.updateProgram(program.id, { ...programRest, ...images });
-			}
-			return this.repo.insertProgram({
-				...programRest,
-				...images,
-				id,
-				episodes: episodeData ? [buildEpisode(episodeData)] : [],
-			});
+	// The program (as GET /id/:programId gives it), with an optional first episode. A program given neither image
+	// gets the ones of its refs; a profile given as an outside URL / data URI is stored in S3.
+	async createProgram({ program: { id: _, profile, banner, ...program }, episode }: SaveBodyRequestType) {
+		this.logger.log("createProgram");
+		const id = randomUUID();
+		let images = await this.uploadGivenImages(id, null, { profile, banner });
+		if (!images.profile && !images.banner) {
+			images = await this.fetchImagesFromRefs(id, program.refs);
 		}
-
-		// The body schema's refine guarantees an episode with its programId here
-		if (episodeData?.id) {
-			return this.repo.updateEpisode(programId!, episodeData);
-		}
-		return this.repo.pushEpisode(programId!, buildEpisode(episodeData));
+		await this.repo.insertProgram({
+			...program,
+			...images,
+			id,
+			episodes: episode ? [buildEpisode(cleanEpisode(episode))] : [],
+		});
+		return this.getProgram(id);
 	}
 
-	deleteEpisode(programId: string, episodeId: string) {
+	// the program's fields only: its episodes have their own routes
+	async updateProgram(id: string, { program: { id: _, profile, banner, ...program } }: SaveBodyRequestType) {
+		this.logger.log("updateProgram");
+		const current = (await this.repo.findById(id)) ?? notFound();
+		const images = await this.uploadGivenImages(id, current, { profile, banner });
+		if (!(await this.repo.updateProgram(id, { ...program, ...images }))) {
+			notFound();
+		}
+		return this.getProgram(id);
+	}
+
+	async createEpisode(programId: string, { id: _, ...fields }: SaveEpisodeBodyRequestType) {
+		this.logger.log("createEpisode");
+		const episode = buildEpisode(cleanEpisode(fields));
+		if (!(await this.repo.pushEpisode(programId, episode))) {
+			notFound();
+		}
+		return episode;
+	}
+
+	async updateEpisode(programId: string, episodeId: string, { id: _, ...fields }: SaveEpisodeBodyRequestType) {
+		this.logger.log("updateEpisode");
+		if (!(await this.repo.updateEpisode(programId, { ...cleanEpisode(fields), id: episodeId }))) {
+			episodeNotFound();
+		}
+		const program = await this.repo.findById(programId);
+		return program?.episodes?.find((e) => e.id === episodeId) ?? episodeNotFound();
+	}
+
+	async deleteEpisode(programId: string, episodeId: string) {
 		this.logger.log("deleteEpisode");
-		return this.repo.deleteEpisode(programId, episodeId);
+		if (!(await this.repo.deleteEpisode(programId, episodeId))) {
+			episodeNotFound();
+		}
 	}
 
 	// Fetches the missing profile / banner of the YouTube channels and RSS podcasts
@@ -211,4 +228,8 @@ export class InternetService {
 
 function notFound(): never {
 	throw new NotFoundError("Programme introuvable");
+}
+
+function episodeNotFound(): never {
+	throw new NotFoundError("Épisode introuvable");
 }

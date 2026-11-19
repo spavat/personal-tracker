@@ -121,26 +121,21 @@ export const LifespanObjectDetailsParamsRequestSchema = z.object({
 });
 
 //
-// SAVE (object and/or event, mirrors GameSaveBodyRequestSchema)
+// SAVE OBJECT (POST /objects, PUT /objects/:id): its events, when sent, replace the whole list
 //
 // Request
-export const LifespanObjectSaveBodyRequestSchema = z
-	.object({
-		object: LifespanObjectSchema.partial({ id: true }).omit({ events: true }).optional(),
-		events: z.array(LifespanEventSaveSchema).optional(),
-		event: LifespanEventSaveSchema.optional(),
-		objectId: z.string().optional(),
-	})
-	.refine(({ object, event, events, objectId }) => {
-		if (object && !objectId && !event) {
-			return true; // Add object (with or without initial events)
-		}
-		if (event && objectId && !events) {
-			return true; // Add or update a single event on an existing object
-		}
-		return false;
-	});
+export const LifespanObjectSaveBodyRequestSchema = z.object({
+	object: LifespanObjectSchema.partial({ id: true }).omit({ events: true }),
+	events: z.array(LifespanEventSaveSchema).optional(),
+});
 export type LifespanObjectSaveBodyRequestType = z.infer<typeof LifespanObjectSaveBodyRequestSchema>;
+
+//
+// SAVE EVENT (POST /objects/:objectId/events, PUT /objects/:objectId/events/:eventId)
+//
+// Request
+export const LifespanEventSaveBodyRequestSchema = LifespanEventSaveSchema;
+export const LifespanEventParamsRequestSchema = z.object({ objectId: z.uuid() });
 
 //
 // DELETE EVENT

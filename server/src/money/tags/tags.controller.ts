@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query } from "@nestjs/common";
 import {
 	type CreateTagBody,
 	CreateTagBodyRequestSchema,
@@ -30,13 +30,11 @@ export class TagsController {
 	}
 
 	@Post()
-	@HttpCode(200)
 	create(@Body({ schema: CreateTagBodyRequestSchema }) body: CreateTagBody) {
 		return this.service.create(body);
 	}
 
-	@Post(":id")
-	@HttpCode(200)
+	@Put(":id")
 	update(
 		@Param({ schema: TagParamsRequestSchema }) { id }: { id: number },
 		@Body({ schema: UpdateTagBodyRequestSchema }) body: UpdateTagBody,
@@ -45,7 +43,8 @@ export class TagsController {
 	}
 
 	@Delete(":id")
-	delete(@Param({ schema: TagParamsRequestSchema }) { id }: { id: number }) {
-		return this.service.delete(id);
+	@HttpCode(204)
+	async delete(@Param({ schema: TagParamsRequestSchema }) { id }: { id: number }) {
+		await this.service.delete(id);
 	}
 }

@@ -1,7 +1,6 @@
-import type { ServerResponse } from "node:http";
 import type { z } from "zod";
 
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, Res, SerializeOptions } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, SerializeOptions } from "@nestjs/common";
 import {
 	ArtistDetailsParamsRequestSchema,
 	ArtistDetailsQuerystringRequestSchema,
@@ -12,7 +11,7 @@ import {
 } from "@personal-tracker/shared/show";
 
 import { Public } from "../../auth/public.decorator.js";
-import { orNotFound, savedOr404 } from "../show-reply.utils.js";
+import { orNotFound } from "../show-reply.utils.js";
 import { ArtistsService } from "./artists.service.js";
 
 @Controller()
@@ -39,13 +38,19 @@ export class ArtistsController {
 		return orNotFound(this.service.get({ artistId: id, groupBySpectacle }), "Artiste introuvable");
 	}
 
-	@Post("save")
+	@Post()
 	@SerializeOptions({ schema: ArtistViewSchema })
-	save(
+	create(@Body({ schema: SaveArtistBodyRequestSchema }) body: z.infer<typeof SaveArtistBodyRequestSchema>) {
+		return orNotFound(this.service.save({ ...body, id: undefined }), "Artiste introuvable");
+	}
+
+	@Put(":id")
+	@SerializeOptions({ schema: ArtistViewSchema })
+	update(
+		@Param({ schema: ArtistDetailsParamsRequestSchema }) { id }: { id: number },
 		@Body({ schema: SaveArtistBodyRequestSchema }) body: z.infer<typeof SaveArtistBodyRequestSchema>,
-		@Res({ passthrough: true }) response: ServerResponse,
 	) {
-		return savedOr404(response, Boolean(body.id), this.service.save(body), "Artiste introuvable");
+		return orNotFound(this.service.save({ ...body, id }), "Artiste introuvable");
 	}
 
 	@Delete(":id")

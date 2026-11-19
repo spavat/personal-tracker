@@ -39,29 +39,30 @@ describe("LifespanCategoriesController", () => {
 		expect(res.json()).toEqual([{ id: CATEGORY_UUID, name: "Clothes", parentId: null }]);
 	});
 
-	it("POST /save rejects a body without a name", async () => {
+	it("POST / rejects a body without a name", async () => {
 		({ app } = await setup());
 
-		const res = await app.inject({ method: "POST", url: "/lifespan/categories/save", payload: { parentId: null } });
+		const res = await app.inject({ method: "POST", url: "/lifespan/categories", payload: { parentId: null } });
 
 		expect(res.statusCode).toBe(400);
 	});
 
-	it("POST /save inserts a new category", async () => {
+	it("POST / inserts a new category and answers 201 with it", async () => {
 		const ctx = await setup();
 		app = ctx.app;
 
 		const res = await app.inject({
 			method: "POST",
-			url: "/lifespan/categories/save",
+			url: "/lifespan/categories",
 			payload: { name: "Clothes", parentId: null },
 		});
 
-		expect(res.statusCode).toBe(200);
+		expect(res.statusCode).toBe(201);
+		expect(res.json()).toEqual({ id: expect.any(String), name: "Clothes", parentId: null });
 		expect(ctx.categories.insertOne.mock.calls[0][0]).toMatchObject({ name: "Clothes", parentId: null });
 	});
 
-	it("POST /save answers 409 for a parent among the descendants", async () => {
+	it("PUT /:id answers 409 for a parent among the descendants", async () => {
 		const ctx = await setup();
 		app = ctx.app;
 		const child = "22222222-2222-4222-8222-222222222222";
@@ -73,13 +74,13 @@ describe("LifespanCategoriesController", () => {
 		);
 
 		const res = await app.inject({
-			method: "POST",
-			url: "/lifespan/categories/save",
-			payload: { id: CATEGORY_UUID, name: "Clothes", parentId: child },
+			method: "PUT",
+			url: `/lifespan/categories/${CATEGORY_UUID}`,
+			payload: { name: "Clothes", parentId: child },
 		});
 
 		expect(res.statusCode).toBe(409);
-		expect(ctx.categories.updateOne).not.toHaveBeenCalled();
+		expect(ctx.categories.findOneAndUpdate).not.toHaveBeenCalled();
 	});
 
 	it("DELETE /:id rejects a non-uuid id", async () => {
@@ -94,12 +95,11 @@ describe("LifespanCategoriesController", () => {
 
 		const res = await app.inject({ method: "DELETE", url: `/lifespan/categories/${CATEGORY_UUID}` });
 
-		expect(res.statusCode).toBe(200);
-		expect(res.json()).toEqual({ deleted: true });
+		expect(res.statusCode).toBe(204);
 		expect(ctx.categories.deleteOne).toHaveBeenCalledWith({ id: CATEGORY_UUID });
 	});
 
-	it("DELETE /:id answers 409 with the reason as the whole body when sub-categories exist", async () => {
+	it("DELETE /:id answers 409 with a message when sub-categories exist", async () => {
 		const ctx = await setup();
 		app = ctx.app;
 		ctx.categories.find.mockReturnValueOnce(makeCursor([{ id: "child" }]));
@@ -107,7 +107,7 @@ describe("LifespanCategoriesController", () => {
 		const res = await app.inject({ method: "DELETE", url: `/lifespan/categories/${CATEGORY_UUID}` });
 
 		expect(res.statusCode).toBe(409);
-		expect(res.json()).toEqual({ deleted: false, reason: "has_children" });
+		expect(res.json()).toMatchObject({ statusCode: 409, message: expect.stringMatching(/sous-catégories/) });
 		expect(ctx.categories.deleteOne).not.toHaveBeenCalled();
 	});
 
@@ -119,6 +119,6 @@ describe("LifespanCategoriesController", () => {
 		const res = await app.inject({ method: "DELETE", url: `/lifespan/categories/${CATEGORY_UUID}` });
 
 		expect(res.statusCode).toBe(409);
-		expect(res.json()).toEqual({ deleted: false, reason: "in_use" });
+		expect(res.json()).toMatchObject({ statusCode: 409, message: expect.stringMatching(/objets/) });
 	});
 });

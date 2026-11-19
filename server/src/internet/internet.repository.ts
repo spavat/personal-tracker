@@ -165,23 +165,32 @@ export class InternetRepository {
 			.toArray();
 	}
 
-	insertProgram(program: ProgramMongo) {
-		return this.collection.insertOne(program);
+	// a copy: the driver adds `_id` to the document it inserts
+	async insertProgram(program: ProgramMongo) {
+		await this.collection.insertOne({ ...program });
+		return program;
 	}
 
+	// the updated program, null for an unknown id
 	updateProgram(id: string, program: Partial<ProgramMongo>) {
-		return this.collection.updateOne({ id }, { $set: program }, { upsert: false });
+		return this.collection.findOneAndUpdate(
+			{ id },
+			{ $set: program },
+			{ projection: { _id: 0 }, returnDocument: "after" },
+		);
 	}
 
 	setRssRef(programId: string, rssUrl: string) {
 		return this.collection.updateOne({ id: programId }, { $set: { "refs.rss": rssUrl } });
 	}
 
-	pushEpisode(programId: string, episode: EpisodeMongo) {
-		return this.collection.updateOne({ id: programId }, { $push: { episodes: episode } });
+	// false for an unknown program
+	async pushEpisode(programId: string, episode: EpisodeMongo) {
+		return (await this.collection.updateOne({ id: programId }, { $push: { episodes: episode } })).matchedCount > 0;
 	}
 
-	updateEpisode(programId: string, episode: Partial<EpisodeMongo> & { id: string }) {
+	// false for an unknown program or episode
+	async updateEpisode(programId: string, episode: Partial<EpisodeMongo> & { id: string }) {
 		// Transform episode fields to dot notation
 		const setFields = Object.fromEntries(
 			Object.entries(episode).map(([key, value]) => [`episodes.$[element].${key}`, value]),
@@ -196,11 +205,19 @@ export class InternetRepository {
 		const update: UpdateFilter<ProgramMongo> = { $set: setFields };
 		if (Object.keys(unsetFields).length > 0) update.$unset = unsetFields;
 
-		return this.collection.updateOne({ id: programId }, update, { arrayFilters: [{ "element.id": episode.id }] });
+		const result = await this.collection.updateOne({ id: programId, "episodes.id": episode.id }, update, {
+			arrayFilters: [{ "element.id": episode.id }],
+		});
+		return result.matchedCount > 0;
 	}
 
-	deleteEpisode(programId: string, episodeId: string) {
-		return this.collection.updateOne({ id: programId }, { $pull: { episodes: { id: episodeId } } });
+	// false for an unknown program or episode
+	async deleteEpisode(programId: string, episodeId: string) {
+		const result = await this.collection.updateOne(
+			{ id: programId, "episodes.id": episodeId },
+			{ $pull: { episodes: { id: episodeId } } },
+		);
+		return result.modifiedCount > 0;
 	}
 
 	// Same filtering as findEpisodesInRange, sorted by latest episode

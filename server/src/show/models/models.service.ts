@@ -58,7 +58,10 @@ export class ModelsService {
 		this.logger.log("delete");
 		await this.repo.runInTransaction(async (tx) => {
 			await this.repo.deleteModelRoles(tx, id);
-			await this.repo.deleteModel(tx, id);
+			// an unknown id rolls back
+			if (!(await this.repo.deleteModel(tx, id))) {
+				throw new NotFoundError("Modèle introuvable");
+			}
 		});
 	}
 }

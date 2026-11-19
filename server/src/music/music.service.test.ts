@@ -50,17 +50,19 @@ describe("GenresService", () => {
 		genres.list();
 		expect(genresRepo.findAll).toHaveBeenCalled();
 	});
-	it("save inserts a built genre when there is no id", () => {
-		genres.save({ name: "Rock", genres: ["prog"] });
+	it("create inserts a built genre", () => {
+		genres.create({ name: "Rock", genres: ["prog"] });
 		expect(genresRepo.insert.mock.calls[0][0]).toMatchObject({ name: "Rock", genres: ["prog"] });
 		expect(genresRepo.insert.mock.calls[0][0].id).toEqual(expect.any(String));
 	});
-	it("save updates an existing genre without its id in the patch", () => {
-		genres.save({ id: "g1", name: "Metal", genres: [] });
+	it("update updates an existing genre without its id in the patch", async () => {
+		genresRepo.update.mockResolvedValue({ id: "g1" });
+		await genres.update("g1", { id: "g1", name: "Metal", genres: [] });
 		expect(genresRepo.update).toHaveBeenCalledWith("g1", { name: "Metal", genres: [] });
 		expect(genresRepo.insert).not.toHaveBeenCalled();
 	});
 	it("delete forwards the id", () => {
+		genresRepo.delete.mockResolvedValue(true);
 		genres.delete("g1");
 		expect(genresRepo.delete).toHaveBeenCalledWith("g1");
 	});
@@ -80,14 +82,15 @@ describe("MusicService", () => {
 		expect(musicRepo.findById).toHaveBeenCalledWith("l1");
 	});
 
-	it("save updates when an id is present, dropping empty context tags", () => {
-		music.save({ id: "l1", album: "X", contextTags: [] } as never);
+	it("update drops empty context tags", async () => {
+		musicRepo.update.mockResolvedValue({ id: "l1" });
+		await music.update("l1", { id: "l1", album: "X", contextTags: [] } as never);
 		expect(musicRepo.update).toHaveBeenCalledWith("l1", { album: "X" });
 		expect(musicRepo.insert).not.toHaveBeenCalled();
 	});
 
-	it("save inserts a new listening with id and created when there is no id", () => {
-		music.save({ album: "X" } as never);
+	it("create inserts a new listening with id and created", () => {
+		music.create({ album: "X" } as never);
 		const inserted = musicRepo.insert.mock.calls[0][0];
 		expect(inserted).toMatchObject({ album: "X" });
 		expect(inserted.id).toEqual(expect.any(String));
@@ -95,6 +98,7 @@ describe("MusicService", () => {
 	});
 
 	it("delete forwards the id", () => {
+		musicRepo.delete.mockResolvedValue(true);
 		music.delete("l1");
 		expect(musicRepo.delete).toHaveBeenCalledWith("l1");
 	});

@@ -85,7 +85,7 @@ test.describe("anonymous visitor", () => {
 			expect((await request.get(`${API}/show/artists/`)).status()).toBe(200);
 			expect((await request.get(`${API}/show/performances/${performances.paris2025}`)).status()).toBe(200);
 			expect((await request.get(`${API}/show/reports?from=2026-01-01&to=2026-12-31`)).status()).toBe(401);
-			expect((await request.post(`${API}/show/artists/save`, { data: { name: "Intrus" } })).status()).toBe(401);
+			expect((await request.post(`${API}/show/artists`, { data: { name: "Intrus" } })).status()).toBe(401);
 			expect((await request.delete(`${API}/show/artists/${artists.alice.id}`)).status()).toBe(401);
 			expect((await request.delete(`${API}/show/performances/${performances.paris2025}`)).status()).toBe(401);
 		});
@@ -151,7 +151,7 @@ test.describe("anonymous visitor", () => {
 			expect((await request.get(`${API}/internet/latest/${mockPodcast.id}`)).status()).toBe(401);
 			expect((await request.get(`${API}/internet/extract?url=https://example.com`)).status()).toBe(401);
 			expect(
-				(await request.post(`${API}/internet/save`, { data: { program: { name: "Intrus" } } })).status(),
+				(await request.post(`${API}/internet/programs`, { data: { program: { name: "Intrus" } } })).status(),
 			).toBe(401);
 			expect(
 				(
@@ -247,9 +247,9 @@ test.describe("anonymous visitor", () => {
 			expect((await request.get(`${API}/music/stats?from=2026-01-01&to=2026-12-31`)).status()).toBe(200);
 			expect((await request.get(`${API}/music/fortnight-stats`)).status()).toBe(200);
 			expect((await request.get(`${API}/music/reports?from=2026-01-01&to=2026-12-31`)).status()).toBe(401);
-			expect((await request.post(`${API}/music/save`, { data: { album: "Intrus" } })).status()).toBe(401);
+			expect((await request.post(`${API}/music`, { data: { album: "Intrus" } })).status()).toBe(401);
 			expect((await request.delete(`${API}/music/${discovery.id}`)).status()).toBe(401);
-			expect((await request.post(`${API}/music/genres/save`, { data: { name: "Intrus" } })).status()).toBe(401);
+			expect((await request.post(`${API}/music/genres`, { data: { name: "Intrus" } })).status()).toBe(401);
 			expect((await request.delete(`${API}/music/genres/${musicGenres.rock.id}`)).status()).toBe(401);
 		});
 	});
@@ -355,25 +355,23 @@ test.describe("anonymous visitor", () => {
 			expect((await request.get(`${API}/reading-book/authors`)).status()).toBe(200);
 			expect((await request.get(`${API}/reading-book/series`)).status()).toBe(200);
 			expect(
-				(
-					await request.post(`${API}/reading-book/series/save`, { data: { title: "Intrus", books: [] } })
-				).status(),
+				(await request.post(`${API}/reading-book/series`, { data: { title: "Intrus", books: [] } })).status(),
 			).toBe(401);
 			expect((await request.delete(`${API}/reading-book/series/${ALICE_READING_ID}`)).status()).toBe(401);
 			// the entities are only listed for the forms
 			expect((await request.get(`${API}/entities?kind=person`)).status()).toBe(401);
 			expect((await request.get(`${API}/reading-book/reports?from=2026-01-01&to=2026-12-31`)).status()).toBe(401);
-			expect((await request.post(`${API}/reading-book/save`, { data: { book: "Intrus" } })).status()).toBe(401);
+			expect((await request.post(`${API}/reading-book/books`, { data: { book: "Intrus" } })).status()).toBe(401);
 			// any uuid as edition: the login is checked before the edition is looked for
 			const editionUrl = `${API}/reading-book/books/${alice.id}/editions/${ALICE_READING_ID}`;
 			expect((await request.post(`${editionUrl}/readings`)).status()).toBe(401);
-			expect(
-				(await request.post(`${API}/reading-book/books/${alice.id}/editions/save`, { data: {} })).status(),
-			).toBe(401);
+			expect((await request.post(`${API}/reading-book/books/${alice.id}/editions`, { data: {} })).status()).toBe(
+				401,
+			);
 			expect((await request.delete(editionUrl)).status()).toBe(401);
-			expect(
-				(await request.post(`${API}/reading-book/books/${alice.id}/models/save`, { data: {} })).status(),
-			).toBe(401);
+			expect((await request.post(`${API}/reading-book/books/${alice.id}/models`, { data: {} })).status()).toBe(
+				401,
+			);
 			expect(
 				(await request.delete(`${API}/reading-book/books/${alice.id}/models/${ALICE_READING_ID}`)).status(),
 			).toBe(401);
@@ -432,7 +430,9 @@ test.describe("anonymous visitor", () => {
 		test("reads the public endpoints but cannot write", async ({ request }) => {
 			expect((await request.get(`${API}/reading-manga/mangas`)).status()).toBe(200);
 			expect((await request.get(`${API}/reading-manga/mangas/${onePiece.id}`)).status()).toBe(200);
-			expect((await request.post(`${API}/reading-manga/save`, { data: { title: "Intrus" } })).status()).toBe(401);
+			expect((await request.post(`${API}/reading-manga/mangas`, { data: { title: "Intrus" } })).status()).toBe(
+				401,
+			);
 			expect(
 				(
 					await request.delete(`${API}/reading-manga/mangas/${onePiece.id}/readings/${ONE_PIECE_READING_ID}`)
@@ -491,7 +491,9 @@ test.describe("anonymous visitor", () => {
 			expect((await request.get(`${API}/game/games`)).status()).toBe(200);
 			expect((await request.get(`${API}/game/games/${hollow.id}`)).status()).toBe(200);
 			expect((await request.get(`${API}/game/plays?from=2026-01-01&to=2026-12-31`)).status()).toBe(200);
-			expect((await request.post(`${API}/game/save`, { data: { game: { name: "Intrus" } } })).status()).toBe(401);
+			expect((await request.post(`${API}/game/games`, { data: { game: { name: "Intrus" } } })).status()).toBe(
+				401,
+			);
 			expect((await request.delete(`${API}/game/games/${hollow.id}/plays/${HOLLOW_PLAY_ID}`)).status()).toBe(401);
 			expect((await request.get(`${API}/game/sync/status`)).status()).toBe(401);
 			expect((await request.post(`${API}/game/sync/run`)).status()).toBe(401);

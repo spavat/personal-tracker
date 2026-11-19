@@ -51,7 +51,7 @@ describe("TagsService", () => {
 		});
 
 		it("deletes an unused tag", async () => {
-			expect(await service.delete(1)).toEqual({ deleted: true });
+			await expect(service.delete(1)).resolves.toBeUndefined();
 		});
 	});
 

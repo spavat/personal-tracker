@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, HttpCode, Body } from "@nestjs/common";
+import { Controller, Get, Post, Put, Delete, Param, HttpCode, Body } from "@nestjs/common";
 import {
 	CategoryParamsRequestSchema,
 	CreateCategoryBody,
@@ -24,13 +24,11 @@ export class CategoriesController {
 	}
 
 	@Post()
-	@HttpCode(200)
 	create(@Body({ schema: CreateCategoryBodyRequestSchema }) body: CreateCategoryBody) {
 		return this.service.create(body);
 	}
 
-	@Post(":id")
-	@HttpCode(200)
+	@Put(":id")
 	update(
 		@Param({ schema: CategoryParamsRequestSchema }) { id }: { id: number },
 		@Body({ schema: UpdateCategoryBodyRequestSchema }) body: UpdateCategoryBody,
@@ -39,7 +37,8 @@ export class CategoriesController {
 	}
 
 	@Delete(":id")
-	delete(@Param({ schema: CategoryParamsRequestSchema }) { id }: { id: number }) {
-		return this.service.delete(id);
+	@HttpCode(204)
+	async delete(@Param({ schema: CategoryParamsRequestSchema }) { id }: { id: number }) {
+		await this.service.delete(id);
 	}
 }

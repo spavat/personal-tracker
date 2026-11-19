@@ -46,15 +46,18 @@ export class SportRepository {
 		);
 	}
 
-	insert(activity: SportActivity) {
-		return this.collection.insertOne(activity);
+	// a copy: the driver adds `_id` to the document it inserts
+	async insert(activity: SportActivity) {
+		await this.collection.insertOne({ ...activity });
+		return activity;
 	}
 
-	// `unset`: optional fields removed from the activity, which $set alone would keep
+	// the updated activity, null for an unknown id. `unset`: optional fields removed from the activity, which $set
+	// alone would keep
 	update(id: string, activity: Partial<SportActivity>, unset: string[] = []) {
 		const update: UpdateFilter<SportActivity> = { $set: activity };
 		if (unset.length > 0) update.$unset = Object.fromEntries(unset.map((field) => [field, ""]));
-		return this.collection.updateOne({ id }, update, { upsert: false });
+		return this.collection.findOneAndUpdate({ id }, update, { projection: { _id: 0 }, returnDocument: "after" });
 	}
 
 	delete(id: string) {

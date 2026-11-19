@@ -1,7 +1,6 @@
-import type { ServerResponse } from "node:http";
 import type { z } from "zod";
 
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, Res, SerializeOptions } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, SerializeOptions } from "@nestjs/common";
 import {
 	DeleteWorkParamsRequestSchema,
 	SaveWorkBodyRequestSchema,
@@ -13,7 +12,7 @@ import {
 import type { SaveWorkBody } from "./work.entity.js";
 
 import { Public } from "../../auth/public.decorator.js";
-import { orNotFound, savedOr404 } from "../show-reply.utils.js";
+import { orNotFound } from "../show-reply.utils.js";
 import { WorksService } from "./works.service.js";
 
 @Controller()
@@ -38,13 +37,19 @@ export class WorksController {
 		return orNotFound(this.service.get(id), "Œuvre introuvable");
 	}
 
-	@Post("save")
+	@Post()
 	@SerializeOptions({ schema: WorkSchema })
-	save(
+	create(@Body({ schema: SaveWorkBodyRequestSchema }) body: SaveWorkBody) {
+		return orNotFound(this.service.save({ ...body, id: undefined }), "Œuvre introuvable");
+	}
+
+	@Put(":id")
+	@SerializeOptions({ schema: WorkSchema })
+	update(
+		@Param({ schema: WorkDetailsParamsRequestSchema }) { id }: { id: number },
 		@Body({ schema: SaveWorkBodyRequestSchema }) body: SaveWorkBody,
-		@Res({ passthrough: true }) response: ServerResponse,
 	) {
-		return savedOr404(response, Boolean(body.id), this.service.save(body), "Œuvre introuvable");
+		return orNotFound(this.service.save({ ...body, id }), "Œuvre introuvable");
 	}
 
 	@Delete(":id")

@@ -45,10 +45,9 @@ describe("SportController", () => {
 		it("rejects segments with duplicate times", async () => {
 			({ app } = await setup());
 			const res = await app.inject({
-				method: "POST",
-				url: "/sport/segments",
+				method: "PUT",
+				url: `/sport/${UUID}/segments`,
 				payload: {
-					id: UUID,
 					segments: [
 						{ time: 0, type: "running" },
 						{ time: 0, type: "pause" },
@@ -62,8 +61,8 @@ describe("SportController", () => {
 			({ app } = await setup());
 			const res = await app.inject({
 				method: "POST",
-				url: "/sport/crop",
-				payload: { id: UUID, startIndex: 2, endIndex: 2 },
+				url: `/sport/${UUID}/crop`,
+				payload: { startIndex: 2, endIndex: 2 },
 			});
 			expect(res.statusCode).toBe(400);
 		});
@@ -73,7 +72,7 @@ describe("SportController", () => {
 			app = ctx.app;
 			const { id, date, created, ...body } = ACTIVITY;
 
-			const res = await app.inject({ method: "POST", url: "/sport/save", payload: body });
+			const res = await app.inject({ method: "POST", url: "/sport", payload: body });
 
 			expect(res.statusCode).toBe(400);
 			expect(res.json()).toMatchObject({ error: "Bad Request" });
@@ -127,7 +126,7 @@ describe("SportController", () => {
 
 		const res = await app.inject({ method: "DELETE", url: `/sport/${UUID}` });
 
-		expect(res.statusCode).toBe(200);
+		expect(res.statusCode).toBe(204);
 		expect(ctx.activities.findOneAndDelete).toHaveBeenCalledWith({ id: UUID });
 		expect(ctx.storage.delete.mock.calls).toEqual([["g.gpx"], ["t.avif"]]);
 	});

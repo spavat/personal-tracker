@@ -5,6 +5,7 @@ import {
 	LifespanCategorySaveBodyRequestSchema,
 	LifespanEventDeleteParamsRequestSchema,
 	LifespanObjectDeleteParamsRequestSchema,
+	LifespanEventSaveBodyRequestSchema,
 	LifespanObjectSaveBodyRequestSchema,
 	LifespanObjectWithStatus,
 } from "@personal-tracker/shared/lifespan";
@@ -12,7 +13,7 @@ import { queryOptions } from "@tanstack/react-query";
 
 import type { SortListConfig } from "../../hooks/use-sort-table";
 
-import { checkResponse, fetchJson, sendJson, withQuery } from "../../api-utils";
+import { fetchJson, saveJson, sendJson, withQuery } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
 
 //
@@ -35,20 +36,13 @@ export const categoriesQuery = () =>
 
 export async function saveCategory(data: any) {
 	const sentData = LifespanCategorySaveBodyRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/lifespan/categories/save`, "POST", sentData);
+	return saveJson(`${API_BASE_URL}/lifespan/categories`, sentData);
 }
 
-export async function deleteCategory(data: any): Promise<{ deleted: boolean; reason?: "has_children" | "in_use" }> {
+// 409 when it still has sub-categories or objects: the error message says why
+export async function deleteCategory(data: any) {
 	const { id } = LifespanCategoryDeleteParamsRequestSchema.parse(data);
-	const response = await fetch(`${API_BASE_URL}/lifespan/categories/${id}`, {
-		method: "DELETE",
-		credentials: "include",
-	});
-	// 409: deletion refused, the body gives the reason
-	if (response.status !== 409) {
-		await checkResponse(response);
-	}
-	return response.json();
+	return sendJson(`${API_BASE_URL}/lifespan/categories/${id}`, "DELETE");
 }
 
 //
@@ -85,7 +79,15 @@ export const objectDetailsQuery = (id: string) =>
 
 export async function saveObject(data: any) {
 	const sentData = LifespanObjectSaveBodyRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/lifespan/objects/save`, "POST", sentData);
+	const { id } = sentData.object;
+	return id
+		? sendJson(`${API_BASE_URL}/lifespan/objects/${id}`, "PUT", sentData)
+		: sendJson(`${API_BASE_URL}/lifespan/objects`, "POST", sentData);
+}
+
+export async function saveEvent({ objectId, event }: { objectId: string; event: any }) {
+	const sentData = LifespanEventSaveBodyRequestSchema.parse(event);
+	return saveJson(`${API_BASE_URL}/lifespan/objects/${objectId}/events`, sentData);
 }
 
 export async function deleteObject(data: any) {

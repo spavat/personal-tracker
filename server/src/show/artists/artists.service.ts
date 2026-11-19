@@ -2,6 +2,7 @@ import type { ArtistListResponse, SaveArtistBodyRequest } from "@personal-tracke
 
 import { Injectable, Logger } from "@nestjs/common";
 
+import { NotFoundError } from "../../common/errors.js";
 import { sortByMediaOrder, toArtistMedia } from "../media/media.entity.js";
 import { toPerformanceView } from "../performances/performance.entity.js";
 import { toArtistView } from "./artist.entity.js";
@@ -87,6 +88,8 @@ export class ArtistsService {
 
 	async delete(id: number) {
 		this.logger.log("delete");
-		await this.repo.delete(id);
+		if (!(await this.repo.delete(id))) {
+			throw new NotFoundError("Artiste introuvable");
+		}
 	}
 }

@@ -14,7 +14,7 @@ function fakeRepo() {
 		insertModel: vi.fn().mockResolvedValue([{ id: 42 }]),
 		insertArtist: vi.fn().mockResolvedValue([{ id: 99 }]),
 		insertModelRole: vi.fn().mockResolvedValue([{ id: 1 }]),
-		deleteModel: vi.fn().mockResolvedValue(undefined),
+		deleteModel: vi.fn().mockResolvedValue(true),
 		tx,
 	};
 }

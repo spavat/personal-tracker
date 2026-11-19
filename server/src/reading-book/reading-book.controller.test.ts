@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
 	coreNode,
@@ -26,6 +26,43 @@ const ENTITY_UUID = "66666666-6666-4666-8666-666666666666";
 const SERIES_UUID = "77777777-7777-4777-8777-777777777777";
 
 const OWNER = { user: { id: "owner" }, session: { id: "session" } };
+// the id a new edition or model gets: the writes answer it read back from the book
+const NEW_UUID = "88888888-8888-4888-8888-888888888888";
+vi.mock("node:crypto", async (original) => ({
+	...(await original<typeof import("node:crypto")>()),
+	randomUUID: () => NEW_UUID,
+}));
+
+// The book row the writes read back, holding a model, an edition and a reading of these ids
+function bookRow({ modelId = MODEL_UUID, editionId = EDITION_UUID, readingId = READING_UUID } = {}) {
+	return {
+		id: UUID,
+		title: "Dune",
+		originalLanguage: "en",
+		originalYear: 1965,
+		country: "us",
+		contributors: [],
+		series: [],
+		models: [{ id: modelId, name: "VO", tree: [] }],
+		editions: [
+			{
+				id: editionId,
+				title: null,
+				publisher: null,
+				collection: null,
+				contributors: [],
+				language: "fr",
+				pages: null,
+				type: "print",
+				isbn: null,
+				year: null,
+				coverKey: null,
+				modelId,
+				readings: [{ id: readingId, status: "complete", entries: [] }],
+			},
+		],
+	};
+}
 
 const tablesOf = (fn: { mock: { calls: unknown[][] } }) => fn.mock.calls.map((call) => call[0]);
 
@@ -59,7 +96,7 @@ describe("reading-book routes", () => {
 		});
 
 		it("rejects a save with a missing body", async () => {
-			const res = await ctx.app.inject({ method: "POST", url: "/reading-book/save", payload: {} });
+			const res = await ctx.app.inject({ method: "POST", url: "/reading-book/books", payload: {} });
 			expect(res.statusCode).toBe(400);
 		});
 
@@ -87,14 +124,15 @@ describe("reading-book routes", () => {
 			expect(ctx.books.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { id: UUID } }));
 		});
 
-		it("POST /save creates the node, the book, its authors, a model and an edition", async () => {
+		it("POST /books creates the node, the book, its authors, a model and an edition", async () => {
 			await ctx.app.close();
 			// every select answers this row: the book's id, and 1 entity found for the author check
 			ctx = await buildApp([{ id: UUID, count: 1 }]);
+			ctx.books.findFirst.mockResolvedValue(bookRow());
 
 			const res = await ctx.app.inject({
 				method: "POST",
-				url: "/reading-book/save",
+				url: "/reading-book/books",
 				payload: {
 					book: "Dune",
 					authors: [{ entityId: ENTITY_UUID, creditedAs: null }],
@@ -104,7 +142,8 @@ describe("reading-book routes", () => {
 				},
 			});
 
-			expect(res.statusCode).toBe(200);
+			expect(res.statusCode).toBe(201);
+			expect(res.json()).toMatchObject({ id: UUID, book: "Dune" });
 			expect(tablesOf(ctx.db.insert)).toEqual([
 				coreNode,
 				readingBook,
@@ -123,7 +162,8 @@ describe("reading-book routes", () => {
 				url: `/reading-book/books/${UUID}/editions/${EDITION_UUID}/readings`,
 			});
 
-			expect(res.statusCode).toBe(204);
+			expect(res.statusCode).toBe(201);
+			expect(res.json()).toEqual({ id: NEW_UUID, status: "in-progress", details: [] });
 			expect(tablesOf(ctx.db.insert)).toEqual([readingReading]);
 		});
 
@@ -137,13 +177,14 @@ describe("reading-book routes", () => {
 			expect(ctx.db.insert).not.toHaveBeenCalled();
 		});
 
-		it("POST /books/:id/editions/save creates an edition with its publisher and translators", async () => {
+		it("POST /books/:id/editions creates an edition with its publisher and translators", async () => {
 			await ctx.app.close();
 			ctx = await buildApp([{ id: EDITION_UUID, count: 1 }]);
+			ctx.books.findFirst.mockResolvedValue(bookRow({ editionId: NEW_UUID }));
 
 			const res = await ctx.app.inject({
 				method: "POST",
-				url: `/reading-book/books/${UUID}/editions/save`,
+				url: `/reading-book/books/${UUID}/editions`,
 				payload: {
 					title: null,
 					publisherId: ENTITY_UUID,
@@ -159,39 +200,43 @@ describe("reading-book routes", () => {
 				},
 			});
 
-			expect(res.statusCode).toBe(204);
+			expect(res.statusCode).toBe(201);
+			expect(res.json()).toMatchObject({ id: NEW_UUID });
 			expect(tablesOf(ctx.db.insert)).toEqual([readingEdition, readingEditionContributor]);
 		});
 
-		it("POST /books/:id/editions/save accepts a cover of several MB sent as a data URI", async () => {
+		it("POST /books/:id/editions accepts a cover of several MB sent as a data URI", async () => {
 			const cover = `data:image/png;base64,${"A".repeat(6 * 1024 * 1024)}`;
 			const res = await ctx.app.inject({
 				method: "POST",
-				url: `/reading-book/books/${UUID}/editions/save`,
+				url: `/reading-book/books/${UUID}/editions`,
 				payload: { type: "audio", cover },
 			});
 			// past the body limit: refused by the validation, not as too large (413)
 			expect(res.statusCode).toBe(400);
 		});
 
-		it("POST /books/:id/models/save creates a model", async () => {
+		it("POST /books/:id/models creates a model", async () => {
 			await ctx.app.close();
-			ctx = await buildApp([{ id: UUID }]);
+			// the select finds the book, the insert returns the new model's id
+			ctx = await buildApp([{ id: MODEL_UUID }]);
+			ctx.books.findFirst.mockResolvedValue(bookRow());
 
 			const res = await ctx.app.inject({
 				method: "POST",
-				url: `/reading-book/books/${UUID}/models/save`,
+				url: `/reading-book/books/${UUID}/models`,
 				payload: { name: "VO", tree: [{ id: CHAPTER_UUID, title: "I" }] },
 			});
 
-			expect(res.statusCode).toBe(204);
+			expect(res.statusCode).toBe(201);
+			expect(res.json()).toEqual({ id: MODEL_UUID, name: "VO", tree: [] });
 			expect(tablesOf(ctx.db.insert)).toEqual([readingModel]);
 		});
 
-		it("POST /books/:id/models/save rejects a model without name", async () => {
+		it("POST /books/:id/models rejects a model without name", async () => {
 			const res = await ctx.app.inject({
 				method: "POST",
-				url: `/reading-book/books/${UUID}/models/save`,
+				url: `/reading-book/books/${UUID}/models`,
 				payload: { name: " ", tree: [] },
 			});
 			expect(res.statusCode).toBe(400);
@@ -210,10 +255,10 @@ describe("reading-book routes", () => {
 			expect(ctx.db.delete).not.toHaveBeenCalled();
 		});
 
-		it("POST /books/:id/editions/save rejects an unknown edition type", async () => {
+		it("POST /books/:id/editions rejects an unknown edition type", async () => {
 			const res = await ctx.app.inject({
 				method: "POST",
-				url: `/reading-book/books/${UUID}/editions/save`,
+				url: `/reading-book/books/${UUID}/editions`,
 				payload: { type: "audio" },
 			});
 			expect(res.statusCode).toBe(400);
@@ -232,13 +277,14 @@ describe("reading-book routes", () => {
 			expect(ctx.db.delete).not.toHaveBeenCalled();
 		});
 
-		it("POST /books/:id/saveReading replaces the reading's entries", async () => {
+		it("PUT /books/:id/readings/:readingId replaces the reading's entries", async () => {
 			await ctx.app.close();
 			ctx = await buildApp([{ id: READING_UUID }]);
+			ctx.books.findFirst.mockResolvedValue(bookRow());
 
 			const res = await ctx.app.inject({
-				method: "POST",
-				url: `/reading-book/books/${UUID}/saveReading`,
+				method: "PUT",
+				url: `/reading-book/books/${UUID}/readings/${READING_UUID}`,
 				payload: {
 					id: READING_UUID,
 					status: "complete",
@@ -246,13 +292,16 @@ describe("reading-book routes", () => {
 				},
 			});
 
-			expect(res.statusCode).toBe(204);
+			expect(res.statusCode).toBe(200);
+			expect(res.json()).toMatchObject({ id: READING_UUID });
 			expect(tablesOf(ctx.db.update)).toEqual([readingReading]);
 			expect(tablesOf(ctx.db.delete)).toEqual([readingEntry]);
 			expect(tablesOf(ctx.db.insert)).toEqual([readingEntry]);
 		});
 
 		it("DELETE /books/:id/readings/:readingId deletes the reading", async () => {
+			await ctx.app.close();
+			ctx = await buildApp([{ id: READING_UUID }]);
 			const res = await ctx.app.inject({
 				method: "DELETE",
 				url: `/reading-book/books/${UUID}/readings/${READING_UUID}`,
@@ -262,10 +311,10 @@ describe("reading-book routes", () => {
 			expect(tablesOf(ctx.db.delete)).toEqual([readingReading]);
 		});
 
-		it("POST /save rejects a book without author", async () => {
+		it("POST /books rejects a book without author", async () => {
 			const res = await ctx.app.inject({
 				method: "POST",
-				url: "/reading-book/save",
+				url: "/reading-book/books",
 				payload: { book: "Dune", authors: [], originalLanguage: "", originalYear: null, country: "" },
 			});
 			expect(res.statusCode).toBe(400);
@@ -290,14 +339,14 @@ describe("reading-book routes", () => {
 			expect(res.statusCode).toBe(404);
 		});
 
-		it("POST /series/save creates the node, the series and its items in order", async () => {
+		it("POST /series creates the node, the series and its items in order", async () => {
 			await ctx.app.close();
 			// every select answers this row: 1 book and 1 sub-series found, and no item (no cycle)
 			ctx = await buildApp([{ id: SERIES_UUID, count: 1 }]);
 
 			const res = await ctx.app.inject({
 				method: "POST",
-				url: "/reading-book/series/save",
+				url: "/reading-book/series",
 				payload: {
 					title: "Terre du Milieu",
 					items: [
@@ -308,14 +357,14 @@ describe("reading-book routes", () => {
 			});
 
 			expect(res.statusCode).toBe(201);
-			expect(res.json()).toEqual({ id: SERIES_UUID });
+			expect(res.json()).toMatchObject({ id: SERIES_UUID });
 			expect(tablesOf(ctx.db.insert)).toEqual([coreNode, readingSeries, readingSeriesItem]);
 		});
 
-		it("POST /series/save rejects a series without title", async () => {
+		it("POST /series rejects a series without title", async () => {
 			const res = await ctx.app.inject({
 				method: "POST",
-				url: "/reading-book/series/save",
+				url: "/reading-book/series",
 				payload: { title: " ", items: [] },
 			});
 			expect(res.statusCode).toBe(400);
@@ -358,7 +407,7 @@ describe("reading-book access", () => {
 				method: "GET",
 				url: "/reading-book/reports?from=2024-01-01&to=2024-12-31",
 			});
-			const save = await app.inject({ method: "POST", url: "/reading-book/save", payload: {} });
+			const save = await app.inject({ method: "POST", url: "/reading-book/books", payload: {} });
 			expect(report.statusCode).toBe(401);
 			expect(save.statusCode).toBe(401);
 		} finally {

@@ -1,9 +1,13 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query } from "@nestjs/common";
 import {
 	DetailsGameParamsRequestSchema,
 	GameDeleteParamsRequestSchema,
 	type GameDeleteParamsRequestType,
 	GameListQuerystringRequestSchema,
+	GameParamsRequestSchema,
+	GamePlayParamsRequestSchema,
+	GamePlaySaveBodyRequestSchema,
+	type GamePlaySaveBodyRequestType,
 	GameSaveBodyRequestSchema,
 	type GameSaveBodyRequestType,
 	PlayListQuerystringRequestSchema,
@@ -35,14 +39,41 @@ export class GameController {
 		return this.service.getGame(id);
 	}
 
-	@Post("save")
-	@HttpCode(200)
-	save(@Body({ schema: GameSaveBodyRequestSchema }) body: GameSaveBodyRequestType) {
-		return this.service.save(body);
+	// the game, with an optional first play
+	@Post("games")
+	create(@Body({ schema: GameSaveBodyRequestSchema }) body: GameSaveBodyRequestType) {
+		return this.service.create(body);
+	}
+
+	@Put("games/:id")
+	update(
+		@Param({ schema: GameParamsRequestSchema }) { id }: { id: string },
+		@Body({ schema: GameSaveBodyRequestSchema }) body: GameSaveBodyRequestType,
+	) {
+		return this.service.update(id, body);
+	}
+
+	@Post("games/:gameId/plays")
+	createPlay(
+		@Param({ schema: GamePlayParamsRequestSchema }) { gameId }: { gameId: string },
+		@Body({ schema: GamePlaySaveBodyRequestSchema }) play: GamePlaySaveBodyRequestType,
+	) {
+		return this.service.createPlay(gameId, play);
+	}
+
+	@Put("games/:gameId/plays/:playId")
+	updatePlay(
+		@Param({ schema: GameDeleteParamsRequestSchema }) { gameId, playId }: GameDeleteParamsRequestType,
+		@Body({ schema: GamePlaySaveBodyRequestSchema }) play: GamePlaySaveBodyRequestType,
+	) {
+		return this.service.updatePlay(gameId, playId, play);
 	}
 
 	@Delete("games/:gameId/plays/:playId")
-	deletePlay(@Param({ schema: GameDeleteParamsRequestSchema }) { gameId, playId }: GameDeleteParamsRequestType) {
-		return this.service.deletePlay(gameId, playId);
+	@HttpCode(204)
+	async deletePlay(
+		@Param({ schema: GameDeleteParamsRequestSchema }) { gameId, playId }: GameDeleteParamsRequestType,
+	) {
+		await this.service.deletePlay(gameId, playId);
 	}
 }

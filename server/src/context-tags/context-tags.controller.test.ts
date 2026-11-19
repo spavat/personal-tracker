@@ -37,7 +37,7 @@ describe("ContextTagsController", () => {
 			const ctx = await setup(null);
 			app = ctx.app;
 
-			const res = await app.inject({ method: "POST", url: "/context-tags/save", payload: { name: 42 } });
+			const res = await app.inject({ method: "POST", url: "/context-tags", payload: { name: 42 } });
 
 			expect(res.statusCode).toBe(401);
 		});
@@ -78,14 +78,14 @@ describe("ContextTagsController", () => {
 		});
 	});
 
-	describe("POST /context-tags/save", () => {
+	describe("POST /context-tags", () => {
 		it("rejects an invalid body with 400 and writes nothing", async () => {
 			const ctx = await setup();
 			app = ctx.app;
 
 			const res = await app.inject({
 				method: "POST",
-				url: "/context-tags/save",
+				url: "/context-tags",
 				payload: { name: 42, tags: [] },
 			});
 
@@ -93,29 +93,53 @@ describe("ContextTagsController", () => {
 			expect(ctx.tags.insertOne).not.toHaveBeenCalled();
 		});
 
-		it("inserts a new tag with a generated id, without the unknown keys", async () => {
+		it("inserts a new tag with a generated id, without the unknown keys, and answers 201 with it", async () => {
 			const ctx = await setup();
 			app = ctx.app;
 
 			const res = await app.inject({
 				method: "POST",
-				url: "/context-tags/save",
+				url: "/context-tags",
 				payload: { name: "Genre", tags: ["scifi"], admin: true },
 			});
 
+			expect(res.statusCode).toBe(201);
+			const tag = { id: expect.any(String), name: "Genre", tags: ["scifi"] };
+			expect(ctx.tags.insertOne).toHaveBeenCalledWith(tag);
+			expect(res.json()).toEqual(tag);
+		});
+	});
+
+	describe("PUT /context-tags/:id", () => {
+		it("answers 200 with the updated tag", async () => {
+			const ctx = await setup();
+			app = ctx.app;
+			const updated = { id: UUID, name: "Genre", tags: ["polar"] };
+			ctx.tags.findOneAndUpdate.mockResolvedValueOnce(updated);
+
+			const res = await app.inject({
+				method: "PUT",
+				url: `/context-tags/${UUID}`,
+				payload: { name: "Genre", tags: ["polar"] },
+			});
+
 			expect(res.statusCode).toBe(200);
-			expect(ctx.tags.insertOne).toHaveBeenCalledWith({ id: expect.any(String), name: "Genre", tags: ["scifi"] });
+			expect(res.json()).toEqual(updated);
+			expect(ctx.tags.findOneAndUpdate).toHaveBeenCalledWith(
+				{ id: UUID },
+				{ $set: { name: "Genre", tags: ["polar"] } },
+				expect.anything(),
+			);
 		});
 
 		it("answers 404 when updating an id that matches nothing", async () => {
 			const ctx = await setup();
 			app = ctx.app;
-			ctx.tags.updateOne.mockResolvedValueOnce({ acknowledged: true, matchedCount: 0, modifiedCount: 0 });
 
 			const res = await app.inject({
-				method: "POST",
-				url: "/context-tags/save",
-				payload: { id: UUID, name: "Genre", tags: [] },
+				method: "PUT",
+				url: `/context-tags/${UUID}`,
+				payload: { name: "Genre", tags: [] },
 			});
 
 			expect(res.statusCode).toBe(404);
@@ -150,7 +174,7 @@ describe("ContextTagsController", () => {
 
 			const res = await app.inject({ method: "DELETE", url: `/context-tags/${UUID}` });
 
-			expect(res.statusCode).toBe(200);
+			expect(res.statusCode).toBe(204);
 			expect(ctx.tags.deleteOne).toHaveBeenCalledWith({ id: UUID });
 		});
 	});

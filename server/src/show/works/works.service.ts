@@ -4,6 +4,7 @@ import { Injectable, Logger } from "@nestjs/common";
 
 import type { SaveWorkBody } from "./work.entity.js";
 
+import { NotFoundError } from "../../common/errors.js";
 import { WorksRepository } from "./works.repository.js";
 
 @Injectable()
@@ -179,6 +180,8 @@ export class WorksService {
 
 	async delete(id: number) {
 		this.logger.log("delete");
-		await this.repo.delete(id);
+		if (!(await this.repo.delete(id))) {
+			throw new NotFoundError("Œuvre introuvable");
+		}
 	}
 }

@@ -105,18 +105,32 @@ describe("InternetModule controllers", () => {
 			).toBe(400);
 		});
 
-		it("rejects a save body mixing a program with a programId", async () => {
+		it("rejects a program body without its program", async () => {
 			const ctx = await setup();
 			app = ctx.app;
 
 			const res = await app.inject({
 				method: "POST",
-				url: "/internet/save",
-				payload: { program: { id: PROGRAM, name: "Prog" }, programId: PROGRAM, episode: { name: "Ep" } },
+				url: "/internet/programs",
+				payload: { episode: { name: "Ep" } },
 			});
 
 			expect(res.statusCode).toBe(400);
-			expect(ctx.programs.updateOne).not.toHaveBeenCalled();
+			expect(ctx.programs.insertOne).not.toHaveBeenCalled();
+		});
+
+		it("rejects a proposal validated as both a new program and an episode of an existing one", async () => {
+			const ctx = await setup();
+			app = ctx.app;
+
+			const res = await app.inject({
+				method: "POST",
+				url: `/internet/sync/33333333-3333-4333-8333-333333333333/validate`,
+				payload: { program: { name: "Prog" }, programId: PROGRAM, episode: { name: "Ep" } },
+			});
+
+			expect(res.statusCode).toBe(400);
+			expect(ctx.programs.insertOne).not.toHaveBeenCalled();
 		});
 
 		it("answers 400 to the latest episodes of a program without feed", async () => {
@@ -169,14 +183,14 @@ describe("InternetModule controllers", () => {
 		});
 	});
 
-	it("POST /sync/validate/:id saves the episode, then removes the proposal", async () => {
+	it("POST /sync/:id/validate saves the episode, then removes the proposal", async () => {
 		const ctx = await setup();
 		app = ctx.app;
 		const proposal = "33333333-3333-4333-8333-333333333333";
 
 		const res = await app.inject({
 			method: "POST",
-			url: `/internet/sync/validate/${proposal}`,
+			url: `/internet/sync/${proposal}/validate`,
 			payload: {
 				programId: PROGRAM,
 				episode: { name: "Ep", duration: 30, date: "2026-10-01", type: "podcast", tags: [], contextTags: [] },

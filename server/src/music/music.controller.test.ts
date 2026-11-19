@@ -64,11 +64,11 @@ describe("MusicModule controllers", () => {
 		});
 		it("rejects an incomplete genre save", async () => {
 			({ app } = await setup());
-			expect((await app.inject({ method: "POST", url: "/music/genres/save", payload: {} })).statusCode).toBe(400);
+			expect((await app.inject({ method: "POST", url: "/music/genres", payload: {} })).statusCode).toBe(400);
 		});
 		it("rejects an incomplete listening save", async () => {
 			({ app } = await setup());
-			expect((await app.inject({ method: "POST", url: "/music/save", payload: {} })).statusCode).toBe(400);
+			expect((await app.inject({ method: "POST", url: "/music", payload: {} })).statusCode).toBe(400);
 		});
 		it("rejects a non-uuid delete id", async () => {
 			({ app } = await setup());
@@ -121,15 +121,30 @@ describe("MusicModule controllers", () => {
 			expect(res.json()).toMatchObject({ message: "Écoute introuvable" });
 		});
 
-		it("POST /save inserts a new listening", async () => {
+		it("POST / inserts a new listening and answers 201 with it", async () => {
 			const ctx = await setup();
 			app = ctx.app;
 			const { id, ...body } = LISTENING;
 
-			const res = await app.inject({ method: "POST", url: "/music/save", payload: body });
+			const res = await app.inject({ method: "POST", url: "/music", payload: body });
 
-			expect(res.statusCode).toBe(200);
+			expect(res.statusCode).toBe(201);
 			expect(ctx.listenings.insertOne).toHaveBeenCalledTimes(1);
+			expect(res.json()).toMatchObject({ ...body, id: expect.any(String) });
+		});
+
+		it("PUT /:id answers 200 with the updated listening, 404 for an unknown id", async () => {
+			const ctx = await setup();
+			app = ctx.app;
+			const { id, ...body } = LISTENING;
+			ctx.listenings.findOneAndUpdate.mockResolvedValueOnce(LISTENING);
+
+			const res = await app.inject({ method: "PUT", url: `/music/${UUID}`, payload: body });
+			expect(res.statusCode).toBe(200);
+			expect(res.json()).toEqual(LISTENING);
+
+			const unknown = await app.inject({ method: "PUT", url: `/music/${UUID}`, payload: body });
+			expect(unknown.statusCode).toBe(404);
 		});
 
 		it("DELETE /:id removes a listening by id", async () => {
@@ -138,7 +153,7 @@ describe("MusicModule controllers", () => {
 
 			const res = await app.inject({ method: "DELETE", url: `/music/${UUID}` });
 
-			expect(res.statusCode).toBe(200);
+			expect(res.statusCode).toBe(204);
 			expect(ctx.listenings.deleteOne).toHaveBeenCalledWith({ id: UUID });
 		});
 	});
@@ -152,17 +167,17 @@ describe("MusicModule controllers", () => {
 			expect(ctx.genres.find).toHaveBeenCalledTimes(1);
 		});
 
-		it("POST /genres/save inserts a new genre group", async () => {
+		it("POST /genres inserts a new genre group", async () => {
 			const ctx = await setup();
 			app = ctx.app;
 
 			const res = await app.inject({
 				method: "POST",
-				url: "/music/genres/save",
+				url: "/music/genres",
 				payload: { name: "Rock", genres: ["prog rock"] },
 			});
 
-			expect(res.statusCode).toBe(200);
+			expect(res.statusCode).toBe(201);
 			expect(ctx.genres.insertOne).toHaveBeenCalledTimes(1);
 		});
 
@@ -172,7 +187,7 @@ describe("MusicModule controllers", () => {
 
 			const res = await app.inject({ method: "DELETE", url: `/music/genres/${UUID}` });
 
-			expect(res.statusCode).toBe(200);
+			expect(res.statusCode).toBe(204);
 			expect(ctx.genres.deleteOne).toHaveBeenCalledWith({ id: UUID });
 			expect(ctx.listenings.deleteOne).not.toHaveBeenCalled();
 		});

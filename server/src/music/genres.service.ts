@@ -2,6 +2,7 @@ import type { MusicGenre } from "@personal-tracker/shared/music";
 
 import { Injectable, Logger } from "@nestjs/common";
 
+import { NotFoundError } from "../common/errors.js";
 import { buildGenre } from "./genre.entity.js";
 import { GenresRepository } from "./genres.repository.js";
 
@@ -15,16 +16,24 @@ export class GenresService {
 		return this.repo.findAll();
 	}
 
-	save({ id, ...data }: Omit<MusicGenre, "id"> & { id?: string }) {
-		this.logger.log("save");
-		if (id) {
-			return this.repo.update(id, data);
-		}
+	create({ id: _, ...data }: Omit<MusicGenre, "id"> & { id?: string }) {
+		this.logger.log("create");
 		return this.repo.insert(buildGenre(data));
 	}
 
-	delete(id: string) {
-		this.logger.log("delete");
-		return this.repo.delete(id);
+	async update(id: string, { id: _, ...data }: Omit<MusicGenre, "id"> & { id?: string }) {
+		this.logger.log("update");
+		return (await this.repo.update(id, data)) ?? notFound();
 	}
+
+	async delete(id: string) {
+		this.logger.log("delete");
+		if (!(await this.repo.delete(id))) {
+			notFound();
+		}
+	}
+}
+
+function notFound(): never {
+	throw new NotFoundError("Genre introuvable");
 }

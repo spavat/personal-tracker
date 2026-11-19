@@ -22,15 +22,23 @@ export class ContextTagsRepository {
 		return this.collection.findOne({ id }, { projection: { _id: 0 } });
 	}
 
-	insert(contextTag: ContextTag) {
-		return this.collection.insertOne(contextTag);
+	// a copy: the driver adds `_id` to the document it inserts
+	async insert(contextTag: ContextTag) {
+		await this.collection.insertOne({ ...contextTag });
+		return contextTag;
 	}
 
+	// the updated tag, null for an unknown id
 	update(id: string, contextTag: Omit<ContextTag, "id">) {
-		return this.collection.updateOne({ id }, { $set: contextTag });
+		return this.collection.findOneAndUpdate(
+			{ id },
+			{ $set: contextTag },
+			{ projection: { _id: 0 }, returnDocument: "after" },
+		);
 	}
 
-	delete(id: string) {
-		return this.collection.deleteOne({ id });
+	// false for an unknown id
+	async delete(id: string) {
+		return (await this.collection.deleteOne({ id })).deletedCount > 0;
 	}
 }

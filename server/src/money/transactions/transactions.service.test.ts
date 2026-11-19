@@ -83,7 +83,7 @@ describe("TransactionsService", () => {
 		it("only updates the parent for a quick update", async () => {
 			repo.findByIdWithChildren.mockResolvedValue({ id: 1, children: [{ id: 2 }] });
 
-			await service.update(1, "quick", { name: "New", categoryId: 0, paymentTypeId: 0 } as never);
+			await service.patch(1, { name: "New", categoryId: 0, paymentTypeId: 0 } as never);
 
 			expect(repo.update).toHaveBeenCalledWith(1, expect.objectContaining({ name: "New", categoryId: null }));
 			expect(repo.runInTransaction).not.toHaveBeenCalled();
@@ -98,7 +98,7 @@ describe("TransactionsService", () => {
 			});
 			repo.create.mockResolvedValue({ id: 4 });
 
-			await service.update(1, "full", {
+			await service.update(1, {
 				name: "Shop",
 				categoryId: 1,
 				paymentTypeId: 1,
@@ -128,7 +128,7 @@ describe("TransactionsService", () => {
 			repo.findByIdWithChildren.mockResolvedValue({ id: 1, children: [{ id: 2 }] });
 			repo.create.mockResolvedValue({ id: 3 });
 
-			await service.update(1, "full", {
+			await service.update(1, {
 				categoryId: 1,
 				paymentTypeId: 1,
 				children: [
@@ -150,7 +150,7 @@ describe("TransactionsService", () => {
 
 		it("rejects with NotFoundError for an unknown transaction", async () => {
 			repo.findByIdWithChildren.mockResolvedValue(undefined);
-			await expect(service.update(1, "quick", {} as never)).rejects.toBeInstanceOf(NotFoundError);
+			await expect(service.patch(1, {} as never)).rejects.toBeInstanceOf(NotFoundError);
 		});
 	});
 

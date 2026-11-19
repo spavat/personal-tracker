@@ -8,6 +8,7 @@ import {
 	HttpCode,
 	Param,
 	Post,
+	Put,
 	Query,
 	Redirect,
 	SerializeOptions,
@@ -49,31 +50,46 @@ export class SportController {
 		return { url: await this.service.downloadUrl(id) };
 	}
 
-	@Post("save")
-	@HttpCode(200)
-	save(@Body({ schema: SaveBodyRequestSchema }) body: SaveBodyRequest) {
-		return this.service.save(body);
+	@Post()
+	@SerializeOptions({ schema: DetailsResponseSchema })
+	create(@Body({ schema: SaveBodyRequestSchema }) body: SaveBodyRequest) {
+		return this.service.create(body);
+	}
+
+	@Put(":id")
+	@SerializeOptions({ schema: DetailsResponseSchema })
+	update(
+		@Param({ schema: DeleteParamsRequestSchema }) { id }: { id: string },
+		@Body({ schema: SaveBodyRequestSchema }) body: SaveBodyRequest,
+	) {
+		return this.service.update(id, body);
 	}
 
 	@Delete(":id")
-	delete(@Param({ schema: DeleteParamsRequestSchema }) { id }: { id: string }) {
-		return this.service.delete(id);
+	@HttpCode(204)
+	async delete(@Param({ schema: DeleteParamsRequestSchema }) { id }: { id: string }) {
+		await this.service.delete(id);
 	}
 
-	@Post("segments")
-	@HttpCode(200)
+	@Put(":id/segments")
+	@SerializeOptions({ schema: DetailsResponseSchema })
 	updateSegments(
+		@Param({ schema: DeleteParamsRequestSchema }) { id }: { id: string },
 		@Body({ schema: UpdateSegmentsBodyRequestSchema }) {
-			id,
 			segments,
 		}: z.infer<typeof UpdateSegmentsBodyRequestSchema>,
 	) {
 		return this.service.updateSegments(id, segments);
 	}
 
-	@Post("crop")
+	// an action on the activity (not a CRUD write): 200 with the cropped activity
+	@Post(":id/crop")
 	@HttpCode(200)
-	crop(@Body({ schema: CropBodyRequestSchema }) { id, startIndex, endIndex }: z.infer<typeof CropBodyRequestSchema>) {
+	@SerializeOptions({ schema: DetailsResponseSchema })
+	crop(
+		@Param({ schema: DeleteParamsRequestSchema }) { id }: { id: string },
+		@Body({ schema: CropBodyRequestSchema }) { startIndex, endIndex }: z.infer<typeof CropBodyRequestSchema>,
+	) {
 		return this.service.crop(id, startIndex, endIndex);
 	}
 }

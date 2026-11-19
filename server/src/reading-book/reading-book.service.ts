@@ -67,7 +67,7 @@ export class ReadingBookService {
 			bookId = randomUUID();
 			await this.repo.insert(bookId, book);
 		}
-		return this.repo.findById(bookId);
+		return (await this.repo.findById(bookId)) ?? notFound("Livre introuvable");
 	}
 
 	async listAuthors() {
@@ -141,7 +141,7 @@ export class ReadingBookService {
 		if (!id) {
 			throw new NotFoundError("Série introuvable");
 		}
-		return { id };
+		return this.getSeries(id);
 	}
 
 	async deleteSeries(id: string) {
@@ -154,9 +154,11 @@ export class ReadingBookService {
 
 	async saveModel(bookId: string, model: SaveBookModelRequest) {
 		this.logger.log("saveModel");
-		if (!(await this.repo.saveModel(bookId, model))) {
+		const id = await this.repo.saveModel(bookId, model);
+		if (!id) {
 			throw new NotFoundError(model.id ? "Modèle introuvable" : "Livre introuvable");
 		}
+		return (await this.getBook(bookId)).models.find((m) => m.id === id) ?? notFound("Modèle introuvable");
 	}
 
 	async deleteModel(bookId: string, modelId: string) {
@@ -174,9 +176,12 @@ export class ReadingBookService {
 
 	async addReading(bookId: string, editionId: string) {
 		this.logger.log("addReading");
-		if (!(await this.repo.pushReading(bookId, editionId, buildInitialReading()))) {
+		const reading = buildInitialReading();
+		if (!(await this.repo.pushReading(bookId, editionId, reading))) {
 			throw new NotFoundError("Édition introuvable");
 		}
+		// no entry yet: as GET /books/:id gives it
+		return reading;
 	}
 
 	async saveEdition(bookId: string, edition: SaveEditionRequest) {
@@ -221,6 +226,7 @@ export class ReadingBookService {
 		if (current?.coverKey && current.coverKey !== coverKey) {
 			await this.deleteCover(current.coverKey);
 		}
+		return (await this.getBook(bookId)).editions.find((e) => e.id === id) ?? notFound("Édition introuvable");
 	}
 
 	async deleteEdition(bookId: string, editionId: string) {
@@ -241,14 +247,28 @@ export class ReadingBookService {
 		}
 	}
 
-	saveReading(bookId: string, reading: SaveReadingBody) {
+	async saveReading(bookId: string, reading: SaveReadingBody) {
 		this.logger.log("saveReading");
-		return this.repo.updateReading(bookId, reading);
+		if (!(await this.repo.updateReading(bookId, reading))) {
+			notFound("Lecture introuvable");
+		}
+		return this.findReading(bookId, reading.id);
 	}
 
-	deleteReading(bookId: string, readingId: string) {
+	async deleteReading(bookId: string, readingId: string) {
 		this.logger.log("deleteReading");
-		return this.repo.deleteReading(bookId, readingId);
+		if (!(await this.repo.deleteReading(bookId, readingId))) {
+			notFound("Lecture introuvable");
+		}
+	}
+
+	// a reading as GET /books/:id gives it, inside its edition
+	private async findReading(bookId: string, readingId: string) {
+		const book = await this.getBook(bookId);
+		return (
+			book.editions.flatMap((edition) => edition.readings).find((r) => r.id === readingId) ??
+			notFound("Lecture introuvable")
+		);
 	}
 
 	async report({ from, to }: { from: string; to: string }): Promise<GetReportResponse> {

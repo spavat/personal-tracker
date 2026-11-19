@@ -13,7 +13,7 @@ import { queryOptions } from "@tanstack/react-query";
 import type { MonthQueryConfig } from "../../hooks/use-month-changer";
 import type { YearQueryConfig } from "../../hooks/use-year-changer";
 
-import { fetchJson, sendJson, withQuery } from "../../api-utils";
+import { fetchJson, saveJson, sendJson, withQuery } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
 
 export async function getYearOfMusic(from: string, to: string) {
@@ -75,7 +75,7 @@ export async function getReport(from: string, to: string) {
 }
 
 export async function save(data: any) {
-	return sendJson(`${API_BASE_URL}/music/save`, "POST", data);
+	return saveJson(`${API_BASE_URL}/music`, data);
 }
 
 export async function deleteItem(data: DeleteParamsRequest) {
@@ -84,7 +84,7 @@ export async function deleteItem(data: DeleteParamsRequest) {
 
 export async function saveGenre(data: any) {
 	const sentData = SaveGenreRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/music/genres/save`, "POST", sentData);
+	return saveJson(`${API_BASE_URL}/music/genres`, sentData);
 }
 
 export async function deleteGenre(data: any) {

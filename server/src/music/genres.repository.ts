@@ -17,15 +17,23 @@ export class GenresRepository {
 		return this.collection.find({}, { projection: { _id: 0 } }).toArray();
 	}
 
-	insert(genre: MusicGenre) {
-		return this.collection.insertOne(genre);
+	// a copy: the driver adds `_id` to the document it inserts
+	async insert(genre: MusicGenre) {
+		await this.collection.insertOne({ ...genre });
+		return genre;
 	}
 
+	// the updated genre, null for an unknown id
 	update(id: string, genre: Partial<MusicGenre>) {
-		return this.collection.updateOne({ id }, { $set: genre });
+		return this.collection.findOneAndUpdate(
+			{ id },
+			{ $set: genre },
+			{ projection: { _id: 0 }, returnDocument: "after" },
+		);
 	}
 
-	delete(id: string) {
-		return this.collection.deleteOne({ id });
+	// false for an unknown id
+	async delete(id: string) {
+		return (await this.collection.deleteOne({ id })).deletedCount > 0;
 	}
 }

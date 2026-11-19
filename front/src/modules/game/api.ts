@@ -1,6 +1,7 @@
 import {
 	Game,
 	GameWithOverview,
+	GamePlaySaveBodyRequestSchema,
 	GameSaveBodyRequestSchema,
 	GameDeleteParamsRequestSchema,
 	GameMergeBodySchema,
@@ -14,7 +15,7 @@ import { queryOptions } from "@tanstack/react-query";
 import type { SortListConfig } from "../../hooks/use-sort-table";
 import type { YearQueryConfig } from "../../hooks/use-year-changer";
 
-import { fetchJson, sendJson, withQuery } from "../../api-utils";
+import { fetchJson, saveJson, sendJson, withQuery } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
 
 async function getPlayListYear(from: string, to: string): Promise<Array<GameWithOverview>> {
@@ -53,9 +54,15 @@ export const gameDetailsQuery = (id: string) =>
 		queryFn: () => getGameDetails(id),
 	});
 
-export async function save(data: any) {
-	const sentData = GameSaveBodyRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/game/save`, "POST", sentData);
+// a game (with an optional first play), or a play of the game `gameId`
+export async function save({ game, play, gameId }: any) {
+	if (game) {
+		const sentData = GameSaveBodyRequestSchema.parse({ game, play });
+		return sentData.game.id
+			? sendJson(`${API_BASE_URL}/game/games/${sentData.game.id}`, "PUT", sentData)
+			: sendJson(`${API_BASE_URL}/game/games`, "POST", sentData);
+	}
+	return saveJson(`${API_BASE_URL}/game/games/${gameId}/plays`, GamePlaySaveBodyRequestSchema.parse(play));
 }
 
 export async function deleteItem(data: any) {

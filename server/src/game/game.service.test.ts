@@ -65,9 +65,10 @@ describe("GameService", () => {
 		});
 	});
 
-	describe("save", () => {
+	describe("create / update", () => {
 		it("inserts a new game with its pictures stored and its first play", async () => {
-			await service.save({
+			repo.insert.mockImplementation(async (game) => game);
+			await service.create({
 				game: { name: "Celeste", developper: "EXOK", editor: "EXOK", capsule: "https://cdn/c.jpg", links: [] },
 				play: { date: "2026-11-01", duration: 30 },
 			} as never);
@@ -81,9 +82,10 @@ describe("GameService", () => {
 
 		it("keeps a stored picture sent back with its proxy URL, and drops an emptied one", async () => {
 			repo.findById.mockResolvedValue({ id: GAME, capsule: "stored/capsule.avif", header: "stored/header.avif" });
+			repo.update.mockResolvedValue({ id: GAME, name: "Celeste" });
 
-			await service.save({
-				game: { id: GAME, name: "Celeste", capsule: `/images/game/${GAME}/capsule`, header: "" },
+			await service.update(GAME, {
+				game: { name: "Celeste", capsule: `/images/game/${GAME}/capsule`, header: "" },
 			} as never);
 
 			expect(images.uploadFromSource).not.toHaveBeenCalled();
@@ -92,16 +94,31 @@ describe("GameService", () => {
 			expect(saved).not.toHaveProperty("header");
 		});
 
+		it("answers NotFoundError for an unknown game, before storing a picture", async () => {
+			repo.findById.mockResolvedValue(null);
+			await expect(
+				service.update(GAME, { game: { name: "Celeste", capsule: "https://cdn/c.jpg" } } as never),
+			).rejects.toBeInstanceOf(NotFoundError);
+			expect(images.uploadFromSource).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("plays", () => {
 		it("an edited synced play becomes a manual one", async () => {
-			await service.save({
-				gameId: GAME,
-				play: { id: "p1", date: "2026-11-01", duration: 40, auto: true },
+			repo.updatePlay.mockResolvedValue(true);
+			repo.findById.mockResolvedValue({ id: GAME, plays: [{ id: "p1", date: "2026-11-01", auto: false }] });
+			const play = await service.updatePlay(GAME, "p1", {
+				date: "2026-11-01",
+				duration: 40,
+				auto: true,
 			} as never);
 			expect(repo.updatePlay).toHaveBeenCalledWith(GAME, expect.objectContaining({ id: "p1", auto: false }));
+			expect(play).toMatchObject({ id: "p1" });
 		});
 
 		it("adds a play to an existing game", async () => {
-			await service.save({ gameId: GAME, play: { date: "2026-11-01", duration: 40 } } as never);
+			repo.pushPlay.mockResolvedValue(true);
+			await service.createPlay(GAME, { date: "2026-11-01", duration: 40 } as never);
 			expect(repo.pushPlay).toHaveBeenCalledWith(
 				GAME,
 				expect.objectContaining({ id: expect.any(String), duration: 40 }),

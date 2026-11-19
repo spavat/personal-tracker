@@ -33,15 +33,23 @@ export class LifespanCategoriesRepository {
 		return this.objects.find({ categoryId: id }, { projection: { _id: 0 } }).toArray();
 	}
 
-	insert(category: LifespanCategory) {
-		return this.categories.insertOne(category);
+	// a copy: the driver adds `_id` to the document it inserts
+	async insert(category: LifespanCategory) {
+		await this.categories.insertOne({ ...category });
+		return category;
 	}
 
+	// the updated category, null for an unknown id
 	update(id: string, category: Partial<LifespanCategory>) {
-		return this.categories.updateOne({ id }, { $set: category });
+		return this.categories.findOneAndUpdate(
+			{ id },
+			{ $set: category },
+			{ projection: { _id: 0 }, returnDocument: "after" },
+		);
 	}
 
-	delete(id: string) {
-		return this.categories.deleteOne({ id });
+	// false for an unknown id
+	async delete(id: string) {
+		return (await this.categories.deleteOne({ id })).deletedCount > 0;
 	}
 }

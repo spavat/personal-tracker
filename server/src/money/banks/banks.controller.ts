@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put } from "@nestjs/common";
 import {
 	BankParamsRequestSchema,
 	type CreateBankBody,
@@ -34,13 +34,11 @@ export class BanksController {
 	}
 
 	@Post()
-	@HttpCode(200)
 	create(@Body({ schema: CreateBankBodyRequestSchema }) body: CreateBankBody) {
 		return this.service.create(body);
 	}
 
-	@Post(":id")
-	@HttpCode(200)
+	@Put(":id")
 	update(
 		@Param({ schema: BankParamsRequestSchema }) { id }: { id: number },
 		@Body({ schema: UpdateBankBodyRequestSchema }) body: UpdateBankBody,
@@ -49,7 +47,8 @@ export class BanksController {
 	}
 
 	@Delete(":id")
-	delete(@Param({ schema: BankParamsRequestSchema }) { id }: { id: number }) {
-		return this.service.delete(id);
+	@HttpCode(204)
+	async delete(@Param({ schema: BankParamsRequestSchema }) { id }: { id: number }) {
+		await this.service.delete(id);
 	}
 }

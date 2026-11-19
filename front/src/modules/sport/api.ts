@@ -9,7 +9,7 @@ import { queryOptions } from "@tanstack/react-query";
 
 import type { MonthQueryConfig } from "../../hooks/use-month-changer";
 
-import { fetchJson, sendJson, withQuery } from "../../api-utils";
+import { fetchJson, saveJson, sendJson, withQuery } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
 
 async function getActivityList(from?: string, to?: string): Promise<Array<SportActivity>> {
@@ -48,7 +48,7 @@ export function getActivityThumbnailUrl(id: string): string {
 
 export async function save(data: any): Promise<any> {
 	const sentData = SaveBodyRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/sport/save`, "POST", sentData);
+	return saveJson(`${API_BASE_URL}/sport`, sentData);
 }
 
 export async function deleteActivity(data: any): Promise<any> {
@@ -56,12 +56,12 @@ export async function deleteActivity(data: any): Promise<any> {
 	return sendJson(`${API_BASE_URL}/sport/${id}`, "DELETE");
 }
 
-export async function updateSegments(data: any): Promise<any> {
+export async function updateSegments({ id, ...data }: any): Promise<any> {
 	const sentData = UpdateSegmentsBodyRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/sport/segments`, "POST", sentData);
+	return sendJson(`${API_BASE_URL}/sport/${id}/segments`, "PUT", sentData);
 }
 
-export async function cropActivity(data: any): Promise<any> {
+export async function cropActivity({ id, ...data }: any): Promise<any> {
 	const sentData = CropBodyRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/sport/crop`, "POST", sentData);
+	return sendJson(`${API_BASE_URL}/sport/${id}/crop`, "POST", sentData);
 }
