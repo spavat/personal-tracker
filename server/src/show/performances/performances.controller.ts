@@ -34,7 +34,7 @@ export class PerformancesController {
 	@Get(":performanceId")
 	@Public()
 	get(@Param({ schema: PerformanceDetailsParamsRequestSchema }) { performanceId }: { performanceId: number }) {
-		return orNotFound(this.service.get(performanceId), "Représentation introuvable");
+		return orNotFound(this.service.get(performanceId), "performance");
 	}
 
 	// 201 on create, 200 on update (an unknown performance throws NotFoundError)

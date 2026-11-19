@@ -75,7 +75,7 @@ describe("SportController", () => {
 			const res = await app.inject({ method: "POST", url: "/sport/activities", payload: body });
 
 			expect(res.statusCode).toBe(400);
-			expect(res.json()).toMatchObject({ error: "Bad Request" });
+			expect(res.json()).toMatchObject({ code: "sport.date_required" });
 			expect(ctx.activities.insertOne).not.toHaveBeenCalled();
 		});
 	});

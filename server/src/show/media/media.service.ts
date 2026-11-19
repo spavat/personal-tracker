@@ -85,7 +85,7 @@ export class MediaService {
 			new Set(mediaIds).size !== mediaIds.length ||
 			!mediaIds.every((id) => current.includes(id))
 		) {
-			throw new BadRequestError("La liste doit contenir chaque média une seule fois");
+			throw new BadRequestError("duplicate_items", "each media once in the order", { resource: "media" });
 		}
 
 		await this.repo.runInTransaction(async (tx) => {
@@ -113,9 +113,10 @@ export class MediaService {
 			});
 		} catch (error) {
 			if (isForeignKeyViolation(error)) {
-				throw new ConflictError(
-					"Média utilisé (représentation, rôle ou photo principale) : retirez-le d'abord",
-				);
+				throw new ConflictError("has_dependents", "the media is used", {
+					resource: "media",
+					dependent: "uses",
+				});
 			}
 			throw error;
 		}

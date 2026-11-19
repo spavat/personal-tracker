@@ -121,7 +121,7 @@ export class SyncService {
 	async linkFeed(rssUrl: string, programId: string) {
 		this.logger.log("linkFeed");
 		if (!(await this.repo.findById(programId))) {
-			throw new NotFoundError("Programme introuvable");
+			throw new NotFoundError("program");
 		}
 		// The feed URL known by AntennaPod replaces the program's one, so the next syncs match directly
 		await this.repo.setRssRef(programId, rssUrl);
@@ -148,13 +148,13 @@ export class SyncService {
 	async delete(id: string) {
 		this.logger.log("delete");
 		if (!(await this.syncRepo.delete(id))) {
-			throw new NotFoundError("Proposition introuvable");
+			throw new NotFoundError("proposal");
 		}
 	}
 
 	private async assertNoSyncInProgress() {
 		if (await this.syncRepo.count()) {
-			throw new ConflictError("Une synchronisation est déjà en cours");
+			throw new ConflictError("sync_in_progress", "a podcast sync is in progress", { service: "podcasts" });
 		}
 	}
 

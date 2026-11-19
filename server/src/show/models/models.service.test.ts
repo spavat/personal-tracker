@@ -47,9 +47,9 @@ describe("ModelsService.save", () => {
 	it("rejects an unknown model before touching its roles", async () => {
 		const repo = fakeRepo();
 		repo.updateModel.mockResolvedValue([]);
-		await expect(new ModelsService(asRepo(repo)).save({ id: 7, name: "X", roles: [] } as any)).rejects.toThrow(
-			"Modèle introuvable",
-		);
+		await expect(
+			new ModelsService(asRepo(repo)).save({ id: 7, name: "X", roles: [] } as any),
+		).rejects.toMatchObject({ params: { resource: "model" } });
 		expect(repo.deleteModelRoles).not.toHaveBeenCalled();
 	});
 

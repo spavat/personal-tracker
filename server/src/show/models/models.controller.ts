@@ -17,7 +17,7 @@ export class ModelsController {
 
 	@Get(":id")
 	get(@Param({ schema: ModelDetailsParamsRequestSchema }) { id }: { id: number }) {
-		return orNotFound(this.service.get(id), "Modèle introuvable");
+		return orNotFound(this.service.get(id), "model");
 	}
 
 	// 201 on create, 200 on update (an unknown model throws NotFoundError)

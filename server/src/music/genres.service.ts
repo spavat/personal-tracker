@@ -35,5 +35,5 @@ export class GenresService {
 }
 
 function notFound(): never {
-	throw new NotFoundError("Genre introuvable");
+	throw new NotFoundError("genre");
 }

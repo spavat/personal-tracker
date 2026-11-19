@@ -26,7 +26,9 @@ export class LifespanCategoriesService {
 		if (category.parentId) {
 			const categories = await this.repo.findAll();
 			if (isOwnDescendant(id, category.parentId, categories)) {
-				throw new ConflictError("Une catégorie ne peut pas être rangée sous une de ses sous-catégories");
+				throw new ConflictError("cycle", "a category can't be under one of its descendants", {
+					resource: "lifespan_category",
+				});
 			}
 		}
 		return (await this.repo.update(id, category)) ?? notFound();
@@ -36,16 +38,18 @@ export class LifespanCategoriesService {
 		this.logger.log("delete");
 		const subCategories = await this.repo.findSubCategories(id);
 		if (subCategories.length) {
-			throw new ConflictError(
-				"Cette catégorie a des sous-catégories. Supprimez-les ou déplacez-les avant de continuer.",
-			);
+			throw new ConflictError("has_dependents", "the category has sub-categories", {
+				resource: "lifespan_category",
+				dependent: "children",
+			});
 		}
 
 		const objects = await this.repo.findObjectsUsingCategory(id);
 		if (objects.length) {
-			throw new ConflictError(
-				"Des objets sont encore rattachés à cette catégorie. Déplacez-les avant de continuer.",
-			);
+			throw new ConflictError("has_dependents", "the category has objects", {
+				resource: "lifespan_category",
+				dependent: "objects",
+			});
 		}
 
 		if (!(await this.repo.delete(id))) {
@@ -55,5 +59,5 @@ export class LifespanCategoriesService {
 }
 
 function notFound(): never {
-	throw new NotFoundError("Catégorie introuvable");
+	throw new NotFoundError("category");
 }

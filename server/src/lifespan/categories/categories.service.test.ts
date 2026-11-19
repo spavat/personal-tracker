@@ -71,14 +71,20 @@ describe("LifespanCategoriesService", () => {
 		it("refuses to delete when sub-categories exist", async () => {
 			repo.findSubCategories.mockResolvedValue([{ id: "sub-1" }]);
 
-			await expect(service.delete("cat-1")).rejects.toThrow(/sous-catégories/);
+			await expect(service.delete("cat-1")).rejects.toMatchObject({
+				code: "has_dependents",
+				params: { dependent: "children" },
+			});
 			expect(repo.delete).not.toHaveBeenCalled();
 		});
 
 		it("refuses to delete when objects still reference the category", async () => {
 			repo.findObjectsUsingCategory.mockResolvedValue([{ id: "obj-1" }]);
 
-			await expect(service.delete("cat-1")).rejects.toThrow(/objets/);
+			await expect(service.delete("cat-1")).rejects.toMatchObject({
+				code: "has_dependents",
+				params: { dependent: "objects" },
+			});
 			expect(repo.delete).not.toHaveBeenCalled();
 		});
 

@@ -34,13 +34,13 @@ export class WorksController {
 
 	@Get(":id")
 	get(@Param({ schema: WorkDetailsParamsRequestSchema }) { id }: { id: number }) {
-		return orNotFound(this.service.get(id), "Œuvre introuvable");
+		return orNotFound(this.service.get(id), "work");
 	}
 
 	@Post()
 	@SerializeOptions({ schema: WorkSchema })
 	create(@Body({ schema: SaveWorkBodyRequestSchema }) body: SaveWorkBody) {
-		return orNotFound(this.service.save({ ...body, id: undefined }), "Œuvre introuvable");
+		return orNotFound(this.service.save({ ...body, id: undefined }), "work");
 	}
 
 	@Put(":id")
@@ -49,7 +49,7 @@ export class WorksController {
 		@Param({ schema: WorkDetailsParamsRequestSchema }) { id }: { id: number },
 		@Body({ schema: SaveWorkBodyRequestSchema }) body: SaveWorkBody,
 	) {
-		return orNotFound(this.service.save({ ...body, id }), "Œuvre introuvable");
+		return orNotFound(this.service.save({ ...body, id }), "work");
 	}
 
 	@Delete(":id")

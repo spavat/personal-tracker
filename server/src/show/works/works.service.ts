@@ -181,7 +181,7 @@ export class WorksService {
 	async delete(id: number) {
 		this.logger.log("delete");
 		if (!(await this.repo.delete(id))) {
-			throw new NotFoundError("Œuvre introuvable");
+			throw new NotFoundError("work");
 		}
 	}
 }

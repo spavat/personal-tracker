@@ -116,7 +116,7 @@ describe("ReadingMangaController", () => {
 			const res = await app.inject({ method: "GET", url: `/reading-manga/mangas/${MANGA_UUID}` });
 
 			expect(res.statusCode).toBe(404);
-			expect(res.json()).toMatchObject({ statusCode: 404, message: "Manga introuvable" });
+			expect(res.json()).toMatchObject({ statusCode: 404, code: "not_found", params: { resource: "manga" } });
 		});
 
 		it("POST /mangas inserts a new manga and answers 201 with it", async () => {

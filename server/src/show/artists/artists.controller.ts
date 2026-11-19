@@ -35,13 +35,13 @@ export class ArtistsController {
 		@Query({ schema: ArtistDetailsQuerystringRequestSchema })
 		{ groupBySpectacle }: z.infer<typeof ArtistDetailsQuerystringRequestSchema>,
 	) {
-		return orNotFound(this.service.get({ artistId: id, groupBySpectacle }), "Artiste introuvable");
+		return orNotFound(this.service.get({ artistId: id, groupBySpectacle }), "artist");
 	}
 
 	@Post()
 	@SerializeOptions({ schema: ArtistViewSchema })
 	create(@Body({ schema: SaveArtistBodyRequestSchema }) body: z.infer<typeof SaveArtistBodyRequestSchema>) {
-		return orNotFound(this.service.save({ ...body, id: undefined }), "Artiste introuvable");
+		return orNotFound(this.service.save({ ...body, id: undefined }), "artist");
 	}
 
 	@Put(":id")
@@ -50,7 +50,7 @@ export class ArtistsController {
 		@Param({ schema: ArtistDetailsParamsRequestSchema }) { id }: { id: number },
 		@Body({ schema: SaveArtistBodyRequestSchema }) body: z.infer<typeof SaveArtistBodyRequestSchema>,
 	) {
-		return orNotFound(this.service.save({ ...body, id }), "Artiste introuvable");
+		return orNotFound(this.service.save({ ...body, id }), "artist");
 	}
 
 	@Delete(":id")

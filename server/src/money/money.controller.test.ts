@@ -88,7 +88,10 @@ describe("MoneyModule controllers", () => {
 			ctx.table("moneyBank").findFirst.mockResolvedValue({ id: 1, accounts: [{ id: 10 }] });
 			const res = await app.inject({ method: "DELETE", url: "/money/banks/1" });
 			expect(res.statusCode).toBe(409);
-			expect(res.json()).toMatchObject({ error: "Conflict" });
+			expect(res.json()).toMatchObject({
+				code: "has_dependents",
+				params: { resource: "bank", dependent: "accounts", count: 1 },
+			});
 		});
 	});
 

@@ -34,5 +34,5 @@ export class ContextTagsService {
 }
 
 function notFound(): never {
-	throw new NotFoundError("Tag de contexte introuvable");
+	throw new NotFoundError("context_tag");
 }

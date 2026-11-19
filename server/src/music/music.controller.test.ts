@@ -118,7 +118,7 @@ describe("MusicModule controllers", () => {
 			const res = await app.inject({ method: "GET", url: `/music/listenings/${UUID}` });
 
 			expect(res.statusCode).toBe(404);
-			expect(res.json()).toMatchObject({ message: "Écoute introuvable" });
+			expect(res.json()).toMatchObject({ statusCode: 404, code: "not_found", params: { resource: "listening" } });
 		});
 
 		it("POST / inserts a new listening and answers 201 with it", async () => {

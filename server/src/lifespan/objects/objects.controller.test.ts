@@ -97,7 +97,7 @@ describe("LifespanObjectsController", () => {
 			const res = await app.inject({ method: "GET", url: `/lifespan/objects/${OBJECT_UUID}` });
 
 			expect(res.statusCode).toBe(404);
-			expect(res.json()).toMatchObject({ message: "Objet introuvable" });
+			expect(res.json()).toMatchObject({ statusCode: 404, code: "not_found", params: { resource: "object" } });
 		});
 
 		it("PUT /:id keeps the free text type on update and answers the updated object", async () => {

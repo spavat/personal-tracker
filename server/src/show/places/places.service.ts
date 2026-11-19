@@ -85,7 +85,7 @@ export class PlacesService {
 	async delete(id: number) {
 		this.logger.log("delete");
 		if (!(await this.repo.delete(id))) {
-			throw new NotFoundError("Salle introuvable");
+			throw new NotFoundError("place");
 		}
 	}
 }

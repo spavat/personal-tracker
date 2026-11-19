@@ -35,13 +35,13 @@ export class SpectaclesController {
 	@Get(":id")
 	@Public()
 	get(@Param({ schema: SpectacleDetailsParamsRequestSchema }) { id }: { id: number }) {
-		return orNotFound(this.service.get(id), "Spectacle introuvable");
+		return orNotFound(this.service.get(id), "spectacle");
 	}
 
 	@Post()
 	@SerializeOptions({ schema: SpectacleSchema })
 	create(@Body({ schema: SaveSpectacleBodyRequestSchema }) body: SaveSpectacleBody) {
-		return orNotFound(this.service.save({ ...body, id: undefined }), "Spectacle introuvable");
+		return orNotFound(this.service.save({ ...body, id: undefined }), "spectacle");
 	}
 
 	@Put(":id")
@@ -50,6 +50,6 @@ export class SpectaclesController {
 		@Param({ schema: SpectacleDetailsParamsRequestSchema }) { id }: { id: number },
 		@Body({ schema: SaveSpectacleBodyRequestSchema }) body: SaveSpectacleBody,
 	) {
-		return orNotFound(this.service.save({ ...body, id }), "Spectacle introuvable");
+		return orNotFound(this.service.save({ ...body, id }), "spectacle");
 	}
 }

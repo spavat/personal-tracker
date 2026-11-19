@@ -18,7 +18,7 @@ export class CategoriesService {
 		this.logger.log("getCategory");
 		const categorie = await this.repo.findById(id);
 		if (!categorie) {
-			throw new NotFoundError("Catégorie introuvable");
+			throw new NotFoundError("category");
 		}
 		const transactions = await this.repo.findTransactionsUsingCategory(id);
 		return { ...categorie, transactions: transactions.length };
@@ -33,7 +33,7 @@ export class CategoriesService {
 		this.logger.log("update");
 		const result = await this.repo.update(id, data);
 		if (!result) {
-			throw new NotFoundError("Catégorie introuvable");
+			throw new NotFoundError("category");
 		}
 		return result;
 	}
@@ -42,17 +42,23 @@ export class CategoriesService {
 		this.logger.log("delete");
 		const subCategories = await this.repo.findSubCategories(id);
 		if (subCategories.length) {
-			throw new ConflictError("La catégorie a des sous-catégories : impossible de la supprimer");
+			throw new ConflictError("has_dependents", "the category has sub-categories", {
+				resource: "category",
+				dependent: "children",
+			});
 		}
 
 		const transactions = await this.repo.findTransactionsUsingCategory(id);
 		if (transactions.length) {
-			throw new ConflictError("La catégorie a des transactions : impossible de la supprimer");
+			throw new ConflictError("has_dependents", "the category has transactions", {
+				resource: "category",
+				dependent: "transactions",
+			});
 		}
 
 		const deleted = await this.repo.destroy(id);
 		if (!deleted) {
-			throw new NotFoundError("Catégorie introuvable");
+			throw new NotFoundError("category");
 		}
 	}
 }

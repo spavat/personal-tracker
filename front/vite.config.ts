@@ -27,6 +27,10 @@ export default defineConfig({
 				import.meta.dirname,
 				"../shared/src/schemas/entity.schema.ts",
 			),
+			"@personal-tracker/shared/errors": path.resolve(
+				import.meta.dirname,
+				"../shared/src/schemas/errors.schema.ts",
+			),
 			"@personal-tracker/shared/game": path.resolve(import.meta.dirname, "../shared/src/schemas/game.schema.ts"),
 			"@personal-tracker/shared/home": path.resolve(import.meta.dirname, "../shared/src/schemas/home.schema.ts"),
 			"@personal-tracker/shared/internet": path.resolve(

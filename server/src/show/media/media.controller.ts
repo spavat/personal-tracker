@@ -135,14 +135,12 @@ export class MediaController {
 	}
 
 	private async update(owner: MediaOwner, mediaId: string, body: Update) {
-		return (
-			(await this.service.update(owner, mediaId, body)) ?? Promise.reject(new NotFoundError("Média introuvable"))
-		);
+		return (await this.service.update(owner, mediaId, body)) ?? Promise.reject(new NotFoundError("media"));
 	}
 
 	private async delete(owner: MediaOwner, mediaId: string) {
 		if (!(await this.service.delete(owner, mediaId))) {
-			throw new NotFoundError("Média introuvable");
+			throw new NotFoundError("media");
 		}
 	}
 }

@@ -20,6 +20,11 @@
 			"import": "./dist/schemas/entity.schema.js",
 			"require": "./dist/schemas/entity.schema.js"
 		},
+		"./errors": {
+			"types": "./dist/schemas/errors.schema.d.ts",
+			"import": "./dist/schemas/errors.schema.js",
+			"require": "./dist/schemas/errors.schema.js"
+		},
 		"./game": {
 			"types": "./dist/schemas/game.schema.d.ts",
 			"import": "./dist/schemas/game.schema.js",

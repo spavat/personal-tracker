@@ -90,7 +90,7 @@ describe("show/media routes", () => {
 			payload: { label: "x" },
 		});
 		expect(res.statusCode).toBe(404);
-		expect(res.json().message).toBe("Média introuvable");
+		expect(res.json()).toMatchObject({ statusCode: 404, code: "not_found", params: { resource: "media" } });
 	});
 
 	it("DELETE /artists/:artistId/:mediaId rejects a non-uuid media id", async () => {

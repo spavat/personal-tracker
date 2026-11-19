@@ -1,5 +1,4 @@
 import {
-	BadRequestException,
 	MiddlewareConsumer,
 	Module,
 	NestModule,
@@ -8,30 +7,29 @@ import {
 } from "@nestjs/common";
 import { APP_PIPE, APP_FILTER, Reflector, APP_INTERCEPTOR } from "@nestjs/core";
 
-import { DomainErrorFilter } from "./domain.filter.js";
+import { ErrorFilter } from "./error.filter.js";
+import { ValidationError } from "./errors.js";
 import { RequestContextMiddleware } from "./request-context.middleware.js";
 import { TimingInterceptor } from "./timing.interceptor.js";
 
-// A 400 whose `message` is one string ("path: message; ..."), as the Fastify server answered:
-// the front shows `body.message` as is (api-utils.ts), the pipe's default would be an array.
+// A 400 `validation` error with zod's issues, their path as plain keys
 const validationPipe = new StandardSchemaValidationPipe({
 	exceptionFactory: (issues) =>
-		new BadRequestException(
-			issues
-				.map(({ path, message }) => {
-					const at = (path ?? []).map((segment) =>
-						String(typeof segment === "object" ? segment.key : segment),
-					);
-					return at.length ? `${at.join(".")}: ${message}` : message;
-				})
-				.join("; "),
+		new ValidationError(
+			issues.map(({ path, message, ...issue }) => ({
+				path: (path ?? []).map((segment) =>
+					typeof segment === "object" ? (segment.key as string | number) : segment,
+				) as Array<string | number>,
+				...("code" in issue && typeof issue.code === "string" ? { code: issue.code } : {}),
+				message,
+			})),
 		),
 });
 
 @Module({
 	providers: [
 		{ provide: APP_PIPE, useValue: validationPipe },
-		{ provide: APP_FILTER, useClass: DomainErrorFilter },
+		{ provide: APP_FILTER, useClass: ErrorFilter },
 		{ provide: APP_INTERCEPTOR, useClass: TimingInterceptor },
 		{
 			provide: APP_INTERCEPTOR,

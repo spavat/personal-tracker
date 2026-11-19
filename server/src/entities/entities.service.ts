@@ -75,5 +75,5 @@ export class EntitiesService {
 }
 
 function notFound(): never {
-	throw new NotFoundError("Entité introuvable");
+	throw new NotFoundError("entity");
 }

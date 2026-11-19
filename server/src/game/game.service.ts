@@ -118,9 +118,9 @@ export class GameService {
 }
 
 function gameNotFound(): never {
-	throw new NotFoundError("Jeu introuvable");
+	throw new NotFoundError("game");
 }
 
 function playNotFound(): never {
-	throw new NotFoundError("Partie introuvable");
+	throw new NotFoundError("play");
 }

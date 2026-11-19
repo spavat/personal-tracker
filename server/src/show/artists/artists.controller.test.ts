@@ -37,7 +37,7 @@ describe("show/artists routes", () => {
 	it("GET /:id 404s for an unknown artist", async () => {
 		const res = await ctx.app.inject({ method: "GET", url: "/show/artists/5" });
 		expect(res.statusCode).toBe(404);
-		expect(res.json().message).toBe("Artiste introuvable");
+		expect(res.json()).toMatchObject({ statusCode: 404, code: "not_found", params: { resource: "artist" } });
 		expect(ctx.table("showArtist").findFirst).toHaveBeenCalled();
 	});
 

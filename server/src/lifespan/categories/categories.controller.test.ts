@@ -107,7 +107,11 @@ describe("LifespanCategoriesController", () => {
 		const res = await app.inject({ method: "DELETE", url: `/lifespan/categories/${CATEGORY_UUID}` });
 
 		expect(res.statusCode).toBe(409);
-		expect(res.json()).toMatchObject({ statusCode: 409, message: expect.stringMatching(/sous-catégories/) });
+		expect(res.json()).toMatchObject({
+			statusCode: 409,
+			code: "has_dependents",
+			params: { dependent: "children" },
+		});
 		expect(ctx.categories.deleteOne).not.toHaveBeenCalled();
 	});
 
@@ -119,6 +123,6 @@ describe("LifespanCategoriesController", () => {
 		const res = await app.inject({ method: "DELETE", url: `/lifespan/categories/${CATEGORY_UUID}` });
 
 		expect(res.statusCode).toBe(409);
-		expect(res.json()).toMatchObject({ statusCode: 409, message: expect.stringMatching(/objets/) });
+		expect(res.json()).toMatchObject({ statusCode: 409, code: "has_dependents", params: { dependent: "objects" } });
 	});
 });

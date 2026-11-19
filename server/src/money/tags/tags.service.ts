@@ -37,11 +37,18 @@ export class TagsService {
 		this.logger.log("delete");
 		const subTags = await this.repo.findSubTags(id);
 		if (subTags.length) {
-			throw new ConflictError("Le tag a des sous-tags : impossible de le supprimer");
+			throw new ConflictError("has_dependents", "the tag has sub-tags", {
+				resource: "tag",
+				dependent: "children",
+			});
 		}
 		const transactions = await this.repo.findTransactionsUsingTag(id);
 		if (transactions.length) {
-			throw new ConflictError(`Le tag est encore utilisé par ${transactions.length} transactions`);
+			throw new ConflictError("has_dependents", "the tag has transactions", {
+				resource: "tag",
+				dependent: "transactions",
+				count: transactions.length,
+			});
 		}
 		if (!(await this.repo.destroy(id))) {
 			notFound();
@@ -137,5 +144,5 @@ function sortAnalytics(response: Record<string, Analytic>) {
 }
 
 function notFound(): never {
-	throw new NotFoundError("Tag introuvable");
+	throw new NotFoundError("tag");
 }

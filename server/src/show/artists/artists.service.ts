@@ -89,7 +89,7 @@ export class ArtistsService {
 	async delete(id: number) {
 		this.logger.log("delete");
 		if (!(await this.repo.delete(id))) {
-			throw new NotFoundError("Artiste introuvable");
+			throw new NotFoundError("artist");
 		}
 	}
 }

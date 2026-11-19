@@ -33,7 +33,7 @@ const UNKNOWN = "Inconnu";
 let syncInProgress = false;
 async function withSyncLock<T>(task: () => Promise<T>): Promise<T> {
 	if (syncInProgress) {
-		throw new ConflictError("Une synchronisation des magasins est déjà en cours");
+		throw new ConflictError("sync_in_progress", "a store sync is in progress", { service: "stores" });
 	}
 	syncInProgress = true;
 	try {
@@ -145,13 +145,16 @@ const autoPlay = (date: string, origin: GameOrigin, duration: number): AutoPlayM
 
 function getConnector(connectors: StoreConnector[], store: GameStore) {
 	const connector = connectors.find((c) => c.store === store);
-	if (!connector) throw new BadRequestError(`Magasin inconnu : ${store}`);
+	if (!connector)
+		throw new BadRequestError("invalid_reference", `unknown store ${store}`, { resource: "store", value: store });
 	return connector;
 }
 
 async function fetchConfigured(connector: StoreConnector) {
 	if (!(await connector.isConfigured())) {
-		throw new UpstreamError(`${connector.store} n'est pas configuré`);
+		throw new UpstreamError("upstream_unavailable", `${connector.store} is not configured`, {
+			service: connector.store,
+		});
 	}
 	return connector.fetchRaw();
 }
@@ -266,11 +269,11 @@ export class GameSyncService {
 	async merge({ keepId, removeId }: { keepId: string; removeId: string }) {
 		this.logger.log("merge");
 		if (keepId === removeId) {
-			throw new BadRequestError("Impossible de fusionner un jeu avec lui-même");
+			throw new BadRequestError("game.merge_self", "a game can't be merged with itself");
 		}
 		const [keep, remove] = await Promise.all([this.games.findById(keepId), this.games.findById(removeId)]);
 		if (!keep || !remove) {
-			throw new NotFoundError("Jeu introuvable");
+			throw new NotFoundError("game");
 		}
 		const capsule = keep.capsule ?? remove.capsule;
 		const header = keep.header ?? remove.header;
@@ -373,7 +376,7 @@ export class GameSyncService {
 		const connector = getConnector(this.connectors, store);
 		const snapshots = await this.snapshots.findOk(store);
 		if (!canReplay(day, snapshots[0])) {
-			throw new BadRequestError("Jour trop ancien : la récupération qui l'ouvrait n'est plus gardée (30 jours)");
+			throw new BadRequestError("game.replay_too_old", "the snapshot opening this day is no longer kept");
 		}
 
 		await this.games.deleteAutoPlays(day, connector.origins);

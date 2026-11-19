@@ -38,7 +38,7 @@ describe("show/spectacles routes", () => {
 	it("GET /:id 404s for an unknown spectacle", async () => {
 		const res = await ctx.app.inject({ method: "GET", url: "/show/spectacles/5" });
 		expect(res.statusCode).toBe(404);
-		expect(res.json().message).toBe("Spectacle introuvable");
+		expect(res.json()).toMatchObject({ statusCode: 404, code: "not_found", params: { resource: "spectacle" } });
 	});
 
 	it("PUT /:id rejects an invalid link then updates a valid spectacle", async () => {

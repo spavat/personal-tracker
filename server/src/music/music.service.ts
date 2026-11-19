@@ -53,5 +53,5 @@ export class MusicService {
 }
 
 function notFound(): never {
-	throw new NotFoundError("Écoute introuvable");
+	throw new NotFoundError("listening");
 }

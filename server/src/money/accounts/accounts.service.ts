@@ -39,15 +39,23 @@ export class AccountsService {
 		this.logger.log("delete");
 		const account = (await this.repo.findByIdWithRelationsForDelete(id)) ?? notFound();
 		if (account.history.length) {
-			throw new ConflictError(`Le compte a un historique (${account.history.length})`);
+			throw new ConflictError("has_dependents", "the account has history", {
+				resource: "account",
+				dependent: "history",
+				count: account.history.length,
+			});
 		}
 		if (account.paymentTypes.length) {
-			throw new ConflictError(`Le compte a des moyens de paiement (${account.paymentTypes.length})`);
+			throw new ConflictError("has_dependents", "the account has payment types", {
+				resource: "account",
+				dependent: "payment_types",
+				count: account.paymentTypes.length,
+			});
 		}
 		await this.repo.destroy(id);
 	}
 }
 
 function notFound(): never {
-	throw new NotFoundError("Compte introuvable");
+	throw new NotFoundError("account");
 }

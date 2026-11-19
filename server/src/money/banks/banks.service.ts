@@ -39,7 +39,11 @@ export class BanksService {
 		this.logger.log("delete");
 		const bank = (await this.repo.findByIdWithAccountsForDelete(id)) ?? notFound();
 		if (bank.accounts.length) {
-			throw new ConflictError(`La banque a encore des comptes (${bank.accounts.length})`);
+			throw new ConflictError("has_dependents", "the bank has accounts", {
+				resource: "bank",
+				dependent: "accounts",
+				count: bank.accounts.length,
+			});
 		}
 		await this.repo.destroy(id);
 	}
@@ -104,5 +108,5 @@ export class BanksService {
 }
 
 function notFound(): never {
-	throw new NotFoundError("Banque introuvable");
+	throw new NotFoundError("bank");
 }

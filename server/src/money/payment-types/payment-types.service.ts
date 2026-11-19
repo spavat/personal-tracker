@@ -42,12 +42,16 @@ export class PaymentTypesService {
 		}
 		const transactions = await this.repo.findTransactionsUsingPaymentType(id);
 		if (transactions.length) {
-			throw new ConflictError(`Le moyen de paiement est encore utilisé par ${transactions.length} transactions`);
+			throw new ConflictError("has_dependents", "the payment type has transactions", {
+				resource: "payment_type",
+				dependent: "transactions",
+				count: transactions.length,
+			});
 		}
 		await this.repo.destroy(id);
 	}
 }
 
 function notFound(): never {
-	throw new NotFoundError("Moyen de paiement introuvable");
+	throw new NotFoundError("payment_type");
 }

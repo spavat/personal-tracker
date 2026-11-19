@@ -1,9 +1,31 @@
+import { type ErrorBody, ErrorBodySchema } from "@personal-tracker/shared/errors";
+
+import { errorText } from "./error-messages";
+
+// An API error: `message` is its French text, `code` / `params` / `issues` the server's (ErrorBodySchema)
+export class ApiError extends Error {
+	override name = "ApiError";
+	constructor(readonly body: ErrorBody) {
+		super(errorText(body));
+	}
+	get status() {
+		return this.body.statusCode;
+	}
+	get code() {
+		return this.body.code;
+	}
+}
+
 // fetch doesn't reject on HTTP errors: throw so queries reach the route errorComponent and mutations their error state
 export async function checkResponse(response: Response) {
 	if (!response.ok) {
-		// the server answers errors with { message }, but a proxy or a crash may not
-		const body = await response.json().catch(() => null);
-		throw new Error(body?.message ?? `${response.status} ${response.statusText}`);
+		// the server answers errors with ErrorBodySchema, but a proxy or a crash may not
+		const parsed = ErrorBodySchema.safeParse(await response.json().catch(() => null));
+		throw new ApiError(
+			parsed.success
+				? parsed.data
+				: { statusCode: response.status, code: "http_error", message: response.statusText },
+		);
 	}
 }
 

@@ -45,7 +45,7 @@ export class ImagesController {
 		const separator = key.lastIndexOf(".");
 		const field = key.slice(separator + 1);
 		if (field !== "profile" && field !== "banner") {
-			throw new NotFoundError("Image not found");
+			throw new NotFoundError("image");
 		}
 		const program = await this.internet.findById(key.slice(0, separator));
 		return this.serve(program?.[field], response, CACHE_A_DAY, "application/octet-stream");
@@ -120,13 +120,13 @@ export class ImagesController {
 	// The object's body is a Node Readable; a missing key or object is a 404
 	private async fetch(key: string | null | undefined) {
 		if (!key) {
-			throw new NotFoundError("Image not found");
+			throw new NotFoundError("image");
 		}
 		try {
 			const object = await this.storage.get(key);
 			return { ...object, Body: object.Body as Readable | undefined };
 		} catch {
-			throw new NotFoundError("Image not found");
+			throw new NotFoundError("image");
 		}
 	}
 }

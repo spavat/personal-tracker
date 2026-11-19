@@ -23,7 +23,7 @@ export class ModelsService {
 				// Update model (first: an unknown id rolls back before touching the roles)
 				const [model] = await this.repo.updateModel(tx, data.id, data);
 				if (!model) {
-					throw new NotFoundError("Modèle introuvable");
+					throw new NotFoundError("model");
 				}
 				// Remove model roles
 				await this.repo.deleteModelRoles(tx, data.id);
@@ -60,7 +60,7 @@ export class ModelsService {
 			await this.repo.deleteModelRoles(tx, id);
 			// an unknown id rolls back
 			if (!(await this.repo.deleteModel(tx, id))) {
-				throw new NotFoundError("Modèle introuvable");
+				throw new NotFoundError("model");
 			}
 		});
 	}

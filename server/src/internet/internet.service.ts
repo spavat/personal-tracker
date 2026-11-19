@@ -227,9 +227,9 @@ export class InternetService {
 }
 
 function notFound(): never {
-	throw new NotFoundError("Programme introuvable");
+	throw new NotFoundError("program");
 }
 
 function episodeNotFound(): never {
-	throw new NotFoundError("Épisode introuvable");
+	throw new NotFoundError("episode");
 }

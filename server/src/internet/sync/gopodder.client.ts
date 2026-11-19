@@ -21,13 +21,16 @@ export class GopodderClient {
 
 	async fetchEpisodeActions(since: number) {
 		if (!this.url || !this.username || !this.password) {
-			throw new UpstreamError("gopodder n'est pas configuré");
+			throw new UpstreamError("upstream_unavailable", "gopodder is not configured", { service: "gopodder" });
 		}
 		const url = `${this.url}/api/2/episodes/${encodeURIComponent(this.username)}.json?since=${since}`;
 		const credentials = Buffer.from(`${this.username}:${this.password}`).toString("base64");
 		const response = await fetch(url, { headers: { Authorization: `Basic ${credentials}` } });
 		if (!response.ok) {
-			throw new UpstreamError(`gopodder a répondu ${response.status}`);
+			throw new UpstreamError("upstream_unavailable", `gopodder answered ${response.status}`, {
+				service: "gopodder",
+				status: response.status,
+			});
 		}
 		return GopodderEpisodeActionsResponseSchema.parse(await response.json());
 	}

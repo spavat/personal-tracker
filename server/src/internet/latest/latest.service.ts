@@ -28,7 +28,7 @@ export class LatestService {
 	// The latest episodes of any feed (a program being created)
 	async latest({ url, type }: LatestGenericQuerystringRequest): Promise<LatestEpisodesResponse> {
 		this.logger.log("latest");
-		if (!url || !type) throw new BadRequestError("Config invalide");
+		if (!url || !type) throw new BadRequestError("internet.no_feed", "no feed to read");
 		return { dateTimeUtc: now(), type, latestEpisodes: await this.fetch(url, type) };
 	}
 
@@ -45,7 +45,7 @@ export class LatestService {
 		const program = await this.repo.findById(programId);
 		const type = force ?? REF_TYPES.find((refType) => program?.refs?.[refType]);
 		const url = type ? program?.refs?.[type] : undefined;
-		if (!type || !url) throw new BadRequestError("Config invalide");
+		if (!type || !url) throw new BadRequestError("internet.no_feed", "no feed to read");
 
 		const savedExternalIds = new Set(
 			(program?.episodes ?? []).flatMap((episode) => (episode.externalId ? [episode.externalId] : [])),
@@ -65,7 +65,7 @@ export class LatestService {
 			return await fetchLatestEpisodes(url, type);
 		} catch (e) {
 			this.logger.error(`Can't retrieve the latest episodes of ${url}: ${e instanceof Error ? e.message : e}`);
-			throw new UpstreamError("Impossible de récupérer les derniers épisodes");
+			throw new UpstreamError("upstream_unavailable", "the feed could not be read", { service: "feed" });
 		}
 	}
 

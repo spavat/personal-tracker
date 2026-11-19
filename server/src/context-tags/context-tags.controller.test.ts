@@ -30,6 +30,7 @@ describe("ContextTagsController", () => {
 			const res = await app.inject({ method: "GET", url: "/context-tags" });
 
 			expect(res.statusCode).toBe(401);
+			expect(res.json()).toMatchObject({ statusCode: 401, code: "unauthorized" });
 			expect(ctx.tags.find).not.toHaveBeenCalled();
 		});
 
@@ -90,6 +91,11 @@ describe("ContextTagsController", () => {
 			});
 
 			expect(res.statusCode).toBe(400);
+			expect(res.json()).toMatchObject({
+				statusCode: 400,
+				code: "validation",
+				issues: [{ path: ["name"], code: "invalid_type", message: expect.any(String) }],
+			});
 			expect(ctx.tags.insertOne).not.toHaveBeenCalled();
 		});
 
@@ -143,7 +149,11 @@ describe("ContextTagsController", () => {
 			});
 
 			expect(res.statusCode).toBe(404);
-			expect(res.json()).toMatchObject({ statusCode: 404, error: "Not Found" });
+			expect(res.json()).toMatchObject({
+				statusCode: 404,
+				code: "not_found",
+				params: { resource: "context_tag" },
+			});
 		});
 	});
 

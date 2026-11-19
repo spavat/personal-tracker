@@ -74,9 +74,9 @@ export class ReadingMangaService {
 }
 
 function mangaNotFound(): never {
-	throw new NotFoundError("Manga introuvable");
+	throw new NotFoundError("manga");
 }
 
 function readingNotFound(): never {
-	throw new NotFoundError("Lecture introuvable");
+	throw new NotFoundError("reading");
 }

@@ -25,7 +25,7 @@ export class CoverStorage {
 		try {
 			body = await processImage(await fetchImageBuffer(source), COVER_SIZE);
 		} catch {
-			throw new BadRequestError("Image de couverture illisible");
+			throw new BadRequestError("invalid_image", "unreadable cover", { resource: "cover" });
 		}
 		const key = coverKey(editionId, randomBytes(4).toString("hex"));
 		await this.storage.put(key, body, "image/avif");

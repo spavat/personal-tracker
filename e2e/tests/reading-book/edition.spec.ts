@@ -125,7 +125,10 @@ test.describe("Reading Book - Editions", () => {
 			`/api/reading-book/books/${alice.id}/editions/${book.editions[0].id}`,
 		);
 		expect(editionRes.status()).toBe(409);
-		expect((await editionRes.json()).message).toContain("Cette édition a des lectures");
+		expect(await editionRes.json()).toMatchObject({
+			code: "has_dependents",
+			params: { resource: "edition", dependent: "readings" },
+		});
 
 		const modelRes = await page.request.delete(`/api/reading-book/books/${alice.id}/models/${book.models[0].id}`);
 		expect(modelRes.status()).toBe(409);

@@ -37,16 +37,13 @@ export class PlacesController {
 		@Query({ schema: PlaceDetailsQuerystringRequestSchema })
 		{ groupBySpectacle }: z.infer<typeof PlaceDetailsQuerystringRequestSchema>,
 	) {
-		return orNotFound(
-			this.service.get({ placeId: id, groupBySpectacle: Boolean(groupBySpectacle) }),
-			"Salle introuvable",
-		);
+		return orNotFound(this.service.get({ placeId: id, groupBySpectacle: Boolean(groupBySpectacle) }), "place");
 	}
 
 	@Post()
 	@SerializeOptions({ schema: SavePlaceResponseSchema })
 	create(@Body({ schema: SavePlaceBodyRequestSchema }) body: SavePlaceBody) {
-		return orNotFound(this.service.save({ ...body, id: undefined }), "Salle introuvable");
+		return orNotFound(this.service.save({ ...body, id: undefined }), "place");
 	}
 
 	@Put(":id")
@@ -55,7 +52,7 @@ export class PlacesController {
 		@Param({ schema: PlaceDetailsParamsRequestSchema }) { id }: { id: number },
 		@Body({ schema: SavePlaceBodyRequestSchema }) body: SavePlaceBody,
 	) {
-		return orNotFound(this.service.save({ ...body, id }), "Salle introuvable");
+		return orNotFound(this.service.save({ ...body, id }), "place");
 	}
 
 	@Delete(":id")

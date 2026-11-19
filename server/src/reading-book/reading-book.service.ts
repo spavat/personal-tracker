@@ -1,3 +1,4 @@
+import type { ErrorResource } from "@personal-tracker/shared/errors";
 import type {
 	BookListRequestSchema,
 	GetReportResponse,
@@ -50,7 +51,7 @@ export class ReadingBookService {
 
 	async getBook(id: string) {
 		this.logger.log("getBook");
-		return (await this.repo.findById(id)) ?? notFound("Livre introuvable");
+		return (await this.repo.findById(id)) ?? notFound("book");
 	}
 
 	async saveBook(book: SaveBookBody) {
@@ -67,7 +68,7 @@ export class ReadingBookService {
 			bookId = randomUUID();
 			await this.repo.insert(bookId, book);
 		}
-		return (await this.repo.findById(bookId)) ?? notFound("Livre introuvable");
+		return (await this.repo.findById(bookId)) ?? notFound("book");
 	}
 
 	async listAuthors() {
@@ -79,7 +80,7 @@ export class ReadingBookService {
 		this.logger.log("getAuthor");
 		const author = await this.repo.findEntity(id);
 		if (!author) {
-			notFound("Auteur·ice introuvable");
+			notFound("author");
 		}
 		// in publication order
 		const books = await this.repo.findAll({
@@ -107,7 +108,7 @@ export class ReadingBookService {
 		this.logger.log("getSeries");
 		const series = await this.repo.findSeries(id);
 		if (!series) {
-			notFound("Série introuvable");
+			notFound("series");
 		}
 		const [allSeries, items] = await Promise.all([this.repo.findAllSeries(), this.repo.findAllSeriesItems()]);
 		const seriesById = new Map(allSeries.map((item) => [item.id, item]));
@@ -125,21 +126,21 @@ export class ReadingBookService {
 		const bookIds = series.items.flatMap((item) => (item.kind === "book" ? [item.bookId] : []));
 		const childIds = series.items.flatMap((item) => (item.kind === "series" ? [item.seriesId] : []));
 		if (new Set(bookIds).size !== bookIds.length || new Set(childIds).size !== childIds.length) {
-			throw new BadRequestError("Un livre ou une série n'est qu'une fois dans une série");
+			throw new BadRequestError("duplicate_items", "an item is twice in the series", { resource: "series" });
 		}
 		if ((await this.repo.countBooks(bookIds)) !== bookIds.length) {
-			throw new BadRequestError("Livre inconnu");
+			throw new BadRequestError("invalid_reference", "unknown book", { resource: "book" });
 		}
 		if ((await this.repo.countSeries(childIds)) !== childIds.length) {
-			throw new BadRequestError("Série inconnue");
+			throw new BadRequestError("invalid_reference", "unknown series", { resource: "series" });
 		}
 		// a new series is held by none: it can't be in its own tree
 		if (series.id && createsCycle(series.id, childIds, await this.repo.findAllSeriesItems())) {
-			throw new BadRequestError("Une série ne peut pas se contenir elle-même, même par une sous-série");
+			throw new BadRequestError("cycle", "a series can't contain itself", { resource: "series" });
 		}
 		const id = await this.repo.saveSeries(series);
 		if (!id) {
-			throw new NotFoundError("Série introuvable");
+			throw new NotFoundError("series");
 		}
 		return this.getSeries(id);
 	}
@@ -147,7 +148,7 @@ export class ReadingBookService {
 	async deleteSeries(id: string) {
 		this.logger.log("deleteSeries");
 		if (!(await this.repo.findSeries(id))) {
-			throw new NotFoundError("Série introuvable");
+			throw new NotFoundError("series");
 		}
 		await this.repo.deleteSeries(id);
 	}
@@ -156,20 +157,23 @@ export class ReadingBookService {
 		this.logger.log("saveModel");
 		const id = await this.repo.saveModel(bookId, model);
 		if (!id) {
-			throw new NotFoundError(model.id ? "Modèle introuvable" : "Livre introuvable");
+			throw new NotFoundError(model.id ? "model" : "book");
 		}
-		return (await this.getBook(bookId)).models.find((m) => m.id === id) ?? notFound("Modèle introuvable");
+		return (await this.getBook(bookId)).models.find((m) => m.id === id) ?? notFound("model");
 	}
 
 	async deleteModel(bookId: string, modelId: string) {
 		this.logger.log("deleteModel");
 		const model = await this.repo.findModel(bookId, modelId);
 		if (!model) {
-			throw new NotFoundError("Modèle introuvable");
+			throw new NotFoundError("model");
 		}
 		// their readings point to its chapters
 		if (model.nbReadEditions > 0) {
-			throw new ConflictError("Ce modèle est utilisé par une édition qui a des lectures");
+			throw new ConflictError("has_dependents", "the model is used by an edition with readings", {
+				resource: "model",
+				dependent: "readings",
+			});
 		}
 		await this.repo.deleteModel(bookId, modelId);
 	}
@@ -178,7 +182,7 @@ export class ReadingBookService {
 		this.logger.log("addReading");
 		const reading = buildInitialReading();
 		if (!(await this.repo.pushReading(bookId, editionId, reading))) {
-			throw new NotFoundError("Édition introuvable");
+			throw new NotFoundError("edition");
 		}
 		// no entry yet: as GET /books/:id gives it
 		return reading;
@@ -188,7 +192,7 @@ export class ReadingBookService {
 		this.logger.log("saveEdition");
 		const current = edition.id ? await this.repo.findEdition(bookId, edition.id) : undefined;
 		if (edition.id && !current) {
-			throw new NotFoundError("Édition introuvable");
+			throw new NotFoundError("edition");
 		}
 		await assertEntities(this.repo, edition.publisherId ? [edition.publisherId] : [], ["organization"]);
 		await assertEntities(
@@ -197,11 +201,11 @@ export class ReadingBookService {
 			["person"],
 		);
 		if (edition.modelId && !(await this.repo.findModel(bookId, edition.modelId))) {
-			throw new BadRequestError("Ce modèle n'est pas un modèle du livre");
+			throw new BadRequestError("invalid_reference", "not a model of the book", { resource: "model" });
 		}
 		// the entries of its readings point to the chapters of its model
 		if (current && current.nbReadings > 0 && current.modelId !== edition.modelId) {
-			throw new ConflictError("Le modèle d'une édition qui a des lectures ne peut pas changer");
+			throw new ConflictError("edition.model_locked", "the model of an edition with readings can't change");
 		}
 		const id = edition.id ?? randomUUID();
 		const { cover, ...fields } = edition;
@@ -220,26 +224,29 @@ export class ReadingBookService {
 			if (coverKey && coverKey !== current?.coverKey) {
 				await this.deleteCover(coverKey);
 			}
-			throw new NotFoundError("Livre introuvable");
+			throw new NotFoundError("book");
 		}
 		// the former cover was replaced or removed
 		if (current?.coverKey && current.coverKey !== coverKey) {
 			await this.deleteCover(current.coverKey);
 		}
-		return (await this.getBook(bookId)).editions.find((e) => e.id === id) ?? notFound("Édition introuvable");
+		return (await this.getBook(bookId)).editions.find((e) => e.id === id) ?? notFound("edition");
 	}
 
 	async deleteEdition(bookId: string, editionId: string) {
 		this.logger.log("deleteEdition");
 		const edition = await this.repo.findEdition(bookId, editionId);
 		if (!edition) {
-			throw new NotFoundError("Édition introuvable");
+			throw new NotFoundError("edition");
 		}
 		if (edition.nbReadings > 0) {
-			throw new ConflictError("Cette édition a des lectures : supprimez-les d'abord");
+			throw new ConflictError("has_dependents", "the edition has readings", {
+				resource: "edition",
+				dependent: "readings",
+			});
 		}
 		if (edition.nbBookEditions <= 1) {
-			throw new ConflictError("Un livre garde au moins une édition");
+			throw new ConflictError("book.last_edition", "a book keeps one edition");
 		}
 		await this.repo.deleteEdition(bookId, editionId);
 		if (edition.coverKey) {
@@ -250,7 +257,7 @@ export class ReadingBookService {
 	async saveReading(bookId: string, reading: SaveReadingBody) {
 		this.logger.log("saveReading");
 		if (!(await this.repo.updateReading(bookId, reading))) {
-			notFound("Lecture introuvable");
+			notFound("reading");
 		}
 		return this.findReading(bookId, reading.id);
 	}
@@ -258,7 +265,7 @@ export class ReadingBookService {
 	async deleteReading(bookId: string, readingId: string) {
 		this.logger.log("deleteReading");
 		if (!(await this.repo.deleteReading(bookId, readingId))) {
-			notFound("Lecture introuvable");
+			notFound("reading");
 		}
 	}
 
@@ -266,8 +273,7 @@ export class ReadingBookService {
 	private async findReading(bookId: string, readingId: string) {
 		const book = await this.getBook(bookId);
 		return (
-			book.editions.flatMap((edition) => edition.readings).find((r) => r.id === readingId) ??
-			notFound("Lecture introuvable")
+			book.editions.flatMap((edition) => edition.readings).find((r) => r.id === readingId) ?? notFound("reading")
 		);
 	}
 
@@ -422,10 +428,12 @@ export class ReadingBookService {
 // The credited entities must exist, with the kind the credit expects
 async function assertEntities(repo: BookRepository, ids: string[], kinds: EntityKind[]) {
 	if ((await repo.countEntities(ids, kinds)) !== new Set(ids).size) {
-		throw new BadRequestError(kinds.includes("organization") ? "Organisation inconnue" : "Personne inconnue");
+		throw new BadRequestError("invalid_reference", "unknown entity", {
+			resource: kinds.includes("organization") ? "organization" : "person",
+		});
 	}
 }
 
-function notFound(message: string): never {
-	throw new NotFoundError(message);
+function notFound(resource: ErrorResource): never {
+	throw new NotFoundError(resource);
 }

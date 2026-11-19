@@ -25,7 +25,7 @@ export class PortraitStorage {
 		try {
 			body = await processImage(await fetchImageBuffer(source), PORTRAIT_SIZE);
 		} catch {
-			throw new BadRequestError("Portrait illisible");
+			throw new BadRequestError("invalid_image", "unreadable portrait", { resource: "portrait" });
 		}
 		const key = portraitKey(entityId, randomBytes(4).toString("hex"));
 		await this.storage.put(key, body, "image/avif");

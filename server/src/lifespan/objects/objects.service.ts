@@ -96,9 +96,9 @@ export class LifespanObjectsService {
 }
 
 function objectNotFound(): never {
-	throw new NotFoundError("Objet introuvable");
+	throw new NotFoundError("object");
 }
 
 function eventNotFound(): never {
-	throw new NotFoundError("Événement introuvable");
+	throw new NotFoundError("event");
 }

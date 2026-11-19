@@ -153,5 +153,5 @@ export class TransactionsService {
 }
 
 function notFound(): never {
-	throw new NotFoundError("Transaction introuvable");
+	throw new NotFoundError("transaction");
 }

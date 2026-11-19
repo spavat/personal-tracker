@@ -31,7 +31,7 @@ export class MediaStorageRepository {
 			try {
 				body = await processImage(original, SHOW_IMAGE_SIZE[imageKind]);
 			} catch {
-				throw new BadRequestError("Format non supporté : image ou PDF uniquement");
+				throw new BadRequestError("invalid_image", "only an image or a PDF", { resource: "media" });
 			}
 			extension = "avif";
 			contentType = "image/avif";

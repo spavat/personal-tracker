@@ -70,7 +70,9 @@ export class PerformancesService {
 			if (performance.posterId) {
 				const kind = await this.repo.findSpectacleMediaKind(tx, spectacleId!, performance.posterId);
 				if (kind !== "poster") {
-					throw new BadRequestError("L'affiche doit être un média « affiche » de ce spectacle");
+					throw new BadRequestError("invalid_reference", "not a poster of the spectacle", {
+						resource: "poster",
+					});
 				}
 			}
 			const dataToSave = {
@@ -86,7 +88,7 @@ export class PerformancesService {
 			const [saved] = await this.repo.savePerformance(tx, performance.id, dataToSave);
 			if (!saved) {
 				// rolls back the place, work and spectacle created above
-				throw new NotFoundError("Représentation introuvable");
+				throw new NotFoundError("performance");
 			}
 			return saved;
 		});
@@ -98,7 +100,7 @@ export class PerformancesService {
 			const pictures = await this.repo.findRolePictures(tx, id);
 			const [deleted] = await this.repo.delete(tx, id);
 			if (!deleted) {
-				throw new NotFoundError("Représentation introuvable");
+				throw new NotFoundError("performance");
 			}
 			// a role portrait lives in the artist's gallery: it goes too once nothing uses it anymore
 			const keys: string[] = [];

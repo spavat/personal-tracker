@@ -189,7 +189,7 @@ describe("GameSyncService.preview", () => {
 
 	it("refuses a store that isn't configured", async () => {
 		steam.isConfigured = async () => false;
-		await expect(sync([steam]).preview("steam")).rejects.toThrow(/n'est pas configuré/);
+		await expect(sync([steam]).preview("steam")).rejects.toMatchObject({ code: "upstream_unavailable" });
 	});
 });
 
@@ -447,7 +447,9 @@ describe("GameSyncService.replay on the oldest kept day", () => {
 			},
 		);
 
-		await expect(sync([steam], games, snapshots).replay("steam", "2026-10-15")).rejects.toThrow(/trop ancien/);
+		await expect(sync([steam], games, snapshots).replay("steam", "2026-10-15")).rejects.toMatchObject({
+			code: "game.replay_too_old",
+		});
 		expect(playsOf(games, "Hades II")).toEqual([{ date: "2026-10-15", origin: "steam", duration: 50, auto: true }]);
 	});
 });
@@ -479,8 +481,10 @@ describe("GameSyncService.merge", () => {
 	it("refuses to merge a game with itself, and returns null for an unknown game", async () => {
 		const games = memoryGames([manualGame("keep", "Brotato")]);
 		const service = sync([], games);
-		await expect(service.merge({ keepId: "keep", removeId: "keep" })).rejects.toThrow(/lui-même/);
-		await expect(service.merge({ keepId: "keep", removeId: "nope" })).rejects.toThrow(/introuvable/);
+		await expect(service.merge({ keepId: "keep", removeId: "keep" })).rejects.toMatchObject({
+			code: "game.merge_self",
+		});
+		await expect(service.merge({ keepId: "keep", removeId: "nope" })).rejects.toMatchObject({ code: "not_found" });
 	});
 });
 

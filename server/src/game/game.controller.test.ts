@@ -98,7 +98,7 @@ describe("GameModule controllers", () => {
 			({ app } = await setup());
 			const res = await app.inject({ method: "POST", url: "/game/sync/import/steam/preview" });
 			expect(res.statusCode).toBe(502);
-			expect(res.json().message).toBe("steam n'est pas configuré");
+			expect(res.json()).toMatchObject({ code: "upstream_unavailable", params: { service: "steam" } });
 		});
 
 		it("POST /sync/run skips the stores that aren't configured", async () => {

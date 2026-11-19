@@ -31,7 +31,7 @@ export class SportService {
 		this.logger.log("downloadUrl");
 		const activity = await this.repo.findForDownload(id);
 		if (!activity?.gpxKey) {
-			throw new NotFoundError("Pas de fichier GPX pour cette activité");
+			throw new NotFoundError("activity", "sport.no_gpx", "the activity has no GPX file");
 		}
 		return this.files.gpxDownloadUrl(activity.gpxKey, activity.name);
 	}
@@ -41,7 +41,7 @@ export class SportService {
 		this.logger.log(`create ${id}`);
 		const dataToSave = await this.prepare(id, body);
 		if (!dataToSave.date) {
-			throw new BadRequestError("Une nouvelle activité a besoin d'une date ou d'un fichier GPX");
+			throw new BadRequestError("sport.date_required", "a new activity needs a date or a GPX file");
 		}
 		return this.repo.insert({
 			id,
@@ -66,7 +66,7 @@ export class SportService {
 		let thumbnailKey: string | undefined;
 		if (rawData) {
 			if (!gpxData?.date) {
-				throw new BadRequestError("Le fichier GPX n'a pas de date");
+				throw new BadRequestError("sport.gpx_no_date", "the GPX file has no date");
 			}
 			gpxKey = buildGpxKey(activityId, gpxData.date);
 			await this.files.uploadGpx(gpxKey, rawData);
@@ -98,7 +98,7 @@ export class SportService {
 		const activity = (await this.repo.findById(id)) ?? notFound();
 		const points = activity.points ?? [];
 		if (endIndex >= points.length) {
-			throw new BadRequestError("endIndex hors limites");
+			throw new BadRequestError("sport.crop_out_of_range", "endIndex out of the track");
 		}
 
 		const cropped = cropActivity(points, activity.segments, startIndex, endIndex, activity.type);
@@ -132,5 +132,5 @@ export class SportService {
 }
 
 function notFound(): never {
-	throw new NotFoundError("Activité introuvable");
+	throw new NotFoundError("activity");
 }

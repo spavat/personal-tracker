@@ -137,7 +137,7 @@ describe("PerformancesService.save", () => {
 			new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save({
 				performance: { id: 3, date: "2024-01-01", placeId: 7, spectacleId: 100 },
 			} as any),
-		).rejects.toThrow("Représentation introuvable");
+		).rejects.toMatchObject({ params: { resource: "performance" } });
 	});
 
 	it("creates a place when only a place payload is given", async () => {
