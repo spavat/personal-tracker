@@ -90,15 +90,11 @@ export const SaveBodyRequestSchema = z
 		mangaId: z.uuid().optional(),
 	})
 	.refine(({ manga, reading, mangaId }) => {
-		if (manga && !mangaId) {
-			return true; // Add manga (with or without reading)
+		if (manga) {
+			return !mangaId; // Add or update a manga (with or without reading)
 		}
-
-		if (reading && mangaId) {
-			return true; // Add reading only
-		}
-		return false;
-	});
+		return !!(reading && mangaId); // Add or update a reading only
+	}, "Expected either a manga (without mangaId), or a reading with its mangaId");
 export type SaveBodyRequestType = z.infer<typeof SaveBodyRequestSchema>;
 export const SaveParamsRequestSchema = UUIDParamsSchema;
 

@@ -1,0 +1,1 @@
+ALTER TABLE "reading"."edition" ADD COLUMN "created_at" timestamp DEFAULT now() NOT NULL;

@@ -2,8 +2,12 @@
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { join } from "node:path";
 
-import { db } from "./db";
+import { envSchema } from "./config/env.schema.js";
+import { createDrizzle } from "./database/drizzle.js";
 
-migrate(db, { migrationsFolder: join(__dirname, "../drizzle") })
+const { DATABASE_URL } = envSchema.pick({ DATABASE_URL: true }).parse(process.env);
+const db = createDrizzle(DATABASE_URL);
+
+await migrate(db, { migrationsFolder: join(import.meta.dirname, "../drizzle") })
 	.then(() => console.log("[migrate] done"))
 	.finally(() => db.$client.end());

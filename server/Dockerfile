@@ -6,6 +6,7 @@ WORKDIR /app
 COPY package.json package-lock.json tsconfig.base.json ./
 COPY shared/package.json shared/
 COPY server/package.json server/
+COPY fastify-server/package.json fastify-server/
 COPY front/package.json front/
 COPY e2e/package.json e2e/
 RUN npm ci
@@ -19,6 +20,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY shared/package.json shared/
 COPY server/package.json server/
+COPY fastify-server/package.json fastify-server/
 COPY front/package.json front/
 COPY e2e/package.json e2e/
 # root "prepare" runs husky, a dev dependency not installed here
@@ -34,4 +36,5 @@ COPY server/drizzle server/drizzle
 USER node
 WORKDIR /app/server
 EXPOSE 3000
-CMD ["sh", "-c", "node dist/migrate.js && exec node dist/server.js"]
+# the server reads PORT (3000 in deploy/docker-compose.yml); create-owner: `docker compose exec server npm run create-owner -- <email> <password>`
+CMD ["sh", "-c", "node dist/migrate.js && exec node dist/main.js"]

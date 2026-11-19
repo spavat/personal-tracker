@@ -1,6 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
 
-// Minimal AntennaPod backup: only the tables and columns read by server/src/routes/internet/sync.entity.ts
+// Minimal AntennaPod backup: only the tables and columns read by server/src/internet/sync/sync.entity.ts
 type Listened = {
 	feed: { title: string; url: string };
 	title: string;

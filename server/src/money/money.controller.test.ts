@@ -1,0 +1,118 @@
+import type { NestNodeApplication } from "@nestjs/platform-node";
+
+import { afterEach, describe, expect, it } from "vitest";
+
+import { makeFakeDrizzle } from "../test-support/fake-drizzle.js";
+import { buildTestApp } from "../test-support/test-app.js";
+import { MoneyModule } from "./money.module.js";
+
+const OWNER = { user: { id: "owner" }, session: { id: "session" } };
+
+// `insertResult`: what an insert(...).returning() resolves to
+async function setup(session: unknown = OWNER, insertResult: unknown = []) {
+	const { db, table } = makeFakeDrizzle({ builderResult: insertResult });
+	const app = await buildTestApp(MoneyModule, { drizzle: db, session });
+	return { app, table };
+}
+
+describe("MoneyModule controllers", () => {
+	let app: NestNodeApplication;
+
+	afterEach(async () => {
+		await app.close();
+	});
+
+	it("keeps every money route for the owner", async () => {
+		({ app } = await setup(null));
+
+		for (const url of ["/money/accounts", "/money/banks/overview", "/money/transactions", "/money/recap"]) {
+			expect((await app.inject({ method: "GET", url })).statusCode, url).toBe(401);
+		}
+	});
+
+	describe("route order", () => {
+		it("serves /banks/overview and /banks/tree, not /banks/:id", async () => {
+			const ctx = await setup();
+			app = ctx.app;
+
+			expect((await app.inject({ method: "GET", url: "/money/banks/overview" })).statusCode).toBe(200);
+			expect((await app.inject({ method: "GET", url: "/money/banks/tree" })).statusCode).toBe(200);
+			expect(ctx.table("moneyBank").findFirst).not.toHaveBeenCalled();
+		});
+
+		it("serves /tags/analytics, not /tags/:id", async () => {
+			const ctx = await setup();
+			app = ctx.app;
+
+			const res = await app.inject({ method: "GET", url: "/money/tags/analytics?splitParent=true" });
+
+			expect(res.statusCode).toBe(200);
+			expect(ctx.table("moneyTag").findFirst).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("status codes", () => {
+		it("answers 200 to a create, as the Fastify routes did", async () => {
+			({ app } = await setup(OWNER, [{ id: 1 }]));
+
+			const res = await app.inject({ method: "POST", url: "/money/banks", payload: { name: "Bank" } });
+
+			expect(res.statusCode).toBe(200);
+		});
+
+		it("answers 201 to a transaction create and 204 to a transaction delete", async () => {
+			const ctx = await setup(OWNER, [{ id: 1 }]);
+			app = ctx.app;
+			ctx.table("moneyTransaction").findFirst.mockResolvedValue({ id: 1, children: [] });
+
+			const created = await app.inject({ method: "POST", url: "/money/transactions", payload: { name: "Shop" } });
+			const deleted = await app.inject({ method: "DELETE", url: "/money/transactions/1" });
+
+			expect(created.statusCode).toBe(201);
+			expect(deleted.statusCode).toBe(204);
+		});
+
+		it("maps an unknown id to 404 and a refused delete to 409", async () => {
+			const ctx = await setup();
+			app = ctx.app;
+
+			expect((await app.inject({ method: "GET", url: "/money/accounts/1" })).statusCode).toBe(404);
+
+			ctx.table("moneyBank").findFirst.mockResolvedValue({ id: 1, accounts: [{ id: 10 }] });
+			const res = await app.inject({ method: "DELETE", url: "/money/banks/1" });
+			expect(res.statusCode).toBe(409);
+			expect(res.json()).toMatchObject({ error: "Conflict" });
+		});
+	});
+
+	describe("validation", () => {
+		it("rejects a non-numeric id with 400", async () => {
+			({ app } = await setup());
+
+			for (const url of [
+				"/money/paymentTypes/abc",
+				"/money/transactions/abc",
+				"/money/transactions/account/abc",
+			]) {
+				expect((await app.inject({ method: "GET", url })).statusCode, url).toBe(400);
+			}
+		});
+
+		it("rejects an invalid create body with 400", async () => {
+			({ app } = await setup());
+
+			expect(
+				(await app.inject({ method: "POST", url: "/money/accounts", payload: { name: 1 } })).statusCode,
+			).toBe(400);
+		});
+
+		it("requires the recap period", async () => {
+			({ app } = await setup());
+
+			expect((await app.inject({ method: "GET", url: "/money/recap" })).statusCode).toBe(400);
+			expect(
+				(await app.inject({ method: "GET", url: "/money/recap?from=2024-01-01&to=2024-01-31" })).statusCode,
+			).toBe(200);
+		});
+	});
+});
