@@ -1,8 +1,10 @@
-import type { GameImageField, GameImagesStorage } from "../game-images.storage.js";
+import { Injectable, Logger } from "@nestjs/common";
+
 import type { GameMongo } from "../game.entity.js";
 import type { StoreGame } from "./connector.js";
-import type { SteamAppDetails, SteamStore } from "./steam-store.js";
-import type { SyncLog } from "./sync-log.js";
+
+import { type GameImageField, GameImagesStorage } from "../game-images.storage.js";
+import { type SteamAppDetails, SteamStore } from "./steam-store.js";
 
 export type GameEnrichment = Partial<Pick<GameMongo, "developper" | "editor" | "capsule" | "header">>;
 
@@ -11,11 +13,13 @@ export type GameEnrichment = Partial<Pick<GameMongo, "developper" | "editor" | "
  * with exactly its name for a GOG / Epic game. The store's own info is the fallback (Epic's developer is often
  * the publisher). Failures are logged and leave the field out: they never block the sync.
  */
+@Injectable()
 export class GameEnricher {
+	private readonly logger = new Logger(GameEnricher.name);
+
 	constructor(
-		private steam: Pick<SteamStore, "details" | "findAppId">,
-		private images: Pick<GameImagesStorage, "uploadFromSource">,
-		private log: SyncLog,
+		private readonly steam: SteamStore,
+		private readonly images: GameImagesStorage,
 	) {}
 
 	/** Steam app id of a GOG / Epic game: the Steam app with exactly its name. */
@@ -24,7 +28,7 @@ export class GameEnricher {
 		try {
 			return await this.steam.findAppId(storeGame.name);
 		} catch (error) {
-			this.log.warn({ storeGame: storeGame.storeGameId, error }, "game sync: Steam search failed");
+			this.logger.warn(`Steam search failed (${storeGame.storeGameId}): ${String(error)}`);
 			return undefined;
 		}
 	}
@@ -60,7 +64,7 @@ export class GameEnricher {
 		try {
 			return await this.steam.details(steamId);
 		} catch (error) {
-			this.log.warn({ steamId, error }, "game sync: Steam store info failed");
+			this.logger.warn(`Steam store info failed (${steamId}): ${String(error)}`);
 			return null;
 		}
 	}
@@ -77,7 +81,7 @@ export class GameEnricher {
 			try {
 				keys[field] = await this.images.uploadFromSource(gameId, field, source);
 			} catch (error) {
-				this.log.warn({ gameId, field, source, error }, "game sync: picture upload failed");
+				this.logger.warn(`picture upload failed (${gameId} ${field} ${source}): ${String(error)}`);
 			}
 		}
 		return keys;

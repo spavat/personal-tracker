@@ -7,7 +7,7 @@ import { ReadingBookModule } from "../reading-book/reading-book.module.js";
 import { ReadingMangaModule } from "../reading-manga/reading-manga.module.js";
 import { ShowSharedModule } from "../show/show-shared.module.js";
 import { HomeController } from "./home.controller.js";
-import { GetLatestUseCase } from "./home.useCases.js";
+import { HomeService } from "./home.service.js";
 
 // Reads every domain: each imported module exports the repository (and image storage) the home page needs
 @Module({
@@ -20,6 +20,6 @@ import { GetLatestUseCase } from "./home.useCases.js";
 		ReadingBookModule,
 	],
 	controllers: [HomeController],
-	providers: [GetLatestUseCase],
+	providers: [HomeService],
 })
 export class HomeModule {}

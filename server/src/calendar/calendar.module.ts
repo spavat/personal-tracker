@@ -7,7 +7,7 @@ import { ReadingBookModule } from "../reading-book/reading-book.module.js";
 import { ReadingMangaModule } from "../reading-manga/reading-manga.module.js";
 import { ShowSharedModule } from "../show/show-shared.module.js";
 import { CalendarController } from "./calendar.controller.js";
-import { GetDailyCalendarUseCase, GetMonthlyCalendarUseCase, GetPeriodCalendarUseCase } from "./calendar.useCases.js";
+import { CalendarService } from "./calendar.service.js";
 
 // Reads every domain: each imported module exports the repository the calendar needs
 @Module({
@@ -20,6 +20,6 @@ import { GetDailyCalendarUseCase, GetMonthlyCalendarUseCase, GetPeriodCalendarUs
 		GameSharedModule,
 	],
 	controllers: [CalendarController],
-	providers: [GetMonthlyCalendarUseCase, GetPeriodCalendarUseCase, GetDailyCalendarUseCase],
+	providers: [CalendarService],
 })
 export class CalendarModule {}

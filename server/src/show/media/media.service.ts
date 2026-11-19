@@ -5,9 +5,7 @@ import type {
 	UploadMediaBodyRequest,
 } from "@personal-tracker/shared/show";
 
-import { Injectable } from "@nestjs/common";
-
-import type { UseCaseLog } from "../../common/use-case-log.js";
+import { Injectable, Logger } from "@nestjs/common";
 
 import { BadRequestError, ConflictError } from "../../common/errors.js";
 import { MediaStorageRepository } from "./media-storage.repository.js";
@@ -33,26 +31,23 @@ function isForeignKeyViolation(error: unknown) {
 }
 
 @Injectable()
-export class ListMediaUseCase {
-	constructor(private repo: MediaRepository) {}
+export class MediaService {
+	private readonly logger = new Logger(MediaService.name);
 
-	async execute(owner: MediaOwner, kind: SpectacleMediaKind | undefined, log: UseCaseLog) {
-		log.info("ListMediaUseCase.execute");
+	constructor(
+		private readonly repo: MediaRepository,
+		private readonly storage: MediaStorageRepository,
+	) {}
+
+	async list(owner: MediaOwner, kind: SpectacleMediaKind | undefined) {
+		this.logger.log("list");
 		return isArtistOwner(owner)
 			? sortByMediaOrder(await this.repo.findArtistMedia(owner.artistId)).map(toArtistMedia)
 			: sortByMediaOrder(await this.repo.findSpectacleMedia(owner.spectacleId, kind)).map(toSpectacleMedia);
 	}
-}
 
-@Injectable()
-export class UploadMediaUseCase {
-	constructor(
-		private repo: MediaRepository,
-		private storage: MediaStorageRepository,
-	) {}
-
-	execute(owner: MediaOwner, data: UploadMediaBodyRequest, log: UseCaseLog) {
-		log.info("UploadMediaUseCase.execute");
+	upload(owner: MediaOwner, data: UploadMediaBodyRequest) {
+		this.logger.log("upload");
 		return this.repo.runInTransaction(async (tx) => {
 			const order = await this.repo.nextOrder(tx, owner);
 			const [{ id }] = await this.repo.insertMedia(tx, data.label, order);
@@ -63,14 +58,9 @@ export class UploadMediaUseCase {
 			return { id, label: data.label, contentType: file.contentType, url: mediaUrl(id) };
 		});
 	}
-}
 
-@Injectable()
-export class UpdateMediaUseCase {
-	constructor(private repo: MediaRepository) {}
-
-	async execute(owner: MediaOwner, mediaId: string, data: UpdateMediaBodyRequest, log: UseCaseLog) {
-		log.info("UpdateMediaUseCase.execute");
+	async update(owner: MediaOwner, mediaId: string, data: UpdateMediaBodyRequest) {
+		this.logger.log("update");
 		if (!(await this.repo.linkExists(owner, mediaId))) {
 			return null;
 		}
@@ -84,14 +74,9 @@ export class UpdateMediaUseCase {
 
 		return true;
 	}
-}
 
-@Injectable()
-export class ReorderMediaUseCase {
-	constructor(private repo: MediaRepository) {}
-
-	async execute(owner: MediaOwner, { mediaIds }: ReorderMediaBodyRequest, log: UseCaseLog) {
-		log.info("ReorderMediaUseCase.execute");
+	async reorder(owner: MediaOwner, { mediaIds }: ReorderMediaBodyRequest) {
+		this.logger.log("reorder");
 		// the whole gallery, each media once: a partial list would leave ties
 		const current = await this.repo.findMediaIds(owner);
 		if (
@@ -108,17 +93,9 @@ export class ReorderMediaUseCase {
 			}
 		});
 	}
-}
 
-@Injectable()
-export class DeleteMediaUseCase {
-	constructor(
-		private repo: MediaRepository,
-		private storage: MediaStorageRepository,
-	) {}
-
-	async execute(owner: MediaOwner, mediaId: string, log: UseCaseLog) {
-		log.info("DeleteMediaUseCase.execute");
+	async delete(owner: MediaOwner, mediaId: string) {
+		this.logger.log("delete");
 		let result: { found: boolean; key?: string };
 		try {
 			result = await this.repo.runInTransaction(async (tx) => {
@@ -147,7 +124,9 @@ export class DeleteMediaUseCase {
 		}
 		// after the commit: a failed S3 delete only leaves an unreferenced file
 		if (result.key) {
-			await this.storage.deleteObject(result.key).catch((error) => log.warn(error, "S3 media delete failed"));
+			await this.storage
+				.deleteObject(result.key)
+				.catch((error) => this.logger.warn(`S3 media delete failed (${result.key}): ${String(error)}`));
 		}
 		return true;
 	}

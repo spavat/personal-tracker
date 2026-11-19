@@ -2,13 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { SpectacleRepository } from "./spectacle.repository.js";
 
-import { asLog, makeLog } from "../../test-support/fake-log.js";
-import {
-	GetGroupedSpectaclesUseCase,
-	GetSpectacleUseCase,
-	ListSpectaclesUseCase,
-	SaveSpectacleUseCase,
-} from "./spectacle.useCases.js";
+import { SpectacleService } from "./spectacle.service.js";
 
 function fakeRepo() {
 	return {
@@ -21,17 +15,17 @@ function fakeRepo() {
 }
 const asRepo = (r: ReturnType<typeof fakeRepo>) => r as unknown as SpectacleRepository;
 
-describe("ListSpectaclesUseCase", () => {
+describe("SpectacleService.list", () => {
 	it("returns the repository list", async () => {
 		const repo = fakeRepo();
 		repo.findAll.mockResolvedValue([{ id: 1 }]);
-		expect(await new ListSpectaclesUseCase(asRepo(repo)).execute(asLog(makeLog()))).toEqual([{ id: 1 }]);
+		expect(await new SpectacleService(asRepo(repo)).list()).toEqual([{ id: 1 }]);
 	});
 });
 
-describe("GetGroupedSpectaclesUseCase", () => {
+describe("SpectacleService.listGrouped", () => {
 	it("returns an empty object when there is nothing to group", async () => {
-		expect(await new GetGroupedSpectaclesUseCase(asRepo(fakeRepo())).execute(false, asLog(makeLog()))).toEqual({});
+		expect(await new SpectacleService(asRepo(fakeRepo())).listGrouped(false)).toEqual({});
 	});
 
 	it("counts a spectacle whose first performance of the year is canceled", async () => {
@@ -62,15 +56,15 @@ describe("GetGroupedSpectaclesUseCase", () => {
 			},
 		]);
 
-		const result = await new GetGroupedSpectaclesUseCase(asRepo(repo)).execute(true, asLog(makeLog()));
+		const result = await new SpectacleService(asRepo(repo)).listGrouped(true);
 
 		expect(result).toMatchObject([{ name: "2024", nbSpectacles: 1, nbPerformances: 1 }]);
 	});
 });
 
-describe("GetSpectacleUseCase", () => {
+describe("SpectacleService.get", () => {
 	it("returns null for an unknown spectacle", async () => {
-		expect(await new GetSpectacleUseCase(asRepo(fakeRepo())).execute(1, asLog(makeLog()))).toBeNull();
+		expect(await new SpectacleService(asRepo(fakeRepo())).get(1)).toBeNull();
 	});
 
 	it("maps performances, cast and models into the response shape", async () => {
@@ -138,7 +132,7 @@ describe("GetSpectacleUseCase", () => {
 			],
 		});
 
-		const result = await new GetSpectacleUseCase(asRepo(repo)).execute(1, asLog(makeLog()));
+		const result = await new SpectacleService(asRepo(repo)).get(1);
 
 		expect(result).toEqual({
 			id: 1,
@@ -203,12 +197,12 @@ describe("GetSpectacleUseCase", () => {
 	});
 });
 
-describe("SaveSpectacleUseCase", () => {
+describe("SpectacleService.save", () => {
 	it("saves through the repository", async () => {
 		const repo = fakeRepo();
 		const data = { id: 1, name: "Tosca", workId: 2, links: [], tracklist: "# Acte 1" };
 		repo.save.mockResolvedValue(data);
-		expect(await new SaveSpectacleUseCase(asRepo(repo)).execute(data, asLog(makeLog()))).toEqual(data);
+		expect(await new SpectacleService(asRepo(repo)).save(data)).toEqual(data);
 		expect(repo.save).toHaveBeenCalledWith(data);
 	});
 });

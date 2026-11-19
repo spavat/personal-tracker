@@ -11,7 +11,7 @@ import { PlaceRepository } from "./places/place.repository.js";
 import { SpectacleRepository } from "./spectacles/spectacle.repository.js";
 import { WorkRepository } from "./works/work.repository.js";
 
-// The repositories of every show sub-domain: some use cases read several (a performance deletes its media,
+// The repositories of every show sub-domain: some services read several (a performance deletes its media,
 // the search reads spectacles, artists and places). Its own module so the sub-modules don't import their parent.
 const REPOSITORIES = [
 	ArtistRepository,

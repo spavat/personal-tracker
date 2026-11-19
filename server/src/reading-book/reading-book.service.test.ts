@@ -1,32 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { ContextTagsRepository } from "../context-tags/context-tags.repository.js";
-import type { BookLog } from "./book.useCases.js";
-
-const makeLog = () => ({ info: vi.fn(), warn: vi.fn() });
-const asLog = (log: ReturnType<typeof makeLog>) => log as BookLog;
 import type { BookRepository } from "./book.repository.js";
 import type { CoverStorage } from "./cover.storage.js";
 
 import { BadRequestError, ConflictError, NotFoundError } from "../common/errors.js";
-import {
-	AddReadingUseCase,
-	DeleteEditionUseCase,
-	DeleteModelUseCase,
-	DeleteReadingUseCase,
-	DeleteSeriesUseCase,
-	GetAuthorUseCase,
-	GetBookUseCase,
-	GetReportUseCase,
-	GetSeriesUseCase,
-	ListBooksUseCase,
-	ListSeriesUseCase,
-	SaveBookUseCase,
-	SaveEditionUseCase,
-	SaveModelUseCase,
-	SaveReadingUseCase,
-	SaveSeriesUseCase,
-} from "./book.useCases.js";
+import { ReadingBookService } from "./reading-book.service.js";
 
 function fakeRepo() {
 	return {
@@ -59,11 +38,13 @@ function fakeRepo() {
 
 type FakeRepo = ReturnType<typeof fakeRepo>;
 const asRepo = (r: FakeRepo) => r as unknown as BookRepository;
+const buildService = (repo: FakeRepo, covers: unknown = {}, contextTags: unknown = {}) =>
+	new ReadingBookService(asRepo(repo), covers as CoverStorage, contextTags as ContextTagsRepository);
 
-describe("ListBooksUseCase", () => {
+describe("ReadingBookService.listBooks", () => {
 	it("defaults to sorting by lastReadDate desc", () => {
 		const repo = fakeRepo();
-		new ListBooksUseCase(asRepo(repo)).execute({ withReadingsDetails: false } as any, asLog(makeLog()));
+		buildService(repo).listBooks({ withReadingsDetails: false } as any);
 
 		expect(repo.findAll).toHaveBeenCalledWith({
 			from: undefined,
@@ -76,15 +57,12 @@ describe("ListBooksUseCase", () => {
 
 	it("passes through the requested sort and date range", () => {
 		const repo = fakeRepo();
-		new ListBooksUseCase(asRepo(repo)).execute(
-			{
-				sort: ["book", "asc"],
-				from: "2024-01-01",
-				to: "2024-12-31",
-				withReadingsDetails: true,
-			} as any,
-			asLog(makeLog()),
-		);
+		buildService(repo).listBooks({
+			sort: ["book", "asc"],
+			from: "2024-01-01",
+			to: "2024-12-31",
+			withReadingsDetails: true,
+		} as any);
 
 		expect(repo.findAll).toHaveBeenCalledWith({
 			from: "2024-01-01",
@@ -96,21 +74,21 @@ describe("ListBooksUseCase", () => {
 	});
 });
 
-describe("GetBookUseCase", () => {
+describe("ReadingBookService.getBook", () => {
 	it("looks the book up by id", () => {
 		const repo = fakeRepo();
-		new GetBookUseCase(asRepo(repo)).execute("book-1", asLog(makeLog()));
+		buildService(repo).getBook("book-1");
 		expect(repo.findById).toHaveBeenCalledWith("book-1");
 	});
 });
 
-describe("SaveBookUseCase", () => {
+describe("ReadingBookService.saveBook", () => {
 	it("updates an existing book and returns the reloaded document", async () => {
 		const repo = fakeRepo();
 		repo.findById.mockResolvedValue({ id: "book-1", book: "Dune" });
 		const book = { id: "book-1", book: "Dune", authors: [{ entityId: "herbert", creditedAs: null }] };
 
-		const result = await new SaveBookUseCase(asRepo(repo)).execute(book as any, asLog(makeLog()));
+		const result = await buildService(repo).saveBook(book as any);
 
 		expect(repo.update).toHaveBeenCalledWith("book-1", book);
 		expect(repo.insert).not.toHaveBeenCalled();
@@ -123,9 +101,7 @@ describe("SaveBookUseCase", () => {
 		repo.countEntities.mockResolvedValue(0);
 		const book = { book: "Dune", authors: [{ entityId: "folio", creditedAs: null }] };
 
-		await expect(new SaveBookUseCase(asRepo(repo)).execute(book as any, asLog(makeLog()))).rejects.toBeInstanceOf(
-			BadRequestError,
-		);
+		await expect(buildService(repo).saveBook(book as any)).rejects.toBeInstanceOf(BadRequestError);
 		expect(repo.countEntities).toHaveBeenCalledWith(["folio"], ["person"]);
 		expect(repo.insert).not.toHaveBeenCalled();
 	});
@@ -134,7 +110,7 @@ describe("SaveBookUseCase", () => {
 		const repo = fakeRepo();
 		const book = { book: "Dune", authors: [{ entityId: "herbert", creditedAs: null }] };
 
-		await new SaveBookUseCase(asRepo(repo)).execute(book as any, asLog(makeLog()));
+		await buildService(repo).saveBook(book as any);
 
 		expect(repo.update).not.toHaveBeenCalled();
 		expect(repo.insert).toHaveBeenCalledWith(expect.any(String), book);
@@ -143,7 +119,7 @@ describe("SaveBookUseCase", () => {
 	});
 });
 
-describe("GetAuthorUseCase", () => {
+describe("ReadingBookService.getAuthor", () => {
 	it("gives the author with their books, in publication order", async () => {
 		const repo = fakeRepo();
 		repo.findEntity.mockResolvedValue({
@@ -155,7 +131,7 @@ describe("GetAuthorUseCase", () => {
 		});
 		repo.findAll.mockResolvedValue([{ id: "alice" }]);
 
-		expect(await new GetAuthorUseCase(asRepo(repo)).execute("carroll", asLog(makeLog()))).toEqual({
+		expect(await buildService(repo).getAuthor("carroll")).toEqual({
 			id: "carroll",
 			kind: "person",
 			name: "Lewis Carroll",
@@ -171,9 +147,9 @@ describe("GetAuthorUseCase", () => {
 		});
 	});
 
-	it("is undefined for an unknown entity", async () => {
+	it("404s on an unknown entity", async () => {
 		const repo = fakeRepo();
-		expect(await new GetAuthorUseCase(asRepo(repo)).execute("nobody", asLog(makeLog()))).toBeUndefined();
+		await expect(buildService(repo).getAuthor("nobody")).rejects.toBeInstanceOf(NotFoundError);
 		expect(repo.findAll).not.toHaveBeenCalled();
 	});
 });
@@ -195,9 +171,9 @@ function seriesRepo() {
 	return repo;
 }
 
-describe("ListSeriesUseCase", () => {
+describe("ReadingBookService.listSeries", () => {
 	it("counts the books of the whole tree and gives the parents", async () => {
-		expect(await new ListSeriesUseCase(asRepo(seriesRepo())).execute(asLog(makeLog()))).toEqual([
+		expect(await buildService(seriesRepo()).listSeries()).toEqual([
 			{
 				id: "lotr",
 				title: "Le Seigneur des anneaux",
@@ -209,13 +185,13 @@ describe("ListSeriesUseCase", () => {
 	});
 });
 
-describe("GetSeriesUseCase", () => {
+describe("ReadingBookService.getSeries", () => {
 	it("gives the tree, the books of every level loaded at once and numbered in reading order", async () => {
 		const repo = seriesRepo();
 		repo.findSeries.mockResolvedValue({ id: "middle-earth", title: "Terre du Milieu" });
 		repo.findAll.mockResolvedValue([{ id: "fellowship" }, { id: "hobbit" }]);
 
-		expect(await new GetSeriesUseCase(asRepo(repo)).execute("middle-earth", asLog(makeLog()))).toEqual({
+		expect(await buildService(repo).getSeries("middle-earth")).toEqual({
 			id: "middle-earth",
 			title: "Terre du Milieu",
 			parents: [],
@@ -235,19 +211,19 @@ describe("GetSeriesUseCase", () => {
 	it("doesn't load the books of an empty series", async () => {
 		const repo = seriesRepo();
 		repo.findSeries.mockResolvedValue({ id: "empty", title: "Vide" });
-		expect(await new GetSeriesUseCase(asRepo(repo)).execute("empty", asLog(makeLog()))).toMatchObject({
+		expect(await buildService(repo).getSeries("empty")).toMatchObject({
 			items: [],
 		});
 		expect(repo.findAll).not.toHaveBeenCalled();
 	});
 
-	it("is undefined for an unknown series", async () => {
+	it("404s on an unknown series", async () => {
 		const repo = seriesRepo();
-		expect(await new GetSeriesUseCase(asRepo(repo)).execute("nope", asLog(makeLog()))).toBeUndefined();
+		await expect(buildService(repo).getSeries("nope")).rejects.toBeInstanceOf(NotFoundError);
 	});
 });
 
-describe("SaveSeriesUseCase", () => {
+describe("ReadingBookService.saveSeries", () => {
 	const series = {
 		title: "Terre du Milieu",
 		items: [
@@ -258,7 +234,7 @@ describe("SaveSeriesUseCase", () => {
 
 	it("saves the series and gives its id", async () => {
 		const repo = seriesRepo();
-		expect(await new SaveSeriesUseCase(asRepo(repo)).execute(series, asLog(makeLog()))).toEqual({ id: "series-1" });
+		expect(await buildService(repo).saveSeries(series)).toEqual({ id: "series-1" });
 		expect(repo.saveSeries).toHaveBeenCalledWith(series);
 	});
 
@@ -266,10 +242,7 @@ describe("SaveSeriesUseCase", () => {
 		const repo = seriesRepo();
 		for (const twice of [series.items[0], series.items[1]]) {
 			await expect(
-				new SaveSeriesUseCase(asRepo(repo)).execute(
-					{ ...series, items: [...series.items, twice] },
-					asLog(makeLog()),
-				),
+				buildService(repo).saveSeries({ ...series, items: [...series.items, twice] }),
 			).rejects.toBeInstanceOf(BadRequestError);
 		}
 		expect(repo.saveSeries).not.toHaveBeenCalled();
@@ -279,9 +252,7 @@ describe("SaveSeriesUseCase", () => {
 		for (const unknown of ["countBooks", "countSeries"] as const) {
 			const repo = seriesRepo();
 			repo[unknown].mockResolvedValue(0);
-			await expect(new SaveSeriesUseCase(asRepo(repo)).execute(series, asLog(makeLog()))).rejects.toBeInstanceOf(
-				BadRequestError,
-			);
+			await expect(buildService(repo).saveSeries(series)).rejects.toBeInstanceOf(BadRequestError);
 		}
 	});
 
@@ -289,14 +260,11 @@ describe("SaveSeriesUseCase", () => {
 		const repo = seriesRepo();
 		// Le Seigneur des anneaux holding Terre du Milieu, which holds it
 		await expect(
-			new SaveSeriesUseCase(asRepo(repo)).execute(
-				{
-					id: "lotr",
-					title: "Le Seigneur des anneaux",
-					items: [{ kind: "series", seriesId: "middle-earth", positionLabel: null }],
-				},
-				asLog(makeLog()),
-			),
+			buildService(repo).saveSeries({
+				id: "lotr",
+				title: "Le Seigneur des anneaux",
+				items: [{ kind: "series", seriesId: "middle-earth", positionLabel: null }],
+			}),
 		).rejects.toBeInstanceOf(BadRequestError);
 		expect(repo.saveSeries).not.toHaveBeenCalled();
 	});
@@ -304,80 +272,69 @@ describe("SaveSeriesUseCase", () => {
 	it("404s on an unknown series", async () => {
 		const repo = seriesRepo();
 		repo.saveSeries.mockResolvedValue(undefined);
-		await expect(
-			new SaveSeriesUseCase(asRepo(repo)).execute({ ...series, id: "nope" }, asLog(makeLog())),
-		).rejects.toBeInstanceOf(NotFoundError);
+		await expect(buildService(repo).saveSeries({ ...series, id: "nope" })).rejects.toBeInstanceOf(NotFoundError);
 	});
 });
 
-describe("DeleteSeriesUseCase", () => {
+describe("ReadingBookService.deleteSeries", () => {
 	it("deletes a series", async () => {
 		const repo = fakeRepo();
 		repo.findSeries.mockResolvedValue({ id: "s1", title: "Percy Jackson" });
-		await new DeleteSeriesUseCase(asRepo(repo)).execute("s1", asLog(makeLog()));
+		await buildService(repo).deleteSeries("s1");
 		expect(repo.deleteSeries).toHaveBeenCalledWith("s1");
 	});
 
 	it("404s on an unknown series", async () => {
 		const repo = fakeRepo();
-		await expect(new DeleteSeriesUseCase(asRepo(repo)).execute("nope", asLog(makeLog()))).rejects.toBeInstanceOf(
-			NotFoundError,
-		);
+		await expect(buildService(repo).deleteSeries("nope")).rejects.toBeInstanceOf(NotFoundError);
 		expect(repo.deleteSeries).not.toHaveBeenCalled();
 	});
 });
 
-describe("SaveModelUseCase", () => {
+describe("ReadingBookService.saveModel", () => {
 	it("saves the model of the book", async () => {
 		const repo = fakeRepo();
 		const model = { name: "VO", tree: [{ id: "c1", title: "Part 1" }] };
-		await new SaveModelUseCase(asRepo(repo)).execute({ bookId: "book-1", model }, asLog(makeLog()));
+		await buildService(repo).saveModel("book-1", model);
 		expect(repo.saveModel).toHaveBeenCalledWith("book-1", model);
 	});
 
 	it("404s on an unknown book or model", async () => {
 		const repo = fakeRepo();
 		repo.saveModel.mockResolvedValue(false);
-		await expect(
-			new SaveModelUseCase(asRepo(repo)).execute(
-				{ bookId: "book-1", model: { id: "m1", name: "VO", tree: [] } },
-				asLog(makeLog()),
-			),
-		).rejects.toBeInstanceOf(NotFoundError);
+		await expect(buildService(repo).saveModel("book-1", { id: "m1", name: "VO", tree: [] })).rejects.toBeInstanceOf(
+			NotFoundError,
+		);
 	});
 });
 
-describe("DeleteModelUseCase", () => {
+describe("ReadingBookService.deleteModel", () => {
 	const ids = { bookId: "book-1", modelId: "m1" };
 
 	it("deletes a model no read edition uses", async () => {
 		const repo = fakeRepo();
 		repo.findModel.mockResolvedValue({ id: "m1", nbReadEditions: 0 });
-		await new DeleteModelUseCase(asRepo(repo)).execute(ids, asLog(makeLog()));
+		await buildService(repo).deleteModel(ids.bookId, ids.modelId);
 		expect(repo.deleteModel).toHaveBeenCalledWith("book-1", "m1");
 	});
 
 	it("refuses a model used by an edition with readings", async () => {
 		const repo = fakeRepo();
 		repo.findModel.mockResolvedValue({ id: "m1", nbReadEditions: 1 });
-		await expect(new DeleteModelUseCase(asRepo(repo)).execute(ids, asLog(makeLog()))).rejects.toBeInstanceOf(
-			ConflictError,
-		);
+		await expect(buildService(repo).deleteModel(ids.bookId, ids.modelId)).rejects.toBeInstanceOf(ConflictError);
 		expect(repo.deleteModel).not.toHaveBeenCalled();
 	});
 
 	it("404s on an unknown model", async () => {
 		const repo = fakeRepo();
-		await expect(new DeleteModelUseCase(asRepo(repo)).execute(ids, asLog(makeLog()))).rejects.toBeInstanceOf(
-			NotFoundError,
-		);
+		await expect(buildService(repo).deleteModel(ids.bookId, ids.modelId)).rejects.toBeInstanceOf(NotFoundError);
 	});
 });
 
-describe("AddReadingUseCase", () => {
+describe("ReadingBookService.addReading", () => {
 	it("starts a fresh in-progress reading on the edition", async () => {
 		const repo = fakeRepo();
-		await new AddReadingUseCase(asRepo(repo)).execute({ bookId: "book-1", editionId: "ed-1" }, asLog(makeLog()));
+		await buildService(repo).addReading("book-1", "ed-1");
 
 		const [bookId, editionId, reading] = repo.pushReading.mock.calls[0];
 		expect([bookId, editionId]).toEqual(["book-1", "ed-1"]);
@@ -387,13 +344,11 @@ describe("AddReadingUseCase", () => {
 	it("404s when the book has no such edition", async () => {
 		const repo = fakeRepo();
 		repo.pushReading.mockResolvedValue(false);
-		await expect(
-			new AddReadingUseCase(asRepo(repo)).execute({ bookId: "book-1", editionId: "ed-1" }, asLog(makeLog())),
-		).rejects.toBeInstanceOf(NotFoundError);
+		await expect(buildService(repo).addReading("book-1", "ed-1")).rejects.toBeInstanceOf(NotFoundError);
 	});
 });
 
-describe("SaveEditionUseCase", () => {
+describe("ReadingBookService.saveEdition", () => {
 	const OLD_KEY = "personal-tracker/reading-book/edition/ed-1.old.avif";
 	const NEW_KEY = "personal-tracker/reading-book/edition/ed-1.new.avif";
 	const fields = {
@@ -419,16 +374,13 @@ describe("SaveEditionUseCase", () => {
 			upload: vi.fn().mockResolvedValue(NEW_KEY),
 			deleteObject: vi.fn().mockResolvedValue(undefined),
 		};
-		const useCase = new SaveEditionUseCase(asRepo(repo), covers as unknown as CoverStorage);
-		return { repo, covers, useCase };
+		const service = buildService(repo, covers);
+		return { repo, covers, service };
 	}
 
 	it("creates an edition with a new id and uploads its cover", async () => {
-		const { repo, covers, useCase } = build();
-		await useCase.execute(
-			{ bookId: "book-1", edition: { ...fields, cover: "https://example.com/c.jpg" } },
-			asLog(makeLog()),
-		);
+		const { repo, covers, service } = build();
+		await service.saveEdition("book-1", { ...fields, cover: "https://example.com/c.jpg" });
 
 		const [bookId, isNew, saved] = repo.saveEdition.mock.calls[0];
 		expect([bookId, isNew]).toEqual(["book-1", true]);
@@ -437,11 +389,12 @@ describe("SaveEditionUseCase", () => {
 	});
 
 	it("keeps the cover when the form sends back the server's URL", async () => {
-		const { repo, covers, useCase } = build({ coverKey: OLD_KEY });
-		await useCase.execute(
-			{ bookId: "book-1", edition: { ...fields, id: "ed-1", cover: "/images/reading-book/edition/ed-1?v=old" } },
-			asLog(makeLog()),
-		);
+		const { repo, covers, service } = build({ coverKey: OLD_KEY });
+		await service.saveEdition("book-1", {
+			...fields,
+			id: "ed-1",
+			cover: "/images/reading-book/edition/ed-1?v=old",
+		});
 
 		expect(repo.saveEdition.mock.calls[0][2]).toMatchObject({ coverKey: OLD_KEY });
 		expect(covers.upload).not.toHaveBeenCalled();
@@ -449,145 +402,127 @@ describe("SaveEditionUseCase", () => {
 	});
 
 	it("replaces the cover and deletes the former one", async () => {
-		const { repo, covers, useCase } = build({ coverKey: OLD_KEY });
-		await useCase.execute(
-			{ bookId: "book-1", edition: { ...fields, id: "ed-1", cover: "data:image/png;base64,AAAA" } },
-			asLog(makeLog()),
-		);
+		const { repo, covers, service } = build({ coverKey: OLD_KEY });
+		await service.saveEdition("book-1", { ...fields, id: "ed-1", cover: "data:image/png;base64,AAAA" });
 
 		expect(repo.saveEdition.mock.calls[0][2]).toMatchObject({ coverKey: NEW_KEY });
 		expect(covers.deleteObject).toHaveBeenCalledWith(OLD_KEY);
 	});
 
 	it("removes the cover", async () => {
-		const { repo, covers, useCase } = build({ coverKey: OLD_KEY });
-		await useCase.execute({ bookId: "book-1", edition: { ...fields, id: "ed-1", cover: null } }, asLog(makeLog()));
+		const { repo, covers, service } = build({ coverKey: OLD_KEY });
+		await service.saveEdition("book-1", { ...fields, id: "ed-1", cover: null });
 
 		expect(repo.saveEdition.mock.calls[0][2]).toMatchObject({ coverKey: null });
 		expect(covers.deleteObject).toHaveBeenCalledWith(OLD_KEY);
 	});
 
 	it("refuses a publisher that isn't a known organization", async () => {
-		const { repo, useCase } = build();
+		const { repo, service } = build();
 		repo.countEntities.mockResolvedValue(0);
 		await expect(
-			useCase.execute(
-				{ bookId: "book-1", edition: { ...fields, publisherId: "herbert", cover: null } },
-				asLog(makeLog()),
-			),
+			service.saveEdition("book-1", { ...fields, publisherId: "herbert", cover: null }),
 		).rejects.toBeInstanceOf(BadRequestError);
 		expect(repo.countEntities).toHaveBeenCalledWith(["herbert"], ["organization"]);
 		expect(repo.saveEdition).not.toHaveBeenCalled();
 	});
 
 	it("refuses a model of another book", async () => {
-		const { repo, useCase } = build();
-		await expect(
-			useCase.execute({ bookId: "book-1", edition: { ...fields, modelId: "m2", cover: null } }, asLog(makeLog())),
-		).rejects.toBeInstanceOf(BadRequestError);
+		const { repo, service } = build();
+		await expect(service.saveEdition("book-1", { ...fields, modelId: "m2", cover: null })).rejects.toBeInstanceOf(
+			BadRequestError,
+		);
 		expect(repo.findModel).toHaveBeenCalledWith("book-1", "m2");
 		expect(repo.saveEdition).not.toHaveBeenCalled();
 	});
 
 	it("refuses to change the model of an edition with readings", async () => {
-		const { repo, useCase } = build({ coverKey: null, modelId: "m1", nbReadings: 1 });
+		const { repo, service } = build({ coverKey: null, modelId: "m1", nbReadings: 1 });
 		repo.findModel.mockResolvedValue({ id: "m2", nbReadEditions: 0 });
 		await expect(
-			useCase.execute(
-				{ bookId: "book-1", edition: { ...fields, id: "ed-1", modelId: "m2", cover: null } },
-				asLog(makeLog()),
-			),
+			service.saveEdition("book-1", { ...fields, id: "ed-1", modelId: "m2", cover: null }),
 		).rejects.toBeInstanceOf(ConflictError);
 		expect(repo.saveEdition).not.toHaveBeenCalled();
 	});
 
 	it("keeps the model of an edition with readings", async () => {
-		const { repo, useCase } = build({ coverKey: null, modelId: "m1", nbReadings: 1 });
+		const { repo, service } = build({ coverKey: null, modelId: "m1", nbReadings: 1 });
 		repo.findModel.mockResolvedValue({ id: "m1", nbReadEditions: 1 });
-		await useCase.execute(
-			{ bookId: "book-1", edition: { ...fields, id: "ed-1", modelId: "m1", pages: 300, cover: null } },
-			asLog(makeLog()),
-		);
+		await service.saveEdition("book-1", { ...fields, id: "ed-1", modelId: "m1", pages: 300, cover: null });
 		expect(repo.saveEdition.mock.calls[0][2]).toMatchObject({ modelId: "m1", pages: 300 });
 	});
 
 	it("404s on an unknown edition, before uploading anything", async () => {
-		const { covers, useCase } = build();
+		const { covers, service } = build();
 		await expect(
-			useCase.execute(
-				{ bookId: "book-1", edition: { ...fields, id: "ed-1", cover: "https://example.com/c.jpg" } },
-				asLog(makeLog()),
-			),
+			service.saveEdition("book-1", { ...fields, id: "ed-1", cover: "https://example.com/c.jpg" }),
 		).rejects.toBeInstanceOf(NotFoundError);
 		expect(covers.upload).not.toHaveBeenCalled();
 	});
 
 	it("deletes the uploaded cover when the book doesn't exist", async () => {
-		const { repo, covers, useCase } = build();
+		const { repo, covers, service } = build();
 		repo.saveEdition.mockResolvedValue(false);
 		await expect(
-			useCase.execute(
-				{ bookId: "book-1", edition: { ...fields, cover: "https://example.com/c.jpg" } },
-				asLog(makeLog()),
-			),
+			service.saveEdition("book-1", { ...fields, cover: "https://example.com/c.jpg" }),
 		).rejects.toBeInstanceOf(NotFoundError);
 		expect(covers.deleteObject).toHaveBeenCalledWith(NEW_KEY);
 	});
 });
 
-describe("DeleteEditionUseCase", () => {
+describe("ReadingBookService.deleteEdition", () => {
 	function build(edition?: { nbReadings: number; nbBookEditions: number; coverKey: string | null }) {
 		const repo = fakeRepo();
 		repo.findEdition.mockResolvedValue(edition && { id: "ed-1", ...edition });
 		const covers = { deleteObject: vi.fn().mockResolvedValue(undefined) };
-		const useCase = new DeleteEditionUseCase(asRepo(repo), covers as unknown as CoverStorage);
-		return { repo, covers, useCase };
+		const service = buildService(repo, covers);
+		return { repo, covers, service };
 	}
 	const ids = { bookId: "book-1", editionId: "ed-1" };
 
 	it("deletes the edition and its cover", async () => {
-		const { repo, covers, useCase } = build({ nbReadings: 0, nbBookEditions: 2, coverKey: "key" });
-		await useCase.execute(ids, asLog(makeLog()));
+		const { repo, covers, service } = build({ nbReadings: 0, nbBookEditions: 2, coverKey: "key" });
+		await service.deleteEdition(ids.bookId, ids.editionId);
 		expect(repo.deleteEdition).toHaveBeenCalledWith("book-1", "ed-1");
 		expect(covers.deleteObject).toHaveBeenCalledWith("key");
 	});
 
 	it("refuses an edition with readings", async () => {
-		const { repo, useCase } = build({ nbReadings: 1, nbBookEditions: 2, coverKey: null });
-		await expect(useCase.execute(ids, asLog(makeLog()))).rejects.toBeInstanceOf(ConflictError);
+		const { repo, service } = build({ nbReadings: 1, nbBookEditions: 2, coverKey: null });
+		await expect(service.deleteEdition(ids.bookId, ids.editionId)).rejects.toBeInstanceOf(ConflictError);
 		expect(repo.deleteEdition).not.toHaveBeenCalled();
 	});
 
 	it("refuses the book's last edition", async () => {
-		const { repo, useCase } = build({ nbReadings: 0, nbBookEditions: 1, coverKey: null });
-		await expect(useCase.execute(ids, asLog(makeLog()))).rejects.toBeInstanceOf(ConflictError);
+		const { repo, service } = build({ nbReadings: 0, nbBookEditions: 1, coverKey: null });
+		await expect(service.deleteEdition(ids.bookId, ids.editionId)).rejects.toBeInstanceOf(ConflictError);
 		expect(repo.deleteEdition).not.toHaveBeenCalled();
 	});
 
 	it("404s on an unknown edition", async () => {
-		const { useCase } = build();
-		await expect(useCase.execute(ids, asLog(makeLog()))).rejects.toBeInstanceOf(NotFoundError);
+		const { service } = build();
+		await expect(service.deleteEdition(ids.bookId, ids.editionId)).rejects.toBeInstanceOf(NotFoundError);
 	});
 });
 
-describe("SaveReadingUseCase", () => {
+describe("ReadingBookService.saveReading", () => {
 	it("forwards the reading to the repository", () => {
 		const repo = fakeRepo();
 		const reading = { id: "r1", status: "complete", details: [] };
-		new SaveReadingUseCase(asRepo(repo)).execute({ bookId: "book-1", reading: reading as any }, asLog(makeLog()));
+		buildService(repo).saveReading("book-1", reading as any);
 		expect(repo.updateReading).toHaveBeenCalledWith("book-1", reading);
 	});
 });
 
-describe("DeleteReadingUseCase", () => {
+describe("ReadingBookService.deleteReading", () => {
 	it("forwards book and reading ids to the repository", () => {
 		const repo = fakeRepo();
-		new DeleteReadingUseCase(asRepo(repo)).execute({ bookId: "book-1", readingId: "reading-1" }, asLog(makeLog()));
+		buildService(repo).deleteReading("book-1", "reading-1");
 		expect(repo.deleteReading).toHaveBeenCalledWith("book-1", "reading-1");
 	});
 });
 
-describe("GetReportUseCase", () => {
+describe("ReadingBookService.report", () => {
 	const from = "2024-01-01";
 	const to = "2024-12-31";
 
@@ -595,13 +530,13 @@ describe("GetReportUseCase", () => {
 		const repo = fakeRepo();
 		repo.findAll.mockResolvedValue(books);
 		const contextTagRepo = { findAll: vi.fn().mockResolvedValue(tagGroups) };
-		const useCase = new GetReportUseCase(asRepo(repo), contextTagRepo as unknown as ContextTagsRepository);
-		return { useCase, repo, contextTagRepo };
+		const service = buildService(repo, {}, contextTagRepo);
+		return { service, repo, contextTagRepo };
 	}
 
 	it("requests the full range with reading details", async () => {
-		const { useCase, repo } = build([]);
-		await useCase.execute({ from, to }, asLog(makeLog()));
+		const { service, repo } = build([]);
+		await service.report({ from, to });
 		expect(repo.findAll).toHaveBeenCalledWith({
 			from,
 			to,
@@ -612,8 +547,8 @@ describe("GetReportUseCase", () => {
 	});
 
 	it("returns an empty report when there are no books", async () => {
-		const { useCase } = build([]);
-		expect(await useCase.execute({ from, to }, asLog(makeLog()))).toEqual({
+		const { service } = build([]);
+		expect(await service.report({ from, to })).toEqual({
 			hasData: false,
 			streakInfo: { days: 0, start: null, end: null },
 			statusDistribution: [],
@@ -646,9 +581,9 @@ describe("GetReportUseCase", () => {
 				],
 			},
 		];
-		const { useCase } = build(books, [{ name: "Genre", tags: ["scifi", "fantasy"] }]);
+		const { service } = build(books, [{ name: "Genre", tags: ["scifi", "fantasy"] }]);
 
-		expect(await useCase.execute({ from, to }, asLog(makeLog()))).toEqual({
+		expect(await service.report({ from, to })).toEqual({
 			hasData: true,
 			streakInfo: { days: 2, start: "2024-06-01", end: "2024-06-02" },
 			statusDistribution: [{ name: "complete", books: 1, averageDays: 3, medianDays: 3 }],
@@ -676,9 +611,9 @@ describe("GetReportUseCase", () => {
 				],
 			},
 		];
-		const { useCase } = build(books);
+		const { service } = build(books);
 
-		const report = await useCase.execute({ from, to }, asLog(makeLog()));
+		const report = await service.report({ from, to });
 		expect(report.statusDistribution).toEqual([{ name: "in-progress", books: 1, averageDays: 2, medianDays: 2 }]);
 		// status never became "complete", so the author has 0 completed books
 		expect(report.authorDistribution).toEqual([{ name: "Bob", books: 0, chapters: 1, days: 1 }]);

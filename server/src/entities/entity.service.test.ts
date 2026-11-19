@@ -3,8 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { EntityRepository } from "./entity.repository.js";
 import type { PortraitStorage } from "./portrait.storage.js";
 
-import { asLog, makeLog } from "../test-support/fake-log.js";
-import { SaveEntityUseCase } from "./entity.useCases.js";
+import { EntityService } from "./entity.service.js";
 
 const ID = "0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e";
 const OLD_KEY = `personal-tracker/entity/${ID}.old.avif`;
@@ -23,14 +22,14 @@ function build(current?: { pictureKey: string | null; kind?: "person" | "organiz
 		upload: vi.fn().mockResolvedValue(NEW_KEY),
 		deleteObject: vi.fn().mockResolvedValue(undefined),
 	};
-	const useCase = new SaveEntityUseCase(repo as unknown as EntityRepository, portraits as unknown as PortraitStorage);
-	return { repo, portraits, useCase };
+	const service = new EntityService(repo as unknown as EntityRepository, portraits as unknown as PortraitStorage);
+	return { repo, portraits, service };
 }
 
-describe("SaveEntityUseCase", () => {
+describe("EntityService.save", () => {
 	it("creates an entity without portrait (the pickers)", async () => {
-		const { repo, portraits, useCase } = build();
-		const entity = await useCase.execute(CARROLL, asLog(makeLog()));
+		const { repo, portraits, service } = build();
+		const entity = await service.save(CARROLL);
 		expect(repo.create).toHaveBeenCalledWith({ ...CARROLL, id: expect.any(String), pictureKey: null });
 		expect(portraits.upload).not.toHaveBeenCalled();
 		expect(entity).toMatchObject({ ...CARROLL, picture: null });
@@ -38,8 +37,8 @@ describe("SaveEntityUseCase", () => {
 
 	it("keeps the portrait when left out or sent back as the server's URL", async () => {
 		for (const picture of [undefined, `/images/entity/${ID}?v=old`]) {
-			const { repo, portraits, useCase } = build({ pictureKey: OLD_KEY });
-			await useCase.execute({ ...CARROLL, id: ID, picture }, asLog(makeLog()));
+			const { repo, portraits, service } = build({ pictureKey: OLD_KEY });
+			await service.save({ ...CARROLL, id: ID, picture });
 			expect(repo.update).toHaveBeenCalledWith(expect.objectContaining({ pictureKey: OLD_KEY }));
 			expect(portraits.upload).not.toHaveBeenCalled();
 			expect(portraits.deleteObject).not.toHaveBeenCalled();
@@ -47,11 +46,8 @@ describe("SaveEntityUseCase", () => {
 	});
 
 	it("replaces the portrait and deletes the former one", async () => {
-		const { repo, portraits, useCase } = build({ pictureKey: OLD_KEY });
-		const entity = await useCase.execute(
-			{ ...CARROLL, id: ID, picture: "data:image/jpeg;base64,AAAA" },
-			asLog(makeLog()),
-		);
+		const { repo, portraits, service } = build({ pictureKey: OLD_KEY });
+		const entity = await service.save({ ...CARROLL, id: ID, picture: "data:image/jpeg;base64,AAAA" });
 		expect(portraits.upload).toHaveBeenCalledWith(ID, "data:image/jpeg;base64,AAAA");
 		expect(repo.update).toHaveBeenCalledWith(expect.objectContaining({ pictureKey: NEW_KEY }));
 		expect(portraits.deleteObject).toHaveBeenCalledWith(OLD_KEY);
@@ -59,18 +55,16 @@ describe("SaveEntityUseCase", () => {
 	});
 
 	it("removes the portrait", async () => {
-		const { repo, portraits, useCase } = build({ pictureKey: OLD_KEY });
-		await useCase.execute({ ...CARROLL, id: ID, picture: null }, asLog(makeLog()));
+		const { repo, portraits, service } = build({ pictureKey: OLD_KEY });
+		await service.save({ ...CARROLL, id: ID, picture: null });
 		expect(repo.update).toHaveBeenCalledWith(expect.objectContaining({ pictureKey: null }));
 		expect(portraits.deleteObject).toHaveBeenCalledWith(OLD_KEY);
 	});
 
 	it("is undefined for an unknown entity or another kind, before uploading anything", async () => {
 		for (const current of [undefined, { pictureKey: null, kind: "organization" as const }]) {
-			const { repo, portraits, useCase } = build(current);
-			expect(
-				await useCase.execute({ ...CARROLL, id: ID, picture: "https://example.com/p.jpg" }, asLog(makeLog())),
-			).toBeUndefined();
+			const { repo, portraits, service } = build(current);
+			expect(await service.save({ ...CARROLL, id: ID, picture: "https://example.com/p.jpg" })).toBeUndefined();
 			expect(portraits.upload).not.toHaveBeenCalled();
 			expect(repo.update).not.toHaveBeenCalled();
 		}

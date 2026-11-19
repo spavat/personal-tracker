@@ -2,14 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { WorkRepository } from "./work.repository.js";
 
-import { asLog, makeLog } from "../../test-support/fake-log.js";
-import {
-	DeleteWorkUseCase,
-	GetGroupedWorksUseCase,
-	GetWorkUseCase,
-	ListWorksUseCase,
-	SaveWorkUseCase,
-} from "./work.useCases.js";
+import { WorkService } from "./work.service.js";
 
 function fakeRepo() {
 	return {
@@ -22,15 +15,15 @@ function fakeRepo() {
 }
 const asRepo = (r: ReturnType<typeof fakeRepo>) => r as unknown as WorkRepository;
 
-describe("work use cases", () => {
+describe("WorkService", () => {
 	it("list returns the repository list", async () => {
 		const repo = fakeRepo();
 		repo.findAll.mockResolvedValue([{ id: 1 }]);
-		expect(await new ListWorksUseCase(asRepo(repo)).execute(asLog(makeLog()))).toEqual([{ id: 1 }]);
+		expect(await new WorkService(asRepo(repo)).list()).toEqual([{ id: 1 }]);
 	});
 
 	it("grouped returns an empty object when there is nothing to group", async () => {
-		expect(await new GetGroupedWorksUseCase(asRepo(fakeRepo())).execute(false, asLog(makeLog()))).toEqual({});
+		expect(await new WorkService(asRepo(fakeRepo())).listGrouped(false)).toEqual({});
 	});
 
 	it("grouped counts a work and a spectacle whose first performance of the year is canceled", async () => {
@@ -66,26 +59,26 @@ describe("work use cases", () => {
 			},
 		]);
 
-		const result = await new GetGroupedWorksUseCase(asRepo(repo)).execute(true, asLog(makeLog()));
+		const result = await new WorkService(asRepo(repo)).listGrouped(true);
 
 		expect(result).toMatchObject([{ name: "2024", nbWorks: 1, nbSpectacles: 1, nbPerformances: 1 }]);
 	});
 
 	it("get delegates to findByIdWithSpectacles", () => {
 		const repo = fakeRepo();
-		new GetWorkUseCase(asRepo(repo)).execute(4, asLog(makeLog()));
+		new WorkService(asRepo(repo)).get(4);
 		expect(repo.findByIdWithSpectacles).toHaveBeenCalledWith(4);
 	});
 
 	it("save returns the saved work, delete persists", async () => {
 		const repo = fakeRepo();
 		repo.save.mockResolvedValue({ id: 4, name: "Tosca" });
-		expect(await new SaveWorkUseCase(asRepo(repo)).execute({ name: "Tosca" } as any, asLog(makeLog()))).toEqual({
+		expect(await new WorkService(asRepo(repo)).save({ name: "Tosca" } as any)).toEqual({
 			id: 4,
 			name: "Tosca",
 		});
 		expect(repo.save).toHaveBeenCalledWith({ name: "Tosca" });
-		await new DeleteWorkUseCase(asRepo(repo)).execute(4, asLog(makeLog()));
+		await new WorkService(asRepo(repo)).delete(4);
 		expect(repo.delete).toHaveBeenCalledWith(4);
 	});
 });

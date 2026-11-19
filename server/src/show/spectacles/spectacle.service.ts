@@ -1,8 +1,7 @@
 import type { SpectacleDetailsResponse, SpectacleListResponse } from "@personal-tracker/shared/show";
 
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 
-import type { UseCaseLog } from "../../common/use-case-log.js";
 import type { SaveSpectacleBody } from "./spectacle.entity.js";
 
 import { sortByMediaOrder, toSpectacleMedia } from "../media/media.entity.js";
@@ -11,22 +10,19 @@ import { toPerformanceView } from "../performances/performance.entity.js";
 import { SpectacleRepository } from "./spectacle.repository.js";
 
 @Injectable()
-export class ListSpectaclesUseCase {
-	constructor(private repo: SpectacleRepository) {}
+export class SpectacleService {
+	private readonly logger = new Logger(SpectacleService.name);
 
-	async execute(log: UseCaseLog): Promise<SpectacleListResponse> {
-		log.info("ListSpectaclesUseCase.execute");
+	constructor(private readonly repo: SpectacleRepository) {}
+
+	async list(): Promise<SpectacleListResponse> {
+		this.logger.log("list");
 		const spectacles = await this.repo.findAll();
 		return spectacles;
 	}
-}
 
-@Injectable()
-export class GetGroupedSpectaclesUseCase {
-	constructor(private repo: SpectacleRepository) {}
-
-	async execute(groupByYear: boolean, log: UseCaseLog) {
-		log.info("GetGroupedSpectaclesUseCase.execute");
+	async listGrouped(groupByYear: boolean) {
+		this.logger.log("listGrouped");
 		const spectacles = await this.repo.findAllWithPerformancesAndPlaces();
 		if (!spectacles) {
 			return {};
@@ -136,14 +132,9 @@ export class GetGroupedSpectaclesUseCase {
 			})
 			.toSorted((a, b) => b.name.localeCompare(a.name));
 	}
-}
 
-@Injectable()
-export class GetSpectacleUseCase {
-	constructor(private repo: SpectacleRepository) {}
-
-	async execute(id: number, log: UseCaseLog): Promise<SpectacleDetailsResponse | null> {
-		log.info("GetSpectacleUseCase.execute");
+	async get(id: number): Promise<SpectacleDetailsResponse | null> {
+		this.logger.log("get");
 		const spec = await this.repo.findByIdWithDetails(id);
 		if (!spec) {
 			return null;
@@ -161,14 +152,9 @@ export class GetSpectacleUseCase {
 			media: sortByMediaOrder(spec.mediaLinks ?? []).map(toSpectacleMedia),
 		};
 	}
-}
 
-@Injectable()
-export class SaveSpectacleUseCase {
-	constructor(private repo: SpectacleRepository) {}
-
-	async execute(data: SaveSpectacleBody, log: UseCaseLog) {
-		log.info("SaveSpectacleUseCase.execute");
+	async save(data: SaveSpectacleBody) {
+		this.logger.log("save");
 		return (await this.repo.save(data)) ?? null;
 	}
 }

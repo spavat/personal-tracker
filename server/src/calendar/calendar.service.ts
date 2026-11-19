@@ -1,6 +1,4 @@
-import { Injectable } from "@nestjs/common";
-
-import type { UseCaseLog } from "../common/use-case-log.js";
+import { Injectable, Logger } from "@nestjs/common";
 
 import { GameRepository } from "../game/game.repository.js";
 import { InternetRepository } from "../internet/internet.repository.js";
@@ -23,19 +21,20 @@ function getMonthBounds(yyyyMm: string) {
 	return { startOfMonth, endOfMonth };
 }
 
-// @Injectable() here too: the subclasses have no constructor of their own, Nest reads this one's parameter types
 @Injectable()
-abstract class CalendarUseCaseBase {
+export class CalendarService {
+	private readonly logger = new Logger(CalendarService.name);
+
 	constructor(
-		protected musicRepo: MusicRepository,
-		protected internetRepo: InternetRepository,
-		protected bookRepo: BookRepository,
-		protected mangaRepo: ReadingMangaRepository,
-		protected performanceRepo: PerformanceRepository,
-		protected gameRepo: GameRepository,
+		private readonly musicRepo: MusicRepository,
+		private readonly internetRepo: InternetRepository,
+		private readonly bookRepo: BookRepository,
+		private readonly mangaRepo: ReadingMangaRepository,
+		private readonly performanceRepo: PerformanceRepository,
+		private readonly gameRepo: GameRepository,
 	) {}
 
-	protected async buildCalendar({ from, to }: { from: string; to: string }) {
+	private async buildCalendar({ from, to }: { from: string; to: string }) {
 		const [programs, listenings, books, mangas, performances, games] = await Promise.all([
 			this.internetRepo.findEpisodesInRange({ from, to }),
 			this.musicRepo.findAll({ from, to }),
@@ -189,38 +188,20 @@ abstract class CalendarUseCaseBase {
 		});
 		return result;
 	}
-}
 
-@Injectable()
-export class GetPeriodCalendarUseCase extends CalendarUseCaseBase {
-	async execute({ from, to }: { from: string; to: string }, log: UseCaseLog) {
-		log.info("GetPeriodCalendarUseCase.execute");
+	async period({ from, to }: { from: string; to: string }) {
+		this.logger.log("period");
 		return this.buildCalendar({ from, to });
 	}
-}
 
-@Injectable()
-export class GetMonthlyCalendarUseCase extends CalendarUseCaseBase {
-	async execute(period: string, log: UseCaseLog) {
-		log.info("GetMonthlyCalendarUseCase.execute");
+	async monthly(period: string) {
+		this.logger.log("monthly");
 		const { startOfMonth, endOfMonth } = getMonthBounds(period);
 		return this.buildCalendar({ from: startOfMonth.toString(), to: endOfMonth.toString() });
 	}
-}
 
-@Injectable()
-export class GetDailyCalendarUseCase {
-	constructor(
-		private musicRepo: MusicRepository,
-		private internetRepo: InternetRepository,
-		private bookRepo: BookRepository,
-		private mangaRepo: ReadingMangaRepository,
-		private performanceRepo: PerformanceRepository,
-		private gameRepo: GameRepository,
-	) {}
-
-	async execute(date: string, log: UseCaseLog) {
-		log.info("GetDailyCalendarUseCase.execute");
+	async daily(date: string) {
+		this.logger.log("daily");
 		const [programs, listenings, books, mangas, performances, games] = await Promise.all([
 			this.internetRepo.findEpisodesInRange({ from: date, to: date }),
 			this.musicRepo.findAll({ from: date, to: date }),

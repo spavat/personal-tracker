@@ -8,7 +8,7 @@ import { PerformanceModule } from "./performances/performance.module.js";
 import { PlaceModule } from "./places/place.module.js";
 import { ShowSharedModule } from "./show-shared.module.js";
 import { ShowController } from "./show.controller.js";
-import { GetReportUseCase, ShowUseCase } from "./show.useCases.js";
+import { ShowService } from "./show.service.js";
 import { SpectacleModule } from "./spectacles/spectacle.module.js";
 import { WorkModule } from "./works/work.module.js";
 
@@ -29,6 +29,6 @@ const CHILDREN = [
 		RouterModule.register([{ path: "show", module: ShowModule, children: CHILDREN }]),
 	],
 	controllers: [ShowController],
-	providers: [ShowUseCase, GetReportUseCase],
+	providers: [ShowService],
 })
 export class ShowModule {}

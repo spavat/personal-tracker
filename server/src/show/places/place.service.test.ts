@@ -2,8 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { PlaceRepository } from "./place.repository.js";
 
-import { asLog, makeLog } from "../../test-support/fake-log.js";
-import { DeletePlaceUseCase, GetPlaceUseCase, ListPlacesUseCase, SavePlaceUseCase } from "./place.useCases.js";
+import { PlaceService } from "./place.service.js";
 
 function fakeRepo() {
 	return {
@@ -16,24 +15,26 @@ function fakeRepo() {
 }
 const asRepo = (r: ReturnType<typeof fakeRepo>) => r as unknown as PlaceRepository;
 
-describe("ListPlacesUseCase / Save / Delete", () => {
+describe("PlaceService.list / Save / Delete", () => {
 	it("defaults the sort and forwards save/delete", async () => {
 		const repo = fakeRepo();
-		await new ListPlacesUseCase(asRepo(repo)).execute(undefined, asLog(makeLog()));
+		await new PlaceService(asRepo(repo)).list(undefined);
 		expect(repo.findAll).toHaveBeenCalledWith({ sortField: "name", sortDirection: "asc" });
 
 		repo.save.mockResolvedValue({ id: 3, name: "Bastille", formerNames: [] });
-		expect(await new SavePlaceUseCase(asRepo(repo)).execute({ name: "Bastille" } as any, asLog(makeLog()))).toEqual(
-			{ id: 3, name: "Bastille", formerNames: [] },
-		);
+		expect(await new PlaceService(asRepo(repo)).save({ name: "Bastille" } as any)).toEqual({
+			id: 3,
+			name: "Bastille",
+			formerNames: [],
+		});
 		expect(repo.save).toHaveBeenCalledWith({ name: "Bastille" });
 
-		await new DeletePlaceUseCase(asRepo(repo)).execute(3, asLog(makeLog()));
+		await new PlaceService(asRepo(repo)).delete(3);
 		expect(repo.delete).toHaveBeenCalledWith(3);
 	});
 });
 
-describe("GetPlaceUseCase", () => {
+describe("PlaceService.get", () => {
 	it("counts non-canceled performances and unique spectacles", async () => {
 		const repo = fakeRepo();
 		repo.findByIdWithPerformances.mockResolvedValue({
@@ -71,10 +72,7 @@ describe("GetPlaceUseCase", () => {
 			],
 		});
 
-		const result = await new GetPlaceUseCase(asRepo(repo)).execute(
-			{ placeId: 7, groupBySpectacle: false },
-			asLog(makeLog()),
-		);
+		const result = await new PlaceService(asRepo(repo)).get({ placeId: 7, groupBySpectacle: false });
 
 		expect(result).toMatchObject({
 			id: 7,

@@ -1,19 +1,7 @@
 import type { ServerResponse } from "node:http";
 import type { z } from "zod";
 
-import {
-	Body,
-	Controller,
-	Delete,
-	Get,
-	HttpCode,
-	Logger,
-	Param,
-	Post,
-	Query,
-	Res,
-	SerializeOptions,
-} from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, Res, SerializeOptions } from "@nestjs/common";
 import {
 	DeletePlaceParamsRequestSchema,
 	PlaceDetailsParamsRequestSchema,
@@ -26,20 +14,12 @@ import {
 import type { SavePlaceBody } from "./place.entity.js";
 
 import { Public } from "../../auth/public.decorator.js";
-import { toUseCaseLog } from "../../common/use-case-log.js";
 import { orNotFound, savedOr404 } from "../show-reply.js";
-import { DeletePlaceUseCase, GetPlaceUseCase, ListPlacesUseCase, SavePlaceUseCase } from "./place.useCases.js";
+import { PlaceService } from "./place.service.js";
 
 @Controller()
 export class PlaceController {
-	private readonly log = toUseCaseLog(new Logger(PlaceController.name));
-
-	constructor(
-		private readonly listPlaces: ListPlacesUseCase,
-		private readonly getPlace: GetPlaceUseCase,
-		private readonly savePlace: SavePlaceUseCase,
-		private readonly deletePlace: DeletePlaceUseCase,
-	) {}
+	constructor(private readonly service: PlaceService) {}
 
 	@Get()
 	@Public()
@@ -48,7 +28,7 @@ export class PlaceController {
 			sort,
 		}: z.infer<typeof PlaceListQuerystringRequestSchema>,
 	) {
-		return this.listPlaces.execute(sort, this.log);
+		return this.service.list(sort);
 	}
 
 	@Get(":id")
@@ -59,7 +39,7 @@ export class PlaceController {
 		{ groupBySpectacle }: z.infer<typeof PlaceDetailsQuerystringRequestSchema>,
 	) {
 		return orNotFound(
-			this.getPlace.execute({ placeId: id, groupBySpectacle: Boolean(groupBySpectacle) }, this.log),
+			this.service.get({ placeId: id, groupBySpectacle: Boolean(groupBySpectacle) }),
 			"Salle introuvable",
 		);
 	}
@@ -70,12 +50,12 @@ export class PlaceController {
 		@Body({ schema: SavePlaceBodyRequestSchema }) body: SavePlaceBody,
 		@Res({ passthrough: true }) response: ServerResponse,
 	) {
-		return savedOr404(response, Boolean(body.id), this.savePlace.execute(body, this.log), "Salle introuvable");
+		return savedOr404(response, Boolean(body.id), this.service.save(body), "Salle introuvable");
 	}
 
 	@Delete(":id")
 	@HttpCode(204)
 	async delete(@Param({ schema: DeletePlaceParamsRequestSchema }) { id }: { id: number }) {
-		await this.deletePlace.execute(id, this.log);
+		await this.service.delete(id);
 	}
 }

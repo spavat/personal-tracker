@@ -1,6 +1,4 @@
-import { Injectable } from "@nestjs/common";
-
-import type { UseCaseLog } from "../common/use-case-log.js";
+import { Injectable, Logger } from "@nestjs/common";
 
 import { ArtistRepository } from "./artists/artist.repository.js";
 import { PerformanceRepository } from "./performances/performance.repository.js";
@@ -8,15 +6,18 @@ import { PlaceRepository } from "./places/place.repository.js";
 import { SpectacleRepository } from "./spectacles/spectacle.repository.js";
 
 @Injectable()
-export class ShowUseCase {
+export class ShowService {
+	private readonly logger = new Logger(ShowService.name);
+
 	constructor(
-		private spectacleRepo: SpectacleRepository,
-		private artistRepo: ArtistRepository,
-		private placeRepo: PlaceRepository,
+		private readonly spectacleRepo: SpectacleRepository,
+		private readonly artistRepo: ArtistRepository,
+		private readonly placeRepo: PlaceRepository,
+		private readonly performanceRepo: PerformanceRepository,
 	) {}
 
-	async execute(search: string, log: UseCaseLog) {
-		log.info("ShowUseCase.execute");
+	async search(search: string) {
+		this.logger.log("search");
 		if (!search) {
 			return [];
 		}
@@ -38,11 +39,6 @@ export class ShowUseCase {
 			...places.map((s) => ({ ...s, type: "place" })),
 		];
 	}
-}
-
-@Injectable()
-export class GetReportUseCase {
-	constructor(private repo: PerformanceRepository) {}
 
 	private calculateRank(items: Array<any>) {
 		let rank = 0;
@@ -75,9 +71,9 @@ export class GetReportUseCase {
 		return cutIndex === -1 ? items : items.slice(0, cutIndex);
 	}
 
-	async execute({ from, to }: { from: string; to: string }, log: UseCaseLog) {
-		log.info("GetReportUseCase.execute");
-		const performances = await this.repo.findAll({ to });
+	async report({ from, to }: { from: string; to: string }) {
+		this.logger.log("report");
+		const performances = await this.performanceRepo.findAll({ to });
 
 		let counts = {
 			spectacles: 0,
