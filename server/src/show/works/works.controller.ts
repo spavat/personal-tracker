@@ -5,7 +5,10 @@ import {
 	DeleteWorkParamsRequestSchema,
 	SaveWorkBodyRequestSchema,
 	WorkDetailsParamsRequestSchema,
+	WorkDetailsResponseSchema,
 	WorkGroupedListRequestSchema,
+	WorkGroupedListResponseSchema,
+	WorkListResponseSchema,
 	WorkSchema,
 } from "@personal-tracker/shared/show";
 
@@ -20,12 +23,14 @@ export class WorksController {
 	constructor(private readonly service: WorksService) {}
 
 	@Get()
+	@SerializeOptions({ schema: WorkListResponseSchema.element })
 	list() {
 		return this.service.list();
 	}
 
 	@Get("grouped")
 	@Public()
+	@SerializeOptions({ schema: WorkGroupedListResponseSchema.element })
 	grouped(
 		@Query({ schema: WorkGroupedListRequestSchema }) { groupByYear }: z.infer<typeof WorkGroupedListRequestSchema>,
 	) {
@@ -33,6 +38,7 @@ export class WorksController {
 	}
 
 	@Get(":id")
+	@SerializeOptions({ schema: WorkDetailsResponseSchema })
 	get(@Param({ schema: WorkDetailsParamsRequestSchema }) { id }: { id: number }) {
 		return orNotFound(this.service.get(id), "work");
 	}

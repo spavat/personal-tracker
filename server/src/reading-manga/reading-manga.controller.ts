@@ -3,6 +3,9 @@ import { DeleteReadingParamsRequestSchema } from "@personal-tracker/shared/readi
 import {
 	MangaDetailsParamsSchema,
 	MangaListRequestSchema,
+	MangaOverviewSchema,
+	MangaSchema,
+	ReadingSchema,
 	SaveBodyRequestSchema,
 	type SaveBodyRequestType,
 	SaveReadingBodyRequestSchema,
@@ -19,12 +22,14 @@ export class ReadingMangaController {
 
 	@Get("mangas")
 	@Public()
+	@SerializeOptions({ schema: MangaOverviewSchema })
 	list(@Query({ schema: MangaListRequestSchema }) query: MangaListQuery) {
 		return this.service.list(query);
 	}
 
 	@Get("mangas/:id")
 	@Public()
+	@SerializeOptions({ schema: MangaSchema })
 	get(@Param({ schema: MangaDetailsParamsSchema }) { id }: { id: string }) {
 		return this.service.get(id);
 	}
@@ -46,6 +51,7 @@ export class ReadingMangaController {
 	}
 
 	@Post("mangas/:id/readings")
+	@SerializeOptions({ schema: ReadingSchema })
 	createReading(
 		@Param({ schema: MangaDetailsParamsSchema }) { id }: { id: string },
 		@Body({ schema: SaveReadingBodyRequestSchema }) reading: SaveReadingBodyRequestType,
@@ -54,6 +60,7 @@ export class ReadingMangaController {
 	}
 
 	@Put("mangas/:id/readings/:readingId")
+	@SerializeOptions({ schema: ReadingSchema })
 	updateReading(
 		@Param({ schema: DeleteReadingParamsRequestSchema }) { id, readingId }: { id: string; readingId: string },
 		@Body({ schema: SaveReadingBodyRequestSchema }) reading: SaveReadingBodyRequestType,

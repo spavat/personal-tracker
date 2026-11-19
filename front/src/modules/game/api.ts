@@ -1,6 +1,7 @@
 import {
 	Game,
 	GameWithOverview,
+	GameWithPlays,
 	GamePlaySaveBodyRequestSchema,
 	GameSaveBodyRequestSchema,
 	GameDeleteParamsRequestSchema,
@@ -18,10 +19,10 @@ import type { YearQueryConfig } from "../../hooks/use-year-changer";
 import { fetchJson, saveJson, sendJson, withQuery } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
 
-async function getPlayListYear(from: string, to: string): Promise<Array<GameWithOverview>> {
-	return fetchJson<Array<GameWithOverview>>(withQuery(`${API_BASE_URL}/game/plays`, { from, to }));
+async function getPlayListYear(from: string, to: string): Promise<Array<GameWithPlays>> {
+	return fetchJson<Array<GameWithPlays>>(withQuery(`${API_BASE_URL}/game/plays`, { from, to }));
 }
-export const playHistory: YearQueryConfig<Array<GameWithOverview>> = {
+export const playHistory: YearQueryConfig<Array<GameWithPlays>> = {
 	queryKey: ["game", "plays"],
 	queryFn: getPlayListYear,
 };

@@ -5,7 +5,9 @@ import {
 	DeletePlaceParamsRequestSchema,
 	PlaceDetailsParamsRequestSchema,
 	PlaceDetailsQuerystringRequestSchema,
+	PlaceDetailsResponseSchema,
 	PlaceListQuerystringRequestSchema,
+	PlaceListResponseSchema,
 	SavePlaceBodyRequestSchema,
 	SavePlaceResponseSchema,
 } from "@personal-tracker/shared/show";
@@ -22,6 +24,7 @@ export class PlacesController {
 
 	@Get()
 	@Public()
+	@SerializeOptions({ schema: PlaceListResponseSchema.element })
 	list(
 		@Query({ schema: PlaceListQuerystringRequestSchema }) {
 			sort,
@@ -32,6 +35,7 @@ export class PlacesController {
 
 	@Get(":id")
 	@Public()
+	@SerializeOptions({ schema: PlaceDetailsResponseSchema })
 	get(
 		@Param({ schema: PlaceDetailsParamsRequestSchema }) { id }: { id: number },
 		@Query({ schema: PlaceDetailsQuerystringRequestSchema })

@@ -4,7 +4,9 @@ import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, Seria
 import {
 	ArtistDetailsParamsRequestSchema,
 	ArtistDetailsQuerystringRequestSchema,
+	ArtistDetailsResponseSchema,
 	ArtistListQuerystringRequestSchema,
+	ArtistListResponseSchema,
 	ArtistViewSchema,
 	DeleteArtistParamsRequestSchema,
 	SaveArtistBodyRequestSchema,
@@ -20,6 +22,7 @@ export class ArtistsController {
 
 	@Get()
 	@Public()
+	@SerializeOptions({ schema: ArtistListResponseSchema.element })
 	list(
 		@Query({ schema: ArtistListQuerystringRequestSchema }) {
 			sort,
@@ -30,6 +33,7 @@ export class ArtistsController {
 
 	@Get(":id")
 	@Public()
+	@SerializeOptions({ schema: ArtistDetailsResponseSchema })
 	get(
 		@Param({ schema: ArtistDetailsParamsRequestSchema }) { id }: { id: number },
 		@Query({ schema: ArtistDetailsQuerystringRequestSchema })

@@ -62,7 +62,7 @@ export default function GameList() {
 									))}
 								</td>
 								<td className="cell-date" data-label="Dernière date">
-									{formatPlayDate(game.latestPlayDate)}
+									{game.latestPlayDate && formatPlayDate(game.latestPlayDate)}
 								</td>
 								<td className="cell-number" data-label="Nombre">
 									{game.playCount}

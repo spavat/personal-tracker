@@ -4,7 +4,10 @@ import { Body, Controller, Get, Param, Post, Put, Query, SerializeOptions } from
 import {
 	SaveSpectacleBodyRequestSchema,
 	SpectacleDetailsParamsRequestSchema,
+	SpectacleDetailsResponseSchema,
 	SpectacleGroupedListRequestSchema,
+	SpectacleGroupedListResponseSchema,
+	SpectacleListResponseSchema,
 	SpectacleSchema,
 } from "@personal-tracker/shared/show";
 
@@ -19,12 +22,14 @@ export class SpectaclesController {
 	constructor(private readonly service: SpectaclesService) {}
 
 	@Get()
+	@SerializeOptions({ schema: SpectacleListResponseSchema.element })
 	list() {
 		return this.service.list();
 	}
 
 	@Get("grouped")
 	@Public()
+	@SerializeOptions({ schema: SpectacleGroupedListResponseSchema.element })
 	grouped(
 		@Query({ schema: SpectacleGroupedListRequestSchema })
 		{ groupByYear }: z.infer<typeof SpectacleGroupedListRequestSchema>,
@@ -34,6 +39,7 @@ export class SpectaclesController {
 
 	@Get(":id")
 	@Public()
+	@SerializeOptions({ schema: SpectacleDetailsResponseSchema })
 	get(@Param({ schema: SpectacleDetailsParamsRequestSchema }) { id }: { id: number }) {
 		return orNotFound(this.service.get(id), "spectacle");
 	}

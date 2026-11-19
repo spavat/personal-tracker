@@ -1,13 +1,16 @@
 import type { z } from "zod";
 
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, SerializeOptions } from "@nestjs/common";
 import {
 	ArtistMediaIdParamsRequestSchema,
 	ArtistMediaParamsRequestSchema,
+	ArtistMediaSchema,
+	MediaSchema,
 	ReorderMediaBodyRequestSchema,
 	SpectacleMediaIdParamsRequestSchema,
 	SpectacleMediaListQuerystringRequestSchema,
 	SpectacleMediaParamsRequestSchema,
+	SpectacleMediaSchema,
 	UpdateMediaBodyRequestSchema,
 	UploadMediaBodyRequestSchema,
 } from "@personal-tracker/shared/show";
@@ -32,6 +35,7 @@ export class MediaController {
 
 	@Get("spectacles/:spectacleId")
 	@Public()
+	@SerializeOptions({ schema: SpectacleMediaSchema })
 	listSpectacle(
 		@Param({ schema: SpectacleMediaParamsRequestSchema }) { spectacleId }: { spectacleId: number },
 		@Query({ schema: SpectacleMediaListQuerystringRequestSchema })
@@ -42,6 +46,7 @@ export class MediaController {
 
 	@Post("spectacles/:spectacleId")
 	@HttpCode(201)
+	@SerializeOptions({ schema: MediaSchema })
 	uploadSpectacle(
 		@Param({ schema: SpectacleMediaParamsRequestSchema }) { spectacleId }: { spectacleId: number },
 		@Body({ schema: UploadMediaBodyRequestSchema }) body: Upload,
@@ -59,6 +64,7 @@ export class MediaController {
 	}
 
 	@Put("spectacles/:spectacleId/:mediaId")
+	@SerializeOptions({ schema: SpectacleMediaSchema })
 	updateSpectacle(
 		@Param({ schema: SpectacleMediaIdParamsRequestSchema }) {
 			spectacleId,
@@ -87,12 +93,14 @@ export class MediaController {
 
 	@Get("artists/:artistId")
 	@Public()
+	@SerializeOptions({ schema: ArtistMediaSchema })
 	listArtist(@Param({ schema: ArtistMediaParamsRequestSchema }) { artistId }: { artistId: number }) {
 		return this.service.list({ artistId }, undefined);
 	}
 
 	@Post("artists/:artistId")
 	@HttpCode(201)
+	@SerializeOptions({ schema: MediaSchema })
 	uploadArtist(
 		@Param({ schema: ArtistMediaParamsRequestSchema }) { artistId }: { artistId: number },
 		@Body({ schema: UploadMediaBodyRequestSchema }) body: Upload,
@@ -110,6 +118,7 @@ export class MediaController {
 	}
 
 	@Put("artists/:artistId/:mediaId")
+	@SerializeOptions({ schema: ArtistMediaSchema })
 	updateArtist(
 		@Param({ schema: ArtistMediaIdParamsRequestSchema }) {
 			artistId,

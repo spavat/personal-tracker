@@ -29,7 +29,9 @@ describe("ReadingMangaController", () => {
 			app = ctx.app;
 			ctx.mangas.aggregate
 				.mockReturnValueOnce(makeCursor([]))
-				.mockReturnValueOnce(makeCursor([{ id: MANGA_UUID }]));
+				.mockReturnValueOnce(
+					makeCursor([{ id: MANGA_UUID, title: "Manga", status: "in-progress", readings: [] }]),
+				);
 
 			const list = await app.inject({ method: "GET", url: "/reading-manga/mangas" });
 			const details = await app.inject({ method: "GET", url: `/reading-manga/mangas/${MANGA_UUID}` });

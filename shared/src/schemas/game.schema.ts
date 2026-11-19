@@ -73,8 +73,9 @@ export const GameSchema = z.object({
 });
 export type Game = z.infer<typeof GameSchema>;
 
-export const GameWithOverviewSchema = GameSchema.extend({
-	latestPlayDate: z.iso.date(),
+// the game list: without the plays, latestPlayDate null for a game never played
+export const GameWithOverviewSchema = GameSchema.omit({ plays: true }).extend({
+	latestPlayDate: z.iso.date().nullable(),
 	playCount: z.number(),
 	totalDuration: z.number(),
 });
@@ -89,6 +90,9 @@ export const GameListQuerystringRequestSchema = SortQSSchema.extend(SearchQSSche
 // LIST PLAYS
 //
 export const PlayListQuerystringRequestSchema = OptionalPeriodQSSchema;
+// Response: the games played in the period, with those plays only
+export const PlayListResponseSchema = z.array(GameSchema.extend({ latestPlayDate: z.iso.date() }));
+export type GameWithPlays = z.infer<typeof PlayListResponseSchema.element>;
 
 //
 // DETAILS GAME

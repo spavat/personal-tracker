@@ -4,6 +4,7 @@ import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, SerializeOpt
 import {
 	DeleteModelParamsRequestSchema,
 	ModelDetailsParamsRequestSchema,
+	ModelDetailsResponseSchema,
 	SaveModelBodyRequestSchema,
 	SaveModelResponseSchema,
 } from "@personal-tracker/shared/show";
@@ -16,6 +17,7 @@ export class ModelsController {
 	constructor(private readonly service: ModelsService) {}
 
 	@Get(":id")
+	@SerializeOptions({ schema: ModelDetailsResponseSchema })
 	get(@Param({ schema: ModelDetailsParamsRequestSchema }) { id }: { id: number }) {
 		return orNotFound(this.service.get(id), "model");
 	}

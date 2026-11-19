@@ -7,7 +7,7 @@ const statuses = ["in-progress", "complete", "abandoned"] as const;
 export const StatusEnumSchema = z.enum(statuses);
 export type StatusEnum = z.infer<typeof StatusEnumSchema>;
 
-const origins = ["Livre", "Digital", "MangaPlus", "Manga-Nova", "Scantrad"] as const;
+const origins = ["Livre", "Digital", "MangaPlus", "Manga-Nova", "Scantrad", "Scans"] as const;
 export const OriginEnumSchema = z.enum(origins);
 export type OriginEnum = z.infer<typeof OriginEnumSchema>;
 
@@ -58,10 +58,11 @@ export const MangaSchema = z.object({
 export type Manga = z.infer<typeof MangaSchema>;
 
 // ENDPOINT SCHEMAS
+// the dates are null for a manga without readings (in the period)
 export const MangaOverviewSchema = MangaSchema.extend({
-	firstReadingDate: z.iso.date(),
-	lastReadingDate: z.iso.date(),
-	latestReadingCreated: z.iso.datetime({ local: true }),
+	firstReadingDate: z.iso.date().nullable(),
+	lastReadingDate: z.iso.date().nullable(),
+	latestReadingCreated: z.iso.datetime({ local: true }).nullable(),
 }).partial({
 	readings: true,
 });

@@ -112,3 +112,127 @@ export const GetAnalyticsQuerystringRequestSchema = z.object({
 		else return false;
 	}, z.boolean().default(false)),
 });
+
+//
+// TRANSACTION (responses; the body and the list query have no schema yet)
+//
+export const TransactionRowSchema = z.object({
+	id: z.number(),
+	// the columns are nullable and the body is not validated: a sub-transaction often leaves them empty
+	name: z.string().nullable(),
+	description: z.string().nullable(),
+	// children take their parent's date
+	date: z.iso.date().nullable(),
+	time: z.iso.time().nullable(),
+	considerationDate: z.iso.date().nullable(),
+	amount: z.number().nullable(),
+	comment: z.string().nullable(),
+	parentId: z.number().nullable(),
+	recurrent: z.boolean().nullable(),
+	informative: z.boolean().nullable(),
+	categoryId: z.number().nullable(),
+	paymentTypeId: z.number().nullable(),
+});
+export type TransactionRow = z.infer<typeof TransactionRowSchema>;
+
+// each list loads its own relations
+const TransactionRelationsSchema = TransactionRowSchema.extend({
+	category: CategorySchema.nullable().optional(),
+	paymentType: PaymentTypeSchema.nullable().optional(),
+	tags: z.array(TagSchema).optional(),
+});
+export const TransactionSchema = TransactionRelationsSchema.extend({
+	children: z.array(TransactionRelationsSchema).optional(),
+	// a sub-transaction listed on its own (by account, category or tag)
+	parent: TransactionRowSchema.nullable().optional(),
+});
+export type Transaction = z.infer<typeof TransactionSchema>;
+
+//
+// ACCOUNT: DETAILS
+//
+export const AccountHistorySchema = z.object({
+	id: z.number(),
+	accountId: z.number(),
+	date: z.iso.date().nullable(),
+	amount: z.number().nullable(),
+});
+export const AccountDetailsSchema = AccountSchema.extend({
+	history: z.array(AccountHistorySchema),
+	paymentTypes: z.array(PaymentTypeSchema),
+});
+export type AccountDetails = z.infer<typeof AccountDetailsSchema>;
+
+//
+// PAYMENT TYPE: DETAILS
+//
+export const PaymentTypeDetailsSchema = PaymentTypeSchema.extend({
+	transactions: z.array(TransactionRowSchema),
+});
+export type PaymentTypeDetails = z.infer<typeof PaymentTypeDetailsSchema>;
+
+//
+// BANK: DETAILS, TREE, OVERVIEW
+//
+export const BankTreeSchema = BankSchema.extend({
+	accounts: z.array(AccountSchema.extend({ paymentTypes: z.array(PaymentTypeSchema) })),
+});
+export type BankTree = z.infer<typeof BankTreeSchema>;
+// each account with its latest history only, its amount updated with the transactions since
+export const BankOverviewSchema = BankSchema.extend({
+	accounts: z.array(
+		AccountSchema.extend({
+			history: z.array(AccountHistorySchema),
+			paymentTypes: z.array(PaymentTypeSchema.extend({ account: AccountSchema.nullable() })),
+		}),
+	),
+});
+export type BankOverview = z.infer<typeof BankOverviewSchema>;
+
+//
+// CATEGORY: LIST, DETAILS
+//
+export const CategoryWithChildrenSchema = CategorySchema.extend({ children: z.array(CategorySchema) });
+export type CategoryWithChildren = z.infer<typeof CategoryWithChildrenSchema>;
+// with the number of transactions using it
+export const CategoryDetailsSchema = CategoryWithChildrenSchema.extend({ transactions: z.number() });
+export type CategoryDetails = z.infer<typeof CategoryDetailsSchema>;
+
+//
+// TAG: LIST, DETAILS
+//
+export const TagWithChildrenSchema = TagSchema.extend({ children: z.array(TagSchema) });
+export type TagWithChildren = z.infer<typeof TagWithChildrenSchema>;
+// with the number of transactions using it
+export const TagDetailsSchema = TagWithChildrenSchema.extend({ transactions: z.number() });
+export type TagDetails = z.infer<typeof TagDetailsSchema>;
+
+// TAG: ANALYTICS
+// Response: one analytic per parent tag (the part of a tag name before "\"); comment: the number of transactions
+const AnalyticPartSchema = z.object({ name: z.string(), amount: z.number(), comment: z.string() });
+export const AnalyticSchema = z.object({
+	name: z.string(),
+	badges: z.array(
+		TagSchema.pick({ icon: true, textColor: true, backgroundColor: true })
+			.extend(AnalyticPartSchema.shape)
+			.extend({
+				parts: z.array(AnalyticPartSchema),
+			}),
+	),
+});
+export type Analytic = z.infer<typeof AnalyticSchema>;
+
+//
+// RECAP
+//
+const DebitCreditSchema = z.object({ debit: z.number(), credit: z.number(), total: z.number().optional() });
+export const RecapResponseSchema = z.object({
+	nbMonths: z.number(),
+	// by category, largest first: each month (YYYY-MM), "total" and "moyenne" (the average, in total)
+	data: z.array(z.object({ id: z.number(), name: z.string(), months: z.record(z.string(), DebitCreditSchema) })),
+	// by month
+	total: z.record(z.string(), z.number()),
+	months: z.array(z.string()),
+	allMonths: z.array(z.string()),
+});
+export type RecapResponse = z.infer<typeof RecapResponseSchema>;

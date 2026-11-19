@@ -186,20 +186,27 @@ export type PerformanceDetailsResponse = z.infer<typeof PerformanceDetailsRespon
 //
 export const DeletePerformanceParamsRequestSchema = NumberIdParamsSchema;
 
-type ItemOverview = {
-	nbPerformances: number;
-	nbSpectacles: number;
-};
-
-export type ArtistListResponse = ArtistView & ItemOverview;
-
-export type PlaceListResponse = Place & ItemOverview;
-
-const StatsArtistPlaceSchema = z.object({
-	nbSpectacles: z.number(),
+const ItemOverviewSchema = z.object({
 	nbPerformances: z.number(),
-	lastPerformance: z.iso.date(),
+	nbSpectacles: z.number(),
 });
+
+export const ArtistListResponseSchema = z.array(ArtistViewSchema.extend(ItemOverviewSchema.shape));
+export type ArtistListResponse = z.infer<typeof ArtistListResponseSchema.element>;
+
+export const PlaceListResponseSchema = z.array(PlaceSchema.extend(ItemOverviewSchema.shape));
+export type PlaceListResponse = z.infer<typeof PlaceListResponseSchema.element>;
+
+const StatsArtistPlaceSchema = ItemOverviewSchema.extend({
+	// the date of the last performance, "" without one
+	lastPerformance: z.iso.datetime({ local: true }).or(z.literal("")),
+});
+
+// grouped by spectacle, or a single group of every performance (no spectacle fields)
+const PerformanceGroupSchema = <T extends z.ZodType>(performance: T) =>
+	SpectacleSchema.omit({ models: true })
+		.partial()
+		.extend({ performances: z.array(performance) });
 
 //
 // ARTIST: LIST
@@ -216,12 +223,8 @@ export const ArtistDetailsQuerystringRequestSchema = GroupedBySpectacleRequestSc
 // Response
 export const ArtistDetailsResponseSchema = ArtistViewSchema.extend({
 	media: z.array(z.lazy(() => ArtistMediaSchema)),
-	groups: z.array(
-		SpectacleSchema.extend({
-			// with the role played by the artist
-			performances: z.array(PerformanceViewSchema.extend({ role: z.string() })),
-		}),
-	),
+	// with the role played by the artist
+	groups: z.array(PerformanceGroupSchema(PerformanceViewSchema.extend({ role: z.string() }))),
 	stats: StatsArtistPlaceSchema,
 });
 export type ArtistDetailsResponse = z.infer<typeof ArtistDetailsResponseSchema>;
@@ -253,11 +256,7 @@ export const PlaceDetailsQuerystringRequestSchema = GroupedBySpectacleRequestSch
 // Response
 export const PlaceDetailsResponseSchema = PlaceSchema.extend({
 	formerNames: z.array(PlaceFormerNameSchema),
-	groups: z.array(
-		SpectacleSchema.extend({
-			performances: z.array(PerformanceViewSchema),
-		}),
-	),
+	groups: z.array(PerformanceGroupSchema(PerformanceViewSchema)),
 	stats: StatsArtistPlaceSchema,
 });
 export type PlaceDetailsResponse = z.infer<typeof PlaceDetailsResponseSchema>;
@@ -337,6 +336,38 @@ export type WorkListResponse = z.infer<typeof WorkListResponseSchema>;
 // Request
 export const WorkGroupedListRequestSchema = GroupedByYearRequestSchema;
 export type WorkGroupedListRequest = z.infer<typeof WorkGroupedListRequestSchema>;
+// Response: one group per year (or a single "all" group), the ids of the groups, works and spectacles as strings
+const GroupedPlaceSchema = PlaceRefSchema.extend({
+	performances: z.array(PerformanceSchema.pick({ id: true, date: true, canceled: true })),
+});
+const GroupedSpectacleSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	nbPerformances: z.number(),
+	// a renamed place is listed once per name
+	places: z.array(GroupedPlaceSchema),
+});
+const YearGroupSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	nbPerformances: z.number(),
+	nbSpectacles: z.number(),
+});
+export const WorkGroupedListResponseSchema = z.array(
+	YearGroupSchema.extend({
+		nbWorks: z.number(),
+		works: z.array(
+			z.object({
+				id: z.string(),
+				name: z.string(),
+				nbPerformances: z.number(),
+				nbSpectacles: z.number(),
+				spectacles: z.array(GroupedSpectacleSchema),
+			}),
+		),
+	}),
+);
+export type WorkGroupedListResponse = z.infer<typeof WorkGroupedListResponseSchema>;
 
 //
 // WORK: DETAILS
@@ -372,6 +403,11 @@ export type SpectacleListResponse = z.infer<typeof SpectacleListResponseSchema>;
 // Request
 export const SpectacleGroupedListRequestSchema = GroupedByYearRequestSchema;
 export type SpectacleGroupedListRequest = z.infer<typeof SpectacleGroupedListRequestSchema>;
+// Response
+export const SpectacleGroupedListResponseSchema = z.array(
+	YearGroupSchema.extend({ spectacles: z.array(GroupedSpectacleSchema) }),
+);
+export type SpectacleGroupedListResponse = z.infer<typeof SpectacleGroupedListResponseSchema>;
 
 //
 // SPECTACLE: DETAILS
@@ -511,6 +547,19 @@ export type ReorderMediaBodyRequest = z.infer<typeof ReorderMediaBodyRequestSche
 //
 // Request
 export const SearchQuerystringRequestSchema = SearchQSSchema;
+// Response
+export const SearchResponseSchema = z.array(
+	z.object({
+		type: z.enum(["spectacle", "artist", "place"]),
+		id: z.int(),
+		name: z.string(),
+		// the number of performances (spectacles, artists)
+		description: z.string().optional(),
+		// places
+		country: z.string().optional(),
+	}),
+);
+export type SearchResponse = z.infer<typeof SearchResponseSchema>;
 
 //
 // REPORT

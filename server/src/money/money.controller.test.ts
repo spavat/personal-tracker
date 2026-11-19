@@ -15,6 +15,23 @@ async function setup(session: unknown = OWNER, insertResult: unknown = []) {
 	return { app, table };
 }
 
+// a transaction as the database gives it
+const transactionRow = () => ({
+	id: 1,
+	name: "Shop",
+	description: null,
+	date: "2026-06-10",
+	time: null,
+	considerationDate: "2026-06-10",
+	amount: -10,
+	comment: null,
+	parentId: null,
+	recurrent: false,
+	informative: false,
+	categoryId: null,
+	paymentTypeId: null,
+});
+
 describe("MoneyModule controllers", () => {
 	let app: NestNodeApplication;
 
@@ -59,7 +76,7 @@ describe("MoneyModule controllers", () => {
 			const res = await app.inject({ method: "POST", url: "/money/banks", payload: { name: "Bank" } });
 			expect(res.statusCode).toBe(201);
 
-			ctx.table("moneyBank").findFirst.mockResolvedValue({ id: 1, accounts: [] });
+			ctx.table("moneyBank").findFirst.mockResolvedValue({ id: 1, name: "Bank", accounts: [] });
 			const updated = await app.inject({ method: "PUT", url: "/money/banks/1", payload: { name: "Bank" } });
 			expect(updated.statusCode).toBe(200);
 
@@ -70,7 +87,7 @@ describe("MoneyModule controllers", () => {
 		it("answers 201 to a transaction create and 204 to a transaction delete", async () => {
 			const ctx = await setup(OWNER, [{ id: 1 }]);
 			app = ctx.app;
-			ctx.table("moneyTransaction").findFirst.mockResolvedValue({ id: 1, children: [] });
+			ctx.table("moneyTransaction").findFirst.mockResolvedValue({ ...transactionRow(), children: [] });
 
 			const created = await app.inject({ method: "POST", url: "/money/transactions", payload: { name: "Shop" } });
 			const deleted = await app.inject({ method: "DELETE", url: "/money/transactions/1" });

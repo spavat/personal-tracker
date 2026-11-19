@@ -1,6 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, SerializeOptions } from "@nestjs/common";
 import {
+	AccountDetailsSchema,
 	AccountParamsRequestSchema,
+	AccountSchema,
 	type CreateAccountBody,
 	CreateAccountBodyRequestSchema,
 	type UpdateAccountBody,
@@ -14,26 +16,31 @@ export class AccountsController {
 	constructor(private readonly service: AccountsService) {}
 
 	@Get()
+	@SerializeOptions({ schema: AccountSchema })
 	list() {
 		return this.service.list();
 	}
 
 	@Get(":id")
+	@SerializeOptions({ schema: AccountSchema })
 	get(@Param({ schema: AccountParamsRequestSchema }) { id }: { id: number }) {
 		return this.service.get(id);
 	}
 
 	@Get(":id/details")
+	@SerializeOptions({ schema: AccountDetailsSchema })
 	getDetails(@Param({ schema: AccountParamsRequestSchema }) { id }: { id: number }) {
 		return this.service.getDetails(id);
 	}
 
 	@Post()
+	@SerializeOptions({ schema: AccountSchema })
 	create(@Body({ schema: CreateAccountBodyRequestSchema }) body: CreateAccountBody) {
 		return this.service.create(body);
 	}
 
 	@Put(":id")
+	@SerializeOptions({ schema: AccountSchema })
 	update(
 		@Param({ schema: AccountParamsRequestSchema }) { id }: { id: number },
 		@Body({ schema: UpdateAccountBodyRequestSchema }) body: UpdateAccountBody,

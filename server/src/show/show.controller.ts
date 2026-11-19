@@ -2,7 +2,11 @@ import type { z } from "zod";
 
 import { Controller, Get, Query, SerializeOptions } from "@nestjs/common";
 import { SearchQuerystringRequestSchema } from "@personal-tracker/shared/music";
-import { GetReportQuerystringRequestSchema, GetReportResponseSchema } from "@personal-tracker/shared/show";
+import {
+	GetReportQuerystringRequestSchema,
+	GetReportResponseSchema,
+	SearchResponseSchema,
+} from "@personal-tracker/shared/show";
 
 import { Public } from "../auth/public.decorator.js";
 import { ShowService } from "./show.service.js";
@@ -14,6 +18,7 @@ export class ShowController {
 
 	@Get("search")
 	@Public()
+	@SerializeOptions({ schema: SearchResponseSchema.element })
 	search(
 		@Query({ schema: SearchQuerystringRequestSchema }) { search }: z.infer<typeof SearchQuerystringRequestSchema>,
 	) {

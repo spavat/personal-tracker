@@ -4,7 +4,9 @@ import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, Seria
 import {
 	DeletePerformanceParamsRequestSchema,
 	PerformanceDetailsParamsRequestSchema,
+	PerformanceDetailsResponseSchema,
 	PerformanceListQuerystringRequestSchema,
+	PerformanceViewSchema,
 	SaveCastingBodyRequestSchema,
 	SavePerformanceBodyRequestSchema,
 	SavePerformanceResponseSchema,
@@ -23,6 +25,7 @@ export class PerformancesController {
 	// a visitor only sees the performances older than a week (database/visible-performance.ts)
 	@Get()
 	@Public()
+	@SerializeOptions({ schema: PerformanceViewSchema })
 	list(
 		@Query({ schema: PerformanceListQuerystringRequestSchema }) query: z.infer<
 			typeof PerformanceListQuerystringRequestSchema
@@ -33,6 +36,7 @@ export class PerformancesController {
 
 	@Get(":performanceId")
 	@Public()
+	@SerializeOptions({ schema: PerformanceDetailsResponseSchema })
 	get(@Param({ schema: PerformanceDetailsParamsRequestSchema }) { performanceId }: { performanceId: number }) {
 		return orNotFound(this.service.get(performanceId), "performance");
 	}

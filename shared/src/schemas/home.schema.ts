@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-import type { GameWithOverview } from "./game.schema";
+import type { Game, GameWithOverview } from "./game.schema";
 import type { Program } from "./internet.schema";
 import type { BookOverview } from "./reading-book.schema";
 import type { MangaOverview } from "./reading-manga.schema";
@@ -17,10 +17,11 @@ export const LatestListeningSchema = z.object({
 	date: z.iso.date(),
 });
 
-// The cards of the home are the ones of each module: each item keeps its module's shape (not validated here,
-// like the module lists, so that an old document does not break the whole home)
+// The cards of the home are the ones of each module: each item keeps its module's shape (not validated here, so
+// that an old document does not break the whole home)
 export const GetLatestResponseSchema = z.object({
-	game: z.array(z.custom<GameWithOverview>()),
+	// with their plays
+	game: z.array(z.custom<GameWithOverview & Pick<Game, "plays">>()),
 	show: z.array(z.custom<PerformanceView>()),
 	music: z.array(LatestListeningSchema),
 	// the programs of the latest episodes, each with only those episodes

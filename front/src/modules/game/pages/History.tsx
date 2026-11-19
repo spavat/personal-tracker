@@ -1,4 +1,4 @@
-import { GameWithOverview } from "@personal-tracker/shared/game";
+import { GameWithPlays } from "@personal-tracker/shared/game";
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
 import { HeaderPortal } from "../../../components/HeaderPortal";
@@ -27,19 +27,16 @@ export default function History({ year }: { year: string }) {
 		initialPeriod: year,
 	});
 
-	const sortedGames = listQuery.data.reduce(
-		(agg: Record<string, Array<GameWithOverview>>, game: GameWithOverview) => {
-			const lastDate = game.plays?.[game.plays?.length - 1]?.date ?? "";
-			const month = lastDate.substring(5, 7);
+	const sortedGames = listQuery.data.reduce((agg: Record<string, Array<GameWithPlays>>, game: GameWithPlays) => {
+		const lastDate = game.plays?.[game.plays?.length - 1]?.date ?? "";
+		const month = lastDate.substring(5, 7);
 
-			if (!agg[month]) {
-				agg[month] = [];
-			}
-			agg[month].push(game);
-			return agg;
-		},
-		{},
-	);
+		if (!agg[month]) {
+			agg[month] = [];
+		}
+		agg[month].push(game);
+		return agg;
+	}, {});
 	const sortedMonthKeys = Object.keys(sortedGames);
 	sortedMonthKeys.sort((k1, k2) => k2.localeCompare(k1));
 	return (

@@ -14,6 +14,7 @@ export class GenresController {
 	constructor(private readonly service: GenresService) {}
 
 	@Get()
+	@SerializeOptions({ schema: MusicGenreSchema })
 	list() {
 		return this.service.list();
 	}

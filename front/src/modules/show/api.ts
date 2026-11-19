@@ -17,6 +17,9 @@ import {
 	SavePerformanceBodyRequestSchema,
 	SaveSpectacleBodyRequestSchema,
 	WorkListResponse,
+	WorkGroupedListResponse,
+	SpectacleGroupedListResponse,
+	SearchResponse,
 	SpectacleListResponse,
 	GetReportResponse,
 	SpectacleMedia,
@@ -35,7 +38,7 @@ import { fetchJson, saveJson, sendJson, withQuery } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
 
 export async function search(search: string) {
-	return fetchJson<Array<any>>(withQuery(`${API_BASE_URL}/show/search`, { search }));
+	return fetchJson<SearchResponse>(withQuery(`${API_BASE_URL}/show/search`, { search }));
 }
 
 // WORKS
@@ -48,7 +51,7 @@ export const worksQuery = () =>
 		queryFn: () => getWorks(),
 	});
 async function getGroupedWorks(groupByYear: boolean) {
-	return fetchJson<Array<any>>(
+	return fetchJson<WorkGroupedListResponse>(
 		withQuery(`${API_BASE_URL}/show/works/grouped`, { groupByYear: Boolean(groupByYear) }),
 	);
 }
@@ -68,7 +71,7 @@ export const spectaclesQuery = () =>
 		queryFn: () => getSpectacles(),
 	});
 async function getGroupedSpectacles(groupByYear: boolean) {
-	return fetchJson<Array<any>>(
+	return fetchJson<SpectacleGroupedListResponse>(
 		withQuery(`${API_BASE_URL}/show/spectacles/grouped`, { groupByYear: Boolean(groupByYear) }),
 	);
 }

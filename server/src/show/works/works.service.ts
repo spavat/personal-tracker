@@ -168,9 +168,12 @@ export class WorksService {
 			.toSorted((a, b) => b.name.localeCompare(a.name));
 	}
 
-	get(id: number) {
+	async get(id: number) {
 		this.logger.log("get");
-		return this.repo.findByIdWithSpectacles(id);
+		const work = await this.repo.findByIdWithSpectacles(id);
+		if (!work) return null;
+		const { spectacle, ...rest } = work;
+		return { ...rest, spectacles: spectacle };
 	}
 
 	async save(data: SaveWorkBody) {
