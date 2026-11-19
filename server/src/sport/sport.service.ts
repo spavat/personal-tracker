@@ -2,11 +2,14 @@ import type { SaveBodyRequest, Segment } from "@personal-tracker/shared/sport";
 
 import { Injectable, Logger } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 import { BadRequestError, NotFoundError } from "../common/errors.js";
 import { SportFilesStorage } from "./sport-files.storage.js";
 import { buildGpxKey, buildThumbnailKey, cropActivity, extractGPXData } from "./sport.entity.js";
 import { SportRepository } from "./sport.repository.js";
+import { mapActivityType, parseStravaActivities } from "./strava-import.utils.js";
 import { generateThumbnail } from "./thumbnail.utils.js";
 
 @Injectable()
@@ -36,7 +39,8 @@ export class SportService {
 		return this.files.gpxDownloadUrl(activity.gpxKey, activity.name);
 	}
 
-	async create(body: SaveBodyRequest) {
+	// `stravaId`: the Strava activity it is imported from
+	async create(body: SaveBodyRequest, stravaId?: string) {
 		const id = randomUUID();
 		this.logger.log(`create ${id}`);
 		const dataToSave = await this.prepare(id, body);
@@ -48,7 +52,44 @@ export class SportService {
 			created: Temporal.Now.plainDateTimeISO().toString(),
 			...dataToSave,
 			date: dataToSave.date,
+			...(stravaId ? { stravaId } : {}),
 		});
+	}
+
+	/**
+	 * Imports the GPX activities of a Strava export folder (activities.csv + activities/*.gpx), skipping the ones
+	 * already imported: it can be run again on a newer export. A failed activity is reported, the others go on.
+	 */
+	async importStrava(exportDir: string) {
+		const rows = parseStravaActivities(await readFile(join(exportDir, "activities.csv"), "utf8")).filter((row) =>
+			row.gpxFilename.endsWith(".gpx"),
+		);
+		const imported = await this.repo.findStravaIds();
+		const toImport = rows.filter((row) => !imported.has(row.id));
+		this.logger.log(`importStrava: ${rows.length} GPX activities, ${toImport.length} to import`);
+
+		let created = 0;
+		const errors: string[] = [];
+		for (const row of toImport) {
+			try {
+				const rawData = await readFile(join(exportDir, row.gpxFilename), "utf8");
+				await this.create(
+					{
+						name: row.name,
+						type: mapActivityType(row.type),
+						...(row.description ? { comment: row.description } : {}),
+						// overwritten from the GPX data
+						details: { totalDuration: 0, movingDuration: 0, distance: 0, pace: 0 },
+						rawData,
+					},
+					row.id,
+				);
+				created++;
+			} catch (error) {
+				errors.push(`${row.gpxFilename}: ${error instanceof Error ? error.message : String(error)}`);
+			}
+		}
+		return { total: rows.length, skipped: rows.length - toImport.length, imported: created, errors };
 	}
 
 	async update(id: string, body: SaveBodyRequest) {

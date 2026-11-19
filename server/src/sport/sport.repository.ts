@@ -46,6 +46,11 @@ export class SportRepository {
 		);
 	}
 
+	// the Strava activities already imported
+	async findStravaIds() {
+		return new Set(await this.collection.distinct("stravaId", { stravaId: { $exists: true } }));
+	}
+
 	// a copy: the driver adds `_id` to the document it inserts
 	async insert(activity: SportActivity) {
 		await this.collection.insertOne({ ...activity });

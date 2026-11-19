@@ -1,5 +1,8 @@
 import { Test } from "@nestjs/testing";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BadRequestError, NotFoundError } from "../common/errors.js";
 import { SportFilesStorage } from "./sport-files.storage.js";
@@ -31,6 +34,7 @@ describe("SportService", () => {
 		insert: vi.fn(),
 		update: vi.fn(),
 		delete: vi.fn(),
+		findStravaIds: vi.fn(),
 	};
 	const files = { uploadGpx: vi.fn(), gpxDownloadUrl: vi.fn(), uploadThumbnail: vi.fn(), delete: vi.fn() };
 
@@ -191,6 +195,57 @@ describe("SportService", () => {
 				{ time: 60, type: "pause" },
 				{ time: 80, type: "running" },
 			],
+		});
+	});
+
+	describe("importStrava", () => {
+		let exportDir: string;
+
+		beforeEach(async () => {
+			exportDir = await mkdtemp(join(tmpdir(), "strava-"));
+			await mkdir(join(exportDir, "activities"));
+			await writeFile(join(exportDir, "activities", "1.gpx"), gpxFile());
+			await writeFile(join(exportDir, "activities", "2.gpx"), gpxFile());
+			// no time: the GPX file has no date
+			await writeFile(
+				join(exportDir, "activities", "3.gpx"),
+				'<gpx><trk><trkseg><trkpt lat="45" lon="5"/></trkseg></trk></gpx>',
+			);
+			await writeFile(
+				join(exportDir, "activities.csv"),
+				[
+					"ID de l'activité,Nom de l'activité,Type d'activité,Description de l'activité,Nom du fichier",
+					// a quoted description, with a comma and a line break
+					'1,Morning run,Course à pied,"Easy, then\nfast",activities/1.gpx',
+					"2,Already there,Marche,,activities/2.gpx",
+					"3,Broken,Randonnée,,activities/3.gpx",
+					"4,Not a GPX,Vélo,,activities/4.fit.gz",
+				].join("\n"),
+			);
+			repo.findStravaIds.mockResolvedValue(new Set(["2"]));
+			repo.insert.mockImplementation(async (activity) => activity);
+		});
+
+		afterEach(async () => {
+			await rm(exportDir, { recursive: true, force: true });
+		});
+
+		it("imports the GPX activities not imported yet, with their Strava id, and reports the failed ones", async () => {
+			const result = await service.importStrava(exportDir);
+
+			expect(result).toMatchObject({ total: 3, skipped: 1, imported: 1 });
+			expect(result.errors).toEqual([expect.stringContaining("activities/3.gpx")]);
+			expect(repo.insert).toHaveBeenCalledTimes(1);
+			expect(repo.insert).toHaveBeenCalledWith(
+				expect.objectContaining({
+					stravaId: "1",
+					name: "Morning run",
+					type: "running",
+					comment: "Easy, then\nfast",
+					date: expect.stringMatching(/^2024-06-01T/),
+				}),
+			);
+			expect(files.uploadGpx).toHaveBeenCalledTimes(1);
 		});
 	});
 });

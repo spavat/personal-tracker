@@ -13,7 +13,7 @@ export const SEGMENT_LABELS: Record<Segment["type"], string> = {
 	pause: "Pause",
 };
 
-// Strava import types included (see server strava-import.ts)
+// Strava import types included (see server/src/sport/strava-import.utils.ts)
 export const ACTIVITY_TYPES: Record<string, string> = {
 	running: "Course à pied",
 	swimming: "Natation",

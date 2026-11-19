@@ -44,6 +44,8 @@ export const SportActivitySchema = z.object({
 	thumbnailKey: z.string().optional(),
 	points: z.array(TrackPointSchema).optional(),
 	segments: z.array(SegmentSchema).optional(),
+	// the Strava activity it was imported from (npm run import-strava)
+	stravaId: z.string().optional(),
 });
 
 export type SportActivity = z.infer<typeof SportActivitySchema>;
@@ -72,6 +74,7 @@ export const SaveBodyRequestSchema = SportActivitySchema.partial({ date: true })
 		created: true,
 		points: true,
 		segments: true,
+		stravaId: true,
 	})
 	.extend({
 		date: z.iso.datetime({ local: true }).optional(),
