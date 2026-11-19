@@ -1,7 +1,8 @@
-import { Controller, Get, Param, Query } from "@nestjs/common";
+import { Controller, Get, Param, Query, SerializeOptions } from "@nestjs/common";
 import {
-	LatestGenericQuerystringRequestSchema,
+	LatestEpisodesResponseSchema,
 	type LatestGenericQuerystringRequest,
+	LatestGenericQuerystringRequestSchema,
 	LatestParamsRequestSchema,
 	LatestQuerystringRequestSchema,
 	type RefIdsEnum,
@@ -14,11 +15,13 @@ export class LatestController {
 	constructor(private readonly service: LatestService) {}
 
 	@Get()
+	@SerializeOptions({ schema: LatestEpisodesResponseSchema })
 	latest(@Query({ schema: LatestGenericQuerystringRequestSchema }) query: LatestGenericQuerystringRequest) {
 		return this.service.latest(query);
 	}
 
 	@Get(":programId")
+	@SerializeOptions({ schema: LatestEpisodesResponseSchema })
 	latestForProgram(
 		@Param({ schema: LatestParamsRequestSchema }) { programId }: { programId: string },
 		@Query({ schema: LatestQuerystringRequestSchema }) { force }: { force?: RefIdsEnum },

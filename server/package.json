@@ -11,6 +11,7 @@
 		"migrate": "node --env-file-if-exists=.env dist/migrate.js",
 		"create-owner": "node --env-file-if-exists=.env dist/scripts/create-owner.js",
 		"seed-epic-token": "node --env-file-if-exists=.env dist/scripts/seed-epic-token.js",
+		"check-stored-data": "node --env-file-if-exists=.env dist/scripts/check-stored-data.js",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {

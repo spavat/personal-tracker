@@ -52,21 +52,36 @@ export const ProgramSchema = z.object({
 export type Episode = z.infer<typeof EpisodeSchema>;
 export type Program = z.infer<typeof ProgramSchema>;
 
-export type ProgramDetails = Program & {
-	details: {
-		episodes: number;
-		averageLength: number;
-		completionRate: number;
-		lastSeenDays: number;
-		lastSeenDate: string;
-	};
-};
+// GET /programs/:programId (and the program writes): the episodes, latest first, and their figures
+export const ProgramDetailsSchema = ProgramSchema.extend({
+	details: z.object({
+		episodes: z.number(),
+		averageLength: z.number(),
+		completionRate: z.number(),
+		// the latest episode's, "" without episode
+		lastSeenDate: z.string(),
+	}),
+});
+export type ProgramDetails = z.infer<typeof ProgramDetailsSchema>;
 
-export interface ProgramSummaryItem extends Omit<Program, "episodes"> {
-	episodeCount: number;
-	totalDuration: number;
-	latestEpisodeDate: "string";
-}
+// GET /programs: a program without its episodes, with their count, total and latest date (null without episode)
+export const ProgramSummarySchema = ProgramSchema.omit({ episodes: true }).extend({
+	episodeCount: z.number(),
+	totalDuration: z.number(),
+	latestEpisodeDate: z.iso.date().nullable(),
+});
+export type ProgramSummaryItem = z.infer<typeof ProgramSummarySchema>;
+export const ProgramListResponseSchema = z.array(ProgramSummarySchema);
+
+// GET /episodes: the programs with an episode in the period, each with only those episodes
+export const EpisodeListResponseSchema = z.array(ProgramSchema);
+
+// POST /sync-covers
+const CoverSyncItemSchema = z.object({ id: z.string(), name: z.string() });
+export const SyncCoversResponseSchema = z.object({
+	successes: z.array(CoverSyncItemSchema),
+	errors: z.array(CoverSyncItemSchema.extend({ error: z.string() })),
+});
 
 //
 // LIST PROGRAMS
@@ -112,6 +127,8 @@ export const SyncValidateBodyRequestSchema = z
 		message: "Expected either a new program, or the programId of an existing one",
 	});
 export type SyncValidateBodyRequestType = z.infer<typeof SyncValidateBodyRequestSchema>;
+// the new program, or the episode added to an existing one
+export const SyncValidateResponseSchema = z.union([ProgramDetailsSchema, EpisodeSchema]);
 
 //
 // DELETE
@@ -149,7 +166,8 @@ export const EpisodeDataFromSourceSchema = z.object({
 export type EpisodeDataFromSource = z.infer<typeof EpisodeDataFromSourceSchema>;
 
 export const LatestEpisodesResponseSchema = z.object({
-	dateTimeUtc: z.iso.datetime(),
+	// when they were fetched: a local date-time (no offset), despite the name
+	dateTimeUtc: z.iso.datetime({ local: true }),
 	type: RefIdsEnumSchema,
 	latestEpisodes: z.array(EpisodeDataFromSourceSchema),
 });
