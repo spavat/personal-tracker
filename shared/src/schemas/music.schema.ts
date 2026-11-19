@@ -30,7 +30,7 @@ export const MusicGenresResponse = z.array(MusicGenreSchema);
 //
 // GENRE SAVE
 //
-export const SaveGenreRequestSchema = MusicGenreSchema.partial({ id: true });
+export const SaveGenreRequestSchema = MusicGenreSchema.omit({ id: true });
 
 //
 // GENRE DELETE
@@ -65,7 +65,7 @@ export const DetailsResponseSchema = MusicListeningSchema;
 //
 // SAVE
 //
-export const SaveBodyRequestSchema = MusicListeningSchema.partial({ id: true });
+export const SaveBodyRequestSchema = MusicListeningSchema.omit({ id: true });
 
 //
 // DELETE

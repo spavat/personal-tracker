@@ -104,8 +104,8 @@ export const DetailsProgramParamsRequestSchema = z.object({
 // SAVE
 //
 // POST /programs (with an optional first episode), PUT /programs/:programId (the episode is ignored)
-export const SaveProgramBodyRequestSchema = ProgramSchema.partial({ id: true }).omit({ episodes: true });
-export const SaveEpisodeBodyRequestSchema = EpisodeSchema.partial({ id: true });
+export const SaveProgramBodyRequestSchema = ProgramSchema.omit({ id: true, episodes: true });
+export const SaveEpisodeBodyRequestSchema = EpisodeSchema.omit({ id: true });
 export type SaveEpisodeBodyRequestType = z.infer<typeof SaveEpisodeBodyRequestSchema>;
 export const SaveBodyRequestSchema = z.object({
 	program: SaveProgramBodyRequestSchema,

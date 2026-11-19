@@ -13,6 +13,6 @@ export const entitiesQuery = (kind: EntityKind) =>
 	});
 
 // `picture`: the URL given by the server or left out = unchanged, an image URL or a data URI = new, null = none
-export function saveEntity(entity: SaveEntityBody) {
-	return saveJson<Entity>(`${API_BASE_URL}/entities`, entity);
+export function saveEntity(entity: SaveEntityBody, id?: string) {
+	return saveJson<Entity>(`${API_BASE_URL}/entities`, id, entity);
 }

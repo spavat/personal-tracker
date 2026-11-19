@@ -1,11 +1,11 @@
-import type { ArtistListResponse, SaveArtistBodyRequest } from "@personal-tracker/shared/show";
+import type { ArtistListResponse } from "@personal-tracker/shared/show";
 
 import { Injectable, Logger } from "@nestjs/common";
 
 import { NotFoundError } from "../../common/errors.js";
 import { sortByMediaOrder, toArtistMedia } from "../media/media.entity.js";
 import { toPerformanceView } from "../performances/performance.entity.js";
-import { toArtistView } from "./artist.entity.js";
+import { type SaveArtistBody, toArtistView } from "./artist.entity.js";
 import { ArtistsRepository } from "./artists.repository.js";
 
 @Injectable()
@@ -80,7 +80,7 @@ export class ArtistsService {
 		};
 	}
 
-	async save(data: SaveArtistBodyRequest) {
+	async save(data: SaveArtistBody) {
 		this.logger.log("save");
 		const artist = await this.repo.save(data);
 		return artist ? toArtistView(artist) : null;

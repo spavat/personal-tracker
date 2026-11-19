@@ -81,8 +81,8 @@ export const MangaDetailsParamsSchema = UUIDParamsSchema;
 // SAVE
 //
 // Request
-export const SaveMangaBodyRequestSchema = MangaSchema.partial({ id: true }).omit({ readings: true });
-export const SaveReadingBodyRequestSchema = ReadingSchema.partial({ id: true });
+export const SaveMangaBodyRequestSchema = MangaSchema.omit({ id: true, readings: true });
+export const SaveReadingBodyRequestSchema = ReadingSchema.omit({ id: true });
 
 // POST /mangas (with an optional first reading), PUT /mangas/:id (the reading is ignored)
 export const SaveBodyRequestSchema = z.object({

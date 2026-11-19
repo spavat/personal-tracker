@@ -37,9 +37,8 @@ export function toEditionFormData(edition?: Edition, defaultModelId?: string): E
 const textOrNull = (value: string) => value.trim() || null;
 const numberOrNull = (value: string) => (value.trim() ? Number(value) : null);
 
-export function toSaveEdition(data: EditionFormData, id?: string): SaveEditionRequest {
+export function toSaveEdition(data: EditionFormData): SaveEditionRequest {
 	return {
-		id,
 		title: textOrNull(data.title),
 		publisherId: data.publisherId || null,
 		collection: textOrNull(data.collection),

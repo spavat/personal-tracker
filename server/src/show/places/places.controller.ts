@@ -47,7 +47,7 @@ export class PlacesController {
 	@Post()
 	@SerializeOptions({ schema: SavePlaceResponseSchema })
 	create(@Body({ schema: SavePlaceBodyRequestSchema }) body: SavePlaceBody) {
-		return orNotFound(this.service.save({ ...body, id: undefined }), "place");
+		return orNotFound(this.service.save(body), "place");
 	}
 
 	@Put(":id")

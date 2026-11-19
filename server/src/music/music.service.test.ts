@@ -55,9 +55,9 @@ describe("GenresService", () => {
 		expect(genresRepo.insert.mock.calls[0][0]).toMatchObject({ name: "Rock", genres: ["prog"] });
 		expect(genresRepo.insert.mock.calls[0][0].id).toEqual(expect.any(String));
 	});
-	it("update updates an existing genre without its id in the patch", async () => {
+	it("update updates an existing genre", async () => {
 		genresRepo.update.mockResolvedValue({ id: "g1" });
-		await genres.update("g1", { id: "g1", name: "Metal", genres: [] });
+		await genres.update("g1", { name: "Metal", genres: [] });
 		expect(genresRepo.update).toHaveBeenCalledWith("g1", { name: "Metal", genres: [] });
 		expect(genresRepo.insert).not.toHaveBeenCalled();
 	});
@@ -84,7 +84,7 @@ describe("MusicService", () => {
 
 	it("update drops empty context tags", async () => {
 		musicRepo.update.mockResolvedValue({ id: "l1" });
-		await music.update("l1", { id: "l1", album: "X", contextTags: [] } as never);
+		await music.update("l1", { album: "X", contextTags: [] } as never);
 		expect(musicRepo.update).toHaveBeenCalledWith("l1", { album: "X" });
 		expect(musicRepo.insert).not.toHaveBeenCalled();
 	});

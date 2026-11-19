@@ -107,14 +107,14 @@ export const DetailsGameParamsRequestSchema = z.object({
 // Request
 // POST /games (with an optional first play), PUT /games/:id (the play is ignored)
 export const GameSaveBodyRequestSchema = z.object({
-	game: GameSchema.partial({ id: true }).omit({ plays: true }),
-	play: GamePlaySchema.partial({ id: true }).optional(),
+	game: GameSchema.omit({ id: true, plays: true }),
+	play: GamePlaySchema.omit({ id: true }).optional(),
 });
 export type GameSaveBodyRequestType = z.infer<typeof GameSaveBodyRequestSchema>;
 export const GameParamsRequestSchema = z.object({ id: z.uuid() });
 
 // POST /games/:gameId/plays, PUT /games/:gameId/plays/:playId
-export const GamePlaySaveBodyRequestSchema = GamePlaySchema.partial({ id: true });
+export const GamePlaySaveBodyRequestSchema = GamePlaySchema.omit({ id: true });
 export type GamePlaySaveBodyRequestType = z.infer<typeof GamePlaySaveBodyRequestSchema>;
 export const GamePlayParamsRequestSchema = z.object({ gameId: z.uuid() });
 

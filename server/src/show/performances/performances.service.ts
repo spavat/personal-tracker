@@ -42,7 +42,8 @@ export class PerformancesService {
 		return { ...toPerformanceView(performance), spectacle: { ...spectacle, models: models.map(toModelView) } };
 	}
 
-	async save(body: SavePerformanceBody) {
+	// `id`: the performance updated (none: created)
+	async save(body: SavePerformanceBody, id?: number) {
 		this.logger.log("save");
 		const { work, spectacle, place, performance } = body;
 
@@ -85,7 +86,7 @@ export class PerformancesService {
 				placeId,
 				spectacleId: spectacleId!,
 			};
-			const [saved] = await this.repo.savePerformance(tx, performance.id, dataToSave);
+			const [saved] = await this.repo.savePerformance(tx, id, dataToSave);
 			if (!saved) {
 				// rolls back the place, work and spectacle created above
 				throw new NotFoundError("performance");
@@ -124,10 +125,10 @@ export class PerformancesService {
 		}
 	}
 
-	async saveCasting(data: SaveCastingBody) {
+	async saveCasting(performanceId: number, data: SaveCastingBody) {
 		this.logger.log("saveCasting");
 		if (data) {
-			const roles = data.roles.map((r) => ({ ...r, performanceId: data.performanceId }));
+			const roles = data.roles.map((r) => ({ ...r, performanceId }));
 			const itemsToInsert = roles.filter((item) => !item.id);
 			const itemsToUpdate = roles.filter((item) => !!item.id);
 			const incomingIds = itemsToUpdate.map((item) => item.id!);
@@ -145,7 +146,7 @@ export class PerformancesService {
 				}
 
 				// 3. DELETE - items not in the incoming array
-				await this.repo.deleteRolesExcept(tx, data.performanceId, incomingIds, insertedIds);
+				await this.repo.deleteRolesExcept(tx, performanceId, incomingIds, insertedIds);
 			});
 		}
 	}

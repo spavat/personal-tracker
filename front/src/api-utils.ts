@@ -47,9 +47,9 @@ export async function sendJson<T = any>(url: string, method: "POST" | "PUT" | "P
 	);
 }
 
-// a resource without an id is created (POST url), with one it's updated (PUT url/:id)
-export async function saveJson<T = any>(url: string, body: { id?: string | number | null }) {
-	return body.id ? sendJson<T>(`${url}/${body.id}`, "PUT", body) : sendJson<T>(url, "POST", body);
+// a resource without an id is created (POST url), with one it's updated (PUT url/:id); the id goes in the path only
+export async function saveJson<T = any>(url: string, id: string | number | null | undefined, body: unknown) {
+	return id ? sendJson<T>(`${url}/${id}`, "PUT", body) : sendJson<T>(url, "POST", body);
 }
 
 type QueryValue = string | number | boolean | null | undefined;

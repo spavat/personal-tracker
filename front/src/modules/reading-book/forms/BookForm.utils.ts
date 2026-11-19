@@ -1,8 +1,10 @@
-import { SaveBookRequestSchema } from "@personal-tracker/shared/reading-book";
+import { BookSchema, SaveBookRequestSchema } from "@personal-tracker/shared/reading-book";
 import { z } from "zod";
 
 // an author row: an entity picked (or created), and the name printed on the book when it differs
 export const BookFormSchema = SaveBookRequestSchema.extend({
+	// the edited book (none: created); the api sends it in the path
+	id: BookSchema.shape.id.optional(),
 	authors: z.array(z.object({ entityId: z.string().nonempty(), creditedAs: z.string() })).min(1),
 });
 export const BookFormSchemaTransformation = BookFormSchema.transform((data) => ({

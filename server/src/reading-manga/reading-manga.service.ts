@@ -32,7 +32,7 @@ export class ReadingMangaService {
 	}
 
 	// the manga (as GET /mangas/:id gives it), with an optional first reading
-	async create({ manga: { id: _, ...manga }, reading }: SaveBodyRequestType) {
+	async create({ manga: { ...manga }, reading }: SaveBodyRequestType) {
 		this.logger.log("create");
 		const id = randomUUID();
 		await this.repo.insert({ id, ...manga, readings: reading ? [buildReading(reading)] : [] });
@@ -40,7 +40,7 @@ export class ReadingMangaService {
 	}
 
 	// the manga's fields only: its readings have their own routes
-	async update(id: string, { manga: { id: _, ...manga } }: SaveBodyRequestType) {
+	async update(id: string, { manga: { ...manga } }: SaveBodyRequestType) {
 		this.logger.log("update");
 		if (!(await this.repo.update(id, manga))) {
 			mangaNotFound();
@@ -48,7 +48,7 @@ export class ReadingMangaService {
 		return this.get(id);
 	}
 
-	async createReading(mangaId: string, { id: _, ...fields }: SaveReadingBodyRequestType) {
+	async createReading(mangaId: string, fields: SaveReadingBodyRequestType) {
 		this.logger.log("createReading");
 		const reading = buildReading(fields);
 		if (!(await this.repo.pushReading(mangaId, reading))) {
@@ -57,7 +57,7 @@ export class ReadingMangaService {
 		return reading;
 	}
 
-	async updateReading(mangaId: string, readingId: string, { id: _, ...fields }: SaveReadingBodyRequestType) {
+	async updateReading(mangaId: string, readingId: string, fields: SaveReadingBodyRequestType) {
 		this.logger.log("updateReading");
 		if (!(await this.repo.updateReading(mangaId, { ...fields, id: readingId } as Reading))) {
 			readingNotFound();

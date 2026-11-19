@@ -46,7 +46,7 @@ export class WorksController {
 	@Post()
 	@SerializeOptions({ schema: WorkSchema })
 	create(@Body({ schema: SaveWorkBodyRequestSchema }) body: SaveWorkBody) {
-		return orNotFound(this.service.save({ ...body, id: undefined }), "work");
+		return orNotFound(this.service.save(body), "work");
 	}
 
 	@Put(":id")

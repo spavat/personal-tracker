@@ -15,12 +15,12 @@ export class ContextTagsService {
 		return this.repo.findAll();
 	}
 
-	create({ id: _, ...fields }: SaveContextTagBody) {
+	create(fields: SaveContextTagBody) {
 		this.logger.log("create");
 		return this.repo.insert(buildContextTag(fields));
 	}
 
-	async update(id: string, { id: _, ...fields }: SaveContextTagBody) {
+	async update(id: string, fields: SaveContextTagBody) {
 		this.logger.log("update");
 		return (await this.repo.update(id, fields)) ?? notFound();
 	}

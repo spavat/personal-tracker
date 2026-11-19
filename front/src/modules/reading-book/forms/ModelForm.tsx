@@ -66,7 +66,7 @@ export default function ModelForm({
 	}
 
 	function onSubmit(data: InputValues) {
-		saveMutation.mutate({ id: bookId, model: { id: modelId, name: data.name, tree: data.root as any } });
+		saveMutation.mutate({ id: bookId, modelId, model: { name: data.name, tree: data.root as any } });
 	}
 
 	function closeModal() {

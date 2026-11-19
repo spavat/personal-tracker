@@ -27,6 +27,8 @@ import { buildSeriesTree, createsCycle, parentsOf, treeBookIds } from "./series.
 
 export type BookListQuery = z.infer<typeof BookListRequestSchema>;
 export type SaveBookBody = z.infer<typeof SaveBookRequestSchema>;
+// the body, with the id of the path on an update (none: created)
+type WithId<T> = T & { id?: string };
 export type SaveReadingBody = z.infer<typeof SaveReadingRequestSchema>;
 
 function isDateBetween(dateStr: string, fromStr: string, toStr: string) {
@@ -54,7 +56,7 @@ export class ReadingBookService {
 		return (await this.repo.findById(id)) ?? notFound("book");
 	}
 
-	async saveBook(book: SaveBookBody) {
+	async saveBook(book: WithId<SaveBookBody>) {
 		this.logger.log("saveBook");
 		await assertEntities(
 			this.repo,
@@ -121,7 +123,7 @@ export class ReadingBookService {
 		};
 	}
 
-	async saveSeries(series: SaveSeriesRequest) {
+	async saveSeries(series: WithId<SaveSeriesRequest>) {
 		this.logger.log("saveSeries");
 		const bookIds = series.items.flatMap((item) => (item.kind === "book" ? [item.bookId] : []));
 		const childIds = series.items.flatMap((item) => (item.kind === "series" ? [item.seriesId] : []));
@@ -153,7 +155,7 @@ export class ReadingBookService {
 		await this.repo.deleteSeries(id);
 	}
 
-	async saveModel(bookId: string, model: SaveBookModelRequest) {
+	async saveModel(bookId: string, model: WithId<SaveBookModelRequest>) {
 		this.logger.log("saveModel");
 		const id = await this.repo.saveModel(bookId, model);
 		if (!id) {
@@ -188,7 +190,7 @@ export class ReadingBookService {
 		return reading;
 	}
 
-	async saveEdition(bookId: string, edition: SaveEditionRequest) {
+	async saveEdition(bookId: string, edition: WithId<SaveEditionRequest>) {
 		this.logger.log("saveEdition");
 		const current = edition.id ? await this.repo.findEdition(bookId, edition.id) : undefined;
 		if (edition.id && !current) {

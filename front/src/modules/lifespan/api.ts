@@ -36,7 +36,7 @@ export const categoriesQuery = () =>
 
 export async function saveCategory(data: any) {
 	const sentData = LifespanCategorySaveBodyRequestSchema.parse(data);
-	return saveJson(`${API_BASE_URL}/lifespan/categories`, sentData);
+	return saveJson(`${API_BASE_URL}/lifespan/categories`, data.id, sentData);
 }
 
 // 409 when it still has sub-categories or objects: the error message says why
@@ -78,16 +78,16 @@ export const objectDetailsQuery = (id: string) =>
 	});
 
 export async function saveObject(data: any) {
-	const sentData = LifespanObjectSaveBodyRequestSchema.parse(data);
-	const { id } = sentData.object;
-	return id
-		? sendJson(`${API_BASE_URL}/lifespan/objects/${id}`, "PUT", sentData)
-		: sendJson(`${API_BASE_URL}/lifespan/objects`, "POST", sentData);
+	return saveJson(
+		`${API_BASE_URL}/lifespan/objects`,
+		data.object.id,
+		LifespanObjectSaveBodyRequestSchema.parse(data),
+	);
 }
 
 export async function saveEvent({ objectId, event }: { objectId: string; event: any }) {
 	const sentData = LifespanEventSaveBodyRequestSchema.parse(event);
-	return saveJson(`${API_BASE_URL}/lifespan/objects/${objectId}/events`, sentData);
+	return saveJson(`${API_BASE_URL}/lifespan/objects/${objectId}/events`, event.id, sentData);
 }
 
 export async function deleteObject(data: any) {

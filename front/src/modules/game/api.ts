@@ -58,12 +58,9 @@ export const gameDetailsQuery = (id: string) =>
 // a game (with an optional first play), or a play of the game `gameId`
 export async function save({ game, play, gameId }: any) {
 	if (game) {
-		const sentData = GameSaveBodyRequestSchema.parse({ game, play });
-		return sentData.game.id
-			? sendJson(`${API_BASE_URL}/game/games/${sentData.game.id}`, "PUT", sentData)
-			: sendJson(`${API_BASE_URL}/game/games`, "POST", sentData);
+		return saveJson(`${API_BASE_URL}/game/games`, game.id, GameSaveBodyRequestSchema.parse({ game, play }));
 	}
-	return saveJson(`${API_BASE_URL}/game/games/${gameId}/plays`, GamePlaySaveBodyRequestSchema.parse(play));
+	return saveJson(`${API_BASE_URL}/game/games/${gameId}/plays`, play.id, GamePlaySaveBodyRequestSchema.parse(play));
 }
 
 export async function deleteItem(data: any) {

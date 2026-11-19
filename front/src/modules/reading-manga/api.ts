@@ -85,13 +85,15 @@ export const mangaDetailsQuery = (id: string) =>
 // a manga (with an optional first reading), or a reading of the manga `mangaId`
 export async function save({ manga, reading, mangaId }: any) {
 	if (manga) {
-		const sentData = SaveBodyRequestSchema.parse({ manga, reading });
-		return sentData.manga.id
-			? sendJson(`${API_BASE_URL}/reading-manga/mangas/${sentData.manga.id}`, "PUT", sentData)
-			: sendJson(`${API_BASE_URL}/reading-manga/mangas`, "POST", sentData);
+		return saveJson(
+			`${API_BASE_URL}/reading-manga/mangas`,
+			manga.id,
+			SaveBodyRequestSchema.parse({ manga, reading }),
+		);
 	}
 	return saveJson(
 		`${API_BASE_URL}/reading-manga/mangas/${mangaId}/readings`,
+		reading.id,
 		SaveReadingBodyRequestSchema.parse(reading),
 	);
 }

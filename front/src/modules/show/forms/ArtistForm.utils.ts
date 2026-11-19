@@ -1,7 +1,8 @@
-import { SaveArtistBodyRequestSchema } from "@personal-tracker/shared/show";
+import { ArtistSchema, SaveArtistBodyRequestSchema } from "@personal-tracker/shared/show";
 import z from "zod";
 
-const ArtistInsideFormSchema = SaveArtistBodyRequestSchema;
+// the id of the edited record (none: created); the api sends it in the path
+const ArtistInsideFormSchema = SaveArtistBodyRequestSchema.extend({ id: ArtistSchema.shape.id.optional() });
 
 export const ArtistFormSchema = z.object({
 	artist: ArtistInsideFormSchema,

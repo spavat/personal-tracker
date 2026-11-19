@@ -59,13 +59,15 @@ export default function AuthorForm({ authorId, returnTo }: { authorId: string; r
 
 	const saveMutation = useMutation({
 		mutationFn: (data: AuthorFormData) =>
-			saveEntity({
-				id: author.id,
-				kind: author.kind,
-				name: data.name.trim(),
-				sortName: data.sortName.trim() || null,
-				picture: data.picture.trim() || null,
-			}),
+			saveEntity(
+				{
+					kind: author.kind,
+					name: data.name.trim(),
+					sortName: data.sortName.trim() || null,
+					picture: data.picture.trim() || null,
+				},
+				author.id,
+			),
 		onSuccess: () => {
 			// the name shows on the books, the cards and the pickers
 			queryClient.invalidateQueries({ queryKey: ["reading"] });

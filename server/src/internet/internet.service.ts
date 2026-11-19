@@ -81,7 +81,7 @@ export class InternetService {
 
 	// The program (as GET /id/:programId gives it), with an optional first episode. A program given neither image
 	// gets the ones of its refs; a profile given as an outside URL / data URI is stored in S3.
-	async createProgram({ program: { id: _, profile, banner, ...program }, episode }: SaveBodyRequestType) {
+	async createProgram({ program: { profile, banner, ...program }, episode }: SaveBodyRequestType) {
 		this.logger.log("createProgram");
 		const id = randomUUID();
 		let images = await this.uploadGivenImages(id, null, { profile, banner });
@@ -98,7 +98,7 @@ export class InternetService {
 	}
 
 	// the program's fields only: its episodes have their own routes
-	async updateProgram(id: string, { program: { id: _, profile, banner, ...program } }: SaveBodyRequestType) {
+	async updateProgram(id: string, { program: { profile, banner, ...program } }: SaveBodyRequestType) {
 		this.logger.log("updateProgram");
 		const current = (await this.repo.findById(id)) ?? notFound();
 		const images = await this.uploadGivenImages(id, current, { profile, banner });
@@ -108,7 +108,7 @@ export class InternetService {
 		return this.getProgram(id);
 	}
 
-	async createEpisode(programId: string, { id: _, ...fields }: SaveEpisodeBodyRequestType) {
+	async createEpisode(programId: string, fields: SaveEpisodeBodyRequestType) {
 		this.logger.log("createEpisode");
 		const episode = buildEpisode(cleanEpisode(fields));
 		if (!(await this.repo.pushEpisode(programId, episode))) {
@@ -117,7 +117,7 @@ export class InternetService {
 		return episode;
 	}
 
-	async updateEpisode(programId: string, episodeId: string, { id: _, ...fields }: SaveEpisodeBodyRequestType) {
+	async updateEpisode(programId: string, episodeId: string, fields: SaveEpisodeBodyRequestType) {
 		this.logger.log("updateEpisode");
 		if (!(await this.repo.updateEpisode(programId, { ...cleanEpisode(fields), id: episodeId }))) {
 			episodeNotFound();

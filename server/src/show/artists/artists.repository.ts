@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { SaveArtistBodyRequest } from "@personal-tracker/shared/show";
 import { and, AnyColumn, asc, desc, eq, getColumns, sql, SQL } from "drizzle-orm";
+
+import type { SaveArtistBody } from "./artist.entity.js";
 
 import { contains } from "../../database/contains.query.js";
 import { DRIZZLE } from "../../database/database.tokens.js";
@@ -90,7 +91,7 @@ export class ArtistsRepository {
 	}
 
 	// undefined when updating an unknown id
-	async save(data: SaveArtistBodyRequest) {
+	async save(data: SaveArtistBody) {
 		const [artist] = data.id
 			? await this.db.update(showArtist).set(data).where(eq(showArtist.id, data.id)).returning()
 			: await this.db.insert(showArtist).values(data).returning();

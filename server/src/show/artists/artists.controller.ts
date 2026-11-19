@@ -45,7 +45,7 @@ export class ArtistsController {
 	@Post()
 	@SerializeOptions({ schema: ArtistViewSchema })
 	create(@Body({ schema: SaveArtistBodyRequestSchema }) body: z.infer<typeof SaveArtistBodyRequestSchema>) {
-		return orNotFound(this.service.save({ ...body, id: undefined }), "artist");
+		return orNotFound(this.service.save(body), "artist");
 	}
 
 	@Put(":id")

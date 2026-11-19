@@ -102,13 +102,15 @@ export const reviewQuery = () =>
 // a program (with an optional first episode), or an episode of the program `programId`
 export async function save({ program, episode, programId }: any) {
 	if (program) {
-		const sentData = SaveBodyRequestSchema.parse({ program, episode });
-		return sentData.program.id
-			? sendJson(`${API_BASE_URL}/internet/programs/${sentData.program.id}`, "PUT", sentData)
-			: sendJson(`${API_BASE_URL}/internet/programs`, "POST", sentData);
+		return saveJson(
+			`${API_BASE_URL}/internet/programs`,
+			program.id,
+			SaveBodyRequestSchema.parse({ program, episode }),
+		);
 	}
 	return saveJson(
 		`${API_BASE_URL}/internet/programs/${programId}/episodes`,
+		episode.id,
 		SaveEpisodeBodyRequestSchema.parse(episode),
 	);
 }

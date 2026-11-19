@@ -16,12 +16,12 @@ export class LifespanCategoriesService {
 		return this.repo.findAll();
 	}
 
-	create({ id: _, ...category }: LifespanCategorySaveBodyRequestType) {
+	create(category: LifespanCategorySaveBodyRequestType) {
 		this.logger.log("create");
 		return this.repo.insert(buildLifespanCategory(category));
 	}
 
-	async update(id: string, { id: _, ...category }: LifespanCategorySaveBodyRequestType) {
+	async update(id: string, category: LifespanCategorySaveBodyRequestType) {
 		this.logger.log("update");
 		if (category.parentId) {
 			const categories = await this.repo.findAll();

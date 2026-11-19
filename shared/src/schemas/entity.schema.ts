@@ -30,7 +30,7 @@ export const EntityListResponseSchema = z.array(EntitySchema);
 // Creates the entity when no id is given. The kind can't change on update.
 // `picture`: the URL given by the server or left out = unchanged, another URL or a data URI = new portrait,
 // null = no portrait
-export const SaveEntityBodyRequestSchema = EntitySchema.partial({ id: true }).extend({
+export const SaveEntityBodyRequestSchema = EntitySchema.omit({ id: true }).extend({
 	sortName: EntitySchema.shape.sortName.default(null),
 	picture: EntitySchema.shape.picture.optional(),
 });

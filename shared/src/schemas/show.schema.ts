@@ -233,7 +233,7 @@ export type ArtistDetailsResponse = z.infer<typeof ArtistDetailsResponseSchema>;
 // ARTIST: SAVE
 //
 // Request
-export const SaveArtistBodyRequestSchema = ArtistSchema.partial({ id: true });
+export const SaveArtistBodyRequestSchema = ArtistSchema.omit({ id: true });
 export type SaveArtistBodyRequest = z.infer<typeof SaveArtistBodyRequestSchema>;
 
 //
@@ -265,7 +265,7 @@ export type PlaceDetailsResponse = z.infer<typeof PlaceDetailsResponseSchema>;
 // PLACE: SAVE
 //
 // Request
-export const SavePlaceBodyRequestSchema = PlaceSchema.partial({ id: true }).extend({
+export const SavePlaceBodyRequestSchema = PlaceSchema.omit({ id: true }).extend({
 	formerNames: z
 		.array(PlaceFormerNameSchema)
 		.refine((names) => new Set(names.map((n) => n.untilDate)).size === names.length, {
@@ -296,7 +296,7 @@ export type ModelDetailsResponse = z.infer<typeof ModelDetailsResponseSchema>;
 // MODEL: SAVE
 //
 // Request
-export const SaveModelBodyRequestSchema = ModelSchema.partial({ id: true }).extend({
+export const SaveModelBodyRequestSchema = ModelSchema.omit({ id: true }).extend({
 	roles: z
 		.array(
 			RoleModelSchema.partial({ id: true }).extend({
@@ -317,8 +317,8 @@ export const DeleteModelParamsRequestSchema = NumberIdParamsSchema;
 //
 // CASTING
 //
+// PUT /performances/:id/casting; a role with an id is kept, without one created
 export const SaveCastingBodyRequestSchema = z.object({
-	performanceId: z.number(),
 	roles: z.array(RoleSchema.partial({ id: true })),
 });
 export type SaveCastingBodyRequest = z.infer<typeof SaveCastingBodyRequestSchema>;
@@ -384,7 +384,7 @@ export type WorkDetailsResponse = z.infer<typeof WorkDetailsResponseSchema>;
 // WORK: SAVE
 //
 // Request
-export const SaveWorkBodyRequestSchema = WorkSchema.partial({ id: true });
+export const SaveWorkBodyRequestSchema = WorkSchema.omit({ id: true });
 //
 // WORK: DELETE
 //
@@ -426,18 +426,18 @@ export type SpectacleDetailsResponse = z.infer<typeof SpectacleDetailsResponseSc
 // SPECTACLE: SAVE
 //
 // Request
-export const SaveSpectacleBodyRequestSchema = SpectacleSchema.partial({ id: true });
+export const SaveSpectacleBodyRequestSchema = SpectacleSchema.omit({ id: true });
 
 //
 // PERFORMANCE: SAVE
 //
 export const SavePerformanceBodyRequestSchema = z
 	.object({
-		work: WorkSchema.partial({ id: true }).optional(),
-		spectacle: SpectacleSchema.partial({ id: true, workId: true }).optional(),
-		place: PlaceSchema.partial({ id: true }).optional(),
-		performance: PerformanceSchema.partial({
-			id: true,
+		// created along with the performance
+		work: WorkSchema.omit({ id: true }).optional(),
+		spectacle: SpectacleSchema.omit({ id: true }).partial({ workId: true }).optional(),
+		place: PlaceSchema.omit({ id: true }).optional(),
+		performance: PerformanceSchema.omit({ id: true }).partial({
 			placeId: true,
 			spectacleId: true,
 		}),

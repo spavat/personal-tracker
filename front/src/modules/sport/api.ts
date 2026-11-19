@@ -48,7 +48,7 @@ export function getActivityThumbnailUrl(id: string): string {
 
 export async function save(data: any): Promise<any> {
 	const sentData = SaveBodyRequestSchema.parse(data);
-	return saveJson(`${API_BASE_URL}/sport/activities`, sentData);
+	return saveJson(`${API_BASE_URL}/sport/activities`, data.id, sentData);
 }
 
 export async function deleteActivity(data: any): Promise<any> {

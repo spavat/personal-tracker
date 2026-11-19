@@ -146,7 +146,7 @@ export const BookDetailsParamsSchema = UUIDParamsSchema;
 //
 // SAVE / DELETE MODEL
 //
-export const SaveBookModelRequestSchema = BookModelSchema.partial({ id: true });
+export const SaveBookModelRequestSchema = BookModelSchema.omit({ id: true });
 export type SaveBookModelRequest = z.infer<typeof SaveBookModelRequestSchema>;
 export const ModelParamsRequestSchema = z.object({
 	id: z.uuid(),
@@ -158,9 +158,13 @@ export const ReadingParamsRequestSchema = UUIDParamsSchema;
 // SAVE BOOK
 //
 // Request
-export const SaveBookRequestSchema = BookSchema.partial({ id: true })
-	.omit({ editions: true, models: true, authors: true, series: true })
-	.extend({ authors: z.array(SaveCreditSchema).min(1) });
+export const SaveBookRequestSchema = BookSchema.omit({
+	id: true,
+	editions: true,
+	models: true,
+	authors: true,
+	series: true,
+}).extend({ authors: z.array(SaveCreditSchema).min(1) });
 // Response
 export const SaveBookResponseSchema = BookSchema;
 export type SaveBookResponse = z.infer<typeof SaveBookResponseSchema>;
@@ -169,13 +173,16 @@ export type SaveBookResponse = z.infer<typeof SaveBookResponseSchema>;
 // SAVE EDITION
 //
 // `cover`: the URL given by the server = unchanged, another URL or a data URI = new cover, null = no cover
-export const SaveEditionRequestSchema = EditionSchema.partial({ id: true })
-	.omit({ readings: true, publisher: true, translators: true })
-	.extend({
-		// an organization
-		publisherId: z.uuid().nullable(),
-		translators: z.array(SaveCreditSchema),
-	});
+export const SaveEditionRequestSchema = EditionSchema.omit({
+	id: true,
+	readings: true,
+	publisher: true,
+	translators: true,
+}).extend({
+	// an organization
+	publisherId: z.uuid().nullable(),
+	translators: z.array(SaveCreditSchema),
+});
 export type SaveEditionRequest = z.infer<typeof SaveEditionRequestSchema>;
 export const EditionParamsRequestSchema = z.object({
 	id: z.uuid(),
@@ -229,7 +236,6 @@ export const SaveSeriesItemSchema = z.discriminatedUnion("kind", [
 ]);
 export type SaveSeriesItem = z.infer<typeof SaveSeriesItemSchema>;
 export const SaveSeriesRequestSchema = z.object({
-	id: z.uuid().optional(),
 	title: z.string().trim().nonempty(),
 	items: z.array(SaveSeriesItemSchema),
 });

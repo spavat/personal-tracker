@@ -74,8 +74,8 @@ export async function getReport(from: string, to: string) {
 	return fetchJson<GetReportResponse>(withQuery(`${API_BASE_URL}/music/reports`, { from, to }));
 }
 
-export async function save(data: any) {
-	return saveJson(`${API_BASE_URL}/music/listenings`, data);
+export async function save({ id, ...data }: any) {
+	return saveJson(`${API_BASE_URL}/music/listenings`, id, data);
 }
 
 export async function deleteItem(data: DeleteParamsRequest) {
@@ -84,7 +84,7 @@ export async function deleteItem(data: DeleteParamsRequest) {
 
 export async function saveGenre(data: any) {
 	const sentData = SaveGenreRequestSchema.parse(data);
-	return saveJson(`${API_BASE_URL}/music/genres`, sentData);
+	return saveJson(`${API_BASE_URL}/music/genres`, data.id, sentData);
 }
 
 export async function deleteGenre(data: any) {

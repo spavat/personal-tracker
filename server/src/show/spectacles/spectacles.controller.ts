@@ -47,7 +47,7 @@ export class SpectaclesController {
 	@Post()
 	@SerializeOptions({ schema: SpectacleSchema })
 	create(@Body({ schema: SaveSpectacleBodyRequestSchema }) body: SaveSpectacleBody) {
-		return orNotFound(this.service.save({ ...body, id: undefined }), "spectacle");
+		return orNotFound(this.service.save(body), "spectacle");
 	}
 
 	@Put(":id")

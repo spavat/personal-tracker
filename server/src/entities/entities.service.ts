@@ -22,13 +22,13 @@ export class EntitiesService {
 		return (await this.repo.findAll(query)).map(toEntityView);
 	}
 
-	create({ id: _, ...body }: SaveEntityBody) {
+	create(body: SaveEntityBody) {
 		this.logger.log("create");
 		return this.write(undefined, body);
 	}
 
 	// 404 for an unknown entity, or one of another kind
-	async update(id: string, { id: _, ...body }: SaveEntityBody) {
+	async update(id: string, body: SaveEntityBody) {
 		this.logger.log("update");
 		return (await this.write(id, body)) ?? notFound();
 	}

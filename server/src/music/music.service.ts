@@ -30,7 +30,7 @@ export class MusicService {
 		return (await this.repo.findById(id)) ?? notFound();
 	}
 
-	create({ id: _, ...data }: SaveListeningBody) {
+	create(data: SaveListeningBody) {
 		this.logger.log("create");
 		return this.repo.insert({
 			id: randomUUID(),
@@ -39,7 +39,7 @@ export class MusicService {
 		});
 	}
 
-	async update(id: string, { id: _, ...data }: SaveListeningBody) {
+	async update(id: string, data: SaveListeningBody) {
 		this.logger.log("update");
 		return (await this.repo.update(id, cleanListening(data))) ?? notFound();
 	}

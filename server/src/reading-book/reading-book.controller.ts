@@ -62,7 +62,7 @@ export class ReadingBookController {
 	@Post("series")
 	@SerializeOptions({ schema: SeriesDetailsSchema })
 	createSeries(@Body({ schema: SaveSeriesRequestSchema }) series: SaveSeriesRequest) {
-		return this.service.saveSeries({ ...series, id: undefined });
+		return this.service.saveSeries(series);
 	}
 
 	@Put("series/:id")
@@ -115,7 +115,7 @@ export class ReadingBookController {
 	@Post("books")
 	@SerializeOptions({ schema: BookSchema })
 	createBook(@Body({ schema: SaveBookRequestSchema }) book: SaveBookBody) {
-		return this.service.saveBook({ ...book, id: undefined });
+		return this.service.saveBook(book);
 	}
 
 	@Put("books/:id")
@@ -133,7 +133,7 @@ export class ReadingBookController {
 		@Param({ schema: ReadingParamsRequestSchema }) { id }: IdParams,
 		@Body({ schema: SaveBookModelRequestSchema }) model: SaveBookModelRequest,
 	) {
-		return this.service.saveModel(id, { ...model, id: undefined });
+		return this.service.saveModel(id, model);
 	}
 
 	@Put("books/:id/models/:modelId")
@@ -158,7 +158,7 @@ export class ReadingBookController {
 		@Param({ schema: ReadingParamsRequestSchema }) { id }: IdParams,
 		@Body({ schema: SaveEditionRequestSchema }) edition: SaveEditionRequest,
 	) {
-		return this.service.saveEdition(id, { ...edition, id: undefined });
+		return this.service.saveEdition(id, edition);
 	}
 
 	@Put("books/:id/editions/:editionId")

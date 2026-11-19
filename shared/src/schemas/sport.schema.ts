@@ -66,8 +66,9 @@ export const DetailsResponseSchema = SportActivitySchema;
 //
 // SAVE
 //
-export const SaveBodyRequestSchema = SportActivitySchema.partial({ id: true, date: true })
+export const SaveBodyRequestSchema = SportActivitySchema.partial({ date: true })
 	.omit({
+		id: true,
 		created: true,
 		points: true,
 		segments: true,

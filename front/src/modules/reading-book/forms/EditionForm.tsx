@@ -56,11 +56,9 @@ export default function EditionForm({
 	const onSubmit = (data: EditionFormData) =>
 		saveMutation.mutate({
 			id: bookId,
+			editionId,
 			// a disabled field is left out of the data: an edition with readings keeps its model
-			edition: toSaveEdition(
-				{ ...data, modelId: hasReadings ? (edition?.modelId ?? "") : data.modelId },
-				editionId,
-			),
+			edition: toSaveEdition({ ...data, modelId: hasReadings ? (edition?.modelId ?? "") : data.modelId }),
 		});
 
 	const title = editionId ? "Modifier l'édition" : "Ajouter une édition";

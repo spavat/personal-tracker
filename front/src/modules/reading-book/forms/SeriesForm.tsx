@@ -87,16 +87,18 @@ export default function SeriesForm({ seriesId, returnTo }: { seriesId?: string; 
 	function onSubmit(data: SeriesFormData) {
 		saveMutation.mutate({
 			id: seriesId,
-			title: data.title.trim(),
-			// a row left without book or series is dropped
-			items: data.items
-				.filter(({ refId }) => refId)
-				.map(({ kind, refId, positionLabel }) => {
-					const label = positionLabel.trim() || null;
-					return kind === "book"
-						? { kind, bookId: refId, positionLabel: label }
-						: { kind, seriesId: refId, positionLabel: label };
-				}),
+			series: {
+				title: data.title.trim(),
+				// a row left without book or series is dropped
+				items: data.items
+					.filter(({ refId }) => refId)
+					.map(({ kind, refId, positionLabel }) => {
+						const label = positionLabel.trim() || null;
+						return kind === "book"
+							? { kind, bookId: refId, positionLabel: label }
+							: { kind, seriesId: refId, positionLabel: label };
+					}),
+			},
 		});
 	}
 

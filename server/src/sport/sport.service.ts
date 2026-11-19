@@ -59,7 +59,7 @@ export class SportService {
 	}
 
 	// A GPX file (rawData) is stored in S3 and overrides the date, details, points and segments
-	private async prepare(activityId: string, { id: _, rawData, ...rest }: SaveBodyRequest) {
+	private async prepare(activityId: string, { rawData, ...rest }: SaveBodyRequest) {
 		const gpxData = rawData ? extractGPXData(rawData, rest.type) : null;
 
 		let gpxKey: string | undefined;

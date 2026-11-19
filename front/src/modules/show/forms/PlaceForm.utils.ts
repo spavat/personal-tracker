@@ -1,7 +1,8 @@
-import { SavePlaceBodyRequestSchema } from "@personal-tracker/shared/show";
+import { PlaceSchema, SavePlaceBodyRequestSchema } from "@personal-tracker/shared/show";
 import z from "zod";
 
-const PlaceInsideFormSchema = SavePlaceBodyRequestSchema;
+// the id of the edited record (none: created); the api sends it in the path
+const PlaceInsideFormSchema = SavePlaceBodyRequestSchema.extend({ id: PlaceSchema.shape.id.optional() });
 
 export const PlaceFormSchema = z.object({
 	place: PlaceInsideFormSchema,

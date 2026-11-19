@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SaveModelBodyRequestSchema } from "@personal-tracker/shared/show";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
@@ -10,7 +9,7 @@ import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-q
 import { modelDetailsQuery, saveModel } from "../api";
 import CropPanel from "../components/CropPanel";
 import ModelRoleFormComponent from "../forms/ModelRoleForm";
-import { ModelForm, onSubmitModel } from "../forms/ModelRoleForm.utils";
+import { ModelForm, ModelFormSchema, onSubmitModel } from "../forms/ModelRoleForm.utils";
 
 interface Inputs extends ModelForm {}
 
@@ -58,7 +57,7 @@ export default function ModelModalForm({
 	}
 
 	const methods = useForm<Inputs>({
-		resolver: zodResolver(SaveModelBodyRequestSchema),
+		resolver: zodResolver(ModelFormSchema),
 		// data is loaded before the modal opens: applied once, never overwritten by a background refetch
 		defaultValues: defaultValues as any,
 	});

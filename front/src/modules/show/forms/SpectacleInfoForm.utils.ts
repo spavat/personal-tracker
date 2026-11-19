@@ -1,10 +1,16 @@
-import { SaveSpectacleBodyRequestSchema, SpectacleDetailsResponse } from "@personal-tracker/shared/show";
+import {
+	SaveSpectacleBodyRequestSchema,
+	SpectacleDetailsResponse,
+	SpectacleSchema,
+} from "@personal-tracker/shared/show";
 import z from "zod";
 
 // an empty input is stored as null
 const emptyToNull = (val: unknown) => (val === "" ? null : val);
 
 const SpectacleInfoInsideFormSchema = SaveSpectacleBodyRequestSchema.omit({ models: true }).extend({
+	// the edited spectacle: the api sends it in the path
+	id: SpectacleSchema.shape.id,
 	description: z.preprocess(emptyToNull, z.string().nullable()),
 	descriptionSource: z.preprocess(emptyToNull, z.url().nullable()),
 	tracklist: z.preprocess(emptyToNull, z.string().nullable()),

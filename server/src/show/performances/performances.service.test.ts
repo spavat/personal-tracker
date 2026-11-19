@@ -117,9 +117,12 @@ describe("PerformancesService.get", () => {
 describe("PerformancesService.save", () => {
 	it("saves the performance directly when place and spectacle ids are already known", async () => {
 		const repo = fakeRepo();
-		await new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save({
-			performance: { id: 3, date: "2024-01-01", canceled: false, seat: "A1", placeId: 7, spectacleId: 100 },
-		} as any);
+		await new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save(
+			{
+				performance: { date: "2024-01-01", canceled: false, seat: "A1", placeId: 7, spectacleId: 100 },
+			} as any,
+			3,
+		);
 
 		expect(repo.insertPlace).not.toHaveBeenCalled();
 		expect(repo.insertSpectacle).not.toHaveBeenCalled();
@@ -134,9 +137,12 @@ describe("PerformancesService.save", () => {
 		const repo = fakeRepo();
 		repo.savePerformance.mockResolvedValue([]);
 		await expect(
-			new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save({
-				performance: { id: 3, date: "2024-01-01", placeId: 7, spectacleId: 100 },
-			} as any),
+			new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save(
+				{
+					performance: { date: "2024-01-01", placeId: 7, spectacleId: 100 },
+				} as any,
+				3,
+			),
 		).rejects.toMatchObject({ params: { resource: "performance" } });
 	});
 
@@ -153,15 +159,17 @@ describe("PerformancesService.save", () => {
 
 	it("saves a poster of kind poster from the spectacle", async () => {
 		const repo = fakeRepo();
-		await new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save({
-			performance: {
-				id: 3,
-				date: "2024-01-01",
-				placeId: 7,
-				spectacleId: 100,
-				posterId: "11111111-1111-4111-8111-111111111111",
-			},
-		} as any);
+		await new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save(
+			{
+				performance: {
+					date: "2024-01-01",
+					placeId: 7,
+					spectacleId: 100,
+					posterId: "11111111-1111-4111-8111-111111111111",
+				},
+			} as any,
+			3,
+		);
 
 		expect(repo.findSpectacleMediaKind).toHaveBeenCalledWith(repo.tx, 100, "11111111-1111-4111-8111-111111111111");
 		expect(repo.savePerformance).toHaveBeenCalledWith(
@@ -178,24 +186,29 @@ describe("PerformancesService.save", () => {
 		const repo = fakeRepo();
 		repo.findSpectacleMediaKind.mockResolvedValue(kind);
 		await expect(
-			new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save({
-				performance: {
-					id: 3,
-					date: "2024-01-01",
-					placeId: 7,
-					spectacleId: 100,
-					posterId: "11111111-1111-4111-8111-111111111111",
-				},
-			} as any),
+			new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save(
+				{
+					performance: {
+						date: "2024-01-01",
+						placeId: 7,
+						spectacleId: 100,
+						posterId: "11111111-1111-4111-8111-111111111111",
+					},
+				} as any,
+				3,
+			),
 		).rejects.toBeInstanceOf(BadRequestError);
 		expect(repo.savePerformance).not.toHaveBeenCalled();
 	});
 
 	it("does not check anything without a poster", async () => {
 		const repo = fakeRepo();
-		await new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save({
-			performance: { id: 3, date: "2024-01-01", placeId: 7, spectacleId: 100 },
-		} as any);
+		await new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save(
+			{
+				performance: { date: "2024-01-01", placeId: 7, spectacleId: 100 },
+			} as any,
+			3,
+		);
 		expect(repo.findSpectacleMediaKind).not.toHaveBeenCalled();
 	});
 });
@@ -204,10 +217,12 @@ describe("PerformancesService.saveCasting", () => {
 	it("inserts new roles, upserts existing ones and prunes the rest", async () => {
 		const repo = fakeRepo();
 
-		await new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).saveCasting({
-			performanceId: 10,
-			roles: [{ name: "New" }, { id: 2, name: "Existing" }],
-		} as any);
+		await new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).saveCasting(
+			10,
+			{
+				roles: [{ name: "New" }, { id: 2, name: "Existing" }],
+			} as any,
+		);
 
 		expect(repo.insertRoles).toHaveBeenCalledWith(repo.tx, [{ name: "New", performanceId: 10 }]);
 		expect(repo.upsertRoles).toHaveBeenCalledWith(repo.tx, [{ id: 2, name: "Existing", performanceId: 10 }]);

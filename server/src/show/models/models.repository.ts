@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { SaveModelBodyRequest } from "@personal-tracker/shared/show";
 import { eq } from "drizzle-orm";
+
+import type { SaveModelBody } from "./model.entity.js";
 
 import { DRIZZLE } from "../../database/database.tokens.js";
 import { Drizzle } from "../../database/drizzle.js";
@@ -33,11 +34,11 @@ export class ModelsRepository {
 		return tx.delete(showModelRole).where(eq(showModelRole.modelId, modelId));
 	}
 
-	updateModel(tx: any, id: number, data: SaveModelBodyRequest) {
+	updateModel(tx: any, id: number, data: SaveModelBody) {
 		return tx.update(showModel).set(data).where(eq(showModel.id, id)).returning();
 	}
 
-	insertModel(tx: any, data: SaveModelBodyRequest) {
+	insertModel(tx: any, data: SaveModelBody) {
 		return tx.insert(showModel).values(data).returning();
 	}
 

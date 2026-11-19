@@ -16,12 +16,12 @@ export class GenresService {
 		return this.repo.findAll();
 	}
 
-	create({ id: _, ...data }: Omit<MusicGenre, "id"> & { id?: string }) {
+	create(data: Omit<MusicGenre, "id">) {
 		this.logger.log("create");
 		return this.repo.insert(buildGenre(data));
 	}
 
-	async update(id: string, { id: _, ...data }: Omit<MusicGenre, "id"> & { id?: string }) {
+	async update(id: string, data: Omit<MusicGenre, "id">) {
 		this.logger.log("update");
 		return (await this.repo.update(id, data)) ?? notFound();
 	}

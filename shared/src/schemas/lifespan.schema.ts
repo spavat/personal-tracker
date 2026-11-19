@@ -22,7 +22,7 @@ export const LifespanCategoryListResponseSchema = z.array(LifespanCategorySchema
 // SAVE CATEGORY
 //
 // Request
-export const LifespanCategorySaveBodyRequestSchema = LifespanCategorySchema.partial({ id: true });
+export const LifespanCategorySaveBodyRequestSchema = LifespanCategorySchema.omit({ id: true });
 export type LifespanCategorySaveBodyRequestType = z.infer<typeof LifespanCategorySaveBodyRequestSchema>;
 
 //
@@ -72,7 +72,7 @@ export const LifespanEventSchema = LifespanEventShapeSchema.refine(
 );
 export type LifespanEvent = z.infer<typeof LifespanEventSchema>;
 
-// Save request shape: id is generated server-side when absent (mirrors GamePlaySchema.partial({ id: true }))
+// An event saved with its object: an id keeps the event (and its creation date), none creates it
 export const LifespanEventSaveSchema = LifespanEventShapeSchema.partial({ id: true }).refine(
 	hasCauseOnlyWhenDisposed,
 	disposeCauseRefinementOptions,
@@ -125,7 +125,7 @@ export const LifespanObjectDetailsParamsRequestSchema = z.object({
 //
 // Request
 export const LifespanObjectSaveBodyRequestSchema = z.object({
-	object: LifespanObjectSchema.partial({ id: true }).omit({ events: true }),
+	object: LifespanObjectSchema.omit({ id: true, events: true }),
 	events: z.array(LifespanEventSaveSchema).optional(),
 });
 export type LifespanObjectSaveBodyRequestType = z.infer<typeof LifespanObjectSaveBodyRequestSchema>;
@@ -134,7 +134,11 @@ export type LifespanObjectSaveBodyRequestType = z.infer<typeof LifespanObjectSav
 // SAVE EVENT (POST /objects/:objectId/events, PUT /objects/:objectId/events/:eventId)
 //
 // Request
-export const LifespanEventSaveBodyRequestSchema = LifespanEventSaveSchema;
+export const LifespanEventSaveBodyRequestSchema = LifespanEventShapeSchema.omit({ id: true }).refine(
+	hasCauseOnlyWhenDisposed,
+	disposeCauseRefinementOptions,
+);
+export type LifespanEventSaveBodyRequestType = z.infer<typeof LifespanEventSaveBodyRequestSchema>;
 export const LifespanEventParamsRequestSchema = z.object({ objectId: z.uuid() });
 
 //

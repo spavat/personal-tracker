@@ -58,7 +58,7 @@ describe("show/places routes", () => {
 		const res = await ctx.app.inject({
 			method: "PUT",
 			url: "/show/places/3",
-			payload: { id: 3, name: "Bastille", address: "Paris", country: "fr", formerNames: [] },
+			payload: { name: "Bastille", address: "Paris", country: "fr", formerNames: [] },
 		});
 		expect(res.statusCode).toBe(404);
 		expect(ctx.db.delete).not.toHaveBeenCalled();

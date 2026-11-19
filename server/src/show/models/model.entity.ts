@@ -1,6 +1,9 @@
-import type { ModelRoleView, ModelView } from "@personal-tracker/shared/show";
+import type { ModelRoleView, ModelView, SaveModelBodyRequest } from "@personal-tracker/shared/show";
 
 import type { showArtist, showModel, showModelRole } from "../../database/schema.js";
+
+// the body, with the id of the path on an update (none: created)
+export type SaveModelBody = SaveModelBodyRequest & { id?: number };
 
 // Rows of the relational queries: model with { roles: { with: { artist } } }
 type ModelRoleRow = typeof showModelRole.$inferSelect & { artist: typeof showArtist.$inferSelect | null };

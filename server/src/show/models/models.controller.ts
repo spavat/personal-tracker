@@ -26,7 +26,7 @@ export class ModelsController {
 	@Post()
 	@SerializeOptions({ schema: SaveModelResponseSchema })
 	create(@Body({ schema: SaveModelBodyRequestSchema }) body: z.infer<typeof SaveModelBodyRequestSchema>) {
-		return this.service.save({ ...body, id: undefined });
+		return this.service.save(body);
 	}
 
 	@Put(":id")

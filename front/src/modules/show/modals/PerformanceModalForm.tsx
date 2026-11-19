@@ -62,11 +62,9 @@ export default function PerformanceModalForm({
 		};
 	} else if (performanceData) {
 		// Only the performance fields: the place, spectacle and roles are not edited here
-		const { id, date, canceled, seat, place, spectacle, casting_status, casting_origin, posterId } =
-			performanceData;
+		const { date, canceled, seat, place, spectacle, casting_status, casting_origin, posterId } = performanceData;
 		defaultValues = {
 			performance: {
-				id,
 				date,
 				canceled,
 				seat,
@@ -96,7 +94,7 @@ export default function PerformanceModalForm({
 
 	const onSubmit: SubmitHandler<SavePerformanceBodyRequest> = (data) => {
 		const dataPerformance = onSubmitPerformance(data);
-		saveMutation.mutate(dataPerformance);
+		saveMutation.mutate({ id: performanceId, data: dataPerformance });
 	};
 
 	const showFormPart = useCallback((type: "work" | "spectacle" | "place", value = true) => {

@@ -26,7 +26,7 @@ export const contextTagsQuery = () =>
 
 export async function save(data: any) {
 	const sentData = SaveContextTagRequestSchema.parse(data);
-	return saveJson(`${API_BASE_URL}/context-tags`, sentData);
+	return saveJson(`${API_BASE_URL}/context-tags`, data.id, sentData);
 }
 
 export async function deleteItem(data: any) {

@@ -19,7 +19,7 @@ export const ListResponseSchema = z.array(ContextTagSchema);
 //
 // SAVE
 //
-export const SaveContextTagRequestSchema = ContextTagSchema.partial({ id: true });
+export const SaveContextTagRequestSchema = ContextTagSchema.omit({ id: true });
 export type SaveContextTagBody = z.infer<typeof SaveContextTagRequestSchema>;
 
 //

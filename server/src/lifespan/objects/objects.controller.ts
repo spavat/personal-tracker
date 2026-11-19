@@ -5,7 +5,7 @@ import {
 	LifespanEventParamsRequestSchema,
 	LifespanEventSaveBodyRequestSchema,
 	LifespanEventSchema,
-	type LifespanEventSaveType,
+	type LifespanEventSaveBodyRequestType,
 	LifespanObjectDeleteParamsRequestSchema,
 	LifespanObjectDetailsParamsRequestSchema,
 	LifespanObjectListQuerystringRequestSchema,
@@ -62,7 +62,7 @@ export class LifespanObjectsController {
 	@SerializeOptions({ schema: LifespanEventSchema })
 	createEvent(
 		@Param({ schema: LifespanEventParamsRequestSchema }) { objectId }: { objectId: string },
-		@Body({ schema: LifespanEventSaveBodyRequestSchema }) event: LifespanEventSaveType,
+		@Body({ schema: LifespanEventSaveBodyRequestSchema }) event: LifespanEventSaveBodyRequestType,
 	) {
 		return this.service.createEvent(objectId, event);
 	}
@@ -74,7 +74,7 @@ export class LifespanObjectsController {
 			objectId,
 			eventId,
 		}: LifespanEventDeleteParamsRequestType,
-		@Body({ schema: LifespanEventSaveBodyRequestSchema }) event: LifespanEventSaveType,
+		@Body({ schema: LifespanEventSaveBodyRequestSchema }) event: LifespanEventSaveBodyRequestType,
 	) {
 		return this.service.updateEvent(objectId, eventId, event);
 	}

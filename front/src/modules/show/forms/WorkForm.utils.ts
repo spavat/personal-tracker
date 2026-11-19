@@ -1,7 +1,8 @@
-import { SaveWorkBodyRequestSchema } from "@personal-tracker/shared/show";
+import { WorkSchema, SaveWorkBodyRequestSchema } from "@personal-tracker/shared/show";
 import z from "zod";
 
-const WorkInsideFormSchema = SaveWorkBodyRequestSchema;
+// the id of the edited record (none: created); the api sends it in the path
+const WorkInsideFormSchema = SaveWorkBodyRequestSchema.extend({ id: WorkSchema.shape.id.optional() });
 
 export const WorkFormSchema = z.object({
 	work: WorkInsideFormSchema,

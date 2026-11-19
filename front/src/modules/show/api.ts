@@ -90,7 +90,7 @@ export const spectacleDetailsQuery = (id: string) =>
 	});
 export async function saveSpectacle(data: any) {
 	const sentData = SaveSpectacleBodyRequestSchema.parse(data);
-	return saveJson(`${API_BASE_URL}/show/spectacles`, sentData);
+	return saveJson(`${API_BASE_URL}/show/spectacles`, data.id, sentData);
 }
 
 // PERFORMANCES
@@ -146,7 +146,7 @@ export const artistDetailsQuery = (id: string, groupBySpectacle: boolean) =>
 	});
 export async function saveArtist(data: any) {
 	const sentData = SaveArtistBodyRequestSchema.parse(data);
-	return saveJson<ArtistView>(`${API_BASE_URL}/show/artists`, sentData);
+	return saveJson<ArtistView>(`${API_BASE_URL}/show/artists`, data.id, sentData);
 }
 export async function deleteArtist(id: string) {
 	return sendJson<void>(`${API_BASE_URL}/show/artists/${id}`, "DELETE");
@@ -179,7 +179,7 @@ export const placeDetailsQuery = (id: string, groupBySpectacle: boolean) =>
 	});
 export async function savePlace(data: any) {
 	const sentData = SavePlaceBodyRequestSchema.parse(data);
-	return saveJson(`${API_BASE_URL}/show/places`, sentData);
+	return saveJson(`${API_BASE_URL}/show/places`, data.id, sentData);
 }
 export async function deletePlace(id: string) {
 	return sendJson(`${API_BASE_URL}/show/places/${id}`, "DELETE");
@@ -196,7 +196,7 @@ export const modelDetailsQuery = (id: string) =>
 	});
 export async function saveModel(data: any) {
 	const sentData = SaveModelBodyRequestSchema.parse(data);
-	return saveJson(`${API_BASE_URL}/show/models`, sentData);
+	return saveJson(`${API_BASE_URL}/show/models`, data.id, sentData);
 }
 export async function deleteModel(id: string) {
 	return sendJson(`${API_BASE_URL}/show/models/${id}`, "DELETE");
@@ -213,22 +213,18 @@ export const workDetailsQuery = (id: string) =>
 	});
 export async function saveWork(data: any) {
 	const sentData = SaveWorkBodyRequestSchema.parse(data);
-	return saveJson(`${API_BASE_URL}/show/works`, sentData);
+	return saveJson(`${API_BASE_URL}/show/works`, data.id, sentData);
 }
 
 // CASTING
 export async function saveCasting(data: any) {
 	const sentData = SaveCastingBodyRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/show/performances/${sentData.performanceId}/casting`, "PUT", sentData);
+	return sendJson(`${API_BASE_URL}/show/performances/${data.performanceId}/casting`, "PUT", sentData);
 }
 
 // PERFORMANCES
-export async function savePerformance(data: any) {
-	const sentData = SavePerformanceBodyRequestSchema.parse(data);
-	const { id } = sentData.performance;
-	return id
-		? sendJson(`${API_BASE_URL}/show/performances/${id}`, "PUT", sentData)
-		: sendJson(`${API_BASE_URL}/show/performances`, "POST", sentData);
+export async function savePerformance({ id, data }: { id?: string; data: any }) {
+	return saveJson(`${API_BASE_URL}/show/performances`, id, SavePerformanceBodyRequestSchema.parse(data));
 }
 export async function deletePerformance(id: string) {
 	return sendJson(`${API_BASE_URL}/show/performances/${id}`, "DELETE");

@@ -1,14 +1,17 @@
-import { SaveMangaBodyRequestSchema } from "@personal-tracker/shared/reading-manga";
+import { MangaSchema, SaveMangaBodyRequestSchema } from "@personal-tracker/shared/reading-manga";
 import z from "zod";
 
-const MangaInsideFormSchema = SaveMangaBodyRequestSchema.extend({
+// the id of the edited record (none: created); the api sends it in the path
+const MangaWithIdSchema = SaveMangaBodyRequestSchema.extend({ id: MangaSchema.shape.id.optional() });
+
+const MangaInsideFormSchema = MangaWithIdSchema.extend({
 	author: z.array(z.object({ value: z.string().nonempty() })),
 	art: z.array(z.object({ value: z.string().nonempty() })),
 	scenario: z.array(z.object({ value: z.string().nonempty() })),
 	genres: z.array(z.object({ value: z.string().nonempty() })),
 });
 
-export const MangaDataTransformation = SaveMangaBodyRequestSchema.transform((data) => ({
+export const MangaDataTransformation = MangaWithIdSchema.transform((data) => ({
 	...data,
 	author: data?.author?.map((author: string) => ({ value: author })) ?? [],
 	art: data?.art?.map((art: string) => ({ value: art })) ?? [],

@@ -96,8 +96,8 @@ export const allBooksQuery = () =>
 		queryFn: () => getBooks({ sortField: "book", sortDirection: "asc" }),
 	});
 
-export async function saveSeries(series: SaveSeriesRequest) {
-	return saveJson<{ id: string }>(`${API_BASE_URL}/reading-book/series`, series);
+export async function saveSeries({ id, series }: { id?: string; series: SaveSeriesRequest }) {
+	return saveJson<{ id: string }>(`${API_BASE_URL}/reading-book/series`, id, series);
 }
 
 export async function deleteSeries(id: string) {
@@ -110,20 +110,28 @@ export async function getReport({ from, to }: { from: string; to: string }) {
 
 export async function saveBook(data: any) {
 	const dataToSend = SaveBookRequestSchema.parse(data);
-	return saveJson<SaveBookResponse>(`${API_BASE_URL}/reading-book/books`, dataToSend);
+	return saveJson<SaveBookResponse>(`${API_BASE_URL}/reading-book/books`, data.id, dataToSend);
 }
 
-export async function saveModel({ id, model }: { id: string; model: SaveBookModelRequest }) {
-	return saveJson(`${API_BASE_URL}/reading-book/books/${id}/models`, model);
+export async function saveModel({ id, modelId, model }: { id: string; modelId?: string; model: SaveBookModelRequest }) {
+	return saveJson(`${API_BASE_URL}/reading-book/books/${id}/models`, modelId, model);
 }
 
 export async function deleteModel({ id, modelId }: { id: string; modelId: string }) {
 	return sendJson(`${API_BASE_URL}/reading-book/books/${id}/models/${modelId}`, "DELETE");
 }
 
-export async function saveEdition({ id, edition }: { id: string; edition: SaveEditionRequest }) {
+export async function saveEdition({
+	id,
+	editionId,
+	edition,
+}: {
+	id: string;
+	editionId?: string;
+	edition: SaveEditionRequest;
+}) {
 	const dataToSend = SaveEditionRequestSchema.parse(edition);
-	return saveJson(`${API_BASE_URL}/reading-book/books/${id}/editions`, dataToSend);
+	return saveJson(`${API_BASE_URL}/reading-book/books/${id}/editions`, editionId, dataToSend);
 }
 
 export async function deleteEdition({ id, editionId }: { id: string; editionId: string }) {

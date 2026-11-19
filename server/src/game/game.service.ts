@@ -45,7 +45,7 @@ export class GameService {
 	}
 
 	// the game, with an optional first play
-	async create({ game: { id: _, ...game }, play }: GameSaveBodyRequestType) {
+	async create({ game: { ...game }, play }: GameSaveBodyRequestType) {
 		this.logger.log("create");
 		const id = randomUUID();
 		const created = await this.repo.insert({
@@ -57,14 +57,14 @@ export class GameService {
 	}
 
 	// the game's fields only: its plays have their own routes
-	async update(id: string, { game: { id: _, ...game } }: GameSaveBodyRequestType) {
+	async update(id: string, { game: { ...game } }: GameSaveBodyRequestType) {
 		this.logger.log("update");
 		const current = (await this.repo.findById(id)) ?? gameNotFound();
 		const updated = await this.repo.update(id, cleanGame(await this.uploadPictures(id, game, current)));
 		return this.toView(updated ?? gameNotFound());
 	}
 
-	async createPlay(gameId: string, { id: _, ...fields }: GamePlaySaveBodyRequestType) {
+	async createPlay(gameId: string, fields: GamePlaySaveBodyRequestType) {
 		this.logger.log("createPlay");
 		const play = buildPlay(fields);
 		if (!(await this.repo.pushPlay(gameId, play))) {
@@ -73,7 +73,7 @@ export class GameService {
 		return play;
 	}
 
-	async updatePlay(gameId: string, playId: string, { id: _, ...fields }: GamePlaySaveBodyRequestType) {
+	async updatePlay(gameId: string, playId: string, fields: GamePlaySaveBodyRequestType) {
 		this.logger.log("updatePlay");
 		// a play edited by hand stops being replaced by the store sync
 		if (!(await this.repo.updatePlay(gameId, toManualPlay({ ...fields, id: playId } as GamePlay)))) {

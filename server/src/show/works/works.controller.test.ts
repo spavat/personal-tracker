@@ -48,8 +48,7 @@ describe("show/works routes", () => {
 
 	it("PUT /:id 404s when updating an unknown work", async () => {
 		expect(
-			(await ctx.app.inject({ method: "PUT", url: "/show/works/4", payload: { id: 4, name: "Tosca" } }))
-				.statusCode,
+			(await ctx.app.inject({ method: "PUT", url: "/show/works/4", payload: { name: "Tosca" } })).statusCode,
 		).toBe(404);
 	});
 

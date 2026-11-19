@@ -1,6 +1,6 @@
 import type {
 	LifespanEvent,
-	LifespanEventSaveType,
+	LifespanEventSaveBodyRequestType,
 	LifespanObjectListQuerystringRequestType,
 	LifespanObjectSaveBodyRequestType,
 } from "@personal-tracker/shared/lifespan";
@@ -35,13 +35,13 @@ export class LifespanObjectsService {
 		return { ...rest, events: events?.toSorted(sortEventsDesc) ?? [] };
 	}
 
-	create({ object: { id: _, ...object }, events }: LifespanObjectSaveBodyRequestType) {
+	create({ object: { ...object }, events }: LifespanObjectSaveBodyRequestType) {
 		this.logger.log("create");
 		return this.repo.insert({ id: randomUUID(), ...object, events: (events ?? []).map(buildLifespanEvent) });
 	}
 
 	// the events, when sent, replace the whole list
-	async update(id: string, { object: { id: _, ...object }, events }: LifespanObjectSaveBodyRequestType) {
+	async update(id: string, { object: { ...object }, events }: LifespanObjectSaveBodyRequestType) {
 		this.logger.log("update");
 		const updated = events
 			? await this.updateObjectWithEvents(id, object, events)
@@ -56,7 +56,7 @@ export class LifespanObjectsService {
 		}
 	}
 
-	async createEvent(objectId: string, { id: _, ...fields }: LifespanEventSaveType) {
+	async createEvent(objectId: string, fields: LifespanEventSaveBodyRequestType) {
 		this.logger.log("createEvent");
 		const event = buildLifespanEvent(fields);
 		if (!(await this.repo.pushEvent(objectId, event))) {
@@ -65,7 +65,7 @@ export class LifespanObjectsService {
 		return event;
 	}
 
-	async updateEvent(objectId: string, eventId: string, { id: _, ...fields }: LifespanEventSaveType) {
+	async updateEvent(objectId: string, eventId: string, fields: LifespanEventSaveBodyRequestType) {
 		this.logger.log("updateEvent");
 		const event = { ...fields, id: eventId } as LifespanEvent;
 		if (!(await this.repo.updateEvent(objectId, event, missingFields(fields, CLEARABLE_EVENT_FIELDS)))) {

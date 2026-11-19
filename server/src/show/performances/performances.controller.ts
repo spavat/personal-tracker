@@ -46,7 +46,7 @@ export class PerformancesController {
 	@Post()
 	@SerializeOptions({ schema: SavePerformanceResponseSchema })
 	create(@Body({ schema: SavePerformanceBodyRequestSchema }) body: SavePerformanceBody) {
-		return this.service.save({ ...body, performance: { ...body.performance, id: undefined } });
+		return this.service.save(body);
 	}
 
 	@Put(":id")
@@ -55,7 +55,7 @@ export class PerformancesController {
 		@Param({ schema: DeletePerformanceParamsRequestSchema }) { id }: { id: number },
 		@Body({ schema: SavePerformanceBodyRequestSchema }) body: SavePerformanceBody,
 	) {
-		return this.service.save({ ...body, performance: { ...body.performance, id } });
+		return this.service.save(body, id);
 	}
 
 	// replaces the whole casting: nothing to send back
@@ -65,7 +65,7 @@ export class PerformancesController {
 		@Param({ schema: DeletePerformanceParamsRequestSchema }) { id }: { id: number },
 		@Body({ schema: SaveCastingBodyRequestSchema }) body: SaveCastingBody,
 	) {
-		await this.service.saveCasting({ ...body, performanceId: id });
+		await this.service.saveCasting(id, body);
 	}
 
 	// the casting roles, and their portraits used nowhere else, are deleted along with the performance

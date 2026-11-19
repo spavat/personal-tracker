@@ -1,6 +1,6 @@
-import type { SaveModelBodyRequest } from "@personal-tracker/shared/show";
-
 import { Injectable, Logger } from "@nestjs/common";
+
+import type { SaveModelBody } from "./model.entity.js";
 
 import { NotFoundError } from "../../common/errors.js";
 import { ModelsRepository } from "./models.repository.js";
@@ -15,7 +15,7 @@ export class ModelsService {
 		return this.repo.findByIdWithDetails(id);
 	}
 
-	async save(data: SaveModelBodyRequest) {
+	async save(data: SaveModelBody) {
 		this.logger.log("save");
 		return this.repo.runInTransaction(async (tx) => {
 			if (data.id) {
@@ -39,7 +39,7 @@ export class ModelsService {
 		});
 	}
 
-	private async processRoleModel(tx: any, roles: SaveModelBodyRequest["roles"], modelId: number) {
+	private async processRoleModel(tx: any, roles: SaveModelBody["roles"], modelId: number) {
 		for (const role of roles) {
 			let artistId = null;
 			if (role.artistId) {
