@@ -9,7 +9,7 @@ import { queryOptions } from "@tanstack/react-query";
 
 import type { MonthQueryConfig } from "../../hooks/use-month-changer";
 
-import { fetchJson, saveJson, sendJson, withQuery } from "../../api-utils";
+import { fetchJson, saveJson, sendJson } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
 
 async function getActivityList(from?: string, to?: string): Promise<Array<SportActivity>> {
@@ -17,7 +17,7 @@ async function getActivityList(from?: string, to?: string): Promise<Array<SportA
 	if (from) params.set("from", from);
 	if (to) params.set("to", to);
 	const qs = params.toString();
-	return fetchJson(`${API_BASE_URL}/sport/list${qs ? `?${qs}` : ""}`);
+	return fetchJson(`${API_BASE_URL}/sport/activities${qs ? `?${qs}` : ""}`);
 }
 export const activityHistory: MonthQueryConfig<Array<SportActivity>> = {
 	queryKey: ["sport", "activities"],
@@ -30,7 +30,7 @@ export const allActivitiesQuery = () =>
 	});
 
 async function getActivityDetails(id: string): Promise<SportActivity> {
-	return fetchJson(withQuery(`${API_BASE_URL}/sport/id`, { id }));
+	return fetchJson(`${API_BASE_URL}/sport/activities/${id}`);
 }
 export const activityDetailsQuery = (id: string) =>
 	queryOptions({
@@ -39,7 +39,7 @@ export const activityDetailsQuery = (id: string) =>
 	});
 
 export function getActivityDownloadUrl(id: string): string {
-	return withQuery(`${API_BASE_URL}/sport/download`, { id });
+	return `${API_BASE_URL}/sport/activities/${id}/download`;
 }
 
 export function getActivityThumbnailUrl(id: string): string {
@@ -48,20 +48,20 @@ export function getActivityThumbnailUrl(id: string): string {
 
 export async function save(data: any): Promise<any> {
 	const sentData = SaveBodyRequestSchema.parse(data);
-	return saveJson(`${API_BASE_URL}/sport`, sentData);
+	return saveJson(`${API_BASE_URL}/sport/activities`, sentData);
 }
 
 export async function deleteActivity(data: any): Promise<any> {
 	const { id } = DeleteParamsRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/sport/${id}`, "DELETE");
+	return sendJson(`${API_BASE_URL}/sport/activities/${id}`, "DELETE");
 }
 
 export async function updateSegments({ id, ...data }: any): Promise<any> {
 	const sentData = UpdateSegmentsBodyRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/sport/${id}/segments`, "PUT", sentData);
+	return sendJson(`${API_BASE_URL}/sport/activities/${id}/segments`, "PUT", sentData);
 }
 
 export async function cropActivity({ id, ...data }: any): Promise<any> {
 	const sentData = CropBodyRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/sport/${id}/crop`, "POST", sentData);
+	return sendJson(`${API_BASE_URL}/sport/activities/${id}/crop`, "POST", sentData);
 }

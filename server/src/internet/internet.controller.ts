@@ -33,7 +33,7 @@ export class InternetController {
 		return this.service.listEpisodes(query);
 	}
 
-	@Get("id/:programId")
+	@Get("programs/:programId")
 	@Public()
 	getProgram(@Param({ schema: DetailsProgramParamsRequestSchema }) { programId }: { programId: string }) {
 		return this.service.getProgram(programId);

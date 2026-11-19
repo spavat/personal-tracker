@@ -60,7 +60,7 @@ export const ListResponseSchema = z.array(SportActivitySchema);
 //
 // DETAILS
 //
-export const DetailsQuerystringRequestSchema = UUIDParamsSchema;
+export const DetailsParamsRequestSchema = UUIDParamsSchema;
 export const DetailsResponseSchema = SportActivitySchema;
 
 //

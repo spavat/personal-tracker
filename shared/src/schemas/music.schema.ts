@@ -58,7 +58,7 @@ export const SearchResponseSchema = z.array(MusicListeningSchema);
 // DETAILS
 //
 // Request
-export const DetailsQuerystringRequestSchema = UUIDParamsSchema;
+export const DetailsParamsRequestSchema = UUIDParamsSchema;
 // Response
 export const DetailsResponseSchema = MusicListeningSchema;
 

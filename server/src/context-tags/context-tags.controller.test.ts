@@ -27,7 +27,7 @@ describe("ContextTagsController", () => {
 			const ctx = await setup(null);
 			app = ctx.app;
 
-			const res = await app.inject({ method: "GET", url: "/context-tags/list" });
+			const res = await app.inject({ method: "GET", url: "/context-tags" });
 
 			expect(res.statusCode).toBe(401);
 			expect(ctx.tags.find).not.toHaveBeenCalled();
@@ -43,14 +43,14 @@ describe("ContextTagsController", () => {
 		});
 	});
 
-	describe("GET /context-tags/list", () => {
+	describe("GET /context-tags", () => {
 		it("returns the stored tags", async () => {
 			const ctx = await setup();
 			app = ctx.app;
 			const stored = [{ id: UUID, name: "Genre", tags: ["scifi"] }];
 			ctx.tags.find.mockReturnValueOnce(makeCursor(stored));
 
-			const res = await app.inject({ method: "GET", url: "/context-tags/list" });
+			const res = await app.inject({ method: "GET", url: "/context-tags" });
 
 			expect(res.statusCode).toBe(200);
 			expect(res.json()).toEqual(stored);
@@ -61,7 +61,7 @@ describe("ContextTagsController", () => {
 			app = ctx.app;
 			ctx.tags.find.mockReturnValueOnce(makeCursor([{ id: UUID, name: "Genre", tags: ["scifi"], secret: "x" }]));
 
-			const res = await app.inject({ method: "GET", url: "/context-tags/list" });
+			const res = await app.inject({ method: "GET", url: "/context-tags" });
 
 			expect(res.statusCode).toBe(200);
 			expect(res.json()).toEqual([{ id: UUID, name: "Genre", tags: ["scifi"] }]);
@@ -72,7 +72,7 @@ describe("ContextTagsController", () => {
 			app = ctx.app;
 			ctx.tags.find.mockReturnValueOnce(makeCursor([{ id: UUID, name: 42, tags: ["scifi"] }]));
 
-			const res = await app.inject({ method: "GET", url: "/context-tags/list" });
+			const res = await app.inject({ method: "GET", url: "/context-tags" });
 
 			expect(res.statusCode).toBe(500);
 		});

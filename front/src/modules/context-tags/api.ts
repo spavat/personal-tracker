@@ -10,7 +10,7 @@ import { fetchJson, saveJson, sendJson } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
 
 async function getContextTags(): Promise<Array<ContextTag>> {
-	const data = await fetchJson(`${API_BASE_URL}/context-tags/list`);
+	const data = await fetchJson(`${API_BASE_URL}/context-tags`);
 	const parsedResponse = ListResponseSchema.safeParse(data);
 	if (!parsedResponse.success) {
 		console.error(parsedResponse.error);

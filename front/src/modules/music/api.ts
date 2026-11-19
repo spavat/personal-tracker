@@ -17,7 +17,7 @@ import { fetchJson, saveJson, sendJson, withQuery } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
 
 export async function getYearOfMusic(from: string, to: string) {
-	const data = await fetchJson(withQuery(`${API_BASE_URL}/music/list`, { from, to }));
+	const data = await fetchJson(withQuery(`${API_BASE_URL}/music/listenings`, { from, to }));
 	const parsedResponse = ListResponseSchema.safeParse(data);
 	if (!parsedResponse.success) {
 		console.error(parsedResponse.error);
@@ -35,7 +35,7 @@ export async function searchMusic(search: string) {
 }
 
 async function getListeningDetails(id: string) {
-	return fetchJson(withQuery(`${API_BASE_URL}/music/id`, { id }));
+	return fetchJson(`${API_BASE_URL}/music/listenings/${id}`);
 }
 export const listeningDetailsQuery = (id: string) =>
 	queryOptions({
@@ -67,7 +67,7 @@ export const musicStats: YearQueryConfig<StatsResponse> = {
 };
 
 export async function getFortnightStats() {
-	return fetchJson<FortnightStatsRespons>(`${API_BASE_URL}/music/fortnight-stats`);
+	return fetchJson<FortnightStatsRespons>(`${API_BASE_URL}/music/stats/fortnight`);
 }
 
 export async function getReport(from: string, to: string) {
@@ -75,11 +75,11 @@ export async function getReport(from: string, to: string) {
 }
 
 export async function save(data: any) {
-	return saveJson(`${API_BASE_URL}/music`, data);
+	return saveJson(`${API_BASE_URL}/music/listenings`, data);
 }
 
 export async function deleteItem(data: DeleteParamsRequest) {
-	return sendJson(`${API_BASE_URL}/music/${data.id}`, "DELETE");
+	return sendJson(`${API_BASE_URL}/music/listenings/${data.id}`, "DELETE");
 }
 
 export async function saveGenre(data: any) {

@@ -25,15 +25,15 @@ describe("LifespanCategoriesController", () => {
 	it("keeps every route for the owner", async () => {
 		({ app } = await setup(null));
 
-		expect((await app.inject({ method: "GET", url: "/lifespan/categories/list" })).statusCode).toBe(401);
+		expect((await app.inject({ method: "GET", url: "/lifespan/categories" })).statusCode).toBe(401);
 	});
 
-	it("GET /list returns the stored categories", async () => {
+	it("GET / returns the stored categories", async () => {
 		const ctx = await setup();
 		app = ctx.app;
 		ctx.categories.find.mockReturnValueOnce(makeCursor([{ id: CATEGORY_UUID, name: "Clothes", parentId: null }]));
 
-		const res = await app.inject({ method: "GET", url: "/lifespan/categories/list" });
+		const res = await app.inject({ method: "GET", url: "/lifespan/categories" });
 
 		expect(res.statusCode).toBe(200);
 		expect(res.json()).toEqual([{ id: CATEGORY_UUID, name: "Clothes", parentId: null }]);

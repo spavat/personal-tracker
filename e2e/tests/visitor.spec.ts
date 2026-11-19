@@ -34,7 +34,7 @@ test.describe("anonymous visitor", () => {
 	});
 
 	test("gets a 401 from private and write endpoints", async ({ request }) => {
-		expect((await request.get(`${API}/context-tags/list`)).status()).toBe(401);
+		expect((await request.get(`${API}/context-tags`)).status()).toBe(401);
 		expect((await request.delete(`${API}/context-tags/some-id`)).status()).toBe(401);
 	});
 
@@ -144,7 +144,7 @@ test.describe("anonymous visitor", () => {
 
 		test("reads the public endpoints but cannot write", async ({ request }) => {
 			expect((await request.get(`${API}/internet/programs`)).status()).toBe(200);
-			expect((await request.get(`${API}/internet/id/${mockPodcast.id}`)).status()).toBe(200);
+			expect((await request.get(`${API}/internet/programs/${mockPodcast.id}`)).status()).toBe(200);
 			expect((await request.get(`${API}/internet/stats?from=2026-01-01&to=2026-12-31`)).status()).toBe(200);
 			expect((await request.get(`${API}/internet/sync`)).status()).toBe(401);
 			expect((await request.get(`${API}/internet/review`)).status()).toBe(401);
@@ -178,7 +178,7 @@ test.describe("anonymous visitor", () => {
 			});
 
 			test("is not found by id", async ({ request }) => {
-				expect((await request.get(`${API}/internet/id/${mockTube.id}`)).status()).toBe(404);
+				expect((await request.get(`${API}/internet/programs/${mockTube.id}`)).status()).toBe(404);
 			});
 
 			test("is left out of the stats", async ({ request }) => {
@@ -240,15 +240,15 @@ test.describe("anonymous visitor", () => {
 		}
 
 		test("reads the public endpoints but cannot write", async ({ request }) => {
-			expect((await request.get(`${API}/music/list?from=2026-10-01&to=2026-10-31`)).status()).toBe(200);
+			expect((await request.get(`${API}/music/listenings?from=2026-10-01&to=2026-10-31`)).status()).toBe(200);
 			expect((await request.get(`${API}/music/search?search=radio`)).status()).toBe(200);
-			expect((await request.get(`${API}/music/id?id=${discovery.id}`)).status()).toBe(200);
+			expect((await request.get(`${API}/music/listenings/${discovery.id}`)).status()).toBe(200);
 			expect((await request.get(`${API}/music/genres`)).status()).toBe(401);
 			expect((await request.get(`${API}/music/stats?from=2026-01-01&to=2026-12-31`)).status()).toBe(200);
-			expect((await request.get(`${API}/music/fortnight-stats`)).status()).toBe(200);
+			expect((await request.get(`${API}/music/stats/fortnight`)).status()).toBe(200);
 			expect((await request.get(`${API}/music/reports?from=2026-01-01&to=2026-12-31`)).status()).toBe(401);
-			expect((await request.post(`${API}/music`, { data: { album: "Intrus" } })).status()).toBe(401);
-			expect((await request.delete(`${API}/music/${discovery.id}`)).status()).toBe(401);
+			expect((await request.post(`${API}/music/listenings`, { data: { album: "Intrus" } })).status()).toBe(401);
+			expect((await request.delete(`${API}/music/listenings/${discovery.id}`)).status()).toBe(401);
 			expect((await request.post(`${API}/music/genres`, { data: { name: "Intrus" } })).status()).toBe(401);
 			expect((await request.delete(`${API}/music/genres/${musicGenres.rock.id}`)).status()).toBe(401);
 		});

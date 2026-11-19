@@ -33,20 +33,20 @@ describe("SportController", () => {
 
 	it("keeps every route for the owner", async () => {
 		({ app } = await setup(null));
-		expect((await app.inject({ method: "GET", url: "/sport/list" })).statusCode).toBe(401);
+		expect((await app.inject({ method: "GET", url: "/sport/activities" })).statusCode).toBe(401);
 	});
 
 	describe("validation", () => {
 		it("rejects a non-uuid activity id", async () => {
 			({ app } = await setup());
-			expect((await app.inject({ method: "GET", url: "/sport/id?id=nope" })).statusCode).toBe(400);
+			expect((await app.inject({ method: "GET", url: "/sport/activities/nope" })).statusCode).toBe(400);
 		});
 
 		it("rejects segments with duplicate times", async () => {
 			({ app } = await setup());
 			const res = await app.inject({
 				method: "PUT",
-				url: `/sport/${UUID}/segments`,
+				url: `/sport/activities/${UUID}/segments`,
 				payload: {
 					segments: [
 						{ time: 0, type: "running" },
@@ -61,7 +61,7 @@ describe("SportController", () => {
 			({ app } = await setup());
 			const res = await app.inject({
 				method: "POST",
-				url: `/sport/${UUID}/crop`,
+				url: `/sport/activities/${UUID}/crop`,
 				payload: { startIndex: 2, endIndex: 2 },
 			});
 			expect(res.statusCode).toBe(400);
@@ -72,7 +72,7 @@ describe("SportController", () => {
 			app = ctx.app;
 			const { id, date, created, ...body } = ACTIVITY;
 
-			const res = await app.inject({ method: "POST", url: "/sport", payload: body });
+			const res = await app.inject({ method: "POST", url: "/sport/activities", payload: body });
 
 			expect(res.statusCode).toBe(400);
 			expect(res.json()).toMatchObject({ error: "Bad Request" });
@@ -81,14 +81,14 @@ describe("SportController", () => {
 	});
 
 	describe("reads", () => {
-		it("GET /list strips the fields outside the response schema", async () => {
+		it("GET /activities strips the fields outside the response schema", async () => {
 			const ctx = await setup();
 			app = ctx.app;
 			ctx.activities.find.mockReturnValueOnce({
 				toArray: async () => [{ ...ACTIVITY, internal: true }],
 			} as never);
 
-			const res = await app.inject({ method: "GET", url: "/sport/list?from=2024-06-01&to=2024-06-30" });
+			const res = await app.inject({ method: "GET", url: "/sport/activities?from=2024-06-01&to=2024-06-30" });
 
 			expect(res.statusCode).toBe(200);
 			expect(res.json()).toEqual([ACTIVITY]);
@@ -96,7 +96,7 @@ describe("SportController", () => {
 
 		it("GET /id 404s for an unknown activity", async () => {
 			({ app } = await setup());
-			expect((await app.inject({ method: "GET", url: `/sport/id?id=${UUID}` })).statusCode).toBe(404);
+			expect((await app.inject({ method: "GET", url: `/sport/activities/${UUID}` })).statusCode).toBe(404);
 		});
 	});
 
@@ -106,7 +106,7 @@ describe("SportController", () => {
 			app = ctx.app;
 			ctx.activities.findOne.mockResolvedValueOnce({ name: "Morning run", gpxKey: "key/a1.gpx" });
 
-			const res = await app.inject({ method: "GET", url: `/sport/download?id=${UUID}` });
+			const res = await app.inject({ method: "GET", url: `/sport/activities/${UUID}/download` });
 
 			expect(res.statusCode).toBe(302);
 			expect(res.headers.location).toBe("https://signed.example/file");
@@ -115,7 +115,9 @@ describe("SportController", () => {
 
 		it("404s when the activity has no GPX file", async () => {
 			({ app } = await setup());
-			expect((await app.inject({ method: "GET", url: `/sport/download?id=${UUID}` })).statusCode).toBe(404);
+			expect((await app.inject({ method: "GET", url: `/sport/activities/${UUID}/download` })).statusCode).toBe(
+				404,
+			);
 		});
 	});
 
@@ -124,7 +126,7 @@ describe("SportController", () => {
 		app = ctx.app;
 		ctx.activities.findOneAndDelete.mockResolvedValueOnce({ ...ACTIVITY, gpxKey: "g.gpx", thumbnailKey: "t.avif" });
 
-		const res = await app.inject({ method: "DELETE", url: `/sport/${UUID}` });
+		const res = await app.inject({ method: "DELETE", url: `/sport/activities/${UUID}` });
 
 		expect(res.statusCode).toBe(204);
 		expect(ctx.activities.findOneAndDelete).toHaveBeenCalledWith({ id: UUID });

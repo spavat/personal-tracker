@@ -12,7 +12,7 @@ import { ContextTagsService } from "./context-tags.service.js";
 export class ContextTagsController {
 	constructor(private readonly service: ContextTagsService) {}
 
-	@Get("list")
+	@Get()
 	@SerializeOptions({ schema: ContextTagSchema })
 	list() {
 		return this.service.list();

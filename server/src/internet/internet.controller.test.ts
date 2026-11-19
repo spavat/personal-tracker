@@ -72,7 +72,7 @@ describe("InternetModule controllers", () => {
 
 		it("answers 404 to a visitor asking for a private program", async () => {
 			({ app } = await setup(null));
-			expect((await app.inject({ method: "GET", url: `/internet/id/${PROGRAM}` })).statusCode).toBe(404);
+			expect((await app.inject({ method: "GET", url: `/internet/programs/${PROGRAM}` })).statusCode).toBe(404);
 		});
 	});
 
@@ -99,7 +99,7 @@ describe("InternetModule controllers", () => {
 	describe("validation", () => {
 		it("rejects a non-uuid program id and non-uuid delete ids", async () => {
 			({ app } = await setup());
-			expect((await app.inject({ method: "GET", url: "/internet/id/nope" })).statusCode).toBe(400);
+			expect((await app.inject({ method: "GET", url: "/internet/programs/nope" })).statusCode).toBe(400);
 			expect(
 				(await app.inject({ method: "DELETE", url: "/internet/programs/nope/episodes/nope" })).statusCode,
 			).toBe(400);

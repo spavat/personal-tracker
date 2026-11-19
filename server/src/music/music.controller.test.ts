@@ -37,10 +37,10 @@ describe("MusicModule controllers", () => {
 			({ app } = await setup(null));
 
 			for (const url of [
-				"/music/list",
+				"/music/listenings",
 				"/music/search?search=rush",
 				"/music/stats?from=2024-01-01&to=2024-01-31",
-				"/music/fortnight-stats",
+				"/music/stats/fortnight",
 			]) {
 				expect((await app.inject({ method: "GET", url })).statusCode, url).toBe(200);
 			}
@@ -53,14 +53,14 @@ describe("MusicModule controllers", () => {
 			expect(
 				(await app.inject({ method: "GET", url: "/music/reports?from=2024-01-01&to=2024-01-31" })).statusCode,
 			).toBe(401);
-			expect((await app.inject({ method: "DELETE", url: `/music/${UUID}` })).statusCode).toBe(401);
+			expect((await app.inject({ method: "DELETE", url: `/music/listenings/${UUID}` })).statusCode).toBe(401);
 		});
 	});
 
 	describe("validation", () => {
 		it("rejects a non-uuid listening id", async () => {
 			({ app } = await setup());
-			expect((await app.inject({ method: "GET", url: "/music/id?id=nope" })).statusCode).toBe(400);
+			expect((await app.inject({ method: "GET", url: "/music/listenings/nope" })).statusCode).toBe(400);
 		});
 		it("rejects an incomplete genre save", async () => {
 			({ app } = await setup());
@@ -68,11 +68,11 @@ describe("MusicModule controllers", () => {
 		});
 		it("rejects an incomplete listening save", async () => {
 			({ app } = await setup());
-			expect((await app.inject({ method: "POST", url: "/music", payload: {} })).statusCode).toBe(400);
+			expect((await app.inject({ method: "POST", url: "/music/listenings", payload: {} })).statusCode).toBe(400);
 		});
 		it("rejects a non-uuid delete id", async () => {
 			({ app } = await setup());
-			expect((await app.inject({ method: "DELETE", url: "/music/nope" })).statusCode).toBe(400);
+			expect((await app.inject({ method: "DELETE", url: "/music/listenings/nope" })).statusCode).toBe(400);
 		});
 		it("requires the stats period", async () => {
 			({ app } = await setup());
@@ -81,12 +81,12 @@ describe("MusicModule controllers", () => {
 	});
 
 	describe("listenings", () => {
-		it("GET /list strips the fields outside the response schema", async () => {
+		it("GET /listenings strips the fields outside the response schema", async () => {
 			const ctx = await setup();
 			app = ctx.app;
 			ctx.listenings.find.mockReturnValueOnce(makeCursor([{ ...LISTENING, created: "2024-06-01T10:00:00" }]));
 
-			const res = await app.inject({ method: "GET", url: "/music/list" });
+			const res = await app.inject({ method: "GET", url: "/music/listenings" });
 
 			expect(res.statusCode).toBe(200);
 			expect(res.json()).toEqual([LISTENING]);
@@ -100,22 +100,22 @@ describe("MusicModule controllers", () => {
 			expect(ctx.listenings.aggregate).toHaveBeenCalledTimes(1);
 		});
 
-		it("GET /id loads one listening without its Mongo _id", async () => {
+		it("GET /listenings/:id loads one listening without its Mongo _id", async () => {
 			const ctx = await setup();
 			app = ctx.app;
 			ctx.listenings.findOne.mockResolvedValueOnce({ _id: "mongo-id", ...LISTENING });
 
-			const res = await app.inject({ method: "GET", url: `/music/id?id=${UUID}` });
+			const res = await app.inject({ method: "GET", url: `/music/listenings/${UUID}` });
 
 			expect(res.statusCode).toBe(200);
 			expect(res.json()).toEqual(LISTENING);
 			expect(ctx.listenings.findOne).toHaveBeenCalledWith({ id: UUID });
 		});
 
-		it("GET /id 404s for an unknown listening", async () => {
+		it("GET /listenings/:id 404s for an unknown listening", async () => {
 			({ app } = await setup());
 
-			const res = await app.inject({ method: "GET", url: `/music/id?id=${UUID}` });
+			const res = await app.inject({ method: "GET", url: `/music/listenings/${UUID}` });
 
 			expect(res.statusCode).toBe(404);
 			expect(res.json()).toMatchObject({ message: "Écoute introuvable" });
@@ -126,7 +126,7 @@ describe("MusicModule controllers", () => {
 			app = ctx.app;
 			const { id, ...body } = LISTENING;
 
-			const res = await app.inject({ method: "POST", url: "/music", payload: body });
+			const res = await app.inject({ method: "POST", url: "/music/listenings", payload: body });
 
 			expect(res.statusCode).toBe(201);
 			expect(ctx.listenings.insertOne).toHaveBeenCalledTimes(1);
@@ -139,11 +139,11 @@ describe("MusicModule controllers", () => {
 			const { id, ...body } = LISTENING;
 			ctx.listenings.findOneAndUpdate.mockResolvedValueOnce(LISTENING);
 
-			const res = await app.inject({ method: "PUT", url: `/music/${UUID}`, payload: body });
+			const res = await app.inject({ method: "PUT", url: `/music/listenings/${UUID}`, payload: body });
 			expect(res.statusCode).toBe(200);
 			expect(res.json()).toEqual(LISTENING);
 
-			const unknown = await app.inject({ method: "PUT", url: `/music/${UUID}`, payload: body });
+			const unknown = await app.inject({ method: "PUT", url: `/music/listenings/${UUID}`, payload: body });
 			expect(unknown.statusCode).toBe(404);
 		});
 
@@ -151,7 +151,7 @@ describe("MusicModule controllers", () => {
 			const ctx = await setup();
 			app = ctx.app;
 
-			const res = await app.inject({ method: "DELETE", url: `/music/${UUID}` });
+			const res = await app.inject({ method: "DELETE", url: `/music/listenings/${UUID}` });
 
 			expect(res.statusCode).toBe(204);
 			expect(ctx.listenings.deleteOne).toHaveBeenCalledWith({ id: UUID });

@@ -16,7 +16,7 @@ import {
 import {
 	CropBodyRequestSchema,
 	DeleteParamsRequestSchema,
-	DetailsQuerystringRequestSchema,
+	DetailsParamsRequestSchema,
 	DetailsResponseSchema,
 	ListQuerystringRequestSchema,
 	ListResponseSchema,
@@ -31,32 +31,32 @@ import { SportService } from "./sport.service.js";
 export class SportController {
 	constructor(private readonly service: SportService) {}
 
-	@Get("list")
+	@Get("activities")
 	@SerializeOptions({ schema: ListResponseSchema.element })
 	list(@Query({ schema: ListQuerystringRequestSchema }) query: z.infer<typeof ListQuerystringRequestSchema>) {
 		return this.service.list(query);
 	}
 
-	@Get("id")
+	@Get("activities/:id")
 	@SerializeOptions({ schema: DetailsResponseSchema })
-	get(@Query({ schema: DetailsQuerystringRequestSchema }) { id }: { id: string }) {
+	get(@Param({ schema: DetailsParamsRequestSchema }) { id }: { id: string }) {
 		return this.service.get(id);
 	}
 
 	// @Redirect() without a url: the handler returns it (302, as Fastify's reply.redirect)
-	@Get("download")
+	@Get("activities/:id/download")
 	@Redirect()
-	async download(@Query({ schema: DetailsQuerystringRequestSchema }) { id }: { id: string }) {
+	async download(@Param({ schema: DetailsParamsRequestSchema }) { id }: { id: string }) {
 		return { url: await this.service.downloadUrl(id) };
 	}
 
-	@Post()
+	@Post("activities")
 	@SerializeOptions({ schema: DetailsResponseSchema })
 	create(@Body({ schema: SaveBodyRequestSchema }) body: SaveBodyRequest) {
 		return this.service.create(body);
 	}
 
-	@Put(":id")
+	@Put("activities/:id")
 	@SerializeOptions({ schema: DetailsResponseSchema })
 	update(
 		@Param({ schema: DeleteParamsRequestSchema }) { id }: { id: string },
@@ -65,13 +65,13 @@ export class SportController {
 		return this.service.update(id, body);
 	}
 
-	@Delete(":id")
+	@Delete("activities/:id")
 	@HttpCode(204)
 	async delete(@Param({ schema: DeleteParamsRequestSchema }) { id }: { id: string }) {
 		await this.service.delete(id);
 	}
 
-	@Put(":id/segments")
+	@Put("activities/:id/segments")
 	@SerializeOptions({ schema: DetailsResponseSchema })
 	updateSegments(
 		@Param({ schema: DeleteParamsRequestSchema }) { id }: { id: string },
@@ -83,7 +83,7 @@ export class SportController {
 	}
 
 	// an action on the activity (not a CRUD write): 200 with the cropped activity
-	@Post(":id/crop")
+	@Post("activities/:id/crop")
 	@HttpCode(200)
 	@SerializeOptions({ schema: DetailsResponseSchema })
 	crop(

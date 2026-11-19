@@ -20,7 +20,7 @@ import { API_BASE_URL } from "../../config";
 // CATEGORIES
 //
 async function getCategories(): Promise<Array<LifespanCategory>> {
-	const data = await fetchJson(`${API_BASE_URL}/lifespan/categories/list`);
+	const data = await fetchJson(`${API_BASE_URL}/lifespan/categories`);
 	const parsedResponse = LifespanCategoryListResponseSchema.safeParse(data);
 	if (!parsedResponse.success) {
 		console.error(parsedResponse.error);

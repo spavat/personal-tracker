@@ -107,7 +107,7 @@ test.describe("Sport - Add an activity", () => {
 		await expect(page.getByRole("button", { name: "Télécharger le fichier GPX" })).toBeVisible();
 
 		// The GPX file is stored in S3, behind a signed URL
-		const download = await request.get(`${API_URL}/sport/download?id=${id}`, { maxRedirects: 0 });
+		const download = await request.get(`${API_URL}/sport/activities/${id}/download`, { maxRedirects: 0 });
 		expect(download.status()).toBe(302);
 		const fileUrl = download.headers().location;
 		const file = await request.get(fileUrl);

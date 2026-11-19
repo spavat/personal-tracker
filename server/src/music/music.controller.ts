@@ -3,7 +3,7 @@ import type { z } from "zod";
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, SerializeOptions } from "@nestjs/common";
 import {
 	DeleteParamsRequestSchema,
-	DetailsQuerystringRequestSchema,
+	DetailsParamsRequestSchema,
 	DetailsResponseSchema,
 	FortnightStatsResponseSchema,
 	GetReportQuerystringRequestSchema,
@@ -31,7 +31,7 @@ export class MusicController {
 		private readonly stats: MusicStatsService,
 	) {}
 
-	@Get("list")
+	@Get("listenings")
 	@Public()
 	@SerializeOptions({ schema: ListResponseSchema.element })
 	list(@Query({ schema: ListQuerystringRequestSchema }) query: z.infer<typeof ListQuerystringRequestSchema>) {
@@ -47,20 +47,20 @@ export class MusicController {
 		return this.service.search(search);
 	}
 
-	@Get("id")
+	@Get("listenings/:id")
 	@Public()
 	@SerializeOptions({ schema: DetailsResponseSchema })
-	get(@Query({ schema: DetailsQuerystringRequestSchema }) { id }: { id: string }) {
+	get(@Param({ schema: DetailsParamsRequestSchema }) { id }: { id: string }) {
 		return this.service.get(id);
 	}
 
-	@Post()
+	@Post("listenings")
 	@SerializeOptions({ schema: DetailsResponseSchema })
 	create(@Body({ schema: SaveBodyRequestSchema }) body: SaveListeningBody) {
 		return this.service.create(body);
 	}
 
-	@Put(":id")
+	@Put("listenings/:id")
 	@SerializeOptions({ schema: DetailsResponseSchema })
 	update(
 		@Param({ schema: DeleteParamsRequestSchema }) { id }: { id: string },
@@ -69,7 +69,7 @@ export class MusicController {
 		return this.service.update(id, body);
 	}
 
-	@Delete(":id")
+	@Delete("listenings/:id")
 	@HttpCode(204)
 	async delete(@Param({ schema: DeleteParamsRequestSchema }) { id }: { id: string }) {
 		await this.service.delete(id);
@@ -82,7 +82,7 @@ export class MusicController {
 		return this.stats.stats(query);
 	}
 
-	@Get("fortnight-stats")
+	@Get("stats/fortnight")
 	@Public()
 	@SerializeOptions({ schema: FortnightStatsResponseSchema.element })
 	fortnightStats() {

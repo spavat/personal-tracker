@@ -13,7 +13,7 @@ import { LifespanCategoriesService } from "./categories.service.js";
 export class LifespanCategoriesController {
 	constructor(private readonly service: LifespanCategoriesService) {}
 
-	@Get("list")
+	@Get()
 	@SerializeOptions({ schema: LifespanCategoryListResponseSchema.element })
 	list() {
 		return this.service.list();

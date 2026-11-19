@@ -62,7 +62,7 @@ export const programListSort: SortListConfig<ProgramSummaryItem> = {
 };
 
 async function getProgramDetails(id: string) {
-	return fetchJson<ProgramDetails>(`${API_BASE_URL}/internet/id/${id}`);
+	return fetchJson<ProgramDetails>(`${API_BASE_URL}/internet/programs/${id}`);
 }
 export const programDetailsQuery = (id: string) =>
 	queryOptions({
