@@ -116,6 +116,21 @@ describe("ContextTagsController", () => {
 		});
 	});
 
+	it("refuses a body over 100kb: only the upload routes take up to 15mb", async () => {
+		const ctx = await setup();
+		app = ctx.app;
+
+		const res = await app.inject({
+			method: "POST",
+			url: "/context-tags",
+			payload: { name: "x".repeat(200 * 1024), tags: [] },
+		});
+
+		expect(res.statusCode).toBe(413);
+		expect(res.json()).toMatchObject({ statusCode: 413, code: "http_error" });
+		expect(ctx.tags.insertOne).not.toHaveBeenCalled();
+	});
+
 	describe("PUT /context-tags/:id", () => {
 		it("answers 200 with the updated tag", async () => {
 			const ctx = await setup();
