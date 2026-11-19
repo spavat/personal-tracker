@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 
 import type { moneyCategory } from "../database/schema.js";
 
-import { getMonthsBetween } from "../common/utils.date.js";
+import { getMonthsBetween } from "../common/date.utils.js";
 import { CategoriesRepository } from "./categories/categories.repository.js";
 import { TransactionsRepository } from "./transactions/transactions.repository.js";
 

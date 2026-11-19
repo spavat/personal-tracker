@@ -1,7 +1,7 @@
 import { Test } from "@nestjs/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../fetch-latest.js", () => ({
+vi.mock("../episode-feed.client.js", () => ({
 	fetchLatestEpisodes: vi.fn().mockResolvedValue([]),
 	fetchPodcastTitle: vi.fn().mockResolvedValue(undefined),
 }));
@@ -11,7 +11,7 @@ vi.mock("./sync.entity.js", async (importOriginal) => ({
 }));
 
 import { ConflictError, NotFoundError } from "../../common/errors.js";
-import { fetchLatestEpisodes, fetchPodcastTitle } from "../fetch-latest.js";
+import { fetchLatestEpisodes, fetchPodcastTitle } from "../episode-feed.client.js";
 import { InternetImagesStorage } from "../internet-images.storage.js";
 import { InternetRepository } from "../internet.repository.js";
 import { InternetService } from "../internet.service.js";

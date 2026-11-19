@@ -1,19 +1,19 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { ArtistRepository } from "./artists/artist.repository.js";
-import { PerformanceRepository } from "./performances/performance.repository.js";
-import { PlaceRepository } from "./places/place.repository.js";
-import { SpectacleRepository } from "./spectacles/spectacle.repository.js";
+import { ArtistsRepository } from "./artists/artists.repository.js";
+import { PerformancesRepository } from "./performances/performances.repository.js";
+import { PlacesRepository } from "./places/places.repository.js";
+import { SpectaclesRepository } from "./spectacles/spectacles.repository.js";
 
 @Injectable()
 export class ShowService {
 	private readonly logger = new Logger(ShowService.name);
 
 	constructor(
-		private readonly spectacleRepo: SpectacleRepository,
-		private readonly artistRepo: ArtistRepository,
-		private readonly placeRepo: PlaceRepository,
-		private readonly performanceRepo: PerformanceRepository,
+		private readonly spectacleRepo: SpectaclesRepository,
+		private readonly artistRepo: ArtistsRepository,
+		private readonly placeRepo: PlacesRepository,
+		private readonly performanceRepo: PerformancesRepository,
 	) {}
 
 	async search(search: string) {

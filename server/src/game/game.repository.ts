@@ -6,7 +6,7 @@ import { Db, UpdateFilter } from "mongodb";
 import type { GameMongo, PlayMongo } from "./game.entity.js";
 
 import { MONGO_DB } from "../database/database.tokens.js";
-import { accentInsensitiveRegex } from "../database/mongo-search.js";
+import { accentInsensitiveRegex } from "../database/mongo-search.query.js";
 
 interface GameListFilters {
 	search: string;

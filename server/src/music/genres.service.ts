@@ -2,7 +2,7 @@ import type { MusicGenre } from "@personal-tracker/shared/music";
 
 import { Injectable, Logger } from "@nestjs/common";
 
-import { buildGenre } from "./genres.entity.js";
+import { buildGenre } from "./genre.entity.js";
 import { GenresRepository } from "./genres.repository.js";
 
 @Injectable()

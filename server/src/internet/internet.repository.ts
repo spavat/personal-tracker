@@ -3,7 +3,7 @@ import { Db, UpdateFilter } from "mongodb";
 
 import { privacyMatch } from "../common/request-context.js";
 import { MONGO_DB } from "../database/database.tokens.js";
-import { accentInsensitiveRegex } from "../database/mongo-search.js";
+import { accentInsensitiveRegex } from "../database/mongo-search.query.js";
 import { EpisodeMongo, ProgramMongo } from "./internet.entity.js";
 
 // Not sent by the episode form when empty (see onSubmitEpisode and cleanEpisode)

@@ -1,19 +1,19 @@
 import { Test } from "@nestjs/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./extractor.js", () => ({
+vi.mock("./video-info.client.js", () => ({
 	getFranceTvVideoInfo: vi.fn(),
 	getYoutubeChannelInfo: vi.fn(),
 	getYoutubeVideoInfo: vi.fn(),
 }));
-vi.mock("./fetch-latest.js", () => ({ getPodcastCoverImageUrl: vi.fn() }));
+vi.mock("./episode-feed.client.js", () => ({ getPodcastCoverImageUrl: vi.fn() }));
 
 import { NotFoundError } from "../common/errors.js";
-import { getFranceTvVideoInfo, getYoutubeChannelInfo } from "./extractor.js";
-import { getPodcastCoverImageUrl } from "./fetch-latest.js";
+import { getPodcastCoverImageUrl } from "./episode-feed.client.js";
 import { InternetImagesStorage } from "./internet-images.storage.js";
 import { InternetRepository } from "./internet.repository.js";
 import { InternetService } from "./internet.service.js";
+import { getFranceTvVideoInfo, getYoutubeChannelInfo } from "./video-info.client.js";
 
 const PROGRAM = "11111111-1111-4111-8111-111111111111";
 

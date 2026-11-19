@@ -10,9 +10,9 @@ import { BadRequestError, ConflictError, NotFoundError, UpstreamError } from "..
 import { buildPlay } from "../game.entity.js";
 import { type AutoPlayMongo, GameRepository } from "../game.repository.js";
 import { CredentialRepository } from "./credential.repository.js";
-import { GameEnricher } from "./game-enricher.js";
+import { GameEnricher } from "./game.enricher.js";
 import { type Snapshot, SnapshotRepository } from "./snapshot.repository.js";
-import { STORE_CONNECTORS } from "./store-connectors.js";
+import { STORE_CONNECTORS } from "./store-connectors.provider.js";
 import {
 	attributeDay,
 	buildImportRows,

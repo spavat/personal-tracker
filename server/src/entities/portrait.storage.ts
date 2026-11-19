@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { randomBytes } from "node:crypto";
 
 import { BadRequestError } from "../common/errors.js";
-import { fetchImageBuffer, processImage } from "../storage/image-processing.js";
+import { fetchImageBuffer, processImage } from "../storage/image.utils.js";
 import { ObjectStorage } from "../storage/object-storage.js";
 import { PORTRAIT_URL_PREFIX, portraitKey } from "./entity.entity.js";
 

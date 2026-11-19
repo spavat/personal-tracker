@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { SaveContextTagBody } from "@personal-tracker/shared/context-tag";
 
 import { NotFoundError } from "../common/errors.js";
-import { buildContextTag } from "./context-tags.entity.js";
+import { buildContextTag } from "./context-tag.entity.js";
 import { ContextTagsRepository } from "./context-tags.repository.js";
 
 @Injectable()

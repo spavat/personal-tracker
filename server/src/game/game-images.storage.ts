@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 
-import { fetchImageBuffer, type ImageSize, processImage } from "../storage/image-processing.js";
+import { fetchImageBuffer, type ImageSize, processImage } from "../storage/image.utils.js";
 import { ObjectStorage } from "../storage/object-storage.js";
 
 export const GAME_IMAGE_FIELDS = ["capsule", "header"] as const;

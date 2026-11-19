@@ -4,7 +4,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { Db } from "mongodb";
 
 import { MONGO_DB } from "../../database/database.tokens.js";
-import { LifespanObjectMongo } from "../objects/objects.entity.js";
+import { LifespanObjectMongo } from "../objects/object.entity.js";
 
 @Injectable()
 export class LifespanCategoriesRepository {

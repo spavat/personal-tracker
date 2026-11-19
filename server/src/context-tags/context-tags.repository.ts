@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { Db } from "mongodb";
 
 import { MONGO_DB } from "../database/database.tokens.js";
-import { ContextTag } from "./context-tags.entity.js";
+import { ContextTag } from "./context-tag.entity.js";
 
 @Injectable()
 export class ContextTagsRepository {

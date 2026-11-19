@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildGenre, mapSubGenres } from "./genres.entity.js";
+import { buildGenre, mapSubGenres } from "./genre.entity.js";
 import { cleanListening, getDaysBetween, getDaysForAverageCount, sortByDuration, sortByKey } from "./music.entity.js";
 
 describe("buildGenre", () => {

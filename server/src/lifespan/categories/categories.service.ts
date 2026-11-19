@@ -3,8 +3,8 @@ import type { LifespanCategorySaveBodyRequestType } from "@personal-tracker/shar
 import { Injectable, Logger } from "@nestjs/common";
 
 import { ConflictError } from "../../common/errors.js";
-import { buildLifespanCategory, isOwnDescendant } from "./categories.entity.js";
 import { LifespanCategoriesRepository } from "./categories.repository.js";
+import { buildLifespanCategory, isOwnDescendant } from "./category.entity.js";
 
 export type DeleteLifespanCategoryResult = { deleted: true } | { deleted: false; reason: "has_children" | "in_use" };
 

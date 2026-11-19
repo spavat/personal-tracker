@@ -9,7 +9,7 @@ import type { GameImageField } from "../game/game-images.storage.js";
 
 import { Public } from "../auth/public.decorator.js";
 import { NotFoundError } from "../common/errors.js";
-import { EntityRepository } from "../entities/entity.repository.js";
+import { EntitiesRepository } from "../entities/entities.repository.js";
 import { GameRepository } from "../game/game.repository.js";
 import { InternetRepository } from "../internet/internet.repository.js";
 import { BookRepository } from "../reading-book/book.repository.js";
@@ -32,7 +32,7 @@ export class ImagesController {
 		private readonly storage: ObjectStorage,
 		private readonly internet: InternetRepository,
 		private readonly books: BookRepository,
-		private readonly entities: EntityRepository,
+		private readonly entities: EntitiesRepository,
 		private readonly sport: SportRepository,
 		private readonly games: GameRepository,
 		private readonly media: MediaRepository,

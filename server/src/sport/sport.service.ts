@@ -7,7 +7,7 @@ import { BadRequestError, NotFoundError } from "../common/errors.js";
 import { SportFilesStorage } from "./sport-files.storage.js";
 import { buildGpxKey, buildThumbnailKey, cropActivity, extractGPXData } from "./sport.entity.js";
 import { SportRepository } from "./sport.repository.js";
-import { generateThumbnail } from "./thumbnail.js";
+import { generateThumbnail } from "./thumbnail.utils.js";
 
 @Injectable()
 export class SportService {

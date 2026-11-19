@@ -3,7 +3,7 @@ import type { CreateTagBody, UpdateTagBody } from "@personal-tracker/shared/mone
 import { Injectable, Logger } from "@nestjs/common";
 
 import { ConflictError, NotFoundError } from "../../common/errors.js";
-import { type Analytic, type AnalyticBadge, sortByNames, type WIPAnalyticPart } from "./tags.entity.js";
+import { type Analytic, type AnalyticBadge, sortByNames, type WIPAnalyticPart } from "./tag.entity.js";
 import { TagsRepository } from "./tags.repository.js";
 
 @Injectable()

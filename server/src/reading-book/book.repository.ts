@@ -16,7 +16,7 @@ import type { EditionType, ReadingStatus } from "./book.entity.js";
 
 import { DRIZZLE } from "../database/database.tokens.js";
 import { Drizzle } from "../database/drizzle.js";
-import { createNode, type EntityKind, renameNode, type Tx } from "../database/node.js";
+import { createNode, type EntityKind, renameNode, type Tx } from "../database/node.query.js";
 import {
 	coreEntity,
 	coreNode,

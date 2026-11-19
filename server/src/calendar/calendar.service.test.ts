@@ -5,7 +5,7 @@ import type { InternetRepository } from "../internet/internet.repository.js";
 import type { MusicRepository } from "../music/music.repository.js";
 import type { BookRepository } from "../reading-book/book.repository.js";
 import type { ReadingMangaRepository } from "../reading-manga/reading-manga.repository.js";
-import type { PerformanceRepository } from "../show/performances/performance.repository.js";
+import type { PerformancesRepository } from "../show/performances/performances.repository.js";
 
 import { CalendarService } from "./calendar.service.js";
 
@@ -25,7 +25,7 @@ function build(f: ReturnType<typeof fakes>) {
 		f.internet as unknown as InternetRepository,
 		f.book as unknown as BookRepository,
 		f.manga as unknown as ReadingMangaRepository,
-		f.performance as unknown as PerformanceRepository,
+		f.performance as unknown as PerformancesRepository,
 		f.game as unknown as GameRepository,
 	);
 }
@@ -57,7 +57,7 @@ describe("CalendarService.daily", () => {
 			f.internet as unknown as InternetRepository,
 			f.book as unknown as BookRepository,
 			f.manga as unknown as ReadingMangaRepository,
-			f.performance as unknown as PerformanceRepository,
+			f.performance as unknown as PerformancesRepository,
 			f.game as unknown as GameRepository,
 		);
 		expect(await service.daily("2024-05-01")).toEqual({});

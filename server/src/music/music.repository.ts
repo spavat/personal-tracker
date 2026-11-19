@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { Db } from "mongodb";
 
 import { MONGO_DB } from "../database/database.tokens.js";
-import { accentInsensitiveRegex } from "../database/mongo-search.js";
+import { accentInsensitiveRegex } from "../database/mongo-search.query.js";
 import { StoredListening } from "./music.entity.js";
 
 @Injectable()

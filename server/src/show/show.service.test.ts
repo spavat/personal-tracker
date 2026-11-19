@@ -1,19 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { ArtistRepository } from "./artists/artist.repository.js";
-import type { PerformanceRepository } from "./performances/performance.repository.js";
-import type { PlaceRepository } from "./places/place.repository.js";
-import type { SpectacleRepository } from "./spectacles/spectacle.repository.js";
+import type { ArtistsRepository } from "./artists/artists.repository.js";
+import type { PerformancesRepository } from "./performances/performances.repository.js";
+import type { PlacesRepository } from "./places/places.repository.js";
+import type { SpectaclesRepository } from "./spectacles/spectacles.repository.js";
 
 import { ShowService } from "./show.service.js";
 
 describe("ShowService.search", () => {
 	it("returns nothing for an empty search", async () => {
 		const service = new ShowService(
-			{} as SpectacleRepository,
-			{} as ArtistRepository,
-			{} as PlaceRepository,
-			{} as PerformanceRepository,
+			{} as SpectaclesRepository,
+			{} as ArtistsRepository,
+			{} as PlacesRepository,
+			{} as PerformancesRepository,
 		);
 		expect(await service.search("")).toEqual([]);
 	});
@@ -26,10 +26,10 @@ describe("ShowService.search", () => {
 		const placeRepo = { findByName: vi.fn().mockResolvedValue([{ id: 3, name: "Bastille" }]) };
 
 		const service = new ShowService(
-			spectacleRepo as unknown as SpectacleRepository,
-			artistRepo as unknown as ArtistRepository,
-			placeRepo as unknown as PlaceRepository,
-			{} as PerformanceRepository,
+			spectacleRepo as unknown as SpectaclesRepository,
+			artistRepo as unknown as ArtistsRepository,
+			placeRepo as unknown as PlacesRepository,
+			{} as PerformancesRepository,
 		);
 
 		expect(await service.search("to")).toEqual([
@@ -44,10 +44,10 @@ describe("ShowService.report", () => {
 	function build(performances: unknown[]) {
 		const repo = { findAll: vi.fn().mockResolvedValue(performances) };
 		return new ShowService(
-			{} as SpectacleRepository,
-			{} as ArtistRepository,
-			{} as PlaceRepository,
-			repo as unknown as PerformanceRepository,
+			{} as SpectaclesRepository,
+			{} as ArtistsRepository,
+			{} as PlacesRepository,
+			repo as unknown as PerformancesRepository,
 		);
 	}
 

@@ -1,25 +1,25 @@
 import { Module } from "@nestjs/common";
 import { RouterModule } from "@nestjs/core";
 
-import { ArtistModule } from "./artists/artist.module.js";
+import { ArtistsModule } from "./artists/artists.module.js";
 import { MediaModule } from "./media/media.module.js";
-import { ModelModule } from "./models/model.module.js";
-import { PerformanceModule } from "./performances/performance.module.js";
-import { PlaceModule } from "./places/place.module.js";
+import { ModelsModule } from "./models/models.module.js";
+import { PerformancesModule } from "./performances/performances.module.js";
+import { PlacesModule } from "./places/places.module.js";
 import { ShowSharedModule } from "./show-shared.module.js";
 import { ShowController } from "./show.controller.js";
 import { ShowService } from "./show.service.js";
-import { SpectacleModule } from "./spectacles/spectacle.module.js";
-import { WorkModule } from "./works/work.module.js";
+import { SpectaclesModule } from "./spectacles/spectacles.module.js";
+import { WorksModule } from "./works/works.module.js";
 
 const CHILDREN = [
-	{ path: "artists", module: ArtistModule },
+	{ path: "artists", module: ArtistsModule },
 	{ path: "media", module: MediaModule },
-	{ path: "models", module: ModelModule },
-	{ path: "performances", module: PerformanceModule },
-	{ path: "places", module: PlaceModule },
-	{ path: "spectacles", module: SpectacleModule },
-	{ path: "works", module: WorkModule },
+	{ path: "models", module: ModelsModule },
+	{ path: "performances", module: PerformancesModule },
+	{ path: "places", module: PlacesModule },
+	{ path: "spectacles", module: SpectaclesModule },
+	{ path: "works", module: WorksModule },
 ];
 
 @Module({

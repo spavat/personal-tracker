@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { asc, desc, eq, inArray, sql } from "drizzle-orm";
 
-import { contains } from "../../database/contains.js";
+import { contains } from "../../database/contains.query.js";
 import { DRIZZLE } from "../../database/database.tokens.js";
 import { Drizzle } from "../../database/drizzle.js";
 import { moneyTransaction, moneyTransactionTag } from "../../database/schema.js";

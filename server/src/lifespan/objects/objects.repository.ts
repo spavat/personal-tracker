@@ -2,8 +2,8 @@ import { Inject, Injectable } from "@nestjs/common";
 import { Db, UpdateFilter } from "mongodb";
 
 import { MONGO_DB } from "../../database/database.tokens.js";
-import { accentInsensitiveRegex } from "../../database/mongo-search.js";
-import { LifespanEventMongo, LifespanObjectMongo, LifespanObjectWithStatusMongo } from "./objects.entity.js";
+import { accentInsensitiveRegex } from "../../database/mongo-search.query.js";
+import { LifespanEventMongo, LifespanObjectMongo, LifespanObjectWithStatusMongo } from "./object.entity.js";
 
 interface LifespanObjectListFilters {
 	search: string;

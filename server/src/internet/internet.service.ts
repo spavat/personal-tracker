@@ -10,11 +10,11 @@ import { Injectable, Logger } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 
 import { NotFoundError } from "../common/errors.js";
-import { getFranceTvVideoInfo, getYoutubeChannelInfo, getYoutubeVideoInfo } from "./extractor.js";
-import { getPodcastCoverImageUrl } from "./fetch-latest.js";
+import { getPodcastCoverImageUrl } from "./episode-feed.client.js";
 import { InternetImagesStorage, type InternetImageKind } from "./internet-images.storage.js";
 import { buildEpisode, cleanEpisode, getDetails, type ProgramMongo, sortEpisodesDesc } from "./internet.entity.js";
 import { InternetRepository } from "./internet.repository.js";
+import { getFranceTvVideoInfo, getYoutubeChannelInfo, getYoutubeVideoInfo } from "./video-info.client.js";
 
 export type ProgramListQuery = z.infer<typeof ProgramListQuerystringRequestSchema>;
 export type EpisodeListQuery = z.infer<typeof EpisodeListQuerystringRequestSchema>;

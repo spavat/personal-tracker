@@ -8,7 +8,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 
 import { NotFoundError } from "../../common/errors.js";
-import { buildLifespanEvent, missingFields, sortEventsDesc } from "./objects.entity.js";
+import { buildLifespanEvent, missingFields, sortEventsDesc } from "./object.entity.js";
 import { LifespanObjectsRepository } from "./objects.repository.js";
 
 const CLEARABLE_OBJECT_FIELDS = ["description"] as const;

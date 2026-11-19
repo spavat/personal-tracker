@@ -13,7 +13,7 @@ import { MusicRepository } from "../music/music.repository.js";
 import { BookRepository } from "../reading-book/book.repository.js";
 import { ReadingMangaRepository } from "../reading-manga/reading-manga.repository.js";
 import { toPerformanceView } from "../show/performances/performance.entity.js";
-import { PerformanceRepository } from "../show/performances/performance.repository.js";
+import { PerformancesRepository } from "../show/performances/performances.repository.js";
 
 const LATEST_GAMES = 3;
 const LATEST_SHOWS = 6;
@@ -30,7 +30,7 @@ export class HomeService {
 	constructor(
 		private readonly gameRepo: GameRepository,
 		private readonly gameImages: GameImagesStorage,
-		private readonly performanceRepo: PerformanceRepository,
+		private readonly performanceRepo: PerformancesRepository,
 		private readonly musicRepo: MusicRepository,
 		private readonly internetRepo: InternetRepository,
 		private readonly internetImages: InternetImagesStorage,

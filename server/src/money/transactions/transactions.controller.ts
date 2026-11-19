@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query } from "@nestjs/common";
 import * as z from "zod";
 
-import type { TransactionBody } from "./transactions.entity.js";
+import type { TransactionBody } from "./transaction.entity.js";
 
 import { type ListTransactionsQuery, TransactionsService } from "./transactions.service.js";
 

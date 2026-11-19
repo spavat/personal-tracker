@@ -9,7 +9,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 
 import { ConflictError, NotFoundError } from "../../common/errors.js";
-import { fetchLatestEpisodes, fetchPodcastTitle } from "../fetch-latest.js";
+import { fetchLatestEpisodes, fetchPodcastTitle } from "../episode-feed.client.js";
 import { InternetImagesStorage } from "../internet-images.storage.js";
 import { InternetRepository } from "../internet.repository.js";
 import { InternetService } from "../internet.service.js";

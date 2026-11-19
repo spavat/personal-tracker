@@ -1,6 +1,6 @@
 import type { ArtistMedia, SpectacleMedia, SpectacleMediaKind } from "@personal-tracker/shared/show";
 
-import type { ImageSize } from "../../storage/image-processing.js";
+import type { ImageSize } from "../../storage/image.utils.js";
 
 export const SHOW_IMAGE_SIZE = {
 	poster: { width: 600, height: 900 },

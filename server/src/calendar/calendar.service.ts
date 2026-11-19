@@ -6,7 +6,7 @@ import { MusicRepository } from "../music/music.repository.js";
 import { buildTitleMap } from "../reading-book/book.entity.js";
 import { BookRepository } from "../reading-book/book.repository.js";
 import { ReadingMangaRepository } from "../reading-manga/reading-manga.repository.js";
-import { PerformanceRepository } from "../show/performances/performance.repository.js";
+import { PerformancesRepository } from "../show/performances/performances.repository.js";
 
 function getMonthBounds(yyyyMm: string) {
 	// Parse "YYYY-MM" into a PlainYearMonth
@@ -30,7 +30,7 @@ export class CalendarService {
 		private readonly internetRepo: InternetRepository,
 		private readonly bookRepo: BookRepository,
 		private readonly mangaRepo: ReadingMangaRepository,
-		private readonly performanceRepo: PerformanceRepository,
+		private readonly performanceRepo: PerformancesRepository,
 		private readonly gameRepo: GameRepository,
 	) {}
 

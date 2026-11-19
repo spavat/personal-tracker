@@ -7,10 +7,10 @@ import type { GameRepository } from "../game.repository.js";
 import type { StoreConnector, StoreGame } from "./connector.js";
 import type { CredentialRepository } from "./credential.repository.js";
 import type { Snapshot, SnapshotRepository } from "./snapshot.repository.js";
-import type { SteamStore } from "./steam-store.js";
+import type { SteamStore } from "./steam-store.client.js";
 
-import { GameEnricher } from "./game-enricher.js";
 import { GameSyncService } from "./game-sync.service.js";
+import { GameEnricher } from "./game.enricher.js";
 
 // --- in-memory repositories, so a run and its replay can be compared on the resulting plays ---
 

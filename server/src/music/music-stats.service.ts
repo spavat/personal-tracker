@@ -2,8 +2,8 @@ import type { GetReportResponse, StatsResponse } from "@personal-tracker/shared/
 
 import { Injectable, Logger } from "@nestjs/common";
 
-import { getMonthsBetween } from "../common/utils.date.js";
-import { mapSubGenres } from "./genres.entity.js";
+import { getMonthsBetween } from "../common/date.utils.js";
+import { mapSubGenres } from "./genre.entity.js";
 import { GenresRepository } from "./genres.repository.js";
 import { getDaysBetween, getDaysForAverageCount, sortByDuration, sortByKey, StatsDuration } from "./music.entity.js";
 import { MusicRepository } from "./music.repository.js";

@@ -2,26 +2,26 @@ import { Module } from "@nestjs/common";
 
 import { DatabaseModule } from "../database/database.module.js";
 import { StorageModule } from "../storage/storage.module.js";
-import { ArtistRepository } from "./artists/artist.repository.js";
+import { ArtistsRepository } from "./artists/artists.repository.js";
 import { MediaStorageRepository } from "./media/media-storage.repository.js";
 import { MediaRepository } from "./media/media.repository.js";
-import { ModelRepository } from "./models/model.repository.js";
-import { PerformanceRepository } from "./performances/performance.repository.js";
-import { PlaceRepository } from "./places/place.repository.js";
-import { SpectacleRepository } from "./spectacles/spectacle.repository.js";
-import { WorkRepository } from "./works/work.repository.js";
+import { ModelsRepository } from "./models/models.repository.js";
+import { PerformancesRepository } from "./performances/performances.repository.js";
+import { PlacesRepository } from "./places/places.repository.js";
+import { SpectaclesRepository } from "./spectacles/spectacles.repository.js";
+import { WorksRepository } from "./works/works.repository.js";
 
 // The repositories of every show sub-domain: some services read several (a performance deletes its media,
 // the search reads spectacles, artists and places). Its own module so the sub-modules don't import their parent.
 const REPOSITORIES = [
-	ArtistRepository,
+	ArtistsRepository,
 	MediaRepository,
 	MediaStorageRepository,
-	ModelRepository,
-	PerformanceRepository,
-	PlaceRepository,
-	SpectacleRepository,
-	WorkRepository,
+	ModelsRepository,
+	PerformancesRepository,
+	PlacesRepository,
+	SpectaclesRepository,
+	WorksRepository,
 ];
 
 @Module({

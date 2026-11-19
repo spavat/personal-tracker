@@ -7,7 +7,7 @@ import type {
 import { Injectable, Logger } from "@nestjs/common";
 
 import { BadRequestError, UpstreamError } from "../../common/errors.js";
-import { fetchLatestEpisodes } from "../fetch-latest.js";
+import { fetchLatestEpisodes } from "../episode-feed.client.js";
 import { InternetRepository } from "../internet.repository.js";
 import { LatestEpisodesCache } from "../latest-episodes.cache.js";
 

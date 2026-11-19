@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 
 import { NotFoundError } from "../../common/errors.js";
-import { mergeAndSortTransactions, normalizeTransactionRefs, type TransactionBody } from "./transactions.entity.js";
+import { mergeAndSortTransactions, normalizeTransactionRefs, type TransactionBody } from "./transaction.entity.js";
 import { TransactionsRepository } from "./transactions.repository.js";
 
 export interface ListTransactionsQuery {

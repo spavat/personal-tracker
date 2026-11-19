@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 
 import { BadRequestError } from "../../common/errors.js";
-import { fetchImageBuffer, processImage } from "../../storage/image-processing.js";
+import { fetchImageBuffer, processImage } from "../../storage/image.utils.js";
 import { ObjectStorage } from "../../storage/object-storage.js";
 import { SHOW_IMAGE_SIZE, type ShowImageKind } from "./media.entity.js";
 

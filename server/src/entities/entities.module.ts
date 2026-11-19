@@ -2,16 +2,16 @@ import { Module } from "@nestjs/common";
 
 import { DatabaseModule } from "../database/database.module.js";
 import { StorageModule } from "../storage/storage.module.js";
-import { EntityController } from "./entity.controller.js";
-import { EntityRepository } from "./entity.repository.js";
-import { EntityService } from "./entity.service.js";
+import { EntitiesController } from "./entities.controller.js";
+import { EntitiesRepository } from "./entities.repository.js";
+import { EntitiesService } from "./entities.service.js";
 import { PortraitStorage } from "./portrait.storage.js";
 
 @Module({
 	imports: [DatabaseModule, StorageModule],
-	controllers: [EntityController],
-	providers: [EntityRepository, PortraitStorage, EntityService],
+	controllers: [EntitiesController],
+	providers: [EntitiesRepository, PortraitStorage, EntitiesService],
 	// read by the images proxy (the portrait key)
-	exports: [EntityRepository],
+	exports: [EntitiesRepository],
 })
 export class EntitiesModule {}

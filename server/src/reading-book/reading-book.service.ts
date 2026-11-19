@@ -14,7 +14,7 @@ import type { z } from "zod";
 import { Injectable, Logger } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 
-import type { EntityKind } from "../database/node.js";
+import type { EntityKind } from "../database/node.query.js";
 
 import { BadRequestError, ConflictError, NotFoundError } from "../common/errors.js";
 import { ContextTagsRepository } from "../context-tags/context-tags.repository.js";

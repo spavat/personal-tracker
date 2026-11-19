@@ -1,10 +1,10 @@
 import { Test } from "@nestjs/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../fetch-latest.js", () => ({ fetchLatestEpisodes: vi.fn() }));
+vi.mock("../episode-feed.client.js", () => ({ fetchLatestEpisodes: vi.fn() }));
 
 import { BadRequestError, UpstreamError } from "../../common/errors.js";
-import { fetchLatestEpisodes } from "../fetch-latest.js";
+import { fetchLatestEpisodes } from "../episode-feed.client.js";
 import { InternetRepository } from "../internet.repository.js";
 import { LatestEpisodesCache } from "../latest-episodes.cache.js";
 import { LatestService } from "./latest.service.js";

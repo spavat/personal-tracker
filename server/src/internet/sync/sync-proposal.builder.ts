@@ -8,7 +8,7 @@ import type { LatestEpisodesCache } from "../latest-episodes.cache.js";
 import type { ListenedEpisode } from "./sync.entity.js";
 import type { SyncProposalMongo } from "./sync.repository.js";
 
-import { fetchLatestEpisodes } from "../fetch-latest.js";
+import { fetchLatestEpisodes } from "../episode-feed.client.js";
 
 function conv(duration: number) {
 	const durationInSec = Math.round(duration / 1000);
