@@ -108,15 +108,11 @@ export const GameSaveBodyRequestSchema = z
 		gameId: z.string().optional(),
 	})
 	.refine(({ game, play, gameId }) => {
-		if (game && !gameId) {
-			return true; // Add game (with or without play)
+		if (game) {
+			return !gameId; // Add or update a game (with or without play)
 		}
-
-		if (play && gameId) {
-			return true; // Add play only
-		}
-		return false;
-	});
+		return !!(play && gameId); // Add or update a play only
+	}, "Expected either a game (without gameId), or a play with its gameId");
 export type GameSaveBodyRequestType = z.infer<typeof GameSaveBodyRequestSchema>;
 
 //

@@ -6,16 +6,18 @@ A personal web app to track everyday life: calendar, games, internet, lifespan o
 
 npm workspaces monorepo:
 
-| Package   | Role                                                                                              |
-| --------- | ------------------------------------------------------------------------------------------------- |
-| `front/`  | React + Vite, TanStack Router (file-based) and Query, react-hook-form, plain CSS                  |
-| `server/` | Fastify API, auth with better-auth, PostgreSQL through Drizzle, MongoDB through the native driver |
-| `shared/` | Zod schemas and TypeScript types used by both, imported as `@personal-tracker/shared/<domain>`    |
-| `e2e/`    | Playwright end-to-end tests                                                                       |
+| Package   | Role                                                                                             |
+| --------- | ------------------------------------------------------------------------------------------------ |
+| `front/`  | React + Vite, TanStack Router (file-based) and Query, react-hook-form, plain CSS                 |
+| `server/` | NestJS API, auth with better-auth, PostgreSQL through Drizzle, MongoDB through the native driver |
+| `shared/` | Zod schemas and TypeScript types used by both, imported as `@personal-tracker/shared/<domain>`   |
+| `e2e/`    | Playwright end-to-end tests                                                                      |
+
+`fastify-server/` holds the former Fastify API, which the NestJS server replaced. It's kept for reference only: it isn't built, tested or deployed.
 
 Storage:
 
-- **PostgreSQL**: `money` and `show` domains, plus auth.
+- **PostgreSQL**: `money`, `show` and `reading-book` domains, plus auth.
 - **MongoDB**: every other domain.
 - **S3 Storage**: files such as GPX tracks, thumbnails and images.
 
@@ -49,25 +51,26 @@ cd server && npx drizzle-kit migrate
 
 ### Configuration
 
-The server loads `server/.env`. The defaults already point to the local Docker services, except for these:
+The server loads `server/.env` and checks it at startup (`server/src/config/env.schema.ts`). These variables have no default:
 
 ```sh
-BETTER_AUTH_SECRET=<a random string>
+DATABASE_URL=postgresql://tracker:tracker@localhost:5432/personal_tracker
+MONGODB_URL=mongodb://localhost:27017/personal_tracker
+BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_SECRET=<a random string, at least 32 characters>
 S3_ENDPOINT=http://localhost:3900
 S3_ACCESS_KEY_ID=GK000000000000000000000000
 S3_SECRET_ACCESS_KEY=0000000000000000000000000000000000000000000000000000000000000000
 ```
 
-The S3 key is the dev key created by `docker/garage/init.sh`.
+The S3 key is the dev key created by `docker/garage/init.sh`. The other variables have defaults:
 
-| Variable                      | Default                                                        |
-| ----------------------------- | -------------------------------------------------------------- |
-| `PORT`                        | `3000`                                                         |
-| `DATABASE_URL`                | `postgresql://tracker:tracker@localhost:5432/personal_tracker` |
-| `MONGODB_URL`                 | `mongodb://localhost:27017/personal_tracker`                   |
-| `FRONT_URL` (comma-separated) | `http://localhost:5173`                                        |
-| `BETTER_AUTH_URL`             | `http://localhost:3000`                                        |
-| `S3_BUCKET` / `S3_REGION`     | `personal-tracker` / `us-east-1`                               |
+| Variable                      | Default                                                   |
+| ----------------------------- | --------------------------------------------------------- |
+| `PORT`                        | `3000`                                                    |
+| `FRONT_URL` (comma-separated) | `http://localhost:5173`                                   |
+| `S3_BUCKET` / `S3_REGION`     | `personal-tracker` / `us-east-1`                          |
+| `GAME_SYNC_SCHEDULER`         | `on` (daily 04:00 store playtime sync; `off` disables it) |
 
 The front reads `VITE_API_BASE_URL` from `front/.env`, for example `http://localhost:3000`.
 
@@ -75,11 +78,14 @@ The front reads `VITE_API_BASE_URL` from `front/.env`, for example `http://local
 
 ### Owner account
 
-Sign-up is disabled on the public API. To create the single owner account, run this from `server/`:
+Sign-up is disabled on the public API. The server scripts run from its build, so build it first, then create the single owner account:
 
 ```sh
-npx tsx scripts/create-owner.ts <email> <password> [name]
+npm run build --prefix server
+npm run create-owner --prefix server -- <email> <password> [name]
 ```
+
+In production, run it in the container: `docker compose exec server npm run create-owner -- <email> <password>`.
 
 ### Run
 
@@ -110,9 +116,9 @@ A Husky pre-commit hook runs oxfmt and oxlint on the staged files.
 
 ## Project layout
 
-The code is split by domain. Each domain has a folder in `server/src/routes/`, `front/src/modules/` and `front/src/routes/`, plus a `shared/src/schemas/<domain>.schema.ts` file.
+The code is split by domain. Each domain has a folder in `server/src/`, `front/src/modules/` and `front/src/routes/`, plus a `shared/src/schemas/<domain>.schema.ts` file.
 
-- **Server**: `*.routes.ts` (Fastify plugin with the zod schemas) calls `*.useCases.ts` (one class per use case), which calls `*.repository.ts` (database access only). Pure domain logic goes in `*.entity.ts`. The routes are autoloaded, and the folder path becomes the URL prefix.
+- **Server**: one Nest module per domain, split into sub-modules when the domain is large (`money/accounts/`). A `*.controller.ts` (HTTP only, validated with the shared zod schemas) calls a `*.service.ts`, which calls a `*.repository.ts` (database access only). Pure domain logic goes in `*.entity.ts`. Every route is owner-only unless it's marked `@Public()`.
 - **Front**: the files in `src/routes/` are thin route definitions. The pages and their `api.ts` live in `src/modules/<domain>/`.
 
 [CLAUDE.md](CLAUDE.md) holds the full set of conventions (HTTP verbs, file naming, CSS scoping, adding a shared schema).

@@ -316,7 +316,7 @@ test.describe("anonymous visitor", () => {
 				await expect(page).toHaveURL("/reading-book/series");
 				await expect(page.getByTitle("Ajouter une série")).toHaveCount(0);
 
-				await page.getByRole("link", { name: "Wonderland" }).click();
+				await page.getByRole("link", { name: "Wonderland", exact: true }).click();
 				await expect(page).toHaveURL(`/reading-book/series/${SERIES_ID}`);
 				await expect(page.getByRole("link", { name: alice.book })).toBeVisible();
 				await expect(page.getByTitle("Modifier")).toHaveCount(0);

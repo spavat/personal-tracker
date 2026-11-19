@@ -95,15 +95,11 @@ export const SaveBodyRequestSchema = z
 		programId: z.string().optional(),
 	})
 	.refine(({ program, episode, programId }) => {
-		if (program && !programId) {
-			return true; // Add program (with or without episode)
+		if (program) {
+			return !programId; // Add or update a program (with or without episode)
 		}
-
-		if (episode && programId) {
-			return true; // Add episode only
-		}
-		return false;
-	});
+		return !!(episode && programId); // Add or update an episode only
+	}, "Expected either a program (without programId), or an episode with its programId");
 export type SaveBodyRequestType = z.infer<typeof SaveBodyRequestSchema>;
 
 //

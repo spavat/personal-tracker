@@ -1,14 +1,16 @@
 {
-	"extends": "fastify-tsconfig",
 	"compilerOptions": {
-		"rootDir": "./src",
-		"outDir": "./dist",
-		"sourceMap": true,
-		"lib": ["ESNext"],
-		"module": "commonjs",
-		"moduleResolution": "Bundler",
 		"target": "esnext",
-		"esModuleInterop": true
+		"module": "nodenext",
+		"rootDir": "src",
+		"outDir": "dist",
+		"strict": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"noEmitOnError": true,
+		"types": ["node"]
 	},
-	"include": ["src/**/*.ts"]
+	"include": ["src"]
 }

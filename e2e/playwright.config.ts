@@ -31,7 +31,7 @@ export default defineConfig<{}, { asOwner: boolean }>({
 				`BETTER_AUTH_URL=http://localhost:${serverPort(i)}`,
 				"BETTER_AUTH_SECRET=e2e-secret-e2e-secret-e2e-secret-e2e",
 				`FRONT_URL=http://localhost:${frontPort(i)}`,
-				// Set explicitly so server/.env (loaded by dotenv, which never overrides) isn't needed, e.g. in CI
+				// Set explicitly so server/.env (read by ConfigModule, process.env wins) isn't needed, e.g. in CI
 				`S3_ENDPOINT=http://localhost:${GARAGE_PORT}`,
 				"S3_REGION=us-east-1",
 				"S3_BUCKET=personal-tracker",
@@ -48,8 +48,8 @@ export default defineConfig<{}, { asOwner: boolean }>({
 				"GOG_USERNAME=",
 				// UI mode doesn't show webServer output: follow it with `tail -f e2e/server-<worker>.log`
 				// fetch-mock serves the external calls (Youtube, RSS, france.tv, images) from e2e/mocks/responses
-				// the built server (`npm run test:build`): lighter than tsx, one runs per worker
-				`node --import ../e2e/mocks/fetch-mock.mjs dist/server.js > ../e2e/server-${i}.log`,
+				// the built server (`npm run test:build`), one runs per worker
+				`node --import ../e2e/mocks/fetch-mock.mjs dist/main.js > ../e2e/server-${i}.log`,
 			].join(" "),
 			port: serverPort(i),
 			cwd: path.resolve(__dirname, "../server"),

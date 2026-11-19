@@ -76,41 +76,45 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 This project is an npm workspaces monorepo splitted into 4 packages:
 
 - front: React application (Vite)
-- server: Node.js service based on fastify.
+- server: Node.js service based on NestJS 12 (NodeAdapter, ESM).
 - shared: Mostly zod schemas (and typescript type) which can be used by both front & server.
 - e2e: Playwright end-to-end tests.
 
-The app is organised by domain (calendar, context-tags, game, internet, lifespan, money, music, reading-book, reading-manga, show, sport); each domain has a matching folder in `server/src/routes/`, `front/src/modules/`, `front/src/routes/` and a `shared/src/schemas/<domain>.schema.ts`.
+The app is organised by domain (calendar, context-tags, game, internet, lifespan, money, music, reading-book, reading-manga, show, sport); each domain has a matching folder in `server/src/`, `front/src/modules/`, `front/src/routes/` and a `shared/src/schemas/<domain>.schema.ts`.
 
 ## Commands
 
 Run from the repo root unless stated otherwise.
 
 - `npm run dev:up` / `npm run dev:down`: start/stop PostgreSQL, MongoDB and Garage (S3) in Docker with the persistent external dev volumes (create them once with `docker volume create personal-tracker-{postgres,mongo,garage-meta,garage-data}`).
-- `npm run dev --prefix server`: server in watch mode (tsx), port 3000.
+- `npm run dev --prefix server`: server in watch mode (`tsc -w` + `node --watch dist/main.js`), port 3000. It reads `server/.env`; restart it after editing `.env` (the watch only follows `dist/`).
 - `npm run front`: Vite dev server.
 - `npm run dev --prefix shared`: rebuild `shared/dist` on change (the server consumes the built `dist`; the front aliases `shared/src` directly in `vite.config.ts`).
 - `npm run lint` (oxlint), `npm run fmt` / `npm run fmt:check` (oxfmt).
 - `npm run typecheck --prefix server`, `npx tsc --noEmit -p front`.
-- Server unit tests (vitest, `server/src/**/*.test.ts` only): `npm test --prefix server`; single file: `cd server && npx vitest run src/routes/sport/sport.routes.test.ts`; single test: add `-t "<name>"`. The legacy `server/test/` dir (node:test, needs a live DB) is not run by vitest.
+- Server unit tests (vitest, `server/src/**/*.test.ts`): `npm test --prefix server`; single file: `cd server && npx vitest run src/sport/sport.controller.test.ts`; single test: add `-t "<name>"`.
+- Server scripts, run from the build (`npm run build --prefix server` first; Node can't strip the parameter decorators of a `.ts` file): `npm run migrate | create-owner -- <email> <password> | seed-epic-token --prefix server`.
 - E2E: `npm test` starts a separate docker stack (project name and ports, PG 5433 / Mongo 27018 / Garage 3901, set in `e2e/test.env`), builds shared/server/front, recreates and seeds the test DBs (`e2e/setup-db.js`, `e2e/seed.js`), then runs Playwright with `E2E_WORKERS` workers (default 3, in `e2e/db-config.js`). Each worker `i` has its own DBs (`personal_tracker_test_<i>`), built server (port 3001+i) and `vite preview` (port 5174+i, `/api` proxied to its server), and logs the owner in once; `resetDb`/`queryDb`/`updateMongo` act on the current worker's DBs. The test DBs are kept after a run, so once `npm test` has run, a single spec runs directly: `npx playwright test --config e2e/playwright.config.ts e2e/tests/music.spec.ts` (Playwright serves the built `dist`: after a front/server change, `npm run test:build` first; with a different `E2E_WORKERS`, `npm run test:db:reset` first). Server output goes to `e2e/server-<i>.log`. Also `npm run test:ui`, `test:headed`, `test:debug`.
 - Drizzle (from `server/`, needs `DATABASE_URL`): `npx drizzle-kit generate` / `npx drizzle-kit migrate`. Migrations live in `server/drizzle/`.
 
 ## Server
 
-Backend of the application. Query the databases (mongoDB and PostgreSQL)
+Backend of the application. Query the databases (mongoDB and PostgreSQL). `fastify-server/` is the former Fastify server, kept for reference only: frozen, not built, tested nor deployed.
 
-- `src/app.ts` autoloads `src/plugins/` then every `*.routes.ts` under `src/routes/`; the folder path becomes the URL prefix (e.g. `routes/money/accounts/` → `/money/accounts`). A domain can be split into sub-domain folders (`money/accounts/`, `internet/sync/`), code shared between them staying at the domain root; every folder under `src/routes/` must contain a `*.routes.ts`, otherwise autoload registers all its files as plugins.
-- Background jobs live in `src/jobs/` (`<name>.job.ts`, a fastify-plugin autoloaded after the routes): work the server runs by itself on a schedule, e.g. `game-store-sync.job.ts` (daily 04:00 store playtime sync, `GAME_SYNC_SCHEDULER=off` disables it). The domain logic stays in its route folder; the job only decides when to run it.
+- One Nest module per domain (`src/<domain>/<domain>.module.ts`), imported by `src/app.module.ts`. A domain splits into sub-modules (`money/accounts/`, `internet/sync/`) mounted with `RouterModule.register` children; code shared by the sub-modules goes in a `*-shared.module.ts`. A module reads another domain's data through the repository that domain's module `exports` (imports are not re-exported: import `DatabaseModule`/`StorageModule` where you inject them).
+- Layering: `*.controller.ts` (HTTP only) → `*.service.ts` (domain logic) → `*.repository.ts` (DB access only); pure domain logic in `*.entity.ts`. Some domains (game, reading-book, show) keep framework-free `*.useCases.ts` classes behind the service or as one provider each.
+- Global enhancers (`src/common/common.module.ts`, `src/auth/auth.module.ts`): the auth guard, the zod validation pipe, the response serializer, the domain error filter, the request context (AsyncLocalStorage). Throw the errors of `src/common/errors.ts` (`NotFoundError` 404, `ConflictError` 409, `BadRequestError` 400, `UpstreamError` 502); their message is shown as is by the French UI, so write it in French.
+- Auth: logged in = owner (single account, better-auth served on `/auth/*` by `AuthHandlerMiddleware`). Every route is owner-only by default; `@Public()` opens a GET to visitors. Repositories hide private documents with `privacyMatch()` (request context); `@IsOwner()` gives the flag to a handler.
+- Validation with the shared zod schemas: `@Body({ schema })`, `@Query({ schema })`, `@Param({ schema })`; responses with `@SerializeOptions({ schema })` (an array route takes `Schema.element`: arrays are checked item by item).
+- Background jobs: `@Cron()` methods (`@nestjs/schedule`), e.g. `src/game/sync/game-sync.job.ts` (daily 04:00 store playtime sync, `GAME_SYNC_SCHEDULER=off` disables it). The job only decides when to run; the logic stays in the domain.
 - Two databases side by side:
-    - PostgreSQL through Drizzle (`fastify.db`, schema in `src/db/schema.ts`, relations in `src/db/relations.ts`): currently `money` and `show`.
-    - MongoDB through `@fastify/mongodb` (`fastify.mongo`, native driver, no ORM): all other domains.
-    - Files (GPX, thumbnails, images) are stored in S3-compatible Garage (`src/config/s3.ts`).
-- Each domain follows the same layering: `*.routes.ts` (Fastify plugin; instantiates repositories and use cases, declares zod schemas) → `*.useCases.ts` (one class per use case with an `execute()` method) → `*.repository.ts` (DB access only). Pure domain logic goes in `*.entity.ts`.
-- Validations around the endpoints should be using zod schema (defined in shared library), through `withTypeProvider<ZodTypeProvider>()` and `schema: { querystring | body, response }`.
-- HTTP verbs: `GET` never changes data (actions like import/sync/add use `POST`). Deletes use `DELETE` with the ids in the path (`DELETE /:id`, or `DELETE /games/:gameId/plays/:playId` for a sub-document), validated by `schema: { params }`, never a body. Creates/updates stay `POST` (`POST /save` upserts, or money's `POST /` + `POST /:id`).
+    - PostgreSQL through Drizzle (`DRIZZLE` token, schema in `src/database/schema.ts`, relations in `src/database/relations.ts`): currently `money`, `show` and `reading-book`.
+    - MongoDB (`MONGO_DB` token, native driver, no ORM): all other domains.
+    - Files (GPX, thumbnails, images) are stored in S3-compatible Garage (`src/storage/`, `ObjectStorage`).
+- Env: validated by `src/config/env.schema.ts` (zod) at startup; read through `ConfigService<Env, true>`.
+- HTTP verbs: `GET` never changes data (actions like import/sync/add use `POST`). Deletes use `DELETE` with the ids in the path (`DELETE /:id`, or `DELETE /games/:gameId/plays/:playId` for a sub-document), validated by `@Param({ schema })`, never a body. Creates/updates stay `POST` (`POST /save` upserts, or money's `POST /` + `POST /:id`); a POST answering 200 needs `@HttpCode(200)`.
 - Front calls go through `fetchJson` (reads), `sendJson(url, method, body?)` (writes) and `withQuery(url, params)` (query strings, encoded) from `front/src/api-utils.ts`.
-- Unit tests are co-located (`*.routes.test.ts`, `*.useCases.test.ts`, `*.entity.test.ts`). Route tests use `src/test-support/route-harness.ts` (`buildRouteApp(plugin, { mongo, db })`) with the fakes in `src/test-support/` (`fake-mongo`, `fake-drizzle`) and `app.inject()`; no real DB.
+- Unit tests are co-located (`*.controller.test.ts`, `*.service.test.ts`, `*.entity.test.ts`). Controller tests boot the module with `src/test-support/test-app.ts` (`buildTestApp(Module, { mongoDb, drizzle, session, storage })`: real global enhancers, fake DBs, S3 and auth) and call `app.inject()`; no real DB.
 
 ## Front
 

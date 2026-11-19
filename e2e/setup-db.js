@@ -1,5 +1,5 @@
 // Runs as a plain Node.js script BEFORE `playwright test` so the test DBs
-// exist when Playwright's webServers (Fastify) start up: one Postgres and one Mongo database per worker.
+// exist when Playwright's webServers (server) start up: one Postgres and one Mongo database per worker.
 const { execSync } = require("child_process");
 const path = require("path");
 const { Client } = require("pg");
