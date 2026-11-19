@@ -99,7 +99,7 @@ Run from the repo root unless stated otherwise.
 
 ## Server
 
-Backend of the application. Query the databases (mongoDB and PostgreSQL). `fastify-server/` is the former Fastify server, kept for reference only: frozen, not built, tested nor deployed.
+Backend of the application. Query the databases (mongoDB and PostgreSQL).
 
 - One Nest module per domain (`src/<domain>/<domain>.module.ts`), imported by `src/app.module.ts`. A domain splits into sub-modules (`money/accounts/`, `internet/sync/`) mounted with `RouterModule.register` children; code shared by the sub-modules goes in a `*-shared.module.ts`. A module reads another domain's data through the repository that domain's module `exports` (imports are not re-exported: import `DatabaseModule`/`StorageModule` where you inject them).
 - Layering: `*.controller.ts` (HTTP only) → `*.service.ts` (domain logic) → `*.repository.ts` (DB access only); pure domain logic in `*.entity.ts`. One service per module (or sub-module), logging with its own Nest `Logger`.

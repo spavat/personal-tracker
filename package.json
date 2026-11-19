@@ -9,7 +9,6 @@
 		"shared",
 		"front",
 		"server",
-		"fastify-server",
 		"e2e"
 	],
 	"type": "module",

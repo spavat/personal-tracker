@@ -29,8 +29,8 @@ export const envSchema = z.object({
 	// GOG: username of a public profile (gog.com/u/<username>)
 	GOG_USERNAME: z.string().default(""),
 	// The daily 04:00 store sync (the /game/sync routes work either way); "off" disables it, e.g. for the e2e tests.
-	// Never run it from two servers on the same database (fastify-server's job included): the playtime would be counted
-	// twice and they would fight over Epic's rotating refresh token.
+	// Never run it from two servers on the same database: the playtime would be counted twice and they would fight over
+	// Epic's rotating refresh token.
 	GAME_SYNC_SCHEDULER: z.enum(["on", "off"]).default("on"),
 });
 

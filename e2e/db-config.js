@@ -33,6 +33,4 @@ module.exports = {
 	serverPort,
 	frontPort,
 	workerIndex,
-	// worker 0 databases, for the scripts run outside Playwright (api-snapshot.js)
-	TEST_POSTGRES_URL: testPostgresUrl(0),
 };

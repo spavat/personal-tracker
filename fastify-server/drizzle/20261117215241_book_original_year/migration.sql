@@ -1,1 +1,0 @@
-ALTER TABLE "reading"."book" ADD COLUMN "original_year" integer;

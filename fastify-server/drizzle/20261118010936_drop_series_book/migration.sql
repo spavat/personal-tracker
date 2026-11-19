@@ -1,1 +1,0 @@
-DROP TABLE "reading"."series_book";

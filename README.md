@@ -13,8 +13,6 @@ npm workspaces monorepo:
 | `shared/` | Zod schemas and TypeScript types used by both, imported as `@personal-tracker/shared/<domain>`   |
 | `e2e/`    | Playwright end-to-end tests                                                                      |
 
-`fastify-server/` holds the former Fastify API, which the NestJS server replaced. It's kept for reference only: it isn't built, tested or deployed.
-
 Storage:
 
 - **PostgreSQL**: `money`, `show` and `reading-book` domains, plus auth.
