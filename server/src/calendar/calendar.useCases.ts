@@ -36,20 +36,22 @@ abstract class CalendarUseCaseBase {
 	) {}
 
 	protected async buildCalendar({ from, to }: { from: string; to: string }) {
-		const programs = await this.internetRepo.findEpisodesInRange({ from, to });
-		const listenings = await this.musicRepo.findAll({ from, to });
-		const books = await this.bookRepo.findAll({
-			from,
-			to,
-			withReadingsDetails: true,
-		});
-		const mangas = await this.mangaRepo.findAll({
-			from,
-			to,
-			withReadings: true,
-		});
-		const performances = await this.performanceRepo.findAll({ from, to });
-		const games = await this.gameRepo.findPlaysInRange({ from, to });
+		const [programs, listenings, books, mangas, performances, games] = await Promise.all([
+			this.internetRepo.findEpisodesInRange({ from, to }),
+			this.musicRepo.findAll({ from, to }),
+			this.bookRepo.findAll({
+				from,
+				to,
+				withReadingsDetails: true,
+			}),
+			this.mangaRepo.findAll({
+				from,
+				to,
+				withReadings: true,
+			}),
+			this.performanceRepo.findAll({ from, to }),
+			this.gameRepo.findPlaysInRange({ from, to }),
+		]);
 
 		const byDate: Record<string, any> = {};
 
@@ -219,20 +221,22 @@ export class GetDailyCalendarUseCase {
 
 	async execute(date: string, log: UseCaseLog) {
 		log.info("GetDailyCalendarUseCase.execute");
-		const programs = await this.internetRepo.findEpisodesInRange({ from: date, to: date });
-		const listenings = await this.musicRepo.findAll({ from: date, to: date });
-		const books = await this.bookRepo.findAll({
-			from: date,
-			to: date,
-			withReadingsDetails: true,
-		});
-		const mangas = await this.mangaRepo.findAll({
-			from: date,
-			to: date,
-			withReadings: true,
-		});
-		const performances = await this.performanceRepo.findAll({ from: date, to: date });
-		const games = await this.gameRepo.findPlaysInRange({ from: date, to: date });
+		const [programs, listenings, books, mangas, performances, games] = await Promise.all([
+			this.internetRepo.findEpisodesInRange({ from: date, to: date }),
+			this.musicRepo.findAll({ from: date, to: date }),
+			this.bookRepo.findAll({
+				from: date,
+				to: date,
+				withReadingsDetails: true,
+			}),
+			this.mangaRepo.findAll({
+				from: date,
+				to: date,
+				withReadings: true,
+			}),
+			this.performanceRepo.findAll({ from: date, to: date }),
+			this.gameRepo.findPlaysInRange({ from: date, to: date }),
+		]);
 
 		const musicItems =
 			listenings?.map((listening) => ({
