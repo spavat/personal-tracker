@@ -1,8 +1,7 @@
 import * as z from "zod";
 
-import type { EntityKind } from "./entity.schema";
-
 import { GenericListSchema, PeriodQSSchema, UUIDParamsSchema } from "./common.schema";
+import { EntityKindSchema } from "./entity.schema";
 
 const ReadingContextItemSchema = z.object({
 	date: z.iso.date(),
@@ -110,25 +109,31 @@ export const BookSchema = z.object({
 
 export type Book = z.infer<typeof BookSchema>;
 
-type ComputedBookProps = {
-	firstReadDate: string;
-	lastReadDate: string;
-	readingDates: Array<string>;
-};
-const ReadingWithOptionalDetailsSchema = ReadingSchema.partial({ details: true });
+// the dates of its entries: null when nothing was read yet
+const ReadDatesSchema = z.object({
+	firstReadDate: z.iso.date().nullable(),
+	lastReadDate: z.iso.date().nullable(),
+	readingDates: z.array(z.iso.date()),
+});
 // A book in lists: its main edition (the one of its latest reading, else the first one) gives
 // the language, pages and cover; each reading carries the language of its edition.
-export type BookOverview = Omit<Book, "editions"> &
-	ComputedBookProps & {
-		language: string;
-		pages: number | null;
-		cover: string | null;
+export const BookOverviewSchema = BookSchema.omit({ editions: true })
+	.extend(ReadDatesSchema.shape)
+	.extend({
+		language: z.string(),
+		pages: z.number().int().nullable(),
+		cover: z.string().nullable(),
 		// the main edition, and its title when it has its own
-		editionId: string | null;
-		editionTitle: string | null;
-		nbReadings: number;
-		readings: Array<z.infer<typeof ReadingWithOptionalDetailsSchema> & ComputedBookProps & { language: string }>;
-	};
+		editionId: z.uuid().nullable(),
+		editionTitle: z.string().nullable(),
+		nbReadings: z.number(),
+		// the details only with `withReadingsDetails`
+		readings: z.array(
+			ReadingSchema.partial({ details: true }).extend(ReadDatesSchema.shape).extend({ language: z.string() }),
+		),
+	});
+export type BookOverview = z.infer<typeof BookOverviewSchema>;
+export const BookListResponseSchema = z.array(BookOverviewSchema);
 
 export const BookListRequestSchema = GenericListSchema.extend({
 	withReadingsDetails: z.preprocess((val) => {
@@ -193,10 +198,28 @@ export const SeriesParamsRequestSchema = UUIDParamsSchema;
 export type SeriesTreeItem =
 	| { kind: "book"; positionLabel: string | null; readingOrder: number; book: BookOverview }
 	| { kind: "series"; positionLabel: string | null; series: { id: string; title: string }; items: SeriesTreeItem[] };
-export type SeriesDetails = z.infer<typeof SeriesRefSchema> & {
-	parents: Array<z.infer<typeof SeriesRefSchema>>;
-	items: SeriesTreeItem[];
-};
+// recursive: a sub-series holds its own items
+export const SeriesTreeItemSchema: z.ZodType<SeriesTreeItem> = z.lazy(() =>
+	z.discriminatedUnion("kind", [
+		z.object({
+			kind: z.literal("book"),
+			positionLabel: z.string().nullable(),
+			readingOrder: z.number(),
+			book: BookOverviewSchema,
+		}),
+		z.object({
+			kind: z.literal("series"),
+			positionLabel: z.string().nullable(),
+			series: SeriesRefSchema,
+			items: z.array(SeriesTreeItemSchema),
+		}),
+	]),
+);
+export const SeriesDetailsSchema = SeriesRefSchema.extend({
+	parents: z.array(SeriesRefSchema),
+	items: z.array(SeriesTreeItemSchema),
+});
+export type SeriesDetails = z.infer<typeof SeriesDetailsSchema>;
 
 // the direct items of the series, in their order (positions 1..n)
 const positionLabel = z.string().trim().nonempty().nullable();
@@ -227,7 +250,11 @@ export const AuthorSchema = z.object({
 export type Author = z.infer<typeof AuthorSchema>;
 export const AuthorListResponseSchema = z.array(AuthorSchema);
 export const AuthorParamsRequestSchema = UUIDParamsSchema;
-export type AuthorDetails = Omit<Author, "nbBooks" | "nbReadings"> & { kind: EntityKind; books: BookOverview[] };
+export const AuthorDetailsSchema = AuthorSchema.omit({ nbBooks: true, nbReadings: true }).extend({
+	kind: EntityKindSchema,
+	books: z.array(BookOverviewSchema),
+});
+export type AuthorDetails = z.infer<typeof AuthorDetailsSchema>;
 
 //
 // SAVE READING

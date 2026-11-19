@@ -1,15 +1,21 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, SerializeOptions } from "@nestjs/common";
 import {
+	AuthorDetailsSchema,
 	AuthorListResponseSchema,
 	AuthorParamsRequestSchema,
 	BookDetailsParamsSchema,
 	BookListRequestSchema,
+	BookListResponseSchema,
+	BookModelSchema,
+	BookSchema,
 	DeleteReadingParamsRequestSchema,
 	EditionParamsRequestSchema,
+	EditionSchema,
 	GetReportQuerystringRequestSchema,
 	GetReportResponseSchema,
 	ModelParamsRequestSchema,
 	ReadingParamsRequestSchema,
+	ReadingSchema,
 	type SaveBookModelRequest,
 	SaveBookModelRequestSchema,
 	SaveBookRequestSchema,
@@ -18,6 +24,7 @@ import {
 	SaveReadingRequestSchema,
 	type SaveSeriesRequest,
 	SaveSeriesRequestSchema,
+	SeriesDetailsSchema,
 	SeriesListResponseSchema,
 	SeriesParamsRequestSchema,
 } from "@personal-tracker/shared/reading-book";
@@ -47,16 +54,19 @@ export class ReadingBookController {
 
 	@Get("series/:id")
 	@Public()
+	@SerializeOptions({ schema: SeriesDetailsSchema })
 	getSeries(@Param({ schema: SeriesParamsRequestSchema }) { id }: IdParams) {
 		return this.service.getSeries(id);
 	}
 
 	@Post("series")
+	@SerializeOptions({ schema: SeriesDetailsSchema })
 	createSeries(@Body({ schema: SaveSeriesRequestSchema }) series: SaveSeriesRequest) {
 		return this.service.saveSeries({ ...series, id: undefined });
 	}
 
 	@Put("series/:id")
+	@SerializeOptions({ schema: SeriesDetailsSchema })
 	updateSeries(
 		@Param({ schema: SeriesParamsRequestSchema }) { id }: IdParams,
 		@Body({ schema: SaveSeriesRequestSchema }) series: SaveSeriesRequest,
@@ -81,6 +91,7 @@ export class ReadingBookController {
 
 	@Get("authors/:id")
 	@Public()
+	@SerializeOptions({ schema: AuthorDetailsSchema })
 	getAuthor(@Param({ schema: AuthorParamsRequestSchema }) { id }: IdParams) {
 		return this.service.getAuthor(id);
 	}
@@ -89,22 +100,26 @@ export class ReadingBookController {
 
 	@Get("books")
 	@Public()
+	@SerializeOptions({ schema: BookListResponseSchema.element })
 	listBooks(@Query({ schema: BookListRequestSchema }) query: BookListQuery) {
 		return this.service.listBooks(query);
 	}
 
 	@Get("books/:id")
 	@Public()
+	@SerializeOptions({ schema: BookSchema })
 	getBook(@Param({ schema: BookDetailsParamsSchema }) { id }: IdParams) {
 		return this.service.getBook(id);
 	}
 
 	@Post("books")
+	@SerializeOptions({ schema: BookSchema })
 	createBook(@Body({ schema: SaveBookRequestSchema }) book: SaveBookBody) {
 		return this.service.saveBook({ ...book, id: undefined });
 	}
 
 	@Put("books/:id")
+	@SerializeOptions({ schema: BookSchema })
 	updateBook(
 		@Param({ schema: BookDetailsParamsSchema }) { id }: IdParams,
 		@Body({ schema: SaveBookRequestSchema }) book: SaveBookBody,
@@ -113,6 +128,7 @@ export class ReadingBookController {
 	}
 
 	@Post("books/:id/models")
+	@SerializeOptions({ schema: BookModelSchema })
 	createModel(
 		@Param({ schema: ReadingParamsRequestSchema }) { id }: IdParams,
 		@Body({ schema: SaveBookModelRequestSchema }) model: SaveBookModelRequest,
@@ -121,6 +137,7 @@ export class ReadingBookController {
 	}
 
 	@Put("books/:id/models/:modelId")
+	@SerializeOptions({ schema: BookModelSchema })
 	updateModel(
 		@Param({ schema: ModelParamsRequestSchema }) { id, modelId }: { id: string; modelId: string },
 		@Body({ schema: SaveBookModelRequestSchema }) model: SaveBookModelRequest,
@@ -136,6 +153,7 @@ export class ReadingBookController {
 
 	// the cover can be sent as a base64 data URI: within the 15mb JSON limit (body-parsers.ts)
 	@Post("books/:id/editions")
+	@SerializeOptions({ schema: EditionSchema })
 	createEdition(
 		@Param({ schema: ReadingParamsRequestSchema }) { id }: IdParams,
 		@Body({ schema: SaveEditionRequestSchema }) edition: SaveEditionRequest,
@@ -144,6 +162,7 @@ export class ReadingBookController {
 	}
 
 	@Put("books/:id/editions/:editionId")
+	@SerializeOptions({ schema: EditionSchema })
 	updateEdition(
 		@Param({ schema: EditionParamsRequestSchema }) { id, editionId }: { id: string; editionId: string },
 		@Body({ schema: SaveEditionRequestSchema }) edition: SaveEditionRequest,
@@ -161,11 +180,13 @@ export class ReadingBookController {
 
 	// a new reading of the edition, not started
 	@Post("books/:id/editions/:editionId/readings")
+	@SerializeOptions({ schema: ReadingSchema })
 	addReading(@Param({ schema: EditionParamsRequestSchema }) { id, editionId }: { id: string; editionId: string }) {
 		return this.service.addReading(id, editionId);
 	}
 
 	@Put("books/:id/readings/:readingId")
+	@SerializeOptions({ schema: ReadingSchema })
 	saveReading(
 		@Param({ schema: DeleteReadingParamsRequestSchema }) { id, readingId }: { id: string; readingId: string },
 		@Body({ schema: SaveReadingRequestSchema }) reading: SaveReadingBody,

@@ -41,7 +41,7 @@ function bookRow({ modelId = MODEL_UUID, editionId = EDITION_UUID, readingId = R
 		originalLanguage: "en",
 		originalYear: 1965,
 		country: "us",
-		contributors: [],
+		contributors: [{ role: "author", creditedAs: null, entity: { id: ENTITY_UUID, name: "Frank Herbert" } }],
 		series: [],
 		models: [{ id: modelId, name: "VO", tree: [] }],
 		editions: [
@@ -341,8 +341,8 @@ describe("reading-book routes", () => {
 
 		it("POST /series creates the node, the series and its items in order", async () => {
 			await ctx.app.close();
-			// every select answers this row: 1 book and 1 sub-series found, and no item (no cycle)
-			ctx = await buildApp([{ id: SERIES_UUID, count: 1 }]);
+			// every select answers this row: 1 book and 1 sub-series found, and no item (no cycle); the series read back
+			ctx = await buildApp([{ id: SERIES_UUID, title: "Terre du Milieu", count: 1 }]);
 
 			const res = await ctx.app.inject({
 				method: "POST",

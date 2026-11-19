@@ -306,7 +306,7 @@ export class ReadingBookService {
 			for (let reading of book.readings) {
 				// Status distribution
 				const status =
-					reading.status === "complete" && !isDateBetween(reading.lastReadDate, from, to)
+					reading.status === "complete" && !isDateBetween(reading.lastReadDate ?? "", from, to)
 						? "in-progress" // Completed after the selected period, considered in-progress
 						: reading.status;
 				if (!statusDistribution[status]) {

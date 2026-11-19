@@ -13,7 +13,7 @@ export default function MiniReadingDashboard({ year }: { year: string }) {
 	const completedBookData = data.reduce(
 		(acc, book) => {
 			book.readings.forEach((reading) => {
-				if (reading.status === "complete" && reading.lastReadDate.substring(0, 4) === year) {
+				if (reading.status === "complete" && reading.lastReadDate?.substring(0, 4) === year) {
 					acc.book += 1;
 					acc.days += reading.readingDates.length;
 				}
@@ -27,7 +27,7 @@ export default function MiniReadingDashboard({ year }: { year: string }) {
 	const inProgressBookData = data.reduce(
 		(acc, book) => {
 			book.readings.forEach((reading) => {
-				if (reading.status === "in-progress" && reading.lastReadDate.substring(0, 4) !== year) {
+				if (reading.status === "in-progress" && reading.lastReadDate?.substring(0, 4) !== year) {
 					acc.book += 1;
 				}
 			});
