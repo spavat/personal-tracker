@@ -40,7 +40,7 @@ describe("TransactionsService", () => {
 	describe("list", () => {
 		it("sorts on the consideration date when asked, on the date otherwise", () => {
 			service.list({ dateOrder: "considerationDate", searchText: "rent" });
-			service.list({ dateOrder: "anything" });
+			service.list({});
 
 			expect(repo.findAll.mock.calls[0][0]).toMatchObject({ dateField: "considerationDate", searchText: "rent" });
 			expect(repo.findAll.mock.calls[1][0]).toMatchObject({ dateField: "date" });
@@ -60,10 +60,10 @@ describe("TransactionsService", () => {
 
 			await service.create({
 				name: "Shop",
-				categoryId: 0,
+				categoryId: null,
 				paymentTypeId: 3,
 				tags: [{ id: 7 }],
-				children: [{ name: "Part", categoryId: 5, paymentTypeId: 0, tags: [{ id: 8 }] }],
+				children: [{ name: "Part", categoryId: 5, paymentTypeId: null, tags: [{ id: 8 }] }],
 			} as never);
 
 			expect(repo.create.mock.calls[0][0]).toMatchObject({ name: "Shop", categoryId: null, paymentTypeId: 3 });
@@ -83,7 +83,7 @@ describe("TransactionsService", () => {
 		it("only updates the parent for a quick update", async () => {
 			repo.findByIdWithChildren.mockResolvedValue({ id: 1, children: [{ id: 2 }] });
 
-			await service.patch(1, { name: "New", categoryId: 0, paymentTypeId: 0 } as never);
+			await service.patch(1, { name: "New", categoryId: null, paymentTypeId: null });
 
 			expect(repo.update).toHaveBeenCalledWith(1, expect.objectContaining({ name: "New", categoryId: null }));
 			expect(repo.runInTransaction).not.toHaveBeenCalled();
@@ -122,30 +122,6 @@ describe("TransactionsService", () => {
 			expect(repo.destroy).toHaveBeenCalledWith(3, TX);
 			expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ name: "new", parentId: 1 }), TX);
 			expect(repo.destroy).not.toHaveBeenCalledWith(2, TX);
-		});
-
-		it("stores a child's 0 category / payment type as null, as on create", async () => {
-			repo.findByIdWithChildren.mockResolvedValue({ id: 1, children: [{ id: 2 }] });
-			repo.create.mockResolvedValue({ id: 3 });
-
-			await service.update(1, {
-				categoryId: 1,
-				paymentTypeId: 1,
-				children: [
-					{ id: 2, categoryId: 0, paymentTypeId: 4 },
-					{ categoryId: 5, paymentTypeId: 0 },
-				],
-			} as never);
-
-			expect(repo.update).toHaveBeenCalledWith(
-				2,
-				expect.objectContaining({ categoryId: null, paymentTypeId: 4 }),
-				TX,
-			);
-			expect(repo.create).toHaveBeenCalledWith(
-				expect.objectContaining({ categoryId: 5, paymentTypeId: null }),
-				TX,
-			);
 		});
 
 		it("rejects with NotFoundError for an unknown transaction", async () => {

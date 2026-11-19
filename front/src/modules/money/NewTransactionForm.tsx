@@ -1,3 +1,5 @@
+import type { Tag } from "@personal-tracker/shared/money";
+
 import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useRef } from "react";
@@ -25,7 +27,7 @@ type Inputs = {
 	children: Array<SubTransaction>;
 	categoryId: number;
 	paymentTypeId: number;
-	tags: Array<Money.Tag>;
+	tags: Array<Tag>;
 };
 
 type SubTransaction = {
@@ -34,7 +36,7 @@ type SubTransaction = {
 	categoryId: number;
 	paymentTypeId: number;
 	comment: string;
-	tags: Array<Money.Tag>;
+	tags: Array<Tag>;
 };
 
 interface Form {
@@ -144,7 +146,7 @@ export default function NewTransactionForm({ transactionId, returnTo, returnToSe
 		remove(index);
 	}
 
-	function appendTagOnParent(tag: Money.Tag) {
+	function appendTagOnParent(tag: Tag) {
 		appendTag(tag);
 	}
 

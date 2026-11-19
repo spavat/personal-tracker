@@ -1,17 +1,16 @@
+import type {
+	TransactionListQuerystring,
+	TransactionPatchBody,
+	TransactionSaveBody,
+} from "@personal-tracker/shared/money";
+
 import { Injectable, Logger } from "@nestjs/common";
 
 import { NotFoundError } from "../../common/errors.js";
-import { mergeAndSortTransactions, normalizeTransactionRefs, type TransactionBody } from "./transaction.entity.js";
+import { mergeAndSortTransactions } from "./transaction.entity.js";
 import { TransactionsRepository } from "./transactions.repository.js";
 
-export interface ListTransactionsQuery {
-	from?: string;
-	to?: string;
-	searchText?: string;
-	dateOrder?: string;
-}
-
-const tagLinks = (transactionId: number, tags: TransactionBody["tags"] | undefined) =>
+const tagLinks = (transactionId: number, tags: TransactionSaveBody["tags"]) =>
 	(tags ?? []).map((tag) => ({ transactionId, tagId: tag.id }));
 
 @Injectable()
@@ -19,7 +18,7 @@ export class TransactionsService {
 	private readonly logger = new Logger(TransactionsService.name);
 	constructor(private readonly repo: TransactionsRepository) {}
 
-	list({ from, to, searchText, dateOrder }: ListTransactionsQuery) {
+	list({ from, to, searchText, dateOrder }: TransactionListQuerystring) {
 		this.logger.log("list");
 		const dateField = dateOrder === "considerationDate" ? "considerationDate" : "date";
 		return this.repo.findAll({ searchText, from, to, dateField });
@@ -30,55 +29,53 @@ export class TransactionsService {
 		return (await this.repo.findById(id)) ?? notFound();
 	}
 
-	async create(body: TransactionBody) {
+	async create({ children, tags, ...body }: TransactionSaveBody) {
 		this.logger.log("create");
-		const transaction = await this.repo.create(normalizeTransactionRefs(body));
+		const transaction = await this.repo.create(body);
 
-		for (const child of body.children ?? []) {
+		for (const { tags: childTags, ...child } of children ?? []) {
 			const createdChild = await this.repo.create({
-				...normalizeTransactionRefs(child),
+				...child,
 				date: transaction.date,
 				parentId: transaction.id,
 			});
-			if (child.tags?.length) {
-				await this.repo.createTags(tagLinks(createdChild.id, child.tags));
+			if (childTags?.length) {
+				await this.repo.createTags(tagLinks(createdChild.id, childTags));
 			}
 		}
-		if (body.tags?.length) {
-			await this.repo.createTags(tagLinks(transaction.id, body.tags));
+		if (tags?.length) {
+			await this.repo.createTags(tagLinks(transaction.id, tags));
 		}
 		return transaction;
 	}
 
 	// "quick" only updates the parent's own fields; any other type rewrites tags and children
 	// the fields sent only: its children and tags are left as they are
-	async patch(id: number, body: TransactionBody) {
+	async patch(id: number, body: TransactionPatchBody) {
 		this.logger.log(`patch ${id}`);
 		if (!(await this.repo.findByIdWithChildren(id))) {
 			notFound();
 		}
-		await this.repo.update(id, normalizeTransactionRefs(body));
+		await this.repo.update(id, body);
 		return this.repo.findByIdWithChildren(id);
 	}
 
-	async update(id: number, body: TransactionBody) {
+	async update(id: number, { children, tags, ...body }: TransactionSaveBody) {
 		this.logger.log(`update ${id}`);
 		const transaction = (await this.repo.findByIdWithChildren(id)) ?? notFound();
 
 		const transactionIds = [id, ...transaction.children.map((c) => c.id)];
 		// Children inherit the parent's date
-		const incomingChildren = (body.children ?? []).map((c) =>
-			normalizeTransactionRefs({ ...c, date: transaction.date, parentId: id }),
-		);
+		const incomingChildren = (children ?? []).map((c) => ({ ...c, date: transaction.date, parentId: id }));
 		const incomingById = new Map(incomingChildren.filter((c) => c.id).map((c) => [c.id, c]));
 
 		// a failure rolls back and reaches the client as a 500
 		await this.repo.runInTransaction(async (tx) => {
 			await this.repo.deleteTags(transactionIds, tx);
 
-			await this.repo.update(id, normalizeTransactionRefs(body), tx);
-			if (body.tags?.length) {
-				await this.repo.createTags(tagLinks(id, body.tags), tx);
+			await this.repo.update(id, body, tx);
+			if (tags?.length) {
+				await this.repo.createTags(tagLinks(id, tags), tx);
 			}
 
 			for (const existing of transaction.children) {

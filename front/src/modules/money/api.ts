@@ -1,3 +1,17 @@
+import type {
+	Account,
+	AccountDetails,
+	Analytic,
+	BankOverview,
+	BankTree,
+	Category,
+	PaymentType,
+	PaymentTypeDetails,
+	RecapResponse,
+	Tag,
+	Transaction,
+} from "@personal-tracker/shared/money";
+
 import { queryOptions } from "@tanstack/react-query";
 
 import type { YearQueryConfig } from "../../hooks/use-year-changer";
@@ -6,32 +20,14 @@ import { fetchJson, sendJson, withQuery } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
 
 async function getBanksOverview() {
-	return fetchJson<Array<Money.BankWithHistory>>(`${API_BASE_URL}/money/banks/overview`);
+	return fetchJson<Array<BankOverview>>(`${API_BASE_URL}/money/banks/overview`);
 }
 async function getBanksTree() {
-	return fetchJson<Array<Money.Bank>>(`${API_BASE_URL}/money/banks/tree`);
+	return fetchJson<Array<BankTree>>(`${API_BASE_URL}/money/banks/tree`);
 }
 
-interface CategoryData {
-	id: string;
-	name: string;
-	months: {
-		[key: string]: {
-			debit: number;
-			credit: number;
-			total?: number;
-		};
-	};
-}
-interface ReponseData {
-	nbMonths: number;
-	data: Array<CategoryData>;
-	total: Record<string, number>;
-	months: Array<string>;
-	allMonths: Array<string>;
-}
 async function getAnnualRecap(year: string, regroup: boolean) {
-	return fetchJson<ReponseData>(
+	return fetchJson<RecapResponse>(
 		withQuery(`${API_BASE_URL}/money/recap`, {
 			from: `${year}-01-01`,
 			to: `${year}-12-31`,
@@ -41,7 +37,7 @@ async function getAnnualRecap(year: string, regroup: boolean) {
 }
 
 async function getAnalytics(splitParent: boolean) {
-	return fetchJson<Array<Money.Analytic>>(withQuery(`${API_BASE_URL}/money/tags/analytics`, { splitParent }));
+	return fetchJson<Array<Analytic>>(withQuery(`${API_BASE_URL}/money/tags/analytics`, { splitParent }));
 }
 
 // no id: created (POST), an id: updated (PUT /:id)
@@ -52,7 +48,7 @@ function saveMoney(url: string, id: number | undefined, data: unknown) {
 // TRANSACTIONS
 //
 async function getTransactions(from: string, to: string, search?: string, useTransactionDate?: boolean) {
-	return fetchJson<Array<Money.Transaction>>(
+	return fetchJson<Array<Transaction>>(
 		withQuery(`${API_BASE_URL}/money/transactions`, {
 			from,
 			to,
@@ -62,16 +58,16 @@ async function getTransactions(from: string, to: string, search?: string, useTra
 	);
 }
 async function getAccountTransactions(accountId: string) {
-	return fetchJson<Array<Money.Transaction>>(`${API_BASE_URL}/money/transactions/account/${accountId}`);
+	return fetchJson<Array<Transaction>>(`${API_BASE_URL}/money/transactions/account/${accountId}`);
 }
 async function getCategoryTransactions(categoryId: string) {
-	return fetchJson<Array<Money.Transaction>>(`${API_BASE_URL}/money/transactions/category/${categoryId}`);
+	return fetchJson<Array<Transaction>>(`${API_BASE_URL}/money/transactions/category/${categoryId}`);
 }
 async function getTagTransactions(tagId: string) {
-	return fetchJson<Array<Money.Transaction>>(`${API_BASE_URL}/money/transactions/tag/${tagId}`);
+	return fetchJson<Array<Transaction>>(`${API_BASE_URL}/money/transactions/tag/${tagId}`);
 }
 async function getTransaction(id: number) {
-	return fetchJson<Money.Transaction>(`${API_BASE_URL}/money/transactions/${id}`);
+	return fetchJson<Transaction>(`${API_BASE_URL}/money/transactions/${id}`);
 }
 
 export async function saveTransaction({ transactionId, data }: { transactionId?: number; data: any }) {
@@ -101,10 +97,10 @@ export async function deleteTransaction(transactionId: number) {
 // BANKS
 //
 async function getBank(id: number) {
-	return fetchJson<Money.Bank>(`${API_BASE_URL}/money/banks/${id}`);
+	return fetchJson<BankTree>(`${API_BASE_URL}/money/banks/${id}`);
 }
 async function getBanks() {
-	return fetchJson<Array<Money.Bank>>(`${API_BASE_URL}/money/banks/`);
+	return fetchJson<Array<BankTree>>(`${API_BASE_URL}/money/banks/`);
 }
 
 export async function updateBank({ bankId, data }: { bankId?: number; data: any }) {
@@ -121,11 +117,11 @@ export async function deleteBank(bankId: number) {
 // ACCOUNTS
 //
 async function getAccount(accountId: string) {
-	return fetchJson<Array<Money.Account>>(`${API_BASE_URL}/money/accounts/${accountId}`);
+	return fetchJson<Array<Account>>(`${API_BASE_URL}/money/accounts/${accountId}`);
 }
 
 async function getAccountDetails(accountId: string) {
-	return fetchJson<Money.AccountDetails>(`${API_BASE_URL}/money/accounts/${accountId}/details`);
+	return fetchJson<AccountDetails>(`${API_BASE_URL}/money/accounts/${accountId}/details`);
 }
 
 export async function updateAccount({ accountId, data }: { accountId?: number; data: any }) {
@@ -143,13 +139,13 @@ export async function deleteAccount(accountId: number) {
 //
 
 async function getPaymentTypes() {
-	return fetchJson<Array<Money.PaymentType>>(`${API_BASE_URL}/money/payment-types`);
+	return fetchJson<Array<PaymentType>>(`${API_BASE_URL}/money/payment-types`);
 }
 async function getPaymentType(paymentTypeId: number) {
-	return fetchJson<Money.PaymentType>(`${API_BASE_URL}/money/payment-types/${paymentTypeId}`);
+	return fetchJson<PaymentType>(`${API_BASE_URL}/money/payment-types/${paymentTypeId}`);
 }
 async function getPaymentTypeDetails(paymentTypeId: number) {
-	return fetchJson<Money.PaymentTypeWithDetails>(`${API_BASE_URL}/money/payment-types/${paymentTypeId}/details`);
+	return fetchJson<PaymentTypeDetails>(`${API_BASE_URL}/money/payment-types/${paymentTypeId}/details`);
 }
 export async function updatePaymentType({ paymentTypeId, data }: { paymentTypeId?: number; data: any }) {
 	return saveMoney(`${API_BASE_URL}/money/payment-types`, paymentTypeId, data);
@@ -164,10 +160,10 @@ export async function deletePaymentType(paymentTypeId: number) {
 // CATEGORIES
 //
 async function getCategories() {
-	return fetchJson<Array<Money.Category>>(`${API_BASE_URL}/money/categories`);
+	return fetchJson<Array<Category>>(`${API_BASE_URL}/money/categories`);
 }
-interface CategorieDetails extends Money.Category {
-	children: Array<Money.Category>;
+interface CategorieDetails extends Category {
+	children: Array<Category>;
 	transactions: number;
 }
 async function getCategory(categoryId: number) {
@@ -188,10 +184,10 @@ export async function deleteCategory(categoryId: number) {
 // TAGS
 //
 async function getTags() {
-	return fetchJson<Array<Money.Tag>>(`${API_BASE_URL}/money/tags`);
+	return fetchJson<Array<Tag>>(`${API_BASE_URL}/money/tags`);
 }
-interface TagDetails extends Money.Tag {
-	children: Array<Money.Tag>;
+interface TagDetails extends Tag {
+	children: Array<Tag>;
 	transactions: number;
 }
 async function getTag(tagId: number) {
@@ -222,7 +218,7 @@ export const banksTreeQuery = () =>
 		queryKey: ["money", "banks", "tree"],
 		queryFn: getBanksTree,
 	});
-export const annualRecap = (regroup: boolean): YearQueryConfig<ReponseData> => ({
+export const annualRecap = (regroup: boolean): YearQueryConfig<RecapResponse> => ({
 	queryKey: ["money", "recap", String(regroup)],
 	queryFn: (from: string) => getAnnualRecap(from.substring(0, 4), regroup),
 });
@@ -259,7 +255,7 @@ export const groupTransactionsQuery = (type: "category" | "tag" | "account", id:
 	});
 // header data of a transactions group page: the account (with its history, for thresholds), tag or category
 export const groupDetailsQuery = (type: "category" | "tag" | "account", id: string) =>
-	queryOptions<Money.AccountDetails | CategorieDetails | TagDetails>({
+	queryOptions<AccountDetails | CategorieDetails | TagDetails>({
 		queryKey:
 			type === "account"
 				? // "details": ["money", "accounts", id] is used by NewAccountForm for getAccount()

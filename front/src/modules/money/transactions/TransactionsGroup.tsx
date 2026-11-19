@@ -1,3 +1,5 @@
+import type { AccountDetails, AccountHistory } from "@personal-tracker/shared/money";
+
 import { useSuspenseQueries } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Fragment } from "react";
@@ -46,7 +48,7 @@ export default function MoneyGroupTransactions({ type, id }: { type: "category" 
 	const [{ data: transactionData }, { data: details }] = useSuspenseQueries({
 		queries: [groupTransactionsQuery(type, id), groupDetailsQuery(type, id)],
 	});
-	const accountData = type === "account" ? (details as Money.AccountDetails) : undefined;
+	const accountData = type === "account" ? (details as AccountDetails) : undefined;
 
 	// Title
 	let title = "";
@@ -105,7 +107,7 @@ export default function MoneyGroupTransactions({ type, id }: { type: "category" 
 		return rows;
 	}
 
-	function processThreshold(threshold?: Money.AmountHistory) {
+	function processThreshold(threshold?: AccountHistory) {
 		if (!threshold) {
 			return [];
 		}

@@ -1,3 +1,5 @@
+import type { Category, PaymentType, Transaction, TransactionChild } from "@personal-tracker/shared/money";
+
 import { useFormContext } from "react-hook-form";
 
 import type { QuickEditInputs } from "./TransactionsTable";
@@ -14,17 +16,17 @@ export default function TransactionChildRow({
 	paymentTypes,
 	onQuickEdit,
 }: {
-	child: Money.Transaction;
-	parentTransaction: Money.Transaction;
+	child: TransactionChild;
+	parentTransaction: Transaction;
 	expanded: boolean;
 	editInProgress: boolean;
-	categories: Array<Money.Category> | undefined;
-	paymentTypes: Array<Money.PaymentType> | undefined;
+	categories: Array<Category> | undefined;
+	paymentTypes: Array<PaymentType> | undefined;
 	onQuickEdit: (id: number) => void;
 }) {
 	const { register } = useFormContext<QuickEditInputs>();
-	const childCategory = child.category ?? {};
-	const childPaymentType = child.paymentType ?? {};
+	const childCategory = child.category;
+	const childPaymentType = child.paymentType;
 
 	return (
 		<tr id={`transaction-${child.id}`} className={`${expanded ? "" : "hidden"} ${editInProgress ? "edit" : ""}`}>

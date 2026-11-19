@@ -1,23 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { mergeAndSortTransactions, normalizeTransactionRefs } from "./transaction.entity.js";
-
-describe("normalizeTransactionRefs", () => {
-	it("turns a 0 categoryId / paymentTypeId into null and keeps other values", () => {
-		expect(normalizeTransactionRefs({ categoryId: 0, paymentTypeId: 4, name: "x" })).toEqual({
-			categoryId: null,
-			paymentTypeId: 4,
-			name: "x",
-		});
-	});
-
-	it("leaves non-zero refs untouched", () => {
-		expect(normalizeTransactionRefs({ categoryId: 3, paymentTypeId: 7 })).toEqual({
-			categoryId: 3,
-			paymentTypeId: 7,
-		});
-	});
-});
+import { mergeAndSortTransactions } from "./transaction.entity.js";
 
 describe("mergeAndSortTransactions", () => {
 	it("merges both lists and sorts by date then time ascending, no time first", () => {

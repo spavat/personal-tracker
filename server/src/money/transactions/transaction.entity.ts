@@ -1,32 +1,3 @@
-import type { moneyTag } from "../../database/schema.js";
-
-// The front's transaction payload (no shared zod schema: the body is not validated, as in the Fastify server)
-export interface TransactionBody {
-	id: number;
-	name: string;
-	date: string | null;
-	time: string;
-	considerationDate: string;
-	description: string;
-	amount: number;
-	children: Array<TransactionBody>;
-	parentId?: number | null;
-	categoryId: number;
-	paymentTypeId: number;
-	recurrent: boolean;
-	informative: boolean;
-	tags: Array<typeof moneyTag.$inferSelect>;
-}
-
-// The front sends 0 for "no category" / "no payment type"
-export function normalizeTransactionRefs<T extends { categoryId: number; paymentTypeId: number }>(data: T) {
-	return {
-		...data,
-		categoryId: data.categoryId !== 0 ? data.categoryId : null,
-		paymentTypeId: data.paymentTypeId !== 0 ? data.paymentTypeId : null,
-	};
-}
-
 type Sortable = { date: string | null; time?: string | null };
 
 function compareByDateThenTime(t1: Sortable, t2: Sortable) {

@@ -1,11 +1,14 @@
 interface AmountOption {
-	informative?: boolean;
+	informative?: boolean | null;
 }
-export function getAmountClassName(amount: number, options?: AmountOption) {
+// a transaction saved without an amount counts as 0
+export function getAmountClassName(amount: number | null, options?: AmountOption) {
 	if (options?.informative) {
 		return "informative";
 	}
-	if (amount < 0) {
+	if (amount === null) {
+		return "transfert";
+	} else if (amount < 0) {
 		return "debit";
 	} else if (amount > 0) {
 		return "credit";

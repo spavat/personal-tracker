@@ -1,10 +1,11 @@
 import type { NestNodeApplication } from "@nestjs/platform-node";
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { makeFakeDrizzle } from "../test-support/fake-drizzle.js";
 import { buildTestApp } from "../test-support/test-app.js";
 import { MoneyModule } from "./money.module.js";
+import { TransactionsService } from "./transactions/transactions.service.js";
 
 const OWNER = { user: { id: "owner" }, session: { id: "session" } };
 
@@ -89,7 +90,11 @@ describe("MoneyModule controllers", () => {
 			app = ctx.app;
 			ctx.table("moneyTransaction").findFirst.mockResolvedValue({ ...transactionRow(), children: [] });
 
-			const created = await app.inject({ method: "POST", url: "/money/transactions", payload: { name: "Shop" } });
+			const created = await app.inject({
+				method: "POST",
+				url: "/money/transactions",
+				payload: { name: "Shop", amount: -10, date: "2026-06-10" },
+			});
 			const deleted = await app.inject({ method: "DELETE", url: "/money/transactions/1" });
 
 			expect(created.statusCode).toBe(201);
@@ -140,6 +145,71 @@ describe("MoneyModule controllers", () => {
 			expect(
 				(await app.inject({ method: "GET", url: "/money/recap?from=2024-01-01&to=2024-01-31" })).statusCode,
 			).toBe(200);
+		});
+	});
+
+	describe("transaction body", () => {
+		const body = { name: "Shop", amount: -10, date: "2026-06-10" };
+
+		it("saves a 0 category / payment type and an empty time or consideration date as null", async () => {
+			({ app } = await setup());
+			const create = vi
+				.spyOn(app.get(TransactionsService), "create")
+				.mockResolvedValue(transactionRow() as never);
+
+			const res = await app.inject({
+				method: "POST",
+				url: "/money/transactions",
+				payload: {
+					...body,
+					categoryId: 0,
+					paymentTypeId: 3,
+					time: "",
+					considerationDate: "",
+					// the form's own fields are left out
+					withChildren: true,
+					children: [
+						{ name: "Part", amount: null, categoryId: 5, paymentTypeId: 0, tags: [{ id: 8, name: "x" }] },
+					],
+				},
+			});
+
+			expect(res.statusCode).toBe(201);
+			expect(create).toHaveBeenCalledWith({
+				...body,
+				categoryId: null,
+				paymentTypeId: 3,
+				time: null,
+				considerationDate: null,
+				children: [{ name: "Part", amount: null, categoryId: 5, paymentTypeId: null, tags: [{ id: 8 }] }],
+			});
+		});
+
+		it("refuses a transaction without a date or an amount", async () => {
+			({ app } = await setup());
+
+			for (const payload of [
+				{ ...body, date: undefined },
+				{ ...body, amount: "-10" },
+			]) {
+				const res = await app.inject({ method: "POST", url: "/money/transactions", payload });
+				expect(res.statusCode).toBe(400);
+				expect(res.json().code).toBe("validation");
+			}
+		});
+
+		it("takes the fields sent only on a quick update", async () => {
+			({ app } = await setup());
+			const patch = vi.spyOn(app.get(TransactionsService), "patch").mockResolvedValue(transactionRow() as never);
+
+			const res = await app.inject({
+				method: "PATCH",
+				url: "/money/transactions/1",
+				payload: { id: 1, name: "New", categoryId: 0 },
+			});
+
+			expect(res.statusCode).toBe(200);
+			expect(patch).toHaveBeenCalledWith(1, { name: "New", categoryId: null });
 		});
 	});
 });

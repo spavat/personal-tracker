@@ -1,3 +1,5 @@
+import type { Category, PaymentType, Tag, Transaction } from "@personal-tracker/shared/money";
+
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { Fragment } from "react";
 import { useFormContext } from "react-hook-form";
@@ -9,7 +11,7 @@ import DayDate from "../../../components/DayDate";
 import { getAmountClassName } from "../utils";
 import TransactionChildRow from "./TransactionChildRow";
 
-function TagBadges({ tags }: { tags: Array<Money.Tag> }) {
+function TagBadges({ tags }: { tags: Array<Tag> }) {
 	return (
 		<>
 			{tags
@@ -45,7 +47,7 @@ export default function TransactionRow({
 	onToggleExpand,
 	onQuickEdit,
 }: {
-	transaction: Money.Transaction;
+	transaction: Transaction;
 	hasChildren: boolean;
 	expanded: boolean;
 	recurrent: boolean;
@@ -53,11 +55,11 @@ export default function TransactionRow({
 	editInProgress: boolean;
 	quickUpdateId: number;
 	showTags: boolean;
-	categories: Array<Money.Category> | undefined;
-	paymentTypes: Array<Money.PaymentType> | undefined;
-	categoriesToDisplay: Array<Money.Category>;
-	paymentTypesToDisplay: Array<Money.PaymentType>;
-	tagsToDisplay: Array<Money.Tag>;
+	categories: Array<Category> | undefined;
+	paymentTypes: Array<PaymentType> | undefined;
+	categoriesToDisplay: Array<Category>;
+	paymentTypesToDisplay: Array<PaymentType>;
+	tagsToDisplay: Array<Tag>;
 	period?: string;
 	onToggleExpand: (id: number) => void;
 	onQuickEdit: (id: number) => void;

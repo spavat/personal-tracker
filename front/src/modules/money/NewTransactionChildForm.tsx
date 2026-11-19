@@ -1,3 +1,5 @@
+import type { Category, PaymentType, Tag } from "@personal-tracker/shared/money";
+
 import { Fragment } from "react";
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
@@ -6,9 +8,9 @@ import Badge from "../../components/Badge";
 interface Form {
 	id: string;
 	index: number;
-	categories: Array<Money.Category>;
-	paymentTypes: Array<Money.PaymentType>;
-	tags: Array<Money.Tag>;
+	categories: Array<Category>;
+	paymentTypes: Array<PaymentType>;
+	tags: Array<Tag>;
 	removeChild: (index: number) => void;
 }
 

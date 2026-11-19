@@ -1,3 +1,5 @@
+import type { Category, PaymentType, Transaction, TransactionChild } from "@personal-tracker/shared/money";
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { FormProvider, type SubmitHandler, useForm } from "react-hook-form";
@@ -9,11 +11,11 @@ import TransactionRow from "./TransactionRow";
 
 export interface QuickEditInputs {
 	id: number;
-	name: string;
-	description: string;
-	amount: number;
-	categoryId: number;
-	paymentTypeId: number;
+	name: string | null;
+	description: string | null;
+	amount: number | null;
+	categoryId: number | null;
+	paymentTypeId: number | null;
 }
 
 export default function TransactionsTable({
@@ -25,9 +27,9 @@ export default function TransactionsTable({
 	from,
 	to,
 }: {
-	transactions: Array<Money.Transaction> | undefined;
-	categories: Array<Money.Category> | undefined;
-	paymentTypes: Array<Money.PaymentType> | undefined;
+	transactions: Array<Transaction> | undefined;
+	categories: Array<Category> | undefined;
+	paymentTypes: Array<PaymentType> | undefined;
 	showTags: boolean;
 	period?: string;
 	from: string;
@@ -62,7 +64,7 @@ export default function TransactionsTable({
 
 	function quickUpdateTransaction(transactionId: number) {
 		setQuickUpdateId(transactionId);
-		let transaction: Money.Transaction | null = null;
+		let transaction: TransactionChild | null = null;
 		if (transactions) {
 			for (const t of transactions) {
 				if (t.id === transactionId) {
@@ -117,9 +119,7 @@ export default function TransactionsTable({
 
 							const rawCategories = [];
 							if (hasChildren && !expanded) {
-								rawCategories.push(
-									...transaction.children.flatMap(({ category }) => category).filter(Boolean),
-								);
+								rawCategories.push(...transaction.children.flatMap(({ category }) => category ?? []));
 							} else if (transaction.category) {
 								rawCategories.push(transaction.category);
 							}
@@ -127,7 +127,7 @@ export default function TransactionsTable({
 							const rawPaymentTypes = [];
 							if (hasChildren && !expanded) {
 								rawPaymentTypes.push(
-									...transaction.children.flatMap(({ paymentType }) => paymentType).filter(Boolean),
+									...transaction.children.flatMap(({ paymentType }) => paymentType ?? []),
 								);
 							} else if (transaction.paymentType) {
 								rawPaymentTypes.push(transaction.paymentType);
@@ -135,7 +135,7 @@ export default function TransactionsTable({
 
 							const rawTags = [];
 							if (hasChildren && !expanded) {
-								rawTags.push(...transaction.children.flatMap(({ tags }) => tags).filter(Boolean));
+								rawTags.push(...transaction.children.flatMap(({ tags }) => tags));
 							} else if (transaction.tags.length) {
 								rawTags.push(...transaction.tags);
 							}
@@ -148,11 +148,11 @@ export default function TransactionsTable({
 							// Calcul du total du mois
 							if (hasChildren) {
 								totalAmount = transaction.children.reduce((total, child) => {
-									return total + child.amount;
+									return total + (child.amount ?? 0);
 								}, totalAmount);
 							} else {
 								if (!transaction.informative) {
-									totalAmount += transaction.amount;
+									totalAmount += transaction.amount ?? 0;
 								}
 							}
 

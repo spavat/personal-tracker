@@ -1,3 +1,5 @@
+import type { RecapQuerystring } from "@personal-tracker/shared/money";
+
 import { Injectable, Logger } from "@nestjs/common";
 
 import type { moneyCategory } from "../database/schema.js";
@@ -9,12 +11,6 @@ import { TransactionsRepository } from "./transactions/transactions.repository.j
 type Category = typeof moneyCategory.$inferSelect;
 type DebitCredit = { debit: number; credit: number };
 
-export interface RecapQuery {
-	from: string;
-	to: string;
-	regroupCategory: boolean;
-}
-
 // Debit / credit by category and by month, over the transactions' consideration date
 @Injectable()
 export class RecapService {
@@ -25,7 +21,7 @@ export class RecapService {
 		private readonly transactionsRepo: TransactionsRepository,
 	) {}
 
-	async recap({ from, to, regroupCategory }: RecapQuery) {
+	async recap({ from, to, regroupCategory }: RecapQuerystring) {
 		this.logger.log(`recap ${from} - ${to}${regroupCategory ? " (regrouped)" : ""}`);
 		const allCategories = await this.categoriesRepo.findAll();
 		const categoryById = new Map(allCategories.map((c) => [c.id, c]));

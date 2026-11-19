@@ -1,3 +1,5 @@
+import type { Category, PaymentType, Tag } from "@personal-tracker/shared/money";
+
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import Badge from "../../../components/Badge";
@@ -5,7 +7,7 @@ import { formatDate, formatDay } from "../../../utils";
 import { transactionQuery } from "../api";
 import { getAmountClassName } from "../utils";
 
-function EntityBadge({ entity }: { entity?: Money.Category | Money.PaymentType | Money.Tag }) {
+function EntityBadge({ entity }: { entity?: Category | PaymentType | Tag | null }) {
 	if (!entity) {
 		return null;
 	}
