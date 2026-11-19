@@ -1,28 +1,24 @@
 import type { WorkListResponse } from "@personal-tracker/shared/show";
 
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 
-import type { UseCaseLog } from "../../common/use-case-log.js";
 import type { SaveWorkBody } from "./work.entity.js";
 
 import { WorkRepository } from "./work.repository.js";
 
 @Injectable()
-export class ListWorksUseCase {
-	constructor(private repo: WorkRepository) {}
+export class WorkService {
+	private readonly logger = new Logger(WorkService.name);
 
-	async execute(log: UseCaseLog): Promise<WorkListResponse> {
-		log.info("ListWorksUseCase.execute");
+	constructor(private readonly repo: WorkRepository) {}
+
+	async list(): Promise<WorkListResponse> {
+		this.logger.log("list");
 		return this.repo.findAll();
 	}
-}
 
-@Injectable()
-export class GetGroupedWorksUseCase {
-	constructor(private repo: WorkRepository) {}
-
-	async execute(groupByYear: boolean, log: UseCaseLog) {
-		log.info("GetGroupedWorksUseCase.execute");
+	async listGrouped(groupByYear: boolean) {
+		this.logger.log("listGrouped");
 		const works = await this.repo.findAllWithSpectaclesPerformancesAndPlaces();
 		if (!works) {
 			return {};
@@ -170,34 +166,19 @@ export class GetGroupedWorksUseCase {
 			})
 			.toSorted((a, b) => b.name.localeCompare(a.name));
 	}
-}
 
-@Injectable()
-export class GetWorkUseCase {
-	constructor(private repo: WorkRepository) {}
-
-	execute(id: number, log: UseCaseLog) {
-		log.info("GetWorkUseCase.execute");
+	get(id: number) {
+		this.logger.log("get");
 		return this.repo.findByIdWithSpectacles(id);
 	}
-}
 
-@Injectable()
-export class SaveWorkUseCase {
-	constructor(private repo: WorkRepository) {}
-
-	async execute(data: SaveWorkBody, log: UseCaseLog) {
-		log.info("SaveWorkUseCase.execute");
+	async save(data: SaveWorkBody) {
+		this.logger.log("save");
 		return (await this.repo.save(data)) ?? null;
 	}
-}
 
-@Injectable()
-export class DeleteWorkUseCase {
-	constructor(private repo: WorkRepository) {}
-
-	async execute(id: number, log: UseCaseLog) {
-		log.info("DeleteWorkUseCase.execute");
+	async delete(id: number) {
+		this.logger.log("delete");
 		await this.repo.delete(id);
 	}
 }

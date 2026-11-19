@@ -7,8 +7,7 @@ import type { BookRepository } from "../reading-book/book.repository.js";
 import type { ReadingMangaRepository } from "../reading-manga/reading-manga.repository.js";
 import type { PerformanceRepository } from "../show/performances/performance.repository.js";
 
-import { asLog, makeLog } from "../test-support/fake-log.js";
-import { GetDailyCalendarUseCase, GetPeriodCalendarUseCase } from "./calendar.useCases.js";
+import { CalendarService } from "./calendar.service.js";
 
 function fakes() {
 	const music = { findAll: vi.fn().mockResolvedValue([]) };
@@ -20,8 +19,8 @@ function fakes() {
 	return { music, internet, book, manga, performance, game };
 }
 
-function periodUseCase(f: ReturnType<typeof fakes>) {
-	return new GetPeriodCalendarUseCase(
+function build(f: ReturnType<typeof fakes>) {
+	return new CalendarService(
 		f.music as unknown as MusicRepository,
 		f.internet as unknown as InternetRepository,
 		f.book as unknown as BookRepository,
@@ -31,10 +30,10 @@ function periodUseCase(f: ReturnType<typeof fakes>) {
 	);
 }
 
-describe("GetPeriodCalendarUseCase", () => {
+describe("CalendarService.period", () => {
 	it("returns an empty list when every source is empty", async () => {
 		const f = fakes();
-		expect(await periodUseCase(f).execute({ from: "2024-05-01", to: "2024-05-31" }, asLog(makeLog()))).toEqual([]);
+		expect(await build(f).period({ from: "2024-05-01", to: "2024-05-31" })).toEqual([]);
 		expect(f.music.findAll).toHaveBeenCalledWith({ from: "2024-05-01", to: "2024-05-31" });
 		expect(f.performance.findAll).toHaveBeenCalledWith({ from: "2024-05-01", to: "2024-05-31" });
 	});
@@ -44,16 +43,16 @@ describe("GetPeriodCalendarUseCase", () => {
 		f.music.findAll.mockResolvedValue([{ listeningDate: "2024-05-01", duration: 30 }]);
 		f.game.findPlaysInRange.mockResolvedValue([{ id: "g1", plays: [{ date: "2024-05-01", duration: 60 }] }]);
 
-		expect(await periodUseCase(f).execute({ from: "2024-05-01", to: "2024-05-31" }, asLog(makeLog()))).toEqual([
+		expect(await build(f).period({ from: "2024-05-01", to: "2024-05-31" })).toEqual([
 			{ date: "2024-05-01", music: { duration: 30 }, game: { games: 1, duration: 60 } },
 		]);
 	});
 });
 
-describe("GetDailyCalendarUseCase", () => {
+describe("CalendarService.daily", () => {
 	it("returns an empty object when every source is empty", async () => {
 		const f = fakes();
-		const useCase = new GetDailyCalendarUseCase(
+		const service = new CalendarService(
 			f.music as unknown as MusicRepository,
 			f.internet as unknown as InternetRepository,
 			f.book as unknown as BookRepository,
@@ -61,6 +60,6 @@ describe("GetDailyCalendarUseCase", () => {
 			f.performance as unknown as PerformanceRepository,
 			f.game as unknown as GameRepository,
 		);
-		expect(await useCase.execute("2024-05-01", asLog(makeLog()))).toEqual({});
+		expect(await service.daily("2024-05-01")).toEqual({});
 	});
 });

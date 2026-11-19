@@ -1,8 +1,7 @@
 import type { PerformanceView } from "@personal-tracker/shared/show";
 
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 
-import type { UseCaseLog } from "../../common/use-case-log.js";
 import type { SaveCastingBody, SavePerformanceBody } from "./performance.entity.js";
 
 import { BadRequestError, NotFoundError } from "../../common/errors.js";
@@ -13,14 +12,17 @@ import { toPerformanceView } from "./performance.entity.js";
 import { PerformanceRepository } from "./performance.repository.js";
 
 @Injectable()
-export class ListPerformancesUseCase {
-	constructor(private repo: PerformanceRepository) {}
+export class PerformanceService {
+	private readonly logger = new Logger(PerformanceService.name);
 
-	async execute(
-		{ from, to, sort }: { from?: string; to?: string; sort?: string[] },
-		log: UseCaseLog,
-	): Promise<Array<PerformanceView>> {
-		log.info("ListPerformancesUseCase.execute");
+	constructor(
+		private readonly repo: PerformanceRepository,
+		private readonly mediaRepo: MediaRepository,
+		private readonly storage: MediaStorageRepository,
+	) {}
+
+	async list({ from, to, sort }: { from?: string; to?: string; sort?: string[] }): Promise<Array<PerformanceView>> {
+		this.logger.log("list");
 		// only the date is sortable
 		const [, sortDirection] = sort ?? ["date", "asc"];
 		const performances = await this.repo.findAllWithDetails({
@@ -30,28 +32,18 @@ export class ListPerformancesUseCase {
 		});
 		return performances.map(toPerformanceView);
 	}
-}
 
-@Injectable()
-export class GetPerformanceUseCase {
-	constructor(private repo: PerformanceRepository) {}
-
-	async execute(performanceId: number, log: UseCaseLog) {
-		log.info("GetPerformanceUseCase.execute");
+	async get(performanceId: number) {
+		this.logger.log("get");
 		const performance = await this.repo.findByIdWithDetails(performanceId);
 		if (!performance) return null;
 		// the details also need the spectacle models, for the casting form
 		const { models, ...spectacle } = performance.spectacle!;
 		return { ...toPerformanceView(performance), spectacle: { ...spectacle, models: models.map(toModelView) } };
 	}
-}
 
-@Injectable()
-export class SavePerformanceUseCase {
-	constructor(private repo: PerformanceRepository) {}
-
-	async execute(body: SavePerformanceBody, log: UseCaseLog) {
-		log.info("SavePerformanceUseCase.execute");
+	async save(body: SavePerformanceBody) {
+		this.logger.log("save");
 		const { work, spectacle, place, performance } = body;
 
 		return this.repo.runInTransaction(async (tx) => {
@@ -99,18 +91,9 @@ export class SavePerformanceUseCase {
 			return saved;
 		});
 	}
-}
 
-@Injectable()
-export class DeletePerformanceUseCase {
-	constructor(
-		private repo: PerformanceRepository,
-		private mediaRepo: MediaRepository,
-		private storage: MediaStorageRepository,
-	) {}
-
-	async execute(id: number, log: UseCaseLog) {
-		log.info("DeletePerformanceUseCase.execute");
+	async delete(id: number) {
+		this.logger.log("delete");
 		const keys = await this.repo.runInTransaction(async (tx) => {
 			const pictures = await this.repo.findRolePictures(tx, id);
 			const [deleted] = await this.repo.delete(tx, id);
@@ -133,17 +116,14 @@ export class DeletePerformanceUseCase {
 		});
 		// after the commit: a failed S3 delete only leaves an unreferenced file
 		for (const key of keys) {
-			await this.storage.deleteObject(key).catch((error) => log.warn(error, "S3 media delete failed"));
+			await this.storage
+				.deleteObject(key)
+				.catch((error) => this.logger.warn(`S3 media delete failed (${key}): ${String(error)}`));
 		}
 	}
-}
 
-@Injectable()
-export class SaveCastingUseCase {
-	constructor(private repo: PerformanceRepository) {}
-
-	async execute(data: SaveCastingBody, log: UseCaseLog) {
-		log.info("SaveCastingUseCase.execute");
+	async saveCasting(data: SaveCastingBody) {
+		this.logger.log("saveCasting");
 		if (data) {
 			const roles = data.roles.map((r) => ({ ...r, performanceId: data.performanceId }));
 			const itemsToInsert = roles.filter((item) => !item.id);

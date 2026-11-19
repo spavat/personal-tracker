@@ -2,8 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { ModelRepository } from "./model.repository.js";
 
-import { asLog, makeLog } from "../../test-support/fake-log.js";
-import { DeleteModelUseCase, GetModelUseCase, SaveModelUseCase } from "./model.useCases.js";
+import { ModelService } from "./model.service.js";
 
 function fakeRepo() {
 	const tx = { __tx: true };
@@ -21,25 +20,22 @@ function fakeRepo() {
 }
 const asRepo = (r: ReturnType<typeof fakeRepo>) => r as unknown as ModelRepository;
 
-describe("GetModelUseCase", () => {
+describe("ModelService.get", () => {
 	it("delegates to the repository", () => {
 		const repo = fakeRepo();
-		new GetModelUseCase(asRepo(repo)).execute(3, asLog(makeLog()));
+		new ModelService(asRepo(repo)).get(3);
 		expect(repo.findByIdWithDetails).toHaveBeenCalledWith(3);
 	});
 });
 
-describe("SaveModelUseCase", () => {
+describe("ModelService.save", () => {
 	it("updates an existing model: clears roles, re-adds them, updates the model", async () => {
 		const repo = fakeRepo();
-		const saved = await new SaveModelUseCase(asRepo(repo)).execute(
-			{
-				id: 7,
-				name: "Cast A",
-				roles: [{ name: "Lead", artistId: 5 }],
-			} as any,
-			asLog(makeLog()),
-		);
+		const saved = await new ModelService(asRepo(repo)).save({
+			id: 7,
+			name: "Cast A",
+			roles: [{ name: "Lead", artistId: 5 }],
+		} as any);
 
 		expect(repo.deleteModelRoles).toHaveBeenCalledWith(repo.tx, 7);
 		expect(repo.insertModelRole).toHaveBeenCalledWith(repo.tx, { name: "Lead", artistId: 5, modelId: 7 });
@@ -51,21 +47,18 @@ describe("SaveModelUseCase", () => {
 	it("rejects an unknown model before touching its roles", async () => {
 		const repo = fakeRepo();
 		repo.updateModel.mockResolvedValue([]);
-		await expect(
-			new SaveModelUseCase(asRepo(repo)).execute({ id: 7, name: "X", roles: [] } as any, asLog(makeLog())),
-		).rejects.toThrow("Modèle introuvable");
+		await expect(new ModelService(asRepo(repo)).save({ id: 7, name: "X", roles: [] } as any)).rejects.toThrow(
+			"Modèle introuvable",
+		);
 		expect(repo.deleteModelRoles).not.toHaveBeenCalled();
 	});
 
 	it("inserts a new model and creates a missing artist for a role", async () => {
 		const repo = fakeRepo();
-		await new SaveModelUseCase(asRepo(repo)).execute(
-			{
-				name: "Cast B",
-				roles: [{ name: "Lead", artist: "New Artist" }],
-			} as any,
-			asLog(makeLog()),
-		);
+		await new ModelService(asRepo(repo)).save({
+			name: "Cast B",
+			roles: [{ name: "Lead", artist: "New Artist" }],
+		} as any);
 
 		expect(repo.insertModel).toHaveBeenCalledWith(repo.tx, expect.objectContaining({ name: "Cast B" }));
 		expect(repo.insertArtist).toHaveBeenCalledWith(repo.tx, "New Artist");
@@ -78,10 +71,10 @@ describe("SaveModelUseCase", () => {
 	});
 });
 
-describe("DeleteModelUseCase", () => {
+describe("ModelService.delete", () => {
 	it("removes the model roles then the model, in a transaction", async () => {
 		const repo = fakeRepo();
-		await new DeleteModelUseCase(asRepo(repo)).execute(7, asLog(makeLog()));
+		await new ModelService(asRepo(repo)).delete(7);
 		expect(repo.deleteModelRoles).toHaveBeenCalledWith(repo.tx, 7);
 		expect(repo.deleteModel).toHaveBeenCalledWith(repo.tx, 7);
 	});

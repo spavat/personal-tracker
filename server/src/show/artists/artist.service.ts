@@ -1,8 +1,6 @@
 import type { ArtistListResponse, SaveArtistBodyRequest } from "@personal-tracker/shared/show";
 
-import { Injectable } from "@nestjs/common";
-
-import type { UseCaseLog } from "../../common/use-case-log.js";
+import { Injectable, Logger } from "@nestjs/common";
 
 import { sortByMediaOrder, toArtistMedia } from "../media/media.entity.js";
 import { toPerformanceView } from "../performances/performance.entity.js";
@@ -10,11 +8,13 @@ import { toArtistView } from "./artist.entity.js";
 import { ArtistRepository } from "./artist.repository.js";
 
 @Injectable()
-export class ListArtistsUseCase {
-	constructor(private repo: ArtistRepository) {}
+export class ArtistService {
+	private readonly logger = new Logger(ArtistService.name);
 
-	async execute(sort: string[] | undefined, log: UseCaseLog) {
-		log.info("ListArtistsUseCase.execute");
+	constructor(private readonly repo: ArtistRepository) {}
+
+	async list(sort: string[] | undefined) {
+		this.logger.log("list");
 		const [sortField, sortDirection] = sort ?? ["name", "asc"];
 		const artists = await this.repo.findAll({ sortField, sortDirection });
 		return artists.map(({ nbPerformances, nbSpectacles, ...artist }): ArtistListResponse => ({
@@ -23,14 +23,9 @@ export class ListArtistsUseCase {
 			nbSpectacles,
 		}));
 	}
-}
 
-@Injectable()
-export class GetArtistUseCase {
-	constructor(private repo: ArtistRepository) {}
-
-	async execute({ artistId, groupBySpectacle }: { artistId: number; groupBySpectacle: boolean }, log: UseCaseLog) {
-		log.info("GetArtistUseCase.execute");
+	async get({ artistId, groupBySpectacle }: { artistId: number; groupBySpectacle: boolean }) {
+		this.logger.log("get");
 		const artistData = await this.repo.findByIdWithPerformances(artistId);
 		if (!artistData) {
 			return null;
@@ -83,25 +78,15 @@ export class GetArtistUseCase {
 			stats,
 		};
 	}
-}
 
-@Injectable()
-export class SaveArtistUseCase {
-	constructor(private repo: ArtistRepository) {}
-
-	async execute(data: SaveArtistBodyRequest, log: UseCaseLog) {
-		log.info("SaveArtistUseCase.execute");
+	async save(data: SaveArtistBodyRequest) {
+		this.logger.log("save");
 		const artist = await this.repo.save(data);
 		return artist ? toArtistView(artist) : null;
 	}
-}
 
-@Injectable()
-export class DeleteArtistUseCase {
-	constructor(private repo: ArtistRepository) {}
-
-	async execute(id: number, log: UseCaseLog) {
-		log.info("DeleteArtistUseCase.execute");
+	async delete(id: number) {
+		this.logger.log("delete");
 		await this.repo.delete(id);
 	}
 }

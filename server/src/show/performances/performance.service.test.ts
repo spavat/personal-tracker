@@ -1,16 +1,12 @@
+import { Logger } from "@nestjs/common";
 import { describe, expect, it, vi } from "vitest";
 
+import type { MediaStorageRepository } from "../media/media-storage.repository.js";
+import type { MediaRepository } from "../media/media.repository.js";
 import type { PerformanceRepository } from "./performance.repository.js";
 
 import { BadRequestError, NotFoundError } from "../../common/errors.js";
-import { asLog, makeLog } from "../../test-support/fake-log.js";
-import {
-	DeletePerformanceUseCase,
-	GetPerformanceUseCase,
-	ListPerformancesUseCase,
-	SaveCastingUseCase,
-	SavePerformanceUseCase,
-} from "./performance.useCases.js";
+import { PerformanceService } from "./performance.service.js";
 
 function fakeRepo() {
 	const tx = { __tx: true };
@@ -32,13 +28,13 @@ function fakeRepo() {
 }
 const asRepo = (r: ReturnType<typeof fakeRepo>) => r as unknown as PerformanceRepository;
 
-describe("ListPerformancesUseCase", () => {
+describe("PerformanceService.list", () => {
 	it("forwards the date range to the repository", async () => {
 		const repo = fakeRepo();
-		await new ListPerformancesUseCase(asRepo(repo)).execute(
-			{ from: "2024-01-01", to: "2024-12-31" },
-			asLog(makeLog()),
-		);
+		await new PerformanceService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).list({
+			from: "2024-01-01",
+			to: "2024-12-31",
+		});
 		expect(repo.findAllWithDetails).toHaveBeenCalledWith({
 			from: "2024-01-01",
 			to: "2024-12-31",
@@ -48,7 +44,9 @@ describe("ListPerformancesUseCase", () => {
 
 	it("forwards the sort direction", async () => {
 		const repo = fakeRepo();
-		await new ListPerformancesUseCase(asRepo(repo)).execute({ sort: ["date", "desc"] }, asLog(makeLog()));
+		await new PerformanceService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).list({
+			sort: ["date", "desc"],
+		});
 		expect(repo.findAllWithDetails).toHaveBeenCalledWith({ sortDirection: "desc" });
 	});
 
@@ -58,12 +56,16 @@ describe("ListPerformancesUseCase", () => {
 			{ id: 1, posterId: "11111111-1111-4111-8111-111111111111" },
 			{ id: 2, posterId: null },
 		]);
-		const result = await new ListPerformancesUseCase(asRepo(repo)).execute({}, asLog(makeLog()));
+		const result = await new PerformanceService(
+			asRepo(repo),
+			{} as MediaRepository,
+			{} as MediaStorageRepository,
+		).list({});
 		expect(result.map((p) => p.posterUrl)).toEqual(["/images/show/11111111-1111-4111-8111-111111111111", null]);
 	});
 });
 
-describe("GetPerformanceUseCase", () => {
+describe("PerformanceService.get", () => {
 	it("returns the performance view with the spectacle and its models", async () => {
 		const repo = fakeRepo();
 		const spectacle = {
@@ -83,7 +85,11 @@ describe("GetPerformanceUseCase", () => {
 			role: [],
 		});
 
-		const result = await new GetPerformanceUseCase(asRepo(repo)).execute(10, asLog(makeLog()));
+		const result = await new PerformanceService(
+			asRepo(repo),
+			{} as MediaRepository,
+			{} as MediaStorageRepository,
+		).get(10);
 
 		expect(result).toMatchObject({
 			id: 10,
@@ -100,19 +106,20 @@ describe("GetPerformanceUseCase", () => {
 	});
 
 	it("returns null for an unknown performance", async () => {
-		expect(await new GetPerformanceUseCase(asRepo(fakeRepo())).execute(10, asLog(makeLog()))).toBeNull();
+		expect(
+			await new PerformanceService(asRepo(fakeRepo()), {} as MediaRepository, {} as MediaStorageRepository).get(
+				10,
+			),
+		).toBeNull();
 	});
 });
 
-describe("SavePerformanceUseCase", () => {
+describe("PerformanceService.save", () => {
 	it("saves the performance directly when place and spectacle ids are already known", async () => {
 		const repo = fakeRepo();
-		await new SavePerformanceUseCase(asRepo(repo)).execute(
-			{
-				performance: { id: 3, date: "2024-01-01", canceled: false, seat: "A1", placeId: 7, spectacleId: 100 },
-			} as any,
-			asLog(makeLog()),
-		);
+		await new PerformanceService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save({
+			performance: { id: 3, date: "2024-01-01", canceled: false, seat: "A1", placeId: 7, spectacleId: 100 },
+		} as any);
 
 		expect(repo.insertPlace).not.toHaveBeenCalled();
 		expect(repo.insertSpectacle).not.toHaveBeenCalled();
@@ -127,22 +134,18 @@ describe("SavePerformanceUseCase", () => {
 		const repo = fakeRepo();
 		repo.savePerformance.mockResolvedValue([]);
 		await expect(
-			new SavePerformanceUseCase(asRepo(repo)).execute(
-				{ performance: { id: 3, date: "2024-01-01", placeId: 7, spectacleId: 100 } } as any,
-				asLog(makeLog()),
-			),
+			new PerformanceService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save({
+				performance: { id: 3, date: "2024-01-01", placeId: 7, spectacleId: 100 },
+			} as any),
 		).rejects.toThrow("Représentation introuvable");
 	});
 
 	it("creates a place when only a place payload is given", async () => {
 		const repo = fakeRepo();
-		await new SavePerformanceUseCase(asRepo(repo)).execute(
-			{
-				performance: { date: "2024-01-01", spectacleId: 100 },
-				place: { name: "New Hall" },
-			} as any,
-			asLog(makeLog()),
-		);
+		await new PerformanceService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save({
+			performance: { date: "2024-01-01", spectacleId: 100 },
+			place: { name: "New Hall" },
+		} as any);
 
 		expect(repo.insertPlace).toHaveBeenCalledWith(repo.tx, { name: "New Hall" });
 		expect(repo.savePerformance).toHaveBeenCalledWith(repo.tx, undefined, expect.objectContaining({ placeId: 70 }));
@@ -150,18 +153,15 @@ describe("SavePerformanceUseCase", () => {
 
 	it("saves a poster of kind poster from the spectacle", async () => {
 		const repo = fakeRepo();
-		await new SavePerformanceUseCase(asRepo(repo)).execute(
-			{
-				performance: {
-					id: 3,
-					date: "2024-01-01",
-					placeId: 7,
-					spectacleId: 100,
-					posterId: "11111111-1111-4111-8111-111111111111",
-				},
-			} as any,
-			asLog(makeLog()),
-		);
+		await new PerformanceService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save({
+			performance: {
+				id: 3,
+				date: "2024-01-01",
+				placeId: 7,
+				spectacleId: 100,
+				posterId: "11111111-1111-4111-8111-111111111111",
+			},
+		} as any);
 
 		expect(repo.findSpectacleMediaKind).toHaveBeenCalledWith(repo.tx, 100, "11111111-1111-4111-8111-111111111111");
 		expect(repo.savePerformance).toHaveBeenCalledWith(
@@ -178,43 +178,36 @@ describe("SavePerformanceUseCase", () => {
 		const repo = fakeRepo();
 		repo.findSpectacleMediaKind.mockResolvedValue(kind);
 		await expect(
-			new SavePerformanceUseCase(asRepo(repo)).execute(
-				{
-					performance: {
-						id: 3,
-						date: "2024-01-01",
-						placeId: 7,
-						spectacleId: 100,
-						posterId: "11111111-1111-4111-8111-111111111111",
-					},
-				} as any,
-				asLog(makeLog()),
-			),
+			new PerformanceService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save({
+				performance: {
+					id: 3,
+					date: "2024-01-01",
+					placeId: 7,
+					spectacleId: 100,
+					posterId: "11111111-1111-4111-8111-111111111111",
+				},
+			} as any),
 		).rejects.toBeInstanceOf(BadRequestError);
 		expect(repo.savePerformance).not.toHaveBeenCalled();
 	});
 
 	it("does not check anything without a poster", async () => {
 		const repo = fakeRepo();
-		await new SavePerformanceUseCase(asRepo(repo)).execute(
-			{ performance: { id: 3, date: "2024-01-01", placeId: 7, spectacleId: 100 } } as any,
-			asLog(makeLog()),
-		);
+		await new PerformanceService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save({
+			performance: { id: 3, date: "2024-01-01", placeId: 7, spectacleId: 100 },
+		} as any);
 		expect(repo.findSpectacleMediaKind).not.toHaveBeenCalled();
 	});
 });
 
-describe("SaveCastingUseCase", () => {
+describe("PerformanceService.saveCasting", () => {
 	it("inserts new roles, upserts existing ones and prunes the rest", async () => {
 		const repo = fakeRepo();
 
-		await new SaveCastingUseCase(asRepo(repo)).execute(
-			{
-				performanceId: 10,
-				roles: [{ name: "New" }, { id: 2, name: "Existing" }],
-			} as any,
-			asLog(makeLog()),
-		);
+		await new PerformanceService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).saveCasting({
+			performanceId: 10,
+			roles: [{ name: "New" }, { id: 2, name: "Existing" }],
+		} as any);
 
 		expect(repo.insertRoles).toHaveBeenCalledWith(repo.tx, [{ name: "New", performanceId: 10 }]);
 		expect(repo.upsertRoles).toHaveBeenCalledWith(repo.tx, [{ id: 2, name: "Existing", performanceId: 10 }]);
@@ -222,7 +215,7 @@ describe("SaveCastingUseCase", () => {
 	});
 });
 
-describe("DeletePerformanceUseCase", () => {
+describe("PerformanceService.delete", () => {
 	const KEY = "personal-tracker/show/media/p1.avif";
 
 	function fakeMediaRepo() {
@@ -240,13 +233,13 @@ describe("DeletePerformanceUseCase", () => {
 		const repo = { ...fakeRepo(), findRolePictures: vi.fn().mockResolvedValue(pictures) };
 		const mediaRepo = fakeMediaRepo();
 		const storage = fakeStorage();
-		const useCase = new DeletePerformanceUseCase(asRepo(repo), mediaRepo as any, storage as any);
-		return { repo, mediaRepo, storage, useCase };
+		const service = new PerformanceService(asRepo(repo), mediaRepo as any, storage as any);
+		return { repo, mediaRepo, storage, service };
 	}
 
 	it("deletes the performance inside a transaction", async () => {
-		const { repo, mediaRepo, storage, useCase } = build();
-		await useCase.execute(10, asLog(makeLog()));
+		const { repo, mediaRepo, storage, service } = build();
+		await service.delete(10);
 		expect(repo.findRolePictures).toHaveBeenCalledWith(repo.tx, 10);
 		expect(repo.delete).toHaveBeenCalledWith(repo.tx, 10);
 		expect(mediaRepo.deleteLink).not.toHaveBeenCalled();
@@ -254,16 +247,16 @@ describe("DeletePerformanceUseCase", () => {
 	});
 
 	it("throws a 404 when nothing was deleted, without touching the pictures", async () => {
-		const { repo, mediaRepo, storage, useCase } = build([{ artistId: 1, pictureId: "p1" }]);
+		const { repo, mediaRepo, storage, service } = build([{ artistId: 1, pictureId: "p1" }]);
 		repo.delete.mockResolvedValue([]);
-		await expect(useCase.execute(10, asLog(makeLog()))).rejects.toBeInstanceOf(NotFoundError);
+		await expect(service.delete(10)).rejects.toBeInstanceOf(NotFoundError);
 		expect(mediaRepo.countPictureUses).not.toHaveBeenCalled();
 		expect(storage.deleteObject).not.toHaveBeenCalled();
 	});
 
 	it("removes a portrait used by no one else, then its file", async () => {
-		const { repo, mediaRepo, storage, useCase } = build([{ artistId: 1, pictureId: "p1" }]);
-		await useCase.execute(10, asLog(makeLog()));
+		const { repo, mediaRepo, storage, service } = build([{ artistId: 1, pictureId: "p1" }]);
+		await service.delete(10);
 		expect(mediaRepo.countPictureUses).toHaveBeenCalledWith(repo.tx, 1, "p1");
 		expect(mediaRepo.deleteLink).toHaveBeenCalledWith(repo.tx, { artistId: 1 }, "p1");
 		expect(mediaRepo.deleteMedia).toHaveBeenCalledWith(repo.tx, "p1");
@@ -271,27 +264,28 @@ describe("DeletePerformanceUseCase", () => {
 	});
 
 	it("keeps a portrait still used by another role or as the artist photo", async () => {
-		const { mediaRepo, storage, useCase } = build([{ artistId: 1, pictureId: "p1" }]);
+		const { mediaRepo, storage, service } = build([{ artistId: 1, pictureId: "p1" }]);
 		mediaRepo.countPictureUses.mockResolvedValue(1);
-		await useCase.execute(10, asLog(makeLog()));
+		await service.delete(10);
 		expect(mediaRepo.deleteLink).not.toHaveBeenCalled();
 		expect(storage.deleteObject).not.toHaveBeenCalled();
 	});
 
 	it("keeps the media and its file while another gallery still links it", async () => {
-		const { mediaRepo, storage, useCase } = build([{ artistId: 1, pictureId: "p1" }]);
+		const { mediaRepo, storage, service } = build([{ artistId: 1, pictureId: "p1" }]);
 		mediaRepo.countLinks.mockResolvedValue(1);
-		await useCase.execute(10, asLog(makeLog()));
+		await service.delete(10);
 		expect(mediaRepo.deleteLink).toHaveBeenCalled();
 		expect(mediaRepo.deleteMedia).not.toHaveBeenCalled();
 		expect(storage.deleteObject).not.toHaveBeenCalled();
 	});
 
 	it("only logs a failed S3 delete", async () => {
-		const { storage, useCase } = build([{ artistId: 1, pictureId: "p1" }]);
+		const { storage, service } = build([{ artistId: 1, pictureId: "p1" }]);
 		storage.deleteObject.mockRejectedValue(new Error("S3 down"));
-		const log = makeLog();
-		await useCase.execute(10, asLog(log));
-		expect(log.warn).toHaveBeenCalled();
+		const warn = vi.spyOn(Logger.prototype, "warn").mockImplementation(() => {});
+		await service.delete(10);
+		expect(warn).toHaveBeenCalled();
+		warn.mockRestore();
 	});
 });

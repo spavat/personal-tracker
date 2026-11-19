@@ -3,9 +3,7 @@ import type { Program } from "@personal-tracker/shared/internet";
 import type { BookOverview } from "@personal-tracker/shared/reading-book";
 import type { MangaOverview } from "@personal-tracker/shared/reading-manga";
 
-import { Injectable } from "@nestjs/common";
-
-import type { UseCaseLog } from "../common/use-case-log.js";
+import { Injectable, Logger } from "@nestjs/common";
 
 import { GameImagesStorage } from "../game/game-images.storage.js";
 import { GameRepository } from "../game/game.repository.js";
@@ -26,20 +24,22 @@ const LATEST_BOOKS = 6;
 
 // The latest of each domain, for the home page
 @Injectable()
-export class GetLatestUseCase {
+export class HomeService {
+	private readonly logger = new Logger(HomeService.name);
+
 	constructor(
-		private gameRepo: GameRepository,
-		private gameImages: GameImagesStorage,
-		private performanceRepo: PerformanceRepository,
-		private musicRepo: MusicRepository,
-		private internetRepo: InternetRepository,
-		private internetImages: InternetImagesStorage,
-		private mangaRepo: ReadingMangaRepository,
-		private bookRepo: BookRepository,
+		private readonly gameRepo: GameRepository,
+		private readonly gameImages: GameImagesStorage,
+		private readonly performanceRepo: PerformanceRepository,
+		private readonly musicRepo: MusicRepository,
+		private readonly internetRepo: InternetRepository,
+		private readonly internetImages: InternetImagesStorage,
+		private readonly mangaRepo: ReadingMangaRepository,
+		private readonly bookRepo: BookRepository,
 	) {}
 
-	async execute(log: UseCaseLog) {
-		log.info("GetLatestUseCase.execute");
+	async latest() {
+		this.logger.log("latest");
 		const today = Temporal.Now.plainDateISO().toString();
 		const [games, performances, listenings, programs, mangas, books] = await Promise.all([
 			this.gameRepo.findAll({

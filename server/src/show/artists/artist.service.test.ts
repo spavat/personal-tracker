@@ -2,8 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { ArtistRepository } from "./artist.repository.js";
 
-import { asLog, makeLog } from "../../test-support/fake-log.js";
-import { DeleteArtistUseCase, GetArtistUseCase, ListArtistsUseCase, SaveArtistUseCase } from "./artist.useCases.js";
+import { ArtistService } from "./artist.service.js";
 
 function fakeRepo() {
 	return {
@@ -16,26 +15,26 @@ function fakeRepo() {
 }
 const asRepo = (r: ReturnType<typeof fakeRepo>) => r as unknown as ArtistRepository;
 
-describe("ListArtistsUseCase", () => {
+describe("ArtistService.list", () => {
 	it("defaults the sort to name asc", async () => {
 		const repo = fakeRepo();
-		await new ListArtistsUseCase(asRepo(repo)).execute(undefined, asLog(makeLog()));
+		await new ArtistService(asRepo(repo)).list(undefined);
 		expect(repo.findAll).toHaveBeenCalledWith({ sortField: "name", sortDirection: "asc" });
 	});
 
 	it("forwards an explicit sort tuple", async () => {
 		const repo = fakeRepo();
-		await new ListArtistsUseCase(asRepo(repo)).execute(["nbPerformances", "desc"], asLog(makeLog()));
+		await new ArtistService(asRepo(repo)).list(["nbPerformances", "desc"]);
 		expect(repo.findAll).toHaveBeenCalledWith({ sortField: "nbPerformances", sortDirection: "desc" });
 	});
 });
 
-describe("SaveArtistUseCase / DeleteArtistUseCase", () => {
+describe("ArtistService.save / delete", () => {
 	it("save persists then returns the saved artist view", async () => {
 		const repo = fakeRepo();
 		repo.save.mockResolvedValue({ id: 7, name: "Callas", pictureId: null });
 		const data = { name: "Callas" };
-		expect(await new SaveArtistUseCase(asRepo(repo)).execute(data as any, asLog(makeLog()))).toEqual({
+		expect(await new ArtistService(asRepo(repo)).save(data as any)).toEqual({
 			id: 7,
 			name: "Callas",
 			pictureId: null,
@@ -46,25 +45,20 @@ describe("SaveArtistUseCase / DeleteArtistUseCase", () => {
 
 	it("save returns null when updating an unknown artist", async () => {
 		const repo = fakeRepo();
-		expect(await new SaveArtistUseCase(asRepo(repo)).execute({ id: 5, name: "X" }, asLog(makeLog()))).toBeNull();
+		expect(await new ArtistService(asRepo(repo)).save({ id: 5, name: "X" })).toBeNull();
 	});
 
 	it("delete removes the artist", async () => {
 		const repo = fakeRepo();
-		await new DeleteArtistUseCase(asRepo(repo)).execute(5, asLog(makeLog()));
+		await new ArtistService(asRepo(repo)).delete(5);
 		expect(repo.delete).toHaveBeenCalledWith(5);
 	});
 });
 
-describe("GetArtistUseCase", () => {
+describe("ArtistService.get", () => {
 	it("returns null when the artist is unknown", async () => {
 		const repo = fakeRepo();
-		expect(
-			await new GetArtistUseCase(asRepo(repo)).execute(
-				{ artistId: 1, groupBySpectacle: false },
-				asLog(makeLog()),
-			),
-		).toBeNull();
+		expect(await new ArtistService(asRepo(repo)).get({ artistId: 1, groupBySpectacle: false })).toBeNull();
 	});
 
 	it("flattens roles into a single performances group with stats (not grouped by spectacle)", async () => {
@@ -114,10 +108,7 @@ describe("GetArtistUseCase", () => {
 			],
 		});
 
-		const result = (await new GetArtistUseCase(asRepo(repo)).execute(
-			{ artistId: 1, groupBySpectacle: false },
-			asLog(makeLog()),
-		)) as any;
+		const result = (await new ArtistService(asRepo(repo)).get({ artistId: 1, groupBySpectacle: false })) as any;
 
 		expect(result).toMatchObject({
 			id: 1,

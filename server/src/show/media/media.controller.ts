@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-import { Body, Controller, Delete, Get, HttpCode, Logger, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query } from "@nestjs/common";
 import {
 	ArtistMediaIdParamsRequestSchema,
 	ArtistMediaParamsRequestSchema,
@@ -16,32 +16,17 @@ import type { MediaOwner } from "./media.entity.js";
 
 import { Public } from "../../auth/public.decorator.js";
 import { NotFoundError } from "../../common/errors.js";
-import { toUseCaseLog } from "../../common/use-case-log.js";
-import {
-	DeleteMediaUseCase,
-	ListMediaUseCase,
-	ReorderMediaUseCase,
-	UpdateMediaUseCase,
-	UploadMediaUseCase,
-} from "./media.useCases.js";
+import { MediaService } from "./media.service.js";
 
 type Upload = z.infer<typeof UploadMediaBodyRequestSchema>;
 type Update = z.infer<typeof UpdateMediaBodyRequestSchema>;
 type Reorder = z.infer<typeof ReorderMediaBodyRequestSchema>;
 
 // Files can be sent as base64 data URIs: within the 15mb JSON limit (body-parsers.ts).
-// The spectacle (poster, photo, programme) and artist (portraits) routes share the same use cases.
+// The spectacle (poster, photo, programme) and artist (portraits) routes share the same service methods.
 @Controller()
 export class MediaController {
-	private readonly log = toUseCaseLog(new Logger(MediaController.name));
-
-	constructor(
-		private readonly listMedia: ListMediaUseCase,
-		private readonly uploadMedia: UploadMediaUseCase,
-		private readonly updateMedia: UpdateMediaUseCase,
-		private readonly reorderMedia: ReorderMediaUseCase,
-		private readonly deleteMedia: DeleteMediaUseCase,
-	) {}
+	constructor(private readonly service: MediaService) {}
 
 	// --- spectacle ---
 
@@ -52,7 +37,7 @@ export class MediaController {
 		@Query({ schema: SpectacleMediaListQuerystringRequestSchema })
 		{ kind }: z.infer<typeof SpectacleMediaListQuerystringRequestSchema>,
 	) {
-		return this.listMedia.execute({ spectacleId }, kind, this.log);
+		return this.service.list({ spectacleId }, kind);
 	}
 
 	@Post("spectacles/:spectacleId")
@@ -61,7 +46,7 @@ export class MediaController {
 		@Param({ schema: SpectacleMediaParamsRequestSchema }) { spectacleId }: { spectacleId: number },
 		@Body({ schema: UploadMediaBodyRequestSchema }) body: Upload,
 	) {
-		return this.uploadMedia.execute({ spectacleId }, body, this.log);
+		return this.service.upload({ spectacleId }, body);
 	}
 
 	@Post("spectacles/:spectacleId/order")
@@ -70,7 +55,7 @@ export class MediaController {
 		@Param({ schema: SpectacleMediaParamsRequestSchema }) { spectacleId }: { spectacleId: number },
 		@Body({ schema: ReorderMediaBodyRequestSchema }) body: Reorder,
 	) {
-		await this.reorderMedia.execute({ spectacleId }, body, this.log);
+		await this.service.reorder({ spectacleId }, body);
 	}
 
 	@Post("spectacles/:spectacleId/:mediaId")
@@ -104,7 +89,7 @@ export class MediaController {
 	@Get("artists/:artistId")
 	@Public()
 	listArtist(@Param({ schema: ArtistMediaParamsRequestSchema }) { artistId }: { artistId: number }) {
-		return this.listMedia.execute({ artistId }, undefined, this.log);
+		return this.service.list({ artistId }, undefined);
 	}
 
 	@Post("artists/:artistId")
@@ -113,7 +98,7 @@ export class MediaController {
 		@Param({ schema: ArtistMediaParamsRequestSchema }) { artistId }: { artistId: number },
 		@Body({ schema: UploadMediaBodyRequestSchema }) body: Upload,
 	) {
-		return this.uploadMedia.execute({ artistId }, body, this.log);
+		return this.service.upload({ artistId }, body);
 	}
 
 	@Post("artists/:artistId/order")
@@ -122,7 +107,7 @@ export class MediaController {
 		@Param({ schema: ArtistMediaParamsRequestSchema }) { artistId }: { artistId: number },
 		@Body({ schema: ReorderMediaBodyRequestSchema }) body: Reorder,
 	) {
-		await this.reorderMedia.execute({ artistId }, body, this.log);
+		await this.service.reorder({ artistId }, body);
 	}
 
 	@Post("artists/:artistId/:mediaId")
@@ -152,13 +137,13 @@ export class MediaController {
 	}
 
 	private async update(owner: MediaOwner, mediaId: string, body: Update) {
-		if (!(await this.updateMedia.execute(owner, mediaId, body, this.log))) {
+		if (!(await this.service.update(owner, mediaId, body))) {
 			throw new NotFoundError("Média introuvable");
 		}
 	}
 
 	private async delete(owner: MediaOwner, mediaId: string) {
-		if (!(await this.deleteMedia.execute(owner, mediaId, this.log))) {
+		if (!(await this.service.delete(owner, mediaId))) {
 			throw new NotFoundError("Média introuvable");
 		}
 	}

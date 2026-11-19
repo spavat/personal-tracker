@@ -1,7 +1,7 @@
 import type { ServerResponse } from "node:http";
 import type { z } from "zod";
 
-import { Body, Controller, Get, Logger, Post, Query, Res, SerializeOptions } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query, Res, SerializeOptions } from "@nestjs/common";
 import {
 	EntityListQuerystringRequestSchema,
 	EntityListResponseSchema,
@@ -11,17 +11,11 @@ import {
 } from "@personal-tracker/shared/entity";
 
 import { NotFoundError } from "../common/errors.js";
-import { toUseCaseLog } from "../common/use-case-log.js";
-import { ListEntitiesUseCase, SaveEntityUseCase } from "./entity.useCases.js";
+import { EntityService } from "./entity.service.js";
 
 @Controller("entities")
 export class EntityController {
-	private readonly log = toUseCaseLog(new Logger(EntityController.name));
-
-	constructor(
-		private readonly listEntities: ListEntitiesUseCase,
-		private readonly saveEntity: SaveEntityUseCase,
-	) {}
+	constructor(private readonly service: EntityService) {}
 
 	@Get()
 	@SerializeOptions({ schema: EntityListResponseSchema.element })
@@ -30,7 +24,7 @@ export class EntityController {
 			typeof EntityListQuerystringRequestSchema
 		>,
 	) {
-		return this.listEntities.execute(query, this.log);
+		return this.service.list(query);
 	}
 
 	// 201 with the new entity on create, 200 with the updated one on update (see show-reply.ts); the portrait can
@@ -41,7 +35,7 @@ export class EntityController {
 		@Body({ schema: SaveEntityBodyRequestSchema }) body: SaveEntityBody,
 		@Res({ passthrough: true }) response: ServerResponse,
 	) {
-		const entity = await this.saveEntity.execute(body, this.log);
+		const entity = await this.service.save(body);
 		if (!entity) {
 			throw new NotFoundError("Entité introuvable");
 		}

@@ -1,27 +1,22 @@
 import type { SaveModelBodyRequest } from "@personal-tracker/shared/show";
 
-import { Injectable } from "@nestjs/common";
-
-import type { UseCaseLog } from "../../common/use-case-log.js";
+import { Injectable, Logger } from "@nestjs/common";
 
 import { NotFoundError } from "../../common/errors.js";
 import { ModelRepository } from "./model.repository.js";
 @Injectable()
-export class GetModelUseCase {
-	constructor(private repo: ModelRepository) {}
+export class ModelService {
+	private readonly logger = new Logger(ModelService.name);
 
-	execute(id: number, log: UseCaseLog) {
-		log.info("GetModelUseCase.execute");
+	constructor(private readonly repo: ModelRepository) {}
+
+	get(id: number) {
+		this.logger.log("get");
 		return this.repo.findByIdWithDetails(id);
 	}
-}
 
-@Injectable()
-export class SaveModelUseCase {
-	constructor(private repo: ModelRepository) {}
-
-	async execute(data: SaveModelBodyRequest, log: UseCaseLog) {
-		log.info("SaveModelUseCase.execute");
+	async save(data: SaveModelBodyRequest) {
+		this.logger.log("save");
 		return this.repo.runInTransaction(async (tx) => {
 			if (data.id) {
 				// UPDATE
@@ -58,14 +53,9 @@ export class SaveModelUseCase {
 			await this.repo.insertModelRole(tx, { ...role, artistId, modelId });
 		}
 	}
-}
 
-@Injectable()
-export class DeleteModelUseCase {
-	constructor(private repo: ModelRepository) {}
-
-	async execute(id: number, log: UseCaseLog) {
-		log.info("DeleteModelUseCase.execute");
+	async delete(id: number) {
+		this.logger.log("delete");
 		await this.repo.runInTransaction(async (tx) => {
 			await this.repo.deleteModelRoles(tx, id);
 			await this.repo.deleteModel(tx, id);

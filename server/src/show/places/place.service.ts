@@ -1,31 +1,27 @@
 import type { PlaceListResponse } from "@personal-tracker/shared/show";
 
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 
-import type { UseCaseLog } from "../../common/use-case-log.js";
 import type { SavePlaceBody } from "./place.entity.js";
 
 import { toPerformanceView } from "../performances/performance.entity.js";
 import { PlaceRepository } from "./place.repository.js";
 
 @Injectable()
-export class ListPlacesUseCase {
-	constructor(private repo: PlaceRepository) {}
+export class PlaceService {
+	private readonly logger = new Logger(PlaceService.name);
 
-	async execute(sort: string[] | undefined, log: UseCaseLog) {
-		log.info("ListPlacesUseCase.execute");
+	constructor(private readonly repo: PlaceRepository) {}
+
+	async list(sort: string[] | undefined) {
+		this.logger.log("list");
 		const [sortField, sortDirection] = sort ?? ["name", "asc"];
 		const places = await this.repo.findAll({ sortField, sortDirection });
 		return places as Array<PlaceListResponse>;
 	}
-}
 
-@Injectable()
-export class GetPlaceUseCase {
-	constructor(private repo: PlaceRepository) {}
-
-	async execute({ placeId, groupBySpectacle }: { placeId: number; groupBySpectacle: boolean }, log: UseCaseLog) {
-		log.info("GetPlaceUseCase.execute");
+	async get({ placeId, groupBySpectacle }: { placeId: number; groupBySpectacle: boolean }) {
+		this.logger.log("get");
 		const placeData = await this.repo.findByIdWithPerformances(placeId);
 		if (!placeData) return null;
 
@@ -79,24 +75,14 @@ export class GetPlaceUseCase {
 			stats,
 		};
 	}
-}
 
-@Injectable()
-export class SavePlaceUseCase {
-	constructor(private repo: PlaceRepository) {}
-
-	async execute(data: SavePlaceBody, log: UseCaseLog) {
-		log.info("SavePlaceUseCase.execute");
+	async save(data: SavePlaceBody) {
+		this.logger.log("save");
 		return (await this.repo.save(data)) ?? null;
 	}
-}
 
-@Injectable()
-export class DeletePlaceUseCase {
-	constructor(private repo: PlaceRepository) {}
-
-	async execute(id: number, log: UseCaseLog) {
-		log.info("DeletePlaceUseCase.execute");
+	async delete(id: number) {
+		this.logger.log("delete");
 		await this.repo.delete(id);
 	}
 }

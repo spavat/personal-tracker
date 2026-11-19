@@ -1,18 +1,12 @@
+import { Logger } from "@nestjs/common";
 import { describe, expect, it, vi } from "vitest";
 
 import type { MediaStorageRepository } from "./media-storage.repository.js";
 import type { MediaRepository } from "./media.repository.js";
 
 import { BadRequestError, ConflictError } from "../../common/errors.js";
-import { asLog, makeLog } from "../../test-support/fake-log.js";
 import { sortByMediaOrder } from "./media.entity.js";
-import {
-	DeleteMediaUseCase,
-	ListMediaUseCase,
-	ReorderMediaUseCase,
-	UpdateMediaUseCase,
-	UploadMediaUseCase,
-} from "./media.useCases.js";
+import { MediaService } from "./media.service.js";
 
 const TX = { tx: true };
 const MEDIA_ID = "0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e";
@@ -60,11 +54,11 @@ function fakeStorage() {
 const asRepo = (r: ReturnType<typeof fakeRepo>) => r as unknown as MediaRepository;
 const asStorage = (s: ReturnType<typeof fakeStorage>) => s as unknown as MediaStorageRepository;
 
-describe("ListMediaUseCase", () => {
+describe("MediaService.list", () => {
 	it("lists a spectacle's media of one kind", async () => {
 		const repo = fakeRepo();
 		expect(
-			await new ListMediaUseCase(asRepo(repo)).execute({ spectacleId: 7 }, "poster", asLog(makeLog())),
+			await new MediaService(asRepo(repo), asStorage(fakeStorage())).list({ spectacleId: 7 }, "poster"),
 		).toEqual([
 			{
 				id: MEDIA_ID,
@@ -79,29 +73,27 @@ describe("ListMediaUseCase", () => {
 
 	it("lists an artist's media", async () => {
 		const repo = fakeRepo();
-		expect(await new ListMediaUseCase(asRepo(repo)).execute({ artistId: 3 }, undefined, asLog(makeLog()))).toEqual([
-			{
-				id: OTHER_ID,
-				label: "",
-				contentType: "image/avif",
-				url: "/images/show/7c1e2d3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
-				spectacleId: null,
-			},
-		]);
+		expect(await new MediaService(asRepo(repo), asStorage(fakeStorage())).list({ artistId: 3 }, undefined)).toEqual(
+			[
+				{
+					id: OTHER_ID,
+					label: "",
+					contentType: "image/avif",
+					url: "/images/show/7c1e2d3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+					spectacleId: null,
+				},
+			],
+		);
 		expect(repo.findArtistMedia).toHaveBeenCalledWith(3);
 	});
 });
 
-describe("UploadMediaUseCase", () => {
+describe("MediaService.upload", () => {
 	it("stores a poster: row, link, upload, file", async () => {
 		const repo = fakeRepo();
 		const storage = fakeStorage();
 		const data = { source: "data:image/png;base64,AA", label: "Saison 2", kind: "poster" as const };
-		const result = await new UploadMediaUseCase(asRepo(repo), asStorage(storage)).execute(
-			{ spectacleId: 7 },
-			data,
-			asLog(makeLog()),
-		);
+		const result = await new MediaService(asRepo(repo), asStorage(storage)).upload({ spectacleId: 7 }, data);
 
 		expect(result).toEqual({
 			id: MEDIA_ID,
@@ -127,10 +119,9 @@ describe("UploadMediaUseCase", () => {
 	it("uses the large photo size for a spectacle programme", async () => {
 		const repo = fakeRepo();
 		const storage = fakeStorage();
-		await new UploadMediaUseCase(asRepo(repo), asStorage(storage)).execute(
+		await new MediaService(asRepo(repo), asStorage(storage)).upload(
 			{ spectacleId: 7 },
 			{ source: "s", label: "", kind: "programme" },
-			asLog(makeLog()),
 		);
 		expect(storage.uploadFromSource).toHaveBeenCalledWith(
 			"personal-tracker/show/media/0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e",
@@ -142,10 +133,9 @@ describe("UploadMediaUseCase", () => {
 	it("stores an artist portrait with its spectacle context", async () => {
 		const repo = fakeRepo();
 		const storage = fakeStorage();
-		await new UploadMediaUseCase(asRepo(repo), asStorage(storage)).execute(
+		await new MediaService(asRepo(repo), asStorage(storage)).upload(
 			{ artistId: 3 },
 			{ source: "https://x/y.jpg", label: "", spectacleId: 7, kind: "poster" },
-			asLog(makeLog()),
 		);
 
 		expect(repo.insertLink).toHaveBeenCalledWith(
@@ -167,10 +157,9 @@ describe("UploadMediaUseCase", () => {
 		repo.insertLink.mockRejectedValue(new Error("fk"));
 
 		await expect(
-			new UploadMediaUseCase(asRepo(repo), asStorage(storage)).execute(
+			new MediaService(asRepo(repo), asStorage(storage)).upload(
 				{ spectacleId: 999 },
 				{ source: "s", label: "", kind: "poster" },
-				asLog(makeLog()),
 			),
 		).rejects.toThrow("fk");
 		expect(storage.uploadFromSource).not.toHaveBeenCalled();
@@ -191,14 +180,13 @@ describe("sortByMediaOrder", () => {
 	});
 });
 
-describe("ReorderMediaUseCase", () => {
+describe("MediaService.reorder", () => {
 	it("stores each media position", async () => {
 		const repo = fakeRepo();
 		expect(
-			await new ReorderMediaUseCase(asRepo(repo)).execute(
+			await new MediaService(asRepo(repo), asStorage(fakeStorage())).reorder(
 				{ spectacleId: 7 },
 				{ mediaIds: [OTHER_ID, MEDIA_ID] },
-				asLog(makeLog()),
 			),
 		).toBeUndefined();
 		expect(repo.setOrder).toHaveBeenNthCalledWith(1, TX, OTHER_ID, 0);
@@ -212,57 +200,49 @@ describe("ReorderMediaUseCase", () => {
 	])("rejects %s with a 400", async (_, mediaIds) => {
 		const repo = fakeRepo();
 		await expect(
-			new ReorderMediaUseCase(asRepo(repo)).execute({ artistId: 3 }, { mediaIds }, asLog(makeLog())),
+			new MediaService(asRepo(repo), asStorage(fakeStorage())).reorder({ artistId: 3 }, { mediaIds }),
 		).rejects.toBeInstanceOf(BadRequestError);
 		expect(repo.setOrder).not.toHaveBeenCalled();
 	});
 });
 
-describe("UpdateMediaUseCase", () => {
+describe("MediaService.update", () => {
 	it("returns null when the media does not belong to the owner", async () => {
 		const repo = fakeRepo();
 		repo.linkExists.mockResolvedValue(false);
 		expect(
-			await new UpdateMediaUseCase(asRepo(repo)).execute(
-				{ spectacleId: 7 },
-				MEDIA_ID,
-				{ label: "x" },
-				asLog(makeLog()),
-			),
+			await new MediaService(asRepo(repo), asStorage(fakeStorage())).update({ spectacleId: 7 }, MEDIA_ID, {
+				label: "x",
+			}),
 		).toBeNull();
 		expect(repo.updateLabel).not.toHaveBeenCalled();
 	});
 
 	it("updates a poster label only", async () => {
 		const repo = fakeRepo();
-		await new UpdateMediaUseCase(asRepo(repo)).execute(
-			{ spectacleId: 7 },
-			MEDIA_ID,
-			{ label: "x" },
-			asLog(makeLog()),
-		);
+		await new MediaService(asRepo(repo), asStorage(fakeStorage())).update({ spectacleId: 7 }, MEDIA_ID, {
+			label: "x",
+		});
 		expect(repo.updateLabel).toHaveBeenCalledWith(TX, MEDIA_ID, "x");
 		expect(repo.updateArtistLink).not.toHaveBeenCalled();
 	});
 
 	it("updates a portrait label and spectacle context", async () => {
 		const repo = fakeRepo();
-		await new UpdateMediaUseCase(asRepo(repo)).execute({ artistId: 3 }, MEDIA_ID, { label: "x" }, asLog(makeLog()));
+		await new MediaService(asRepo(repo), asStorage(fakeStorage())).update({ artistId: 3 }, MEDIA_ID, {
+			label: "x",
+		});
 		expect(repo.updateArtistLink).toHaveBeenCalledWith(TX, 3, MEDIA_ID, null);
 	});
 });
 
-describe("DeleteMediaUseCase", () => {
+describe("MediaService.delete", () => {
 	it("returns null when the link does not exist", async () => {
 		const repo = fakeRepo();
 		const storage = fakeStorage();
 		repo.deleteLink.mockResolvedValue([]);
 		expect(
-			await new DeleteMediaUseCase(asRepo(repo), asStorage(storage)).execute(
-				{ spectacleId: 7 },
-				MEDIA_ID,
-				asLog(makeLog()),
-			),
+			await new MediaService(asRepo(repo), asStorage(storage)).delete({ spectacleId: 7 }, MEDIA_ID),
 		).toBeNull();
 		expect(storage.deleteObject).not.toHaveBeenCalled();
 	});
@@ -270,13 +250,9 @@ describe("DeleteMediaUseCase", () => {
 	it("deletes the media and its file once the last link is gone", async () => {
 		const repo = fakeRepo();
 		const storage = fakeStorage();
-		expect(
-			await new DeleteMediaUseCase(asRepo(repo), asStorage(storage)).execute(
-				{ spectacleId: 7 },
-				MEDIA_ID,
-				asLog(makeLog()),
-			),
-		).toBe(true);
+		expect(await new MediaService(asRepo(repo), asStorage(storage)).delete({ spectacleId: 7 }, MEDIA_ID)).toBe(
+			true,
+		);
 		expect(repo.deleteMedia).toHaveBeenCalledWith(TX, MEDIA_ID);
 		expect(storage.deleteObject).toHaveBeenCalledWith(
 			"personal-tracker/show/media/0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e.avif",
@@ -287,11 +263,7 @@ describe("DeleteMediaUseCase", () => {
 		const repo = fakeRepo();
 		const storage = fakeStorage();
 		repo.countLinks.mockResolvedValue(1);
-		await new DeleteMediaUseCase(asRepo(repo), asStorage(storage)).execute(
-			{ artistId: 3 },
-			MEDIA_ID,
-			asLog(makeLog()),
-		);
+		await new MediaService(asRepo(repo), asStorage(storage)).delete({ artistId: 3 }, MEDIA_ID);
 		expect(repo.deleteMedia).not.toHaveBeenCalled();
 		expect(storage.deleteObject).not.toHaveBeenCalled();
 	});
@@ -301,11 +273,7 @@ describe("DeleteMediaUseCase", () => {
 		const storage = fakeStorage();
 		repo.deleteLink.mockRejectedValue(Object.assign(new Error("query failed"), { cause: { code: "23503" } }));
 		await expect(
-			new DeleteMediaUseCase(asRepo(repo), asStorage(storage)).execute(
-				{ spectacleId: 7 },
-				MEDIA_ID,
-				asLog(makeLog()),
-			),
+			new MediaService(asRepo(repo), asStorage(storage)).delete({ spectacleId: 7 }, MEDIA_ID),
 		).rejects.toBeInstanceOf(ConflictError);
 	});
 
@@ -313,14 +281,11 @@ describe("DeleteMediaUseCase", () => {
 		const repo = fakeRepo();
 		const storage = fakeStorage();
 		storage.deleteObject.mockRejectedValue(new Error("s3 down"));
-		const log = makeLog();
-		expect(
-			await new DeleteMediaUseCase(asRepo(repo), asStorage(storage)).execute(
-				{ spectacleId: 7 },
-				MEDIA_ID,
-				asLog(log),
-			),
-		).toBe(true);
-		expect(log.warn).toHaveBeenCalled();
+		const warn = vi.spyOn(Logger.prototype, "warn").mockImplementation(() => {});
+		expect(await new MediaService(asRepo(repo), asStorage(storage)).delete({ spectacleId: 7 }, MEDIA_ID)).toBe(
+			true,
+		);
+		expect(warn).toHaveBeenCalled();
+		warn.mockRestore();
 	});
 });
