@@ -1,1 +1,0 @@
-ALTER TABLE "reading"."edition" ADD COLUMN "collection" text;
