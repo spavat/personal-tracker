@@ -16,12 +16,12 @@ During a deploy, the job starts the `maintenance` service (Compose profile, neve
 ### VPS
 
 ```sh
-mkdir -p ~/apps/personal-tracker
+mkdir -p /opt/stacks/personal-tracker
 # copy deploy/docker-compose.yml and deploy/maintenance/ there, and deploy/vps.env.example as .env (fill it, chmod 600)
 cat gh-deploy.pub >> ~/.ssh/authorized_keys
 ```
 
-`TRAEFIK_*` values: copy them from the labels/networks of another app in `~/apps/`. DNS: `tracker.spvt.fr` → VPS (unless a wildcard exists).
+`TRAEFIK_*` values: copy them from the labels/networks of another app in `/opt/stacks/`. DNS: `tracker.spvt.fr` → VPS (unless a wildcard exists).
 
 ### S3 (hosted provider)
 

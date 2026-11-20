@@ -121,7 +121,7 @@ jobs:
                   key: ${{ secrets.VPS_SSH_KEY }}
                   script: |
                       set -e
-                      cd ~/apps/personal-tracker
+                      cd /opt/stacks/personal-tracker
                       # pin the approved version in .env, so a manual `docker compose up` keeps it
                       sed -i '/^TAG=/d' .env
                       echo "TAG=${{ github.sha }}" >> .env

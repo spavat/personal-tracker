@@ -1,4 +1,4 @@
-# VPS stack, copied to ~/apps/personal-tracker/docker-compose.yml (with a .env next to it, see .env.example).
+# VPS stack, copied to /opt/stacks/personal-tracker/compose.yaml (with a .env next to it, see .env.example).
 # Traefik routes https://tracker.spvt.fr/api/* to the server (prefix stripped) and the rest to the static front.
 name: personal-tracker
 

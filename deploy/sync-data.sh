@@ -7,7 +7,7 @@ set -euo pipefail
 VPS="${1:?Usage: $0 <ssh host>}"
 LOCAL_DATABASE_URL="${LOCAL_DATABASE_URL:-postgresql://tracker:tracker@localhost:5432/personal_tracker}"
 LOCAL_MONGODB_URL="${LOCAL_MONGODB_URL:-mongodb://localhost:27017/personal_tracker}"
-REMOTE_DIR="~/apps/personal-tracker"
+REMOTE_DIR="/opt/stacks/personal-tracker"
 
 remote_compose() {
 	ssh "$VPS" "cd $REMOTE_DIR && docker compose $*"
