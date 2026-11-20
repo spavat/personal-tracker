@@ -26,6 +26,8 @@ services:
         restart: unless-stopped
         volumes:
             - mongo-data:/data/db
+            # declared as VOLUME by the image: named so a recreated container never leaves an anonymous one behind
+            - mongo-config:/data/configdb
         networks: [internal]
         healthcheck:
             test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
@@ -130,3 +132,4 @@ networks:
 volumes:
     postgres-data:
     mongo-data:
+    mongo-config:
