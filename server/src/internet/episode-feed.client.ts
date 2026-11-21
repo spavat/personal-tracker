@@ -38,7 +38,7 @@ export async function fetchLatestEpisodes(url: string, type: RefIdsEnum): Promis
 		response = items.map((episode) => ({
 			id: episode.guid,
 			title: episode.title,
-			duration: episode["itunes:duration"],
+			duration: episode["itunes:duration"] ?? 0,
 			durationInMinutes: convertDurationInMinutes(episode["itunes:duration"]),
 			date: Temporal.Instant.fromEpochMilliseconds(new Date(episode.pubDate).getTime())
 				.toZonedDateTimeISO("UTC")
