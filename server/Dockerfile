@@ -34,5 +34,5 @@ COPY server/drizzle server/drizzle
 USER node
 WORKDIR /app/server
 EXPOSE 3000
-# the server reads PORT (3000 in deploy/docker-compose.yml); create-owner: `docker compose exec server npm run create-owner -- <email> <password>`
+# the server reads PORT (3000 in the infra repo's stacks/personal-tracker/compose.yaml); create-owner: `docker compose exec server npm run create-owner -- <email> <password>`
 CMD ["sh", "-c", "node dist/migrate.js && exec node dist/main.js"]

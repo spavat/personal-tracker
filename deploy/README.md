@@ -15,13 +15,16 @@ During a deploy, the job starts the `maintenance` service (Compose profile, neve
 
 ### VPS
 
+The stack (compose file, maintenance page, `.env` written from ansible-vault) lives in the `infra` repo
+(`stacks/personal-tracker/`) and is deployed to `/opt/stacks/personal-tracker` by its playbook. The `deploy` job only
+rewrites `TAG=` in that `.env` (the playbook keeps it). Production variables: `stacks/personal-tracker/.env.j2` in
+`infra`; the server refuses to start when one it needs is missing (`server/src/config/env.schema.ts`).
+
 ```sh
-mkdir -p /opt/stacks/personal-tracker
-# copy deploy/docker-compose.yml and deploy/maintenance/ there, and deploy/vps.env.example as .env (fill it, chmod 600)
-cat gh-deploy.pub >> ~/.ssh/authorized_keys
+cat gh-deploy.pub >> ~/.ssh/authorized_keys   # on the VPS, for the deploy job
 ```
 
-`TRAEFIK_*` values: copy them from the labels/networks of another app in `/opt/stacks/`. DNS: `tracker.spvt.fr` → VPS (unless a wildcard exists).
+DNS: `tracker.spvt.fr` → VPS (unless a wildcard exists).
 
 ### S3 (hosted provider)
 
@@ -33,7 +36,8 @@ Create the bucket and a key limited to it; add a CORS rule allowing `GET` from `
 deploy/sync-data.sh user@vps   # overwrites the VPS databases with the local ones (owner account included)
 ```
 
-Rerun it whenever the VPS copy should be refreshed.
+Rerun it whenever the VPS copy should be refreshed. The VPS databases are backed up every night, and restoring them
+from a backup is described in `docs/backup.md` of the `infra` repo.
 
 ## Notes
 
