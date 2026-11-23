@@ -6,7 +6,7 @@ import MiniReadingDashboard from "./MiniReadingDashboard";
 
 // recharts is heavy: loaded with these widgets, after the rest of the dashboard
 const MiniMusicDashboard = lazy(() => import("./MiniMusicDashboard"));
-const MiniInternetDashboard = lazy(() => import("./MiniInternetDashboard"));
+const MiniBroadcastDashboard = lazy(() => import("./MiniBroadcastDashboard"));
 
 export default function MainDashboard() {
 	const now = Temporal.Now.plainDateISO();
@@ -24,9 +24,9 @@ export default function MainDashboard() {
 				<MiniMusicDashboard />
 			</WidgetBoundary>
 
-			<h2>Internet</h2>
+			<h2>Émissions</h2>
 			<WidgetBoundary>
-				<MiniInternetDashboard />
+				<MiniBroadcastDashboard />
 			</WidgetBoundary>
 
 			<h2>Lecture / Livres</h2>

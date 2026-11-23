@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 
+import { BroadcastSharedModule } from "../broadcast/broadcast-shared.module.js";
 import { GameSharedModule } from "../game/game-shared.module.js";
-import { InternetSharedModule } from "../internet/internet-shared.module.js";
 import { MusicModule } from "../music/music.module.js";
 import { ReadingBookModule } from "../reading-book/reading-book.module.js";
 import { ReadingMangaModule } from "../reading-manga/reading-manga.module.js";
@@ -15,7 +15,7 @@ import { HomeService } from "./home.service.js";
 		GameSharedModule,
 		ShowSharedModule,
 		MusicModule,
-		InternetSharedModule,
+		BroadcastSharedModule,
 		ReadingMangaModule,
 		ReadingBookModule,
 	],

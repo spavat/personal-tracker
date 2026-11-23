@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
 
+import { BroadcastSharedModule } from "../broadcast/broadcast-shared.module.js";
 import { EntitiesModule } from "../entities/entities.module.js";
 import { GameSharedModule } from "../game/game-shared.module.js";
-import { InternetSharedModule } from "../internet/internet-shared.module.js";
 import { ReadingBookModule } from "../reading-book/reading-book.module.js";
 import { ShowSharedModule } from "../show/show-shared.module.js";
 import { SportModule } from "../sport/sport.module.js";
@@ -13,7 +13,7 @@ import { ImagesController } from "./images.controller.js";
 @Module({
 	imports: [
 		StorageModule,
-		InternetSharedModule,
+		BroadcastSharedModule,
 		ReadingBookModule,
 		EntitiesModule,
 		SportModule,

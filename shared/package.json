@@ -45,10 +45,10 @@
 			"import": "./dist/schemas/home.schema.js",
 			"require": "./dist/schemas/home.schema.js"
 		},
-		"./internet": {
-			"types": "./dist/schemas/internet.schema.d.ts",
-			"import": "./dist/schemas/internet.schema.js",
-			"require": "./dist/schemas/internet.schema.js"
+		"./broadcast": {
+			"types": "./dist/schemas/broadcast.schema.d.ts",
+			"import": "./dist/schemas/broadcast.schema.js",
+			"require": "./dist/schemas/broadcast.schema.js"
 		},
 		"./lifespan": {
 			"types": "./dist/schemas/lifespan.schema.d.ts",

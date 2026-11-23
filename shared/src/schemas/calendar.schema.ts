@@ -13,7 +13,7 @@ export const MonthlyCalendarItemSchema = z.object({
 			duration: z.number(),
 		})
 		.optional(),
-	internet: z
+	broadcast: z
 		.object({
 			duration: z.number(),
 			episodes: z.number(),
@@ -68,7 +68,7 @@ export const DailyMusicSchema = z.object({
 	contextTags: z.array(z.string()).optional(),
 	created: z.iso.datetime({ local: true }).optional(),
 });
-export const DailyInternetSchema = z.object({
+export const DailyBroadcastSchema = z.object({
 	programId: z.uuid(),
 	programName: z.string(),
 	episodeId: z.uuid(),
@@ -120,7 +120,7 @@ export const DailyShowSchema = z.object({
 });
 export const DailyItemSchema = z.object({
 	music: z.array(DailyMusicSchema).optional(),
-	internet: z.array(DailyInternetSchema).optional(),
+	broadcast: z.array(DailyBroadcastSchema).optional(),
 	"reading-book": z.array(DailyBookSchema).optional(),
 	"reading-manga": z.array(DailyMangaSchema).optional(),
 	game: z.array(DailyGameSchema).optional(),

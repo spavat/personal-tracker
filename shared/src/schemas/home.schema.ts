@@ -1,7 +1,7 @@
 import * as z from "zod";
 
+import type { Program } from "./broadcast.schema";
 import type { Game, GameWithOverview } from "./game.schema";
-import type { Program } from "./internet.schema";
 import type { BookOverview } from "./reading-book.schema";
 import type { MangaOverview } from "./reading-manga.schema";
 import type { PerformanceView } from "./show.schema";
@@ -25,7 +25,7 @@ export const GetLatestResponseSchema = z.object({
 	show: z.array(z.custom<PerformanceView>()),
 	music: z.array(LatestListeningSchema),
 	// the programs of the latest episodes, each with only those episodes
-	internet: z.array(z.custom<Program>()),
+	broadcast: z.array(z.custom<Program>()),
 	"reading-manga": z.array(z.custom<MangaOverview>()),
 	"reading-book": z.array(z.custom<BookOverview>()),
 });

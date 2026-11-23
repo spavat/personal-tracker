@@ -16,14 +16,14 @@ const UPLOAD_ROUTES: Array<[method: string, path: RegExp]> = [
 	["POST", /^\/reading-book\/books\/[^/]+\/editions$/],
 	["PUT", /^\/reading-book\/books\/[^/]+\/editions\/[^/]+$/],
 	["POST", /^\/show\/media\/(spectacles|artists)\/[^/]+$/],
-	["POST", /^\/internet\/programs$/],
-	["PUT", /^\/internet\/programs\/[^/]+$/],
-	["POST", /^\/internet\/sync\/[^/]+\/validate$/],
+	["POST", /^\/broadcast\/programs$/],
+	["PUT", /^\/broadcast\/programs\/[^/]+$/],
+	["POST", /^\/broadcast\/sync\/[^/]+\/validate$/],
 	["POST", /^\/game\/games$/],
 	["PUT", /^\/game\/games\/[^/]+$/],
 ];
 // AntennaPod backups: raw SQLite files (application/octet-stream), a Buffer body
-const BACKUP_ROUTE = /^\/internet\/sync\/upload$/;
+const BACKUP_ROUTE = /^\/broadcast\/sync\/upload$/;
 
 const pathOf = (req: IncomingMessage) => (req.url ?? "").split("?")[0];
 const isUpload = (req: IncomingMessage) =>

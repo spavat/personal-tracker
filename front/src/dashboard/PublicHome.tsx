@@ -1,11 +1,11 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { WidgetBoundary } from "../components/WidgetBoundary";
-import CardGame from "../modules/game/components/CardGame";
+import CardProgram from "../modules/broadcast/components/CardProgram";
 import "../modules/game/module.css";
+import CardGame from "../modules/game/components/CardGame";
 import { latestQuery } from "../modules/home/api";
-import CardProgram from "../modules/internet/components/CardProgram";
-import "../modules/internet/module.css";
+import "../modules/broadcast/module.css";
 import CardBook from "../modules/reading-book/components/CardBook";
 import "../modules/reading-book/module.css";
 import CardManga from "../modules/reading-manga/components/CardManga";
@@ -41,10 +41,10 @@ function Latest() {
 				</div>
 			</section>
 
-			<section className="internet">
+			<section className="broadcast">
 				<h2>Derniers épisodes (Podcast / Vidéo)</h2>
 				<div className="grid">
-					{data.internet.map((program) => (
+					{data.broadcast.map((program) => (
 						<CardProgram key={program.id} program={program} />
 					))}
 				</div>

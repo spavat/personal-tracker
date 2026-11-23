@@ -5,7 +5,7 @@ export const mainNavItems = [
 	{ path: "/music", title: "Musique", icon: "🎶" },
 	{ path: "/reading-book", title: "Livre", icon: "📖" },
 	{ path: "/reading-manga", title: "Manga", icon: "📚" },
-	{ path: "/internet", title: "Internet", icon: "🌐" },
+	{ path: "/broadcast", title: "Émissions", icon: "🎙️" },
 	{ path: "/game", title: "Jeux", icon: "🎮" },
 	{ path: "/sport", title: "Sport", icon: "🏃" },
 	{ path: "/lifespan", title: "Durée de vie", icon: "⏳" },

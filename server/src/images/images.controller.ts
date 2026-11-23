@@ -8,10 +8,10 @@ import * as z from "zod";
 import type { GameImageField } from "../game/game-images.storage.js";
 
 import { Public } from "../auth/public.decorator.js";
+import { BroadcastRepository } from "../broadcast/broadcast.repository.js";
 import { NotFoundError } from "../common/errors.js";
 import { EntitiesRepository } from "../entities/entities.repository.js";
 import { GameRepository } from "../game/game.repository.js";
-import { InternetRepository } from "../internet/internet.repository.js";
 import { BookRepository } from "../reading-book/book.repository.js";
 import { MediaRepository } from "../show/media/media.repository.js";
 import { SportRepository } from "../sport/sport.repository.js";
@@ -30,7 +30,7 @@ const CACHE_A_DAY = "public, max-age=86400";
 export class ImagesController {
 	constructor(
 		private readonly storage: ObjectStorage,
-		private readonly internet: InternetRepository,
+		private readonly broadcast: BroadcastRepository,
 		private readonly books: BookRepository,
 		private readonly entities: EntitiesRepository,
 		private readonly sport: SportRepository,
@@ -39,15 +39,15 @@ export class ImagesController {
 	) {}
 
 	// <programId>.profile or <programId>.banner; private programs are filtered out by findById for visitors
-	@Get("internet/:key")
+	@Get("broadcast/:key")
 	@Public()
-	async internetPicture(@Param("key") key: string, @Res({ passthrough: true }) response: ServerResponse) {
+	async broadcastPicture(@Param("key") key: string, @Res({ passthrough: true }) response: ServerResponse) {
 		const separator = key.lastIndexOf(".");
 		const field = key.slice(separator + 1);
 		if (field !== "profile" && field !== "banner") {
 			throw new NotFoundError("image");
 		}
-		const program = await this.internet.findById(key.slice(0, separator));
+		const program = await this.broadcast.findById(key.slice(0, separator));
 		return this.serve(program?.[field], response, CACHE_A_DAY, "application/octet-stream");
 	}
 

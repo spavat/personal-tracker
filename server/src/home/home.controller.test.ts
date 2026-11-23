@@ -40,7 +40,7 @@ describe("home routes", () => {
 			game: [],
 			show: [],
 			music: [],
-			internet: [],
+			broadcast: [],
 			"reading-manga": [],
 			"reading-book": [],
 		});
@@ -61,7 +61,7 @@ describe("home routes", () => {
 			sortDirection: "desc",
 			limit: 6,
 		});
-		expect(pipelineOf(ctx.collection, "internet")).toEqual(
+		expect(pipelineOf(ctx.collection, "broadcast")).toEqual(
 			expect.arrayContaining([
 				{ $unwind: "$episodes" },
 				{ $sort: { "episodes.date": -1, "episodes.created": -1 } },
@@ -124,7 +124,7 @@ describe("home routes", () => {
 	it("GET /latest groups the latest episodes by program, latest program first", async () => {
 		await ctx.app.inject({ method: "GET", url: "/home/latest" });
 
-		const pipeline = pipelineOf(ctx.collection, "internet");
+		const pipeline = pipelineOf(ctx.collection, "broadcast");
 		const limitAt = pipeline.findIndex((stage) => "$limit" in stage);
 		const groupAt = pipeline.findIndex((stage) => "$group" in stage);
 		// limited on the episodes, before grouping them
@@ -134,23 +134,23 @@ describe("home routes", () => {
 	});
 
 	it("GET /latest serves the program profile through the image proxy, not its S3 key", async () => {
-		ctx.collection("internet").aggregate.mockReturnValue(
+		ctx.collection("broadcast").aggregate.mockReturnValue(
 			makeCursor([
 				{
 					id: "p1",
 					name: "Le Masque",
-					profile: "personal-tracker/internet/p1.profile.avif",
+					profile: "personal-tracker/broadcast/p1.profile.avif",
 					episodes: [{ id: "e1", name: "Épisode", date: "2026-11-11", duration: 60 }],
 				},
 			]),
 		);
 
 		const res = await ctx.app.inject({ method: "GET", url: "/home/latest" });
-		expect(res.json().internet).toEqual([
+		expect(res.json().broadcast).toEqual([
 			{
 				id: "p1",
 				name: "Le Masque",
-				profile: "/images/internet/p1.profile",
+				profile: "/images/broadcast/p1.profile",
 				episodes: [{ id: "e1", name: "Épisode", date: "2026-11-11", duration: 60 }],
 			},
 		]);

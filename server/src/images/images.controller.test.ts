@@ -26,7 +26,7 @@ async function setup(session: unknown = null) {
 	return {
 		app,
 		storage,
-		internet: collection("internet"),
+		broadcast: collection("broadcast"),
 		sport: collection("sport"),
 		game: collection("game"),
 		media: table("showMedia"),
@@ -40,10 +40,10 @@ describe("ImagesController", () => {
 		await app.close();
 	});
 
-	describe("internet", () => {
+	describe("broadcast", () => {
 		it("404s for an unknown image field", async () => {
 			({ app } = await setup());
-			expect((await app.inject({ method: "GET", url: "/images/internet/some-id.thumbnail" })).statusCode).toBe(
+			expect((await app.inject({ method: "GET", url: "/images/broadcast/some-id.thumbnail" })).statusCode).toBe(
 				404,
 			);
 		});
@@ -52,22 +52,22 @@ describe("ImagesController", () => {
 			const ctx = await setup();
 			app = ctx.app;
 
-			const res = await app.inject({ method: "GET", url: "/images/internet/prog-1.profile" });
+			const res = await app.inject({ method: "GET", url: "/images/broadcast/prog-1.profile" });
 
 			expect(res.statusCode).toBe(404);
-			expect(ctx.internet.findOne).toHaveBeenCalledWith({ private: { $ne: true }, id: "prog-1" });
+			expect(ctx.broadcast.findOne).toHaveBeenCalledWith({ private: { $ne: true }, id: "prog-1" });
 		});
 
 		it("streams the stored image with its type and a day of cache", async () => {
 			const ctx = await setup();
 			app = ctx.app;
-			ctx.internet.findOne.mockResolvedValue({
+			ctx.broadcast.findOne.mockResolvedValue({
 				id: "prog-1",
-				profile: "personal-tracker/internet/prog-1.profile.avif",
+				profile: "personal-tracker/broadcast/prog-1.profile.avif",
 			});
 			ctx.storage.get.mockResolvedValue(s3Object("avif-bytes"));
 
-			const res = await app.inject({ method: "GET", url: "/images/internet/prog-1.profile" });
+			const res = await app.inject({ method: "GET", url: "/images/broadcast/prog-1.profile" });
 
 			expect(res.statusCode).toBe(200);
 			expect(res.headers).toMatchObject({
@@ -75,16 +75,16 @@ describe("ImagesController", () => {
 				"cache-control": "public, max-age=86400",
 			});
 			expect(res.body).toBe("avif-bytes");
-			expect(ctx.storage.get).toHaveBeenCalledWith("personal-tracker/internet/prog-1.profile.avif");
+			expect(ctx.storage.get).toHaveBeenCalledWith("personal-tracker/broadcast/prog-1.profile.avif");
 		});
 
 		it("404s when the object is missing from S3", async () => {
 			const ctx = await setup();
 			app = ctx.app;
-			ctx.internet.findOne.mockResolvedValue({ id: "prog-1", banner: "gone.avif" });
+			ctx.broadcast.findOne.mockResolvedValue({ id: "prog-1", banner: "gone.avif" });
 			ctx.storage.get.mockRejectedValue(new Error("NoSuchKey"));
 
-			expect((await app.inject({ method: "GET", url: "/images/internet/prog-1.banner" })).statusCode).toBe(404);
+			expect((await app.inject({ method: "GET", url: "/images/broadcast/prog-1.banner" })).statusCode).toBe(404);
 		});
 	});
 

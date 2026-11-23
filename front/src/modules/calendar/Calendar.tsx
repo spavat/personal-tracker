@@ -74,12 +74,12 @@ export default function Calendar({ period }: { period: string }) {
 				content.push(`🎶 ${getDurationString(dayData.music.duration)}`);
 			}
 
-			// internet
-			if (dayData?.internet) {
-				const internetTotal = dayData.internet.duration;
-				const nbPrograms = dayData.internet.programs;
-				const nbEpisodes = dayData.internet.episodes;
-				content.push(`🎧 ${getDurationString(internetTotal)} (${nbEpisodes} ep. / ${nbPrograms} prog.)`);
+			// broadcast
+			if (dayData?.broadcast) {
+				const broadcastTotal = dayData.broadcast.duration;
+				const nbPrograms = dayData.broadcast.programs;
+				const nbEpisodes = dayData.broadcast.episodes;
+				content.push(`🎧 ${getDurationString(broadcastTotal)} (${nbEpisodes} ep. / ${nbPrograms} prog.)`);
 			}
 
 			// reading

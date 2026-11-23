@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import type { BroadcastRepository } from "../broadcast/broadcast.repository.js";
 import type { GameRepository } from "../game/game.repository.js";
-import type { InternetRepository } from "../internet/internet.repository.js";
 import type { MusicRepository } from "../music/music.repository.js";
 import type { BookRepository } from "../reading-book/book.repository.js";
 import type { ReadingMangaRepository } from "../reading-manga/reading-manga.repository.js";
@@ -11,18 +11,18 @@ import { CalendarService } from "./calendar.service.js";
 
 function fakes() {
 	const music = { findAll: vi.fn().mockResolvedValue([]) };
-	const internet = { findEpisodesInRange: vi.fn().mockResolvedValue([]) };
+	const broadcast = { findEpisodesInRange: vi.fn().mockResolvedValue([]) };
 	const book = { findAll: vi.fn().mockResolvedValue([]) };
 	const manga = { findAll: vi.fn().mockResolvedValue([]) };
 	const performance = { findAll: vi.fn().mockResolvedValue([]) };
 	const game = { findPlaysInRange: vi.fn().mockResolvedValue([]) };
-	return { music, internet, book, manga, performance, game };
+	return { music, broadcast, book, manga, performance, game };
 }
 
 function build(f: ReturnType<typeof fakes>) {
 	return new CalendarService(
 		f.music as unknown as MusicRepository,
-		f.internet as unknown as InternetRepository,
+		f.broadcast as unknown as BroadcastRepository,
 		f.book as unknown as BookRepository,
 		f.manga as unknown as ReadingMangaRepository,
 		f.performance as unknown as PerformancesRepository,
@@ -54,7 +54,7 @@ describe("CalendarService.daily", () => {
 		const f = fakes();
 		const service = new CalendarService(
 			f.music as unknown as MusicRepository,
-			f.internet as unknown as InternetRepository,
+			f.broadcast as unknown as BroadcastRepository,
 			f.book as unknown as BookRepository,
 			f.manga as unknown as ReadingMangaRepository,
 			f.performance as unknown as PerformancesRepository,

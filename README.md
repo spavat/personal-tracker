@@ -1,6 +1,6 @@
 # Personal Tracker
 
-A personal web app to track everyday life: calendar, games, internet, lifespan of objects, money, music, books, manga, shows and sport. The UI is in French.
+A personal web app to track everyday life: calendar, games, broadcasts (podcasts, videos), lifespan of objects, money, music, books, manga, shows and sport. The UI is in French.
 
 ## Stack
 

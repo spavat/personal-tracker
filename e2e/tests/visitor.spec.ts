@@ -3,7 +3,7 @@ import { expect, queryDb, resetDb, SEED, test, updateMongo } from "../fixtures";
 // the server, behind the front proxy (relative to the worker's baseURL)
 const API = "/api";
 const { artists, spectacles, performances } = SEED.show;
-const { mockPodcast, mockTube } = SEED.internet;
+const { mockPodcast, mockTube } = SEED.broadcast;
 const { discovery, genres: musicGenres } = SEED.music;
 const { alice } = SEED.book;
 const ALICE_READING_ID = "0883b913-75f8-4cf2-83b2-a9b832a9311e";
@@ -91,15 +91,15 @@ test.describe("anonymous visitor", () => {
 		});
 	});
 
-	test.describe("internet (read only)", () => {
+	test.describe("broadcast (read only)", () => {
 		test("list without add or edit buttons, and no Sync Podcast", async ({ page }) => {
 			await page.goto("/");
-			await page.getByRole("link", { name: "Internet" }).click();
-			await expect(page).toHaveURL(/\/internet\/history\/\d{4}-\d{2}$/);
+			await page.getByRole("link", { name: "Émissions" }).click();
+			await expect(page).toHaveURL(/\/broadcast\/history\/\d{4}-\d{2}$/);
 			await expect(page.getByRole("link", { name: "Sync Podcast" })).toHaveCount(0);
 			await expect(page.getByRole("link", { name: "Review Tag" })).toHaveCount(0);
 
-			await page.goto("/internet/list");
+			await page.goto("/broadcast/list");
 			await expect(page.getByRole("link", { name: mockPodcast.name })).toBeVisible();
 			await expect(page.getByRole("columnheader", { name: "Actions" })).toHaveCount(0);
 			await expect(page.getByRole("button", { name: "Ajouter un programme" })).toHaveCount(0);
@@ -107,11 +107,11 @@ test.describe("anonymous visitor", () => {
 		});
 
 		test("history and details without add, edit or delete buttons", async ({ page }) => {
-			await page.goto("/internet/history/2026-10");
+			await page.goto("/broadcast/history/2026-10");
 			await expect(page.getByRole("link", { name: mockPodcast.name, exact: true })).toBeVisible();
 			await expect(page.getByRole("button", { name: "Ajouter un programme" })).toHaveCount(0);
 
-			await page.goto(`/internet/${mockPodcast.id}`);
+			await page.goto(`/broadcast/${mockPodcast.id}`);
 			await expect(page.getByRole("heading", { name: mockPodcast.name })).toBeVisible();
 			await expect(page.getByText("Podcast épisode 0")).toBeVisible();
 			await expect(page.getByTitle("Modifier")).toHaveCount(0);
@@ -122,19 +122,19 @@ test.describe("anonymous visitor", () => {
 		});
 
 		test("stats are public", async ({ page }) => {
-			await page.goto("/internet/stats/2026");
-			await expect(page).toHaveURL("/internet/stats/2026");
+			await page.goto("/broadcast/stats/2026");
+			await expect(page).toHaveURL("/broadcast/stats/2026");
 			await expect(page.getByRole("heading", { name: "Année 2026" })).toBeVisible();
 		});
 
 		for (const url of [
-			"/internet/sync",
-			"/internet/review",
-			"/internet/list/add",
-			`/internet/list/edit/${mockPodcast.id}`,
-			`/internet/${mockPodcast.id}/edit`,
-			`/internet/${mockPodcast.id}/add`,
-			"/internet/history/2026-10/add",
+			"/broadcast/sync",
+			"/broadcast/review",
+			"/broadcast/list/add",
+			`/broadcast/list/edit/${mockPodcast.id}`,
+			`/broadcast/${mockPodcast.id}/edit`,
+			`/broadcast/${mockPodcast.id}/add`,
+			"/broadcast/history/2026-10/add",
 		]) {
 			test(`is sent back home from ${url}`, async ({ page }) => {
 				await page.goto(url);
@@ -143,46 +143,46 @@ test.describe("anonymous visitor", () => {
 		}
 
 		test("reads the public endpoints but cannot write", async ({ request }) => {
-			expect((await request.get(`${API}/internet/programs`)).status()).toBe(200);
-			expect((await request.get(`${API}/internet/programs/${mockPodcast.id}`)).status()).toBe(200);
-			expect((await request.get(`${API}/internet/stats?from=2026-01-01&to=2026-12-31`)).status()).toBe(200);
-			expect((await request.get(`${API}/internet/sync`)).status()).toBe(401);
-			expect((await request.get(`${API}/internet/review`)).status()).toBe(401);
-			expect((await request.get(`${API}/internet/latest/${mockPodcast.id}`)).status()).toBe(401);
-			expect((await request.get(`${API}/internet/extract?url=https://example.com`)).status()).toBe(401);
+			expect((await request.get(`${API}/broadcast/programs`)).status()).toBe(200);
+			expect((await request.get(`${API}/broadcast/programs/${mockPodcast.id}`)).status()).toBe(200);
+			expect((await request.get(`${API}/broadcast/stats?from=2026-01-01&to=2026-12-31`)).status()).toBe(200);
+			expect((await request.get(`${API}/broadcast/sync`)).status()).toBe(401);
+			expect((await request.get(`${API}/broadcast/review`)).status()).toBe(401);
+			expect((await request.get(`${API}/broadcast/latest/${mockPodcast.id}`)).status()).toBe(401);
+			expect((await request.get(`${API}/broadcast/extract?url=https://example.com`)).status()).toBe(401);
 			expect(
-				(await request.post(`${API}/internet/programs`, { data: { program: { name: "Intrus" } } })).status(),
+				(await request.post(`${API}/broadcast/programs`, { data: { program: { name: "Intrus" } } })).status(),
 			).toBe(401);
 			expect(
 				(
-					await request.delete(`${API}/internet/programs/${mockPodcast.id}/episodes/${mockPodcast.id}`)
+					await request.delete(`${API}/broadcast/programs/${mockPodcast.id}/episodes/${mockPodcast.id}`)
 				).status(),
 			).toBe(401);
 		});
 
 		test.describe("private program", () => {
-			test.beforeEach(() => updateMongo("internet", { id: mockTube.id }, { $set: { private: true } }));
+			test.beforeEach(() => updateMongo("broadcast", { id: mockTube.id }, { $set: { private: true } }));
 			test.afterEach(resetDb);
 
 			test("is hidden from the list, the history and the search", async ({ page, request }) => {
-				await page.goto("/internet/list");
+				await page.goto("/broadcast/list");
 				await expect(page.getByRole("link", { name: mockPodcast.name })).toBeVisible();
 				await expect(page.getByRole("link", { name: mockTube.name })).toHaveCount(0);
 
-				await page.goto("/internet/history/2026-10");
+				await page.goto("/broadcast/history/2026-10");
 				await expect(page.getByRole("link", { name: mockPodcast.name, exact: true })).toBeVisible();
 				await expect(page.getByRole("link", { name: mockTube.name, exact: true })).toHaveCount(0);
 
-				const search = await (await request.get(`${API}/internet/programs?search=tube`)).json();
+				const search = await (await request.get(`${API}/broadcast/programs?search=tube`)).json();
 				expect(search).toEqual([]);
 			});
 
 			test("is not found by id", async ({ request }) => {
-				expect((await request.get(`${API}/internet/programs/${mockTube.id}`)).status()).toBe(404);
+				expect((await request.get(`${API}/broadcast/programs/${mockTube.id}`)).status()).toBe(404);
 			});
 
 			test("is left out of the stats", async ({ request }) => {
-				const stats = await (await request.get(`${API}/internet/stats?from=2026-01-01&to=2026-12-31`)).json();
+				const stats = await (await request.get(`${API}/broadcast/stats?from=2026-01-01&to=2026-12-31`)).json();
 				const names = stats.programs.map((p: { name: string }) => p.name);
 				expect(names).toContain(mockPodcast.name);
 				expect(names).not.toContain(mockTube.name);

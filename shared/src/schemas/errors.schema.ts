@@ -15,7 +15,7 @@ export const ErrorCodeSchema = z.enum([
 	"edition.model_locked",
 	"game.merge_self",
 	"game.replay_too_old",
-	"internet.no_feed",
+	"broadcast.no_feed",
 	"sport.gpx_no_date",
 	"sport.date_required",
 	"sport.no_gpx",

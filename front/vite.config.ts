@@ -37,9 +37,9 @@ export default defineConfig({
 			),
 			"@personal-tracker/shared/game": path.resolve(import.meta.dirname, "../shared/src/schemas/game.schema.ts"),
 			"@personal-tracker/shared/home": path.resolve(import.meta.dirname, "../shared/src/schemas/home.schema.ts"),
-			"@personal-tracker/shared/internet": path.resolve(
+			"@personal-tracker/shared/broadcast": path.resolve(
 				import.meta.dirname,
-				"../shared/src/schemas/internet.schema.ts",
+				"../shared/src/schemas/broadcast.schema.ts",
 			),
 			"@personal-tracker/shared/lifespan": path.resolve(
 				import.meta.dirname,

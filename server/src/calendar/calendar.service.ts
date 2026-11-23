@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 
+import { BroadcastRepository } from "../broadcast/broadcast.repository.js";
 import { GameRepository } from "../game/game.repository.js";
-import { InternetRepository } from "../internet/internet.repository.js";
 import { MusicRepository } from "../music/music.repository.js";
 import { buildTitleMap } from "../reading-book/book.entity.js";
 import { BookRepository } from "../reading-book/book.repository.js";
@@ -27,7 +27,7 @@ export class CalendarService {
 
 	constructor(
 		private readonly musicRepo: MusicRepository,
-		private readonly internetRepo: InternetRepository,
+		private readonly broadcastRepo: BroadcastRepository,
 		private readonly bookRepo: BookRepository,
 		private readonly mangaRepo: ReadingMangaRepository,
 		private readonly performanceRepo: PerformancesRepository,
@@ -36,7 +36,7 @@ export class CalendarService {
 
 	private async buildCalendar({ from, to }: { from: string; to: string }) {
 		const [programs, listenings, books, mangas, performances, games] = await Promise.all([
-			this.internetRepo.findEpisodesInRange({ from, to }),
+			this.broadcastRepo.findEpisodesInRange({ from, to }),
 			this.musicRepo.findAll({ from, to }),
 			this.bookRepo.findAll({
 				from,
@@ -64,23 +64,23 @@ export class CalendarService {
 			byDate[listening.listeningDate].music += listening.duration;
 		}
 
-		// Internet
+		// Broadcast
 		for (let program of programs ?? []) {
 			for (let episode of program.episodes ?? []) {
 				const date = episode.date;
 				if (!byDate[date]) {
 					byDate[date] = {};
 				}
-				if (!byDate[date].internet) {
-					byDate[date].internet = {
+				if (!byDate[date].broadcast) {
+					byDate[date].broadcast = {
 						duration: 0,
 						episodes: 0,
 						programs: new Set(),
 					};
 				}
-				byDate[date].internet.duration += episode.durationReal ?? episode.duration;
-				byDate[date].internet.episodes += 1;
-				byDate[date].internet.programs.add(program.id);
+				byDate[date].broadcast.duration += episode.durationReal ?? episode.duration;
+				byDate[date].broadcast.episodes += 1;
+				byDate[date].broadcast.programs.add(program.id);
 			}
 		}
 
@@ -157,11 +157,11 @@ export class CalendarService {
 			return {
 				date,
 				...(data.music && { music: { duration: data.music ?? 0 } }),
-				...(data.internet && {
-					internet: {
-						duration: data.internet?.duration ?? 0,
-						episodes: data.internet?.episodes ?? 0,
-						programs: data.internet?.programs.size ?? 0,
+				...(data.broadcast && {
+					broadcast: {
+						duration: data.broadcast?.duration ?? 0,
+						episodes: data.broadcast?.episodes ?? 0,
+						programs: data.broadcast?.programs.size ?? 0,
 					},
 				}),
 				...(data["reading-book"] && {
@@ -203,7 +203,7 @@ export class CalendarService {
 	async daily(date: string) {
 		this.logger.log("daily");
 		const [programs, listenings, books, mangas, performances, games] = await Promise.all([
-			this.internetRepo.findEpisodesInRange({ from: date, to: date }),
+			this.broadcastRepo.findEpisodesInRange({ from: date, to: date }),
 			this.musicRepo.findAll({ from: date, to: date }),
 			this.bookRepo.findAll({
 				from: date,
@@ -228,7 +228,7 @@ export class CalendarService {
 				...((listening.contextTags?.length ?? 0) > 0 && { contextTags: listening.contextTags }),
 				created: listening.created,
 			})) ?? [];
-		const internetItems =
+		const broadcastItems =
 			programs?.flatMap((program) => {
 				return program.episodes?.map((episode: any) => {
 					return {
@@ -299,7 +299,7 @@ export class CalendarService {
 			})) ?? [];
 		return {
 			...(musicItems.length > 0 && { music: musicItems }),
-			...(internetItems.length > 0 && { internet: internetItems }),
+			...(broadcastItems.length > 0 && { broadcast: broadcastItems }),
 			...(bookItems.length > 0 && { "reading-book": bookItems }),
 			...(mangaItems.length > 0 && { "reading-manga": mangaItems }),
 			...(gameItems.length > 0 && { game: gameItems }),

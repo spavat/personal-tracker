@@ -8,7 +8,7 @@ import { COVER_URL_PREFIX, coverKey } from "./book.entity.js";
 
 const COVER_SIZE = { width: 600, height: 900 };
 
-// Same proxy approach as the internet images: only the S3 key is kept in the DB,
+// Same proxy approach as the broadcast images: only the S3 key is kept in the DB,
 // covers are served through /images/reading-book/edition/:id
 @Injectable()
 export class CoverStorage {

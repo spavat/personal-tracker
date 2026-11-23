@@ -12,7 +12,7 @@ const GAME_IMAGE_SIZE: Record<GameImageField, ImageSize> = {
 	header: { width: 460, height: 215 },
 };
 
-// Only the S3 key is kept on the game; images are served by the /images/game/:id/:field proxy route, like internet programs.
+// Only the S3 key is kept on the game; images are served by the /images/game/:id/:field proxy route, like broadcast programs.
 @Injectable()
 export class GameImagesStorage {
 	constructor(private readonly storage: ObjectStorage) {}

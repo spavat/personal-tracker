@@ -7,7 +7,7 @@ import { SHOW_IMAGE_SIZE, type ShowImageKind } from "./media.entity.js";
 
 const PDF_SIGNATURE = "%PDF-";
 
-// Same proxy approach as the internet images: only the key is kept in the DB, files are served through /images/show/:id.
+// Same proxy approach as the broadcast images: only the key is kept in the DB, files are served through /images/show/:id.
 @Injectable()
 export class MediaStorageRepository {
 	constructor(private readonly storage: ObjectStorage) {}

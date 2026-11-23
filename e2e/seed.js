@@ -1365,7 +1365,7 @@ async function seedMongo(db) {
 	]);
 
 	// External refs (Youtube channel, RSS feeds, france.tv links) match the fixtures served by e2e/mocks/fetch-mock.mjs
-	await db.collection("internet").insertMany([
+	await db.collection("broadcast").insertMany([
 		{
 			id: "982fd13b-5f14-4131-ac1a-c0575fd80f17",
 			name: "Mock Podcast",
@@ -1507,7 +1507,7 @@ async function seedMongo(db) {
 	]);
 
 	// gopodder already initialized: the next sync reads e2e/mocks/responses/gopodder-episodes.json
-	await db.collection("internet_sync_state").insertOne({ _id: "gopodder", since: 1794400000 });
+	await db.collection("broadcast_sync_state").insertOne({ _id: "gopodder", since: 1794400000 });
 }
 
 // Wipes every row/document (schema and indexes are kept) and re-inserts the seed.

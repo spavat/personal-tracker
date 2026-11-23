@@ -3,6 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
 
 import { AuthModule } from "./auth/auth.module.js";
+import { BroadcastModule } from "./broadcast/broadcast.module.js";
 import { CalendarModule } from "./calendar/calendar.module.js";
 import { CommonModule } from "./common/common.module.js";
 import { envSchema } from "./config/env.schema.js";
@@ -13,7 +14,6 @@ import { GameModule } from "./game/game.module.js";
 import { HealthController } from "./health/health.controller.js";
 import { HomeModule } from "./home/home.module.js";
 import { ImagesModule } from "./images/images.module.js";
-import { InternetModule } from "./internet/internet.module.js";
 import { LifespanModule } from "./lifespan/lifespan.module.js";
 import { MoneyModule } from "./money/money.module.js";
 import { MusicModule } from "./music/music.module.js";
@@ -37,7 +37,7 @@ import { SportModule } from "./sport/sport.module.js";
 		MusicModule,
 		LifespanModule,
 		SportModule,
-		InternetModule,
+		BroadcastModule,
 		GameModule,
 		ReadingBookModule,
 		ShowModule,

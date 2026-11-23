@@ -143,7 +143,7 @@ export const SEED = {
 		littleWomen: { id: "185d86c8-d527-4213-b91c-8e52327cce8e", book: "Little Women" },
 		roman: { id: "7c663c14-5404-46e6-90aa-fc76c8f052be", book: "Roman de Ronce et d'Épine" },
 	},
-	internet: {
+	broadcast: {
 		mockPodcast: { id: "982fd13b-5f14-4131-ac1a-c0575fd80f17", name: "Mock Podcast" },
 		mockTube: { id: "d06eac35-d504-433f-9e1b-6b1b33206dd3", name: "Mock Tube" },
 		tourDeFrance: { id: "f1d163a6-2dec-488d-97d3-c9de7ab16f49", name: "Tour de France" },

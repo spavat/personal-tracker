@@ -80,7 +80,7 @@ This project is an npm workspaces monorepo splitted into 4 packages:
 - shared: Mostly zod schemas (and typescript type) which can be used by both front & server.
 - e2e: Playwright end-to-end tests.
 
-The app is organised by domain (calendar, context-tags, game, internet, lifespan, money, music, reading-book, reading-manga, show, sport); each domain has a matching folder in `server/src/`, `front/src/modules/`, `front/src/routes/` and a `shared/src/schemas/<domain>.schema.ts`.
+The app is organised by domain (broadcast, calendar, context-tags, game, lifespan, money, music, reading-book, reading-manga, show, sport); each domain has a matching folder in `server/src/`, `front/src/modules/`, `front/src/routes/` and a `shared/src/schemas/<domain>.schema.ts`.
 
 ## Commands
 
@@ -101,7 +101,7 @@ Run from the repo root unless stated otherwise.
 
 Backend of the application. Query the databases (mongoDB and PostgreSQL).
 
-- One Nest module per domain (`src/<domain>/<domain>.module.ts`), imported by `src/app.module.ts`. A domain splits into sub-modules (`money/accounts/`, `internet/sync/`) mounted with `RouterModule.register` children; code shared by the sub-modules goes in a `*-shared.module.ts`. A module reads another domain's data through the repository that domain's module `exports` (imports are not re-exported: import `DatabaseModule`/`StorageModule` where you inject them).
+- One Nest module per domain (`src/<domain>/<domain>.module.ts`), imported by `src/app.module.ts`. A domain splits into sub-modules (`money/accounts/`, `broadcast/sync/`) mounted with `RouterModule.register` children; code shared by the sub-modules goes in a `*-shared.module.ts`. A module reads another domain's data through the repository that domain's module `exports` (imports are not re-exported: import `DatabaseModule`/`StorageModule` where you inject them).
 - Layering: `*.controller.ts` (HTTP only) → `*.service.ts` (domain logic) → `*.repository.ts` (DB access only); pure domain logic in `*.entity.ts`. One service per module (or sub-module), logging with its own Nest `Logger`.
 - File names: `<subject>.<role>.ts`. A resource's module/controller/service/repository are plural like its folder (`artists/artists.service.ts`, class `ArtistsService`), its entity singular (`artist.entity.ts`); domain folders stay singular (`game/`, `sport/`). Helpers take a role too: `.utils.ts` (pure functions), `.query.ts` (DB query builders), `.client.ts` (an outside HTTP source), `.storage.ts`, `.provider.ts`.
 - Global enhancers (`src/common/common.module.ts`, `src/auth/auth.module.ts`): the auth guard, the zod validation pipe, the response serializer, the error filter (every error answers `ErrorBodySchema` of `@personal-tracker/shared/errors`), the request context (AsyncLocalStorage). Throw the errors of `src/common/errors.ts` (`NotFoundError` 404, `ConflictError` 409, `BadRequestError` 400, `UpstreamError` 502) with a code of `ErrorCodeSchema` and its params, and an English message for the logs: the front translates the code (`front/src/error-messages.ts`, read by `checkResponse` into an `ApiError`). A new code needs its entry in both (see `.scratch/error-codes/spec.md`).

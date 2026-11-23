@@ -1,14 +1,14 @@
+import type { Program } from "@personal-tracker/shared/broadcast";
 import type { GameWithOverview } from "@personal-tracker/shared/game";
-import type { Program } from "@personal-tracker/shared/internet";
 import type { BookOverview } from "@personal-tracker/shared/reading-book";
 import type { MangaOverview } from "@personal-tracker/shared/reading-manga";
 
 import { Injectable, Logger } from "@nestjs/common";
 
+import { BroadcastImagesStorage } from "../broadcast/broadcast-images.storage.js";
+import { BroadcastRepository } from "../broadcast/broadcast.repository.js";
 import { GameImagesStorage } from "../game/game-images.storage.js";
 import { GameRepository } from "../game/game.repository.js";
-import { InternetImagesStorage } from "../internet/internet-images.storage.js";
-import { InternetRepository } from "../internet/internet.repository.js";
 import { MusicRepository } from "../music/music.repository.js";
 import { BookRepository } from "../reading-book/book.repository.js";
 import { ReadingMangaRepository } from "../reading-manga/reading-manga.repository.js";
@@ -32,8 +32,8 @@ export class HomeService {
 		private readonly gameImages: GameImagesStorage,
 		private readonly performanceRepo: PerformancesRepository,
 		private readonly musicRepo: MusicRepository,
-		private readonly internetRepo: InternetRepository,
-		private readonly internetImages: InternetImagesStorage,
+		private readonly broadcastRepo: BroadcastRepository,
+		private readonly broadcastImages: BroadcastImagesStorage,
 		private readonly mangaRepo: ReadingMangaRepository,
 		private readonly bookRepo: BookRepository,
 	) {}
@@ -56,7 +56,7 @@ export class HomeService {
 				limit: LATEST_SHOWS,
 			}),
 			this.musicRepo.findAll({ limit: LATEST_LISTENINGS }),
-			this.internetRepo.findLatestEpisodes(LATEST_EPISODES),
+			this.broadcastRepo.findLatestEpisodes(LATEST_EPISODES),
 			this.mangaRepo.findAll({
 				withReadings: true,
 				sortField: "lastReadingDate",
@@ -83,7 +83,7 @@ export class HomeService {
 				album: listening.album,
 				date: listening.listeningDate,
 			})),
-			internet: (programs ?? []).map((program) => this.internetImages.resolveImages(program as Program)),
+			broadcast: (programs ?? []).map((program) => this.broadcastImages.resolveImages(program as Program)),
 			"reading-manga": (mangas ?? []).filter((manga) => manga.lastReadingDate) as MangaOverview[],
 			"reading-book": (books ?? []).filter((book) => book.lastReadDate) as BookOverview[],
 		};

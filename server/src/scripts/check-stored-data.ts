@@ -3,8 +3,8 @@
 // Usage, from server/ after a build: npm run check-stored-data (in production: docker compose exec server npm run check-stored-data)
 import type { PgTable } from "drizzle-orm/pg-core";
 
+import { ProgramSchema } from "@personal-tracker/shared/broadcast";
 import { GameSchema } from "@personal-tracker/shared/game";
-import { ProgramSchema } from "@personal-tracker/shared/internet";
 import { LifespanObjectSchema } from "@personal-tracker/shared/lifespan";
 import {
 	AccountHistorySchema,
@@ -48,7 +48,7 @@ import {
 
 // Mongo collection -> the schema each of its documents is answered with
 const COLLECTIONS: Array<[collection: string, schema: z.ZodType]> = [
-	["internet", ProgramSchema],
+	["broadcast", ProgramSchema],
 	["reading_manga", MangaSchema],
 	["lifespan_object", LifespanObjectSchema],
 	["game", GameSchema],
