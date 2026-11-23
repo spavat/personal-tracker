@@ -4,7 +4,7 @@ import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { PendingContent } from "../../../components/PendingContent";
 import { useIsOwner } from "../../../hooks/use-is-owner";
 import { useSortTable } from "../../../hooks/use-sort-table";
-import { formatDate } from "../../../utils";
+import { formatDate, languageName } from "../../../utils";
 import { bookListSort } from "../api";
 import SeriesPath from "../components/SeriesPath";
 
@@ -64,7 +64,7 @@ export default function BookList() {
 										))}
 									</td>
 									<td className="cell-text" data-label="Langue">
-										{book.language}
+										{book.language && languageName(book.language)}
 									</td>
 									<td className="cell-icon" data-label="Pays">
 										<span className={`fi fi-${book.country}`}></span>

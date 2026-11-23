@@ -1,0 +1,17 @@
+{
+	"numFound": 2,
+	"docs": [
+		{
+			"key": "/works/OL102749W",
+			"title": "Through the Looking-Glass",
+			"author_name": ["Lewis Carroll", "John Tenniel"],
+			"first_publish_year": 1871
+		},
+		{
+			"key": "/works/OL102750W",
+			"title": "The Hunting of the Snark",
+			"author_name": ["Lewis Carroll"],
+			"first_publish_year": 1876
+		}
+	]
+}

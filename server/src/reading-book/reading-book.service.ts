@@ -1,3 +1,4 @@
+import type { ExternalIds } from "@personal-tracker/shared/common";
 import type { ErrorResource } from "@personal-tracker/shared/errors";
 import type {
 	BookListRequestSchema,
@@ -19,6 +20,7 @@ import type { EntityKind } from "../database/node.query.js";
 
 import { BadRequestError, ConflictError, NotFoundError } from "../common/errors.js";
 import { ContextTagsRepository } from "../context-tags/context-tags.repository.js";
+import { isExternalIdTaken } from "../database/node.query.js";
 import { toEntityView } from "../entities/entity.entity.js";
 import { buildInitialReading, getLongestConsecutiveStreak, median } from "./book.entity.js";
 import { BookRepository } from "./book.repository.js";
@@ -63,12 +65,17 @@ export class ReadingBookService {
 			book.authors.map(({ entityId }) => entityId),
 			["person"],
 		);
+		await assertExternalIdsFree(this.repo, book.externalIds, book.id);
 		let bookId = book.id;
-		if (bookId) {
-			await this.repo.update(bookId, book);
-		} else {
-			bookId = randomUUID();
-			await this.repo.insert(bookId, book);
+		try {
+			if (bookId) {
+				await this.repo.update(bookId, book);
+			} else {
+				bookId = randomUUID();
+				await this.repo.insert(bookId, book);
+			}
+		} catch (error) {
+			throw externalIdTakenOr(error, book.externalIds);
 		}
 		return (await this.repo.findById(bookId)) ?? notFound("book");
 	}
@@ -202,6 +209,7 @@ export class ReadingBookService {
 			edition.translators.map(({ entityId }) => entityId),
 			["person"],
 		);
+		await assertExternalIdsFree(this.repo, edition.externalIds, edition.id);
 		if (edition.modelId && !(await this.repo.findModel(bookId, edition.modelId))) {
 			throw new BadRequestError("invalid_reference", "not a model of the book", { resource: "model" });
 		}
@@ -220,12 +228,21 @@ export class ReadingBookService {
 			coverKey = await this.covers.upload(id, cover);
 		}
 
-		const saved = await this.repo.saveEdition(bookId, !edition.id, { ...fields, id, coverKey });
-		if (!saved) {
-			// the cover just uploaded is of no use
+		// the cover just uploaded is of no use when the edition isn't saved
+		const dropNewCover = async () => {
 			if (coverKey && coverKey !== current?.coverKey) {
 				await this.deleteCover(coverKey);
 			}
+		};
+		let saved: boolean;
+		try {
+			saved = await this.repo.saveEdition(bookId, !edition.id, { ...fields, id, coverKey });
+		} catch (error) {
+			await dropNewCover();
+			throw externalIdTakenOr(error, edition.externalIds);
+		}
+		if (!saved) {
+			await dropNewCover();
 			throw new NotFoundError("book");
 		}
 		// the former cover was replaced or removed
@@ -434,6 +451,26 @@ async function assertEntities(repo: BookRepository, ids: string[], kinds: Entity
 			resource: kinds.includes("organization") ? "organization" : "person",
 		});
 	}
+}
+
+// an outside id names a single book or edition
+async function assertExternalIdsFree(repo: BookRepository, externalIds: ExternalIds | undefined, nodeId?: string) {
+	const taken = externalIds && (await repo.findTakenExternalId(externalIds, nodeId));
+	if (taken) {
+		throw new ConflictError("external_id_taken", "the external id is already on another node", taken);
+	}
+}
+
+// a save that lost the race for an external id (checked free, then saved elsewhere first) answers as the check would
+function externalIdTakenOr(error: unknown, externalIds: ExternalIds | undefined) {
+	if (!isExternalIdTaken(error)) {
+		return error;
+	}
+	const [source, externalId] = Object.entries(externalIds ?? {})[0] ?? [];
+	return new ConflictError("external_id_taken", "the external id was saved on another node meanwhile", {
+		...(source && { source }),
+		...(externalId && { externalId }),
+	});
 }
 
 function notFound(resource: ErrorResource): never {

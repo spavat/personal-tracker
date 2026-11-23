@@ -10,6 +10,7 @@ export const ErrorCodeSchema = z.enum([
 	"invalid_reference",
 	"cycle",
 	"duplicate_items",
+	"external_id_taken",
 	"book.last_edition",
 	"edition.model_locked",
 	"game.merge_self",

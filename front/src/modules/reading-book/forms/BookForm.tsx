@@ -1,8 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SaveBookResponse } from "@personal-tracker/shared/reading-book";
+import { type LookupWork, SaveBookResponse } from "@personal-tracker/shared/reading-book";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { useState } from "react";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 
 import type { FormData } from "./BookForm.utils";
 
@@ -10,7 +11,9 @@ import EntitySearchSelect from "../../../components/EntitySearchSelect";
 import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
 import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-query";
+import { languageName } from "../../../utils";
 import { bookDetailsQuery, saveBook } from "../api";
+import BookLookup from "../components/BookLookup";
 import { BookFormSchema, BookFormSchemaTransformation } from "./BookForm.utils";
 
 export default function BookForm({ bookId, returnTo }: { bookId?: string; returnTo: string }) {
@@ -23,6 +26,7 @@ export default function BookForm({ bookId, returnTo }: { bookId?: string; return
 		register,
 		handleSubmit,
 		reset,
+		setValue,
 		formState: { errors },
 	} = useForm<FormData>({
 		// data is loaded before the modal opens: applied once, never overwritten by a background refetch
@@ -34,10 +38,36 @@ export default function BookForm({ bookId, returnTo }: { bookId?: string; return
 		},
 		resolver: zodResolver(BookFormSchema),
 	});
-	const { fields, append, remove } = useFieldArray({
+	const [originalLanguage, country] = useWatch({ control, name: ["originalLanguage", "country"] });
+	const { fields, append, remove, replace } = useFieldArray({
 		control: control,
 		name: "authors",
 	});
+	// the ISBN of the Open Library search the form was filled from: its first edition is filled from it next
+	const [lookupIsbn, setLookupIsbn] = useState<string | null>(null);
+
+	function fillFromLookup(work: LookupWork, isbn: string | null) {
+		setValue("book", work.title, { shouldDirty: true });
+		setValue("originalYear", work.originalYear, { shouldDirty: true });
+		setValue("externalIds", { [work.source]: work.externalId });
+		// an author not matched to an entity: an empty picker, looking for that name
+		replace(
+			work.authors.length
+				? work.authors.map(({ name, entityId }) => ({
+						entityId: entityId ?? "",
+						creditedAs: "",
+						hint: entityId ? undefined : name,
+					}))
+				: [{ entityId: "", creditedAs: "" }],
+		);
+		setLookupIsbn(isbn);
+	}
+
+	// the fields keep their values, but the book no longer comes from that result
+	function clearLookup() {
+		setValue("externalIds", {});
+		setLookupIsbn(null);
+	}
 
 	const saveMutation = useMutation({
 		mutationFn: saveBook,
@@ -46,6 +76,14 @@ export default function BookForm({ bookId, returnTo }: { bookId?: string; return
 			queryClient.invalidateQueries({ queryKey: ["reading", "books"] });
 			if (bookId) {
 				closeModal();
+			} else if (lookupIsbn && data.editions[0]) {
+				// its first edition, filled from that ISBN
+				navigate({
+					to: "/reading-book/book/$bookId/edition/$editionId/edit",
+					params: { bookId: data.id, editionId: data.editions[0].id },
+					search: { returnTo: `/reading-book/book/${data.id}`, isbn: lookupIsbn },
+					replace: true,
+				});
 			} else {
 				// Insert
 				navigate({
@@ -76,6 +114,7 @@ export default function BookForm({ bookId, returnTo }: { bookId?: string; return
 					<h2 id="dialog-title">{bookId ? "Modifier le livre" : "Ajouter un livre"}</h2>
 				</div>
 				<div className="dialog-body">
+					{!bookId && <BookLookup onPick={fillFromLookup} onClear={clearLookup} />}
 					<div className="panel">
 						<h3>Général</h3>
 						<div className="form-grid">
@@ -93,6 +132,7 @@ export default function BookForm({ bookId, returnTo }: { bookId?: string; return
 													kind="person"
 													value={value}
 													onChange={(entityId) => onChange(entityId ?? "")}
+													initialSearch={field.hint}
 													aria-label={`Auteur·ice ${index + 1}`}
 												/>
 											)}
@@ -130,7 +170,21 @@ export default function BookForm({ bookId, returnTo }: { bookId?: string; return
 							</label>
 							<label className="form-field">
 								<span>Langue originale</span>
-								<input {...register("originalLanguage")} type="text" />
+								<div>
+									<input
+										{...register("originalLanguage")}
+										aria-label="Langue originale"
+										type="text"
+										maxLength={2}
+										pattern="[a-z]{2}"
+										title="Code ISO 639-1 en minuscules : fr, en, ja…"
+										autoComplete="off"
+									/>{" "}
+									{originalLanguage && languageName(originalLanguage)}
+								</div>
+								{errors.originalLanguage && (
+									<span className="error">Code de langue à 2 lettres (fr, en, ja…)</span>
+								)}
 							</label>
 							<label className="form-field">
 								<span>Année de publication</span>
@@ -144,7 +198,21 @@ export default function BookForm({ bookId, returnTo }: { bookId?: string; return
 							</label>
 							<label className="form-field">
 								<span>Pays</span>
-								<input {...register("country")} type="text" />
+								<div>
+									<input
+										{...register("country")}
+										aria-label="Pays"
+										type="text"
+										maxLength={2}
+										pattern="[a-z]{2}"
+										title="Code ISO 3166-1 en minuscules : fr, us, jp…"
+										autoComplete="off"
+									/>{" "}
+									<span className={`fi fi-${country}`}></span>
+								</div>
+								{errors.country && (
+									<span className="error">Code de pays à 2 lettres (fr, us, jp…)</span>
+								)}
 							</label>
 						</div>
 					</div>

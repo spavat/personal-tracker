@@ -39,7 +39,8 @@ import {
 
 type IdParams = { id: string };
 
-@Controller("reading-book")
+// Mounted at /reading-book by ReadingBookModule's RouterModule path
+@Controller()
 export class ReadingBookController {
 	constructor(private readonly service: ReadingBookService) {}
 

@@ -19,6 +19,10 @@ export default defineConfig({
 				import.meta.dirname,
 				"../shared/src/schemas/calendar.schema.ts",
 			),
+			"@personal-tracker/shared/common": path.resolve(
+				import.meta.dirname,
+				"../shared/src/schemas/common.schema.ts",
+			),
 			"@personal-tracker/shared/context-tag": path.resolve(
 				import.meta.dirname,
 				"../shared/src/schemas/context-tag.schema.ts",

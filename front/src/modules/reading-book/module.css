@@ -55,6 +55,44 @@
 			max-height: 225px;
 			object-fit: contain;
 		}
+		/* the title (or ISBN) takes the room left by the author */
+		.book-lookup input:not(.flex) {
+			width: 12em;
+		}
+		.lookup-filter {
+			align-items: center;
+			margin-top: 8px;
+		}
+		/* the results of an Open Library search, in the book and edition forms */
+		.lookup-results {
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+			max-height: 18lh;
+			overflow-y: auto;
+			margin: 8px 0 0;
+			padding: 0;
+			button {
+				display: flex;
+				gap: 10px;
+				align-items: center;
+				width: 100%;
+				text-align: left;
+			}
+			img,
+			.lookup-cover-placeholder {
+				width: 40px;
+				aspect-ratio: 2 / 3;
+				object-fit: cover;
+				flex-shrink: 0;
+			}
+			.lookup-cover-placeholder {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				opacity: 0.5;
+			}
+		}
 		/* the portraits (.artist-picture, .portrait-card) are styled in App.css, shared with the show artists */
 		.grid.authors {
 			grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));

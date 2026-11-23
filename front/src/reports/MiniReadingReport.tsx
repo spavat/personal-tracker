@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { getReport } from "../modules/reading-book/api";
-import { formatFullDate } from "../utils";
+import { formatFullDate, languageName } from "../utils";
 
 export default function MiniReadingReport({ year }: { year: string }) {
 	const { data } = useSuspenseQuery({
@@ -71,7 +71,7 @@ export default function MiniReadingReport({ year }: { year: string }) {
 									<tr key={item.name}>
 										<td className="pos monospace smalltext">#{i + 1}.</td>
 										<td>
-											<b>{item.name}</b>
+											<b>{languageName(item.name)}</b>
 										</td>
 										<td className="count">{Math.round(item.percent)} %</td>
 										<td className="small_count">({item.chapters})</td>

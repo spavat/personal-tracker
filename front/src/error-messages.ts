@@ -82,6 +82,9 @@ const DUPLICATE_ITEMS: Record<string, string> = {
 	series: "Un livre ou une série n'est qu'une fois dans une série",
 	media: "La liste doit contenir chaque média une seule fois",
 };
+const EXTERNAL_SOURCE_NAMES: Record<string, string> = {
+	openLibrary: "Open Library",
+};
 const SYNC_IN_PROGRESS: Record<string, string> = {
 	stores: "Une synchronisation des magasins est déjà en cours",
 	podcasts: "Une synchronisation est déjà en cours",
@@ -92,16 +95,23 @@ const TEXTS: Record<ErrorBody["code"], Text> = {
 	has_dependents: (params) =>
 		DEPENDENTS[`${params.resource}.${params.dependent}`]?.(params) ?? "Suppression impossible : élément utilisé",
 	sync_in_progress: ({ service }) => SYNC_IN_PROGRESS[service] ?? "Une synchronisation est déjà en cours",
-	upstream_unavailable: ({ service, status }) =>
+	upstream_unavailable: ({ service, status, reason }) =>
 		service === "feed"
 			? "Impossible de récupérer les derniers épisodes"
-			: status
-				? `${service} a répondu ${status}`
-				: `${service} n'est pas configuré`,
+			: service === "openLibrary"
+				? status
+					? `Open Library a répondu ${status}`
+					: reason === "unexpected_body"
+						? "Open Library a donné une réponse illisible"
+						: "Open Library est injoignable"
+				: status
+					? `${service} a répondu ${status}`
+					: `${service} n'est pas configuré`,
 	invalid_image: ({ resource }) => INVALID_IMAGE[resource] ?? "Image illisible",
 	invalid_reference: (params) => INVALID_REFERENCE[params.resource]?.(params) ?? "Référence inconnue",
 	cycle: ({ resource }) => CYCLE[resource] ?? "Un élément ne peut pas se contenir lui-même",
 	duplicate_items: ({ resource }) => DUPLICATE_ITEMS[resource] ?? "Un élément est en double",
+	external_id_taken: ({ source }) => `Cet identifiant ${EXTERNAL_SOURCE_NAMES[source] ?? source} est déjà utilisé`,
 	"book.last_edition": () => "Un livre garde au moins une édition",
 	"edition.model_locked": () => "Le modèle d'une édition qui a des lectures ne peut pas changer",
 	"game.merge_self": () => "Impossible de fusionner un jeu avec lui-même",

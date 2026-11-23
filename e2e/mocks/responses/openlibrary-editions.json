@@ -1,0 +1,36 @@
+{
+	"links": { "self": "/works/OL102749W/editions.json?limit=500", "work": "/works/OL102749W" },
+	"size": 3,
+	"entries": [
+		{
+			"key": "/books/OL7038372M",
+			"title": "De l'autre côté du miroir",
+			"publishers": ["Gallimard"],
+			"series": ["Folio Classique"],
+			"languages": [{ "key": "/languages/fre" }],
+			"number_of_pages": 220,
+			"physical_format": "Paperback",
+			"isbn_13": ["9782070388523"],
+			"publish_date": "1994",
+			"works": [{ "key": "/works/OL102749W" }]
+		},
+		{
+			"key": "/books/OL24151283M",
+			"title": "Through the Looking-Glass",
+			"publishers": ["Macmillan"],
+			"languages": [{ "key": "/languages/eng" }],
+			"number_of_pages": 224,
+			"physical_format": "Hardcover",
+			"publish_date": "1871",
+			"works": [{ "key": "/works/OL102749W" }]
+		},
+		{
+			"key": "/books/OL50001234M",
+			"title": "Through the Looking Glass",
+			"publishers": ["Independently published"],
+			"physical_format": "Ebook",
+			"publish_date": "Mar 04, 2016",
+			"works": [{ "key": "/works/OL102749W" }]
+		}
+	]
+}

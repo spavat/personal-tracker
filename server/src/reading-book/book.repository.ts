@@ -1,3 +1,4 @@
+import type { ExternalIds } from "@personal-tracker/shared/common";
 import type {
 	BookModel,
 	BookOverview,
@@ -9,14 +10,21 @@ import type {
 } from "@personal-tracker/shared/reading-book";
 
 import { Inject, Injectable } from "@nestjs/common";
-import { and, asc, between, eq, inArray, sql, type SQL } from "drizzle-orm";
+import { and, asc, between, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import type { EditionType, ReadingStatus } from "./book.entity.js";
 
 import { DRIZZLE } from "../database/database.tokens.js";
 import { Drizzle } from "../database/drizzle.js";
-import { createNode, type EntityKind, renameNode, type Tx } from "../database/node.query.js";
+import {
+	createNode,
+	type EntityKind,
+	findTakenExternalId,
+	renameNode,
+	setExternalIds,
+	type Tx,
+} from "../database/node.query.js";
 import {
 	coreEntity,
 	coreNode,
@@ -53,6 +61,8 @@ export interface BookFields {
 	originalLanguage: string;
 	originalYear: number | null;
 	country: string;
+	// left out = unchanged
+	externalIds?: ExternalIds;
 }
 
 export interface EditionFields {
@@ -68,10 +78,13 @@ export interface EditionFields {
 	year: number | null;
 	coverKey: string | null;
 	modelId: string | null;
+	// left out = unchanged
+	externalIds?: ExternalIds;
 }
 
 const WITH_DETAILS = {
 	contributors: { with: { entity: true }, orderBy: { order: "asc" } },
+	externalIds: true,
 	models: { orderBy: { name: "asc" } },
 	// the series the book is directly in, and the series holding them
 	series: { with: { series: { with: { parentItems: { with: { series: true } } } } } },
@@ -80,6 +93,7 @@ const WITH_DETAILS = {
 		with: {
 			publisher: true,
 			contributors: { with: { entity: true }, orderBy: { order: "asc" } },
+			externalIds: true,
 			readings: { with: { entries: { orderBy: { date: "asc" } } } },
 		},
 	},
@@ -286,7 +300,7 @@ export class BookRepository {
 	}
 
 	// A new book comes with an empty model and an empty edition
-	insert(id: string, { book, authors, originalLanguage, originalYear, country }: BookFields) {
+	insert(id: string, { book, authors, originalLanguage, originalYear, country, externalIds }: BookFields) {
 		return this.db.transaction(async (tx) => {
 			await createNode(tx, { type: "book", label: book, id });
 			await tx.insert(readingBook).values({
@@ -297,15 +311,19 @@ export class BookRepository {
 				country: country || null,
 			});
 			await this.replaceAuthors(tx, id, authors);
+			if (externalIds) {
+				await setExternalIds(tx, id, externalIds);
+			}
 			const [model] = await tx
 				.insert(readingModel)
 				.values({ bookId: id, name: "Modèle" })
 				.returning({ id: readingModel.id });
-			await tx.insert(readingEdition).values({ bookId: id, modelId: model.id });
+			const editionId = await createNode(tx, { type: "book_edition", label: book });
+			await tx.insert(readingEdition).values({ id: editionId, bookId: id, modelId: model.id });
 		});
 	}
 
-	update(id: string, { book, authors, originalLanguage, originalYear, country }: BookFields) {
+	update(id: string, { book, authors, originalLanguage, originalYear, country, externalIds }: BookFields) {
 		return this.db.transaction(async (tx) => {
 			const [updated] = await tx
 				.update(readingBook)
@@ -321,8 +339,29 @@ export class BookRepository {
 				return;
 			}
 			await renameNode(tx, id, book);
+			// the editions without a title of their own are named after the book
+			await tx
+				.update(coreNode)
+				.set({ label: book })
+				.where(
+					inArray(
+						coreNode.id,
+						tx
+							.select({ id: readingEdition.id })
+							.from(readingEdition)
+							.where(and(eq(readingEdition.bookId, id), isNull(readingEdition.title))),
+					),
+				);
 			await this.replaceAuthors(tx, id, authors);
+			if (externalIds) {
+				await setExternalIds(tx, id, externalIds);
+			}
 		});
+	}
+
+	// the first of these external ids already held by another node than `nodeId`
+	findTakenExternalId(externalIds: ExternalIds, nodeId?: string) {
+		return findTakenExternalId(this.db, externalIds, nodeId);
 	}
 
 	private async replaceAuthors(tx: Tx, bookId: string, authors: CreditFields[]) {
@@ -415,16 +454,19 @@ export class BookRepository {
 	}
 
 	// false when the book (on create) or the edition (on update) doesn't exist
-	saveEdition(bookId: string, isNew: boolean, { id, translators, ...fields }: EditionFields) {
+	saveEdition(bookId: string, isNew: boolean, { id, translators, externalIds, ...fields }: EditionFields) {
 		return this.db.transaction(async (tx) => {
+			const [book] = await tx
+				.select({ title: readingBook.title })
+				.from(readingBook)
+				.where(eq(readingBook.id, bookId));
+			if (!book) {
+				return false;
+			}
+			// named after its own title, else its book's
+			const label = fields.title ?? book.title;
 			if (isNew) {
-				const [book] = await tx
-					.select({ id: readingBook.id })
-					.from(readingBook)
-					.where(eq(readingBook.id, bookId));
-				if (!book) {
-					return false;
-				}
+				await createNode(tx, { type: "book_edition", label, id });
 				await tx.insert(readingEdition).values({ id, bookId, ...fields });
 			} else {
 				const [updated] = await tx
@@ -435,6 +477,10 @@ export class BookRepository {
 				if (!updated) {
 					return false;
 				}
+				await renameNode(tx, id, label);
+			}
+			if (externalIds) {
+				await setExternalIds(tx, id, externalIds);
 			}
 			await tx
 				.delete(readingEditionContributor)
@@ -456,10 +502,17 @@ export class BookRepository {
 		});
 	}
 
+	// through its node: the edition and its external ids go with it
 	async deleteEdition(bookId: string, editionId: string) {
-		await this.db
-			.delete(readingEdition)
-			.where(and(eq(readingEdition.id, editionId), eq(readingEdition.bookId, bookId)));
+		await this.db.delete(coreNode).where(
+			inArray(
+				coreNode.id,
+				this.db
+					.select({ id: readingEdition.id })
+					.from(readingEdition)
+					.where(and(eq(readingEdition.id, editionId), eq(readingEdition.bookId, bookId))),
+			),
+		);
 	}
 
 	// undefined when the book has no such model

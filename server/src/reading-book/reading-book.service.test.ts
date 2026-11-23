@@ -41,10 +41,15 @@ function fakeRepo() {
 		deleteEdition: vi.fn().mockResolvedValue(undefined),
 		updateReading: vi.fn().mockResolvedValue(true),
 		deleteReading: vi.fn().mockResolvedValue(true),
+		findTakenExternalId: vi.fn().mockResolvedValue(undefined),
 	};
 }
 
 type FakeRepo = ReturnType<typeof fakeRepo>;
+
+// what Drizzle throws when the insert breaks UNIQUE (source, external_id)
+const uniqueViolation = () =>
+	new Error("Failed query", { cause: { code: "23505", constraint: "external_id_source_external_id_key" } });
 const asRepo = (r: FakeRepo) => r as unknown as BookRepository;
 const buildService = (repo: FakeRepo, covers: unknown = {}, contextTags: unknown = {}) =>
 	new ReadingBookService(asRepo(repo), covers as CoverStorage, contextTags as ContextTagsRepository);
@@ -102,6 +107,59 @@ describe("ReadingBookService.saveBook", () => {
 		expect(repo.insert).not.toHaveBeenCalled();
 		expect(repo.findById).toHaveBeenCalledWith("book-1");
 		expect(result).toEqual({ id: "book-1", book: "Dune" });
+	});
+
+	it("checks the external ids against the other nodes than the book itself", async () => {
+		const repo = fakeRepo();
+		const book = {
+			id: "book-1",
+			book: "Dune",
+			authors: [{ entityId: "herbert", creditedAs: null }],
+			externalIds: { openLibrary: "OL893415W" },
+		};
+
+		await buildService(repo).saveBook(book as any);
+
+		expect(repo.findTakenExternalId).toHaveBeenCalledWith({ openLibrary: "OL893415W" }, "book-1");
+		expect(repo.update).toHaveBeenCalledWith("book-1", book);
+	});
+
+	it("refuses an external id held by another node", async () => {
+		const repo = fakeRepo();
+		repo.findTakenExternalId.mockResolvedValue({ source: "openLibrary", externalId: "OL893415W" });
+		const book = {
+			book: "Dune",
+			authors: [{ entityId: "herbert", creditedAs: null }],
+			externalIds: { openLibrary: "OL893415W" },
+		};
+
+		await expect(buildService(repo).saveBook(book as any)).rejects.toBeInstanceOf(ConflictError);
+		expect(repo.insert).not.toHaveBeenCalled();
+	});
+
+	it("answers 409 when the id was saved on another node meanwhile (unique violation)", async () => {
+		const repo = fakeRepo();
+		repo.insert.mockRejectedValue(uniqueViolation());
+		const book = {
+			book: "Dune",
+			authors: [{ entityId: "herbert", creditedAs: null }],
+			externalIds: { openLibrary: "OL893415W" },
+		};
+
+		await expect(buildService(repo).saveBook(book as any)).rejects.toMatchObject({
+			code: "external_id_taken",
+			params: { source: "openLibrary", externalId: "OL893415W" },
+		});
+	});
+
+	it("rethrows any other error of the write", async () => {
+		const repo = fakeRepo();
+		const error = new Error("connection lost");
+		repo.insert.mockRejectedValue(error);
+
+		await expect(
+			buildService(repo).saveBook({ book: "Dune", authors: [{ entityId: "herbert", creditedAs: null }] } as any),
+		).rejects.toBe(error);
 	});
 
 	it("refuses an author who isn't a known person", async () => {
@@ -395,6 +453,20 @@ describe("ReadingBookService.saveEdition", () => {
 		expect([bookId, isNew]).toEqual(["book-1", true]);
 		expect(saved).toEqual({ ...fields, id: expect.any(String), coverKey: NEW_KEY });
 		expect(covers.upload).toHaveBeenCalledWith(saved.id, "https://example.com/c.jpg");
+	});
+
+	it("answers 409 and drops the cover just uploaded when the id was saved elsewhere meanwhile", async () => {
+		const { repo, covers, service } = build();
+		repo.saveEdition.mockRejectedValue(uniqueViolation());
+
+		await expect(
+			service.saveEdition("book-1", {
+				...fields,
+				cover: "https://example.com/c.jpg",
+				externalIds: { openLibrary: "OL59879604M" },
+			}),
+		).rejects.toBeInstanceOf(ConflictError);
+		expect(covers.deleteObject).toHaveBeenCalledWith(NEW_KEY);
 	});
 
 	it("keeps the cover when the form sends back the server's URL", async () => {

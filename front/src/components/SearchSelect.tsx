@@ -13,6 +13,8 @@ type SearchSelectProps<Id> = {
 	emptyLabel?: string;
 	clearTitle?: string;
 	placeholder?: string;
+	// a name to look for (given by an outside source): shown while nothing is selected, typed in when focused
+	initialSearch?: string;
 	"aria-label"?: string;
 	// also given the input: lets a form focus it (react-hook-form Controller's field.ref)
 	inputRef?: (input: HTMLInputElement | null) => void;
@@ -28,6 +30,7 @@ export default function SearchSelect<Id>({
 	emptyLabel = "Aucun résultat",
 	clearTitle = "Effacer",
 	placeholder,
+	initialSearch,
 	"aria-label": ariaLabel,
 	inputRef: externalInputRef,
 }: SearchSelectProps<Id>) {
@@ -98,12 +101,12 @@ export default function SearchSelect<Id>({
 				}}
 				type="text"
 				autoComplete="off"
-				placeholder={placeholder}
+				placeholder={initialSearch || placeholder}
 				aria-label={ariaLabel}
 				value={displayed}
 				onFocus={(e) => {
-					// start editing from the current name
-					setSearch(selectedName);
+					// start editing from the current name, else from the name to look for
+					setSearch(selectedName || (value ? "" : (initialSearch ?? "")));
 					// A <dialog> shown via showModal() renders in the browser's top layer, above
 					// regular body content regardless of z-index — so portal into it when nested
 					// inside one, instead of always targeting <body>.

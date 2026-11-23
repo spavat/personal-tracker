@@ -16,6 +16,7 @@ type EntitySearchSelectProps = {
 	value?: string | null;
 	onChange: (entityId: string | null, name: string) => void;
 	placeholder?: string;
+	initialSearch?: string;
 	"aria-label"?: string;
 };
 

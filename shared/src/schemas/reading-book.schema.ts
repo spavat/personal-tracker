@@ -1,6 +1,14 @@
 import * as z from "zod";
 
-import { GenericListSchema, PeriodQSSchema, UUIDParamsSchema } from "./common.schema";
+import {
+	CountryCodeSchema,
+	ExternalIdsSchema,
+	ExternalSourceSchema,
+	GenericListSchema,
+	LanguageCodeSchema,
+	PeriodQSSchema,
+	UUIDParamsSchema,
+} from "./common.schema";
 import { EntityKindSchema } from "./entity.schema";
 
 const ReadingContextItemSchema = z.object({
@@ -71,6 +79,7 @@ export const EditionSchema = z.object({
 	publisher: z.object({ id: z.uuid(), name: z.string() }).nullable(),
 	collection: z.string().nullable(),
 	translators: z.array(CreditSchema),
+	// an ISO 639-1 code (checked on save only: a stored value never breaks a read)
 	language: z.string().nullable(),
 	pages: z.number().int().nullable(),
 	type: EditionTypeSchema.nullable(),
@@ -80,6 +89,7 @@ export const EditionSchema = z.object({
 	cover: z.string().nullable(),
 	// the chapters its readings follow
 	modelId: z.uuid().nullable(),
+	externalIds: ExternalIdsSchema,
 	readings: z.array(ReadingSchema),
 });
 export type Edition = z.infer<typeof EditionSchema>;
@@ -99,12 +109,14 @@ export const BookSchema = z.object({
 	id: z.uuidv4(),
 	book: z.string().nonempty(),
 	authors: z.array(CreditSchema).min(1),
+	// ISO 639-1 and ISO 3166-1 codes, "" = unknown (checked on save only: a stored value never breaks a read)
 	originalLanguage: z.string(),
 	originalYear: z.number().int().nullable(),
 	country: z.string(),
 	models: z.array(BookModelSchema),
 	editions: z.array(EditionSchema),
 	series: z.array(BookSeriesSchema),
+	externalIds: ExternalIdsSchema,
 });
 
 export type Book = z.infer<typeof BookSchema>;
@@ -117,7 +129,7 @@ const ReadDatesSchema = z.object({
 });
 // A book in lists: its main edition (the one of its latest reading, else the first one) gives
 // the language, pages and cover; each reading carries the language of its edition.
-export const BookOverviewSchema = BookSchema.omit({ editions: true })
+export const BookOverviewSchema = BookSchema.omit({ editions: true, externalIds: true })
 	.extend(ReadDatesSchema.shape)
 	.extend({
 		language: z.string(),
@@ -164,7 +176,14 @@ export const SaveBookRequestSchema = BookSchema.omit({
 	models: true,
 	authors: true,
 	series: true,
-}).extend({ authors: z.array(SaveCreditSchema).min(1) });
+	externalIds: true,
+}).extend({
+	authors: z.array(SaveCreditSchema).min(1),
+	originalLanguage: z.union([LanguageCodeSchema, z.literal("")]),
+	country: z.union([CountryCodeSchema, z.literal("")]),
+	// left out = unchanged, {} = none
+	externalIds: ExternalIdsSchema.optional(),
+});
 // Response
 export const SaveBookResponseSchema = BookSchema;
 export type SaveBookResponse = z.infer<typeof SaveBookResponseSchema>;
@@ -178,10 +197,14 @@ export const SaveEditionRequestSchema = EditionSchema.omit({
 	readings: true,
 	publisher: true,
 	translators: true,
+	externalIds: true,
 }).extend({
 	// an organization
 	publisherId: z.uuid().nullable(),
 	translators: z.array(SaveCreditSchema),
+	language: LanguageCodeSchema.nullable(),
+	// left out = unchanged, {} = none
+	externalIds: ExternalIdsSchema.optional(),
 });
 export type SaveEditionRequest = z.infer<typeof SaveEditionRequestSchema>;
 export const EditionParamsRequestSchema = z.object({
@@ -314,3 +337,68 @@ export const GetReportResponseSchema = z.object({
 	),
 });
 export type GetReportResponse = z.infer<typeof GetReportResponseSchema>;
+
+//
+// LOOKUP: a book or an edition found in an outside source (Open Library…), to fill in the forms.
+// See .scratch/reading-book-openlibrary/spec.md
+//
+export const LookupSourceSchema = ExternalSourceSchema;
+export type LookupSource = z.infer<typeof LookupSourceSchema>;
+
+// An ISBN-10 or ISBN-13 without its hyphens and spaces ("978-2-07-036002-4" → "9782070360024"), else null
+export function normalizeIsbn(text: string) {
+	const isbn = text.replace(/[\s-]/g, "").toUpperCase();
+	return /^(\d{9}[\dX]|\d{13})$/.test(isbn) ? isbn : null;
+}
+const IsbnSchema = z.string().transform((text, ctx) => {
+	const isbn = normalizeIsbn(text);
+	if (!isbn) {
+		ctx.addIssue({ code: "custom", message: "not an ISBN-10 or ISBN-13" });
+		return z.NEVER;
+	}
+	return isbn;
+});
+
+// a person or an organization named by the source; entityId: the single entity of that name
+const LookupNameSchema = z.object({ name: z.string(), entityId: z.uuid().nullable() });
+
+export const LookupWorkSchema = z.object({
+	source: LookupSourceSchema,
+	externalId: z.string(),
+	title: z.string(),
+	authors: z.array(LookupNameSchema),
+	originalYear: z.number().int().nullable(),
+	// a thumbnail for the results list
+	cover: z.url().nullable(),
+});
+export type LookupWork = z.infer<typeof LookupWorkSchema>;
+export const LookupWorkListSchema = z.array(LookupWorkSchema);
+
+export const LookupEditionSchema = z.object({
+	source: LookupSourceSchema,
+	externalId: z.string(),
+	workExternalId: z.string().nullable(),
+	title: z.string().nullable(),
+	publisher: LookupNameSchema.nullable(),
+	collection: z.string().nullable(),
+	language: LanguageCodeSchema.nullable(),
+	pages: z.number().int().nullable(),
+	type: EditionTypeSchema.nullable(),
+	isbn: z.string().nullable(),
+	year: z.number().int().nullable(),
+	// given as the edition's cover URL
+	cover: z.url().nullable(),
+});
+export type LookupEdition = z.infer<typeof LookupEditionSchema>;
+export const LookupEditionListSchema = z.array(LookupEditionSchema);
+
+export const LookupSourceParamsSchema = z.object({ source: LookupSourceSchema });
+export const LookupWorkParamsSchema = LookupSourceParamsSchema.extend({ externalId: z.string().trim().nonempty() });
+// by ISBN (the work of that edition), else by title and author
+export const LookupWorksQuerySchema = z.union([
+	z.object({ isbn: IsbnSchema }),
+	z.object({ title: z.string().trim().nonempty(), author: z.string().trim().nonempty().optional() }),
+]);
+export type LookupWorksQuery = z.infer<typeof LookupWorksQuerySchema>;
+export const LookupWorkEditionsQuerySchema = z.object({ language: LanguageCodeSchema.optional() });
+export const LookupEditionQuerySchema = z.object({ isbn: IsbnSchema });

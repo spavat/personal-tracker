@@ -1,12 +1,17 @@
+import type { LookupEdition } from "@personal-tracker/shared/reading-book";
+
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 
 import EntitySearchSelect from "../../../components/EntitySearchSelect";
 import ImageDropZone from "../../../components/ImageDropZone";
 import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
+import { languageName } from "../../../utils";
 import { bookDetailsQuery, saveEdition } from "../api";
+import EditionLookup from "../components/EditionLookup";
 import { coverSrc, EDITION_TYPE_LABELS } from "../utils";
 import { type EditionFormData, toEditionFormData, toSaveEdition } from "./EditionForm.utils";
 
@@ -23,10 +28,13 @@ export default function EditionForm({
 	bookId,
 	editionId,
 	returnTo,
+	isbn,
 }: {
 	bookId: string;
 	editionId?: string;
 	returnTo: string;
+	// looked up on Open Library when the form opens, its edition filling the form
+	isbn?: string;
 }) {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
@@ -39,7 +47,31 @@ export default function EditionForm({
 		defaultValues: toEditionFormData(edition, book.models[0]?.id),
 	});
 	const translators = useFieldArray({ control, name: "translators" });
-	const cover = useWatch({ control, name: "cover" });
+	const [cover, language] = useWatch({ control, name: ["cover", "language"] });
+	// the publisher's name given by an Open Library edition, when no organization has it: looked for in the picker
+	const [publisherHint, setPublisherHint] = useState<string | undefined>();
+
+	function fillFromLookup(found: LookupEdition) {
+		const options = { shouldDirty: true };
+		// no title of its own: the book's
+		setValue("title", found.title && found.title !== book.book ? found.title : "", options);
+		setValue("publisherId", found.publisher?.entityId ?? "", options);
+		setPublisherHint(found.publisher && !found.publisher.entityId ? found.publisher.name : undefined);
+		setValue("collection", found.collection ?? "", options);
+		setValue("language", found.language ?? "", options);
+		setValue("pages", found.pages?.toString() ?? "", options);
+		setValue("type", found.type ?? "", options);
+		setValue("isbn", found.isbn ?? "", options);
+		setValue("year", found.year?.toString() ?? "", options);
+		setValue("cover", found.cover ?? "", options);
+		setValue("externalIds", { [found.source]: found.externalId }, options);
+	}
+
+	// the fields keep their values, but the edition no longer comes from that result: its own ids again
+	function clearLookup() {
+		setValue("externalIds", edition?.externalIds ?? {}, { shouldDirty: true });
+		setPublisherHint(undefined);
+	}
 
 	const saveMutation = useMutation({
 		mutationFn: saveEdition,
@@ -69,6 +101,13 @@ export default function EditionForm({
 					<h2 id="dialog-title">{title}</h2>
 				</div>
 				<div className="dialog-body">
+					<EditionLookup
+						workId={book.externalIds.openLibrary}
+						defaultLanguage={book.originalLanguage}
+						initialIsbn={isbn}
+						onPick={fillFromLookup}
+						onClear={clearLookup}
+					/>
 					<div className="panel">
 						<h3>Édition</h3>
 						<div className="form-grid">
@@ -86,6 +125,7 @@ export default function EditionForm({
 											kind="organization"
 											value={value}
 											onChange={(entityId) => onChange(entityId ?? "")}
+											initialSearch={publisherHint}
 											aria-label="Éditeur"
 										/>
 									)}
@@ -108,7 +148,18 @@ export default function EditionForm({
 							</label>
 							<label className="form-field">
 								<span>Langue</span>
-								<input {...register("language")} type="text" />
+								<div>
+									<input
+										{...register("language")}
+										aria-label="Langue"
+										type="text"
+										maxLength={2}
+										pattern="[a-z]{2}"
+										title="Code ISO 639-1 en minuscules : fr, en, ja…"
+										autoComplete="off"
+									/>{" "}
+									{language && languageName(language)}
+								</div>
 							</label>
 							<label className="form-field">
 								<span>Pages</span>

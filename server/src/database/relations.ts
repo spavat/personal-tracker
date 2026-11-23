@@ -197,6 +197,10 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.readingBook.id,
 			to: r.readingModel.bookId,
 		}),
+		externalIds: r.many.coreExternalId({
+			from: r.readingBook.id,
+			to: r.coreExternalId.nodeId,
+		}),
 		// the series the book is directly in
 		series: r.many.readingSeriesItem({
 			from: r.readingBook.id,
@@ -233,6 +237,10 @@ export const relations = defineRelations(schema, (r) => ({
 		readings: r.many.readingReading({
 			from: r.readingEdition.id,
 			to: r.readingReading.editionId,
+		}),
+		externalIds: r.many.coreExternalId({
+			from: r.readingEdition.id,
+			to: r.coreExternalId.nodeId,
 		}),
 	},
 	readingEditionContributor: {

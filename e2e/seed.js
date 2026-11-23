@@ -744,11 +744,15 @@ async function seedReadingBooks(conn) {
 			book.id,
 			JSON.stringify(book.model),
 		]);
+		// an edition is a node, named after its book (no title of its own)
 		const {
 			rows: [edition],
-		} = await conn.query(
-			`INSERT INTO reading.edition (book_id, language, pages, model_id) VALUES ($1, $2, $3, $4) RETURNING id`,
-			[book.id, book.language, book.pages, model.id],
+		} = await conn.query(`INSERT INTO core.node (type, label) VALUES ('book_edition', $1) RETURNING id`, [
+			book.book,
+		]);
+		await conn.query(
+			`INSERT INTO reading.edition (id, book_id, language, pages, model_id) VALUES ($1, $2, $3, $4, $5)`,
+			[edition.id, book.id, book.language, book.pages, model.id],
 		);
 		for (const reading of book.readings) {
 			await conn.query(`INSERT INTO reading.reading (id, edition_id, status) VALUES ($1, $2, $3)`, [

@@ -4,6 +4,9 @@ import {
 	Book,
 	BookOverview,
 	GetReportResponse,
+	LookupEdition,
+	LookupSource,
+	LookupWork,
 	SaveBookModelRequest,
 	SaveBookRequestSchema,
 	SaveBookResponse,
@@ -148,4 +151,39 @@ export async function saveReading({ id, reading }: { id: string; reading: any })
 
 export async function deleteReading({ id, readingId }: { id: string; readingId: string }) {
 	return sendJson(`${API_BASE_URL}/reading-book/books/${id}/readings/${readingId}`, "DELETE");
+}
+
+// books found in an outside source (Open Library…): by ISBN, the book of that edition
+export function lookupWorksQuery(source: LookupSource, query: { isbn: string } | { title: string; author?: string }) {
+	return queryOptions({
+		queryKey: ["reading", "lookup", source, "works", query],
+		queryFn: () => fetchJson<LookupWork[]>(withQuery(`${API_BASE_URL}/reading-book/lookup/${source}/works`, query)),
+		// the results of a search don't change while the form is open
+		staleTime: Infinity,
+		retry: false,
+	});
+}
+
+// all the editions of a book of an outside source, in every language (filtered by the form)
+export function lookupWorkEditionsQuery(source: LookupSource, workId: string) {
+	return queryOptions({
+		queryKey: ["reading", "lookup", source, "editions", workId],
+		queryFn: () =>
+			fetchJson<LookupEdition[]>(
+				`${API_BASE_URL}/reading-book/lookup/${source}/works/${encodeURIComponent(workId)}/editions`,
+			),
+		staleTime: Infinity,
+		retry: false,
+	});
+}
+
+// an edition by ISBN: an unknown ISBN answers 404
+export function lookupEditionQuery(source: LookupSource, isbn: string) {
+	return queryOptions({
+		queryKey: ["reading", "lookup", source, "edition", isbn],
+		queryFn: () =>
+			fetchJson<LookupEdition>(withQuery(`${API_BASE_URL}/reading-book/lookup/${source}/editions`, { isbn })),
+		staleTime: Infinity,
+		retry: false,
+	});
 }

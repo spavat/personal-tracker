@@ -1,3 +1,4 @@
+import type { ExternalIds } from "@personal-tracker/shared/common";
 import type { Edition, EditionType, SaveEditionRequest } from "@personal-tracker/shared/reading-book";
 
 export type EditionFormData = {
@@ -14,6 +15,8 @@ export type EditionFormData = {
 	// the server's URL (unchanged), an image URL or a data URI (new), empty (no cover)
 	cover: string;
 	modelId: string;
+	// its ids in the outside sources it was found in (Open Library…)
+	externalIds: ExternalIds;
 };
 
 // a new edition gets the book's first model
@@ -31,6 +34,7 @@ export function toEditionFormData(edition?: Edition, defaultModelId?: string): E
 		year: edition?.year?.toString() ?? "",
 		cover: edition?.cover ?? "",
 		modelId: (edition ? edition.modelId : defaultModelId) ?? "",
+		externalIds: edition?.externalIds ?? {},
 	};
 }
 
@@ -53,5 +57,6 @@ export function toSaveEdition(data: EditionFormData): SaveEditionRequest {
 		year: numberOrNull(data.year),
 		cover: textOrNull(data.cover),
 		modelId: data.modelId || null,
+		externalIds: data.externalIds,
 	};
 }

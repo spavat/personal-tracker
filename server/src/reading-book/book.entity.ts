@@ -2,6 +2,8 @@ import type { Book, ReadingDetails, ReadingModelItem } from "@personal-tracker/s
 
 import { randomUUID } from "node:crypto";
 
+import { toExternalIds } from "../database/node.query.js";
+
 export type ReadingStatus = Book["editions"][number]["readings"][number]["status"];
 export type EditionType = Book["editions"][number]["type"];
 
@@ -12,6 +14,7 @@ export interface Entry {
 	tags: string[];
 }
 
+type ExternalIdRow = Parameters<typeof toExternalIds>[0][number];
 type CreditRow = { role: string; creditedAs: string | null; entity: { id: string; name: string } | null };
 const credits = (rows: CreditRow[], role: string) =>
 	rows
@@ -25,6 +28,7 @@ export interface BookRow {
 	originalLanguage: string | null;
 	originalYear: number | null;
 	country: string | null;
+	externalIds: ExternalIdRow[];
 	contributors: CreditRow[];
 	models: Array<{ id: string; name: string; tree: ReadingModelItem[] }>;
 	series: Array<{
@@ -49,6 +53,7 @@ export interface BookRow {
 		year: number | null;
 		coverKey: string | null;
 		modelId: string | null;
+		externalIds: ExternalIdRow[];
 		readings: Array<{ id: string; status: ReadingStatus; entries: Array<Omit<Entry, "readingId">> }>;
 	}>;
 }
@@ -61,6 +66,7 @@ export function toBook(row: BookRow): Book {
 		originalLanguage: row.originalLanguage ?? "",
 		originalYear: row.originalYear,
 		country: row.country ?? "",
+		externalIds: toExternalIds(row.externalIds),
 		models: row.models.map(({ id, name, tree }) => ({ id, name, tree })),
 		series: row.series
 			.filter(({ series }) => series)
@@ -88,6 +94,7 @@ export function toBook(row: BookRow): Book {
 			year: edition.year,
 			cover: coverUrl(edition.id, edition.coverKey),
 			modelId: edition.modelId,
+			externalIds: toExternalIds(edition.externalIds),
 			// first read first, the readings not started yet last
 			readings: edition.readings
 				.toSorted((a, b) => (a.entries[0]?.date ?? "9999").localeCompare(b.entries[0]?.date ?? "9999"))

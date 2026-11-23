@@ -1,5 +1,5 @@
 // Preloaded in the e2e server (see playwright.config.ts): replaces the external calls made with the global fetch
-// (Youtube, RSS feeds, gopodder, france.tv, images) by the fixtures in ./responses, so the tests never hit the network.
+// (Youtube, RSS feeds, gopodder, france.tv, Open Library, images) by the fixtures in ./responses, so the tests never hit the network.
 // Any external URL missing from ROUTES throws, so a forgotten mock is visible in the server logs.
 import { readFileSync } from "node:fs";
 
@@ -32,6 +32,12 @@ const ROUTES = {
 	"https://gopodder.example.com/api/2/episodes/tracker.json": ["gopodder-episodes.json", "application/json"],
 	// france.tv
 	"https://www.france.tv/sport/cyclisme/tour-de-france/7000001-etape-15.html": ["francetv-etape-15.html", HTML],
+	// Open Library (book lookup): the searches match on the path, whatever the title, the author or the work key
+	"https://openlibrary.org/search.json": ["openlibrary-search.json", "application/json"],
+	"https://openlibrary.org/isbn/9782070388523.json": ["openlibrary-edition-folio.json", "application/json"],
+	"https://openlibrary.org/works/OL102749W/editions.json": ["openlibrary-editions.json", "application/json"],
+	// an unknown ISBN
+	"https://openlibrary.org/isbn/9799999999990.json": [null, HTML, 404],
 	// Images
 	"https://images.example.com/mocktube-profile.svg": ["profile.svg", SVG],
 	"https://images.example.com/mocktube-banner.svg": ["banner.svg", SVG],
@@ -57,7 +63,8 @@ globalThis.fetch = async (input, init) => {
 		console.error(`[fetch-mock] Unmocked external request: ${url}`);
 		throw new Error(`Unmocked external request: ${url}`);
 	}
-	const [file, contentType] = route;
-	const body = readFileSync(new URL(`./responses/${file}`, import.meta.url));
-	return new Response(body, { status: 200, headers: { "content-type": contentType } });
+	// [fixture file (none: empty body), content type, status (200 by default)]
+	const [file, contentType, status = 200] = route;
+	const body = file ? readFileSync(new URL(`./responses/${file}`, import.meta.url)) : "";
+	return new Response(body, { status, headers: { "content-type": contentType } });
 };

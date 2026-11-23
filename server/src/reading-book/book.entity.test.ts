@@ -140,6 +140,7 @@ describe("toBook", () => {
 		year: 2021,
 		coverKey: "personal-tracker/reading-book/edition/e1.0a1b2c3d.avif",
 		modelId: "m1",
+		externalIds: [{ source: "openLibrary", externalId: "OL59879604M" }],
 		readings: [
 			{
 				id: "r1",
@@ -158,6 +159,7 @@ describe("toBook", () => {
 		originalLanguage: "en",
 		originalYear: 1965,
 		country: "us",
+		externalIds: [{ source: "openLibrary", externalId: "OL893415W" }],
 		contributors: [
 			{ role: "author", creditedAs: null, entity: { id: "a1", name: "Frank Herbert" } },
 			{ role: "illustrator", creditedAs: null, entity: { id: "i1", name: "Someone" } },
@@ -182,6 +184,7 @@ describe("toBook", () => {
 			originalLanguage: "en",
 			originalYear: 1965,
 			country: "us",
+			externalIds: { openLibrary: "OL893415W" },
 			models: [{ id: "m1", name: "VO", tree: [{ id: "c1", title: "I" }] }],
 			// by title
 			series: [
@@ -211,6 +214,7 @@ describe("toBook", () => {
 					year: 2021,
 					cover: "/images/reading-book/edition/e1?v=0a1b2c3d",
 					modelId: "m1",
+					externalIds: { openLibrary: "OL59879604M" },
 					readings: [
 						{
 							id: "r1",

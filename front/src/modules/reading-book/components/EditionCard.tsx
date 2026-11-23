@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 
 import { useIsOwner } from "../../../hooks/use-is-owner";
+import { languageName } from "../../../utils";
 import { addReading } from "../api";
 import { ReadingForm } from "../forms/ReadingForm";
 import { coverSrc, EDITION_TYPE_LABELS } from "../utils";
@@ -26,7 +27,7 @@ export default function EditionCard({ book, edition }: { book: Book; edition: Ed
 		edition.publisher?.name,
 		edition.collection,
 		edition.type && EDITION_TYPE_LABELS[edition.type],
-		edition.language,
+		edition.language && languageName(edition.language),
 		edition.pages !== null && `${edition.pages} pages`,
 		edition.year,
 	].filter(Boolean);

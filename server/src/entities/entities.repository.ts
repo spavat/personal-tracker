@@ -43,6 +43,34 @@ export class EntitiesRepository {
 			.orderBy(asc(sql`coalesce(${coreEntity.sortName}, ${coreEntity.name})`));
 	}
 
+	// The entities of this kind named exactly like one of these names, case and accents ignored, each with the
+	// names it matches ("Émile Zola" and "Emile Zola" both match the entity "Émile Zola")
+	findByNames(names: string[], kind: EntityKind) {
+		if (!names.length) {
+			return Promise.resolve([]);
+		}
+		const key = (value: unknown) => sql`unaccent(lower(${value}))`;
+		const entityKey = key(coreEntity.name);
+		return this.db
+			.select({
+				id: coreEntity.id,
+				names: sql<string[]>`array_remove(array[${sql.join(
+					names.map((name) => sql`case when ${entityKey} = ${key(name)} then ${name}::text end`),
+					sql`, `,
+				)}], null)`,
+			})
+			.from(coreEntity)
+			.where(
+				and(
+					eq(coreEntity.kind, kind),
+					sql`${entityKey} in (${sql.join(
+						names.map((name) => key(name)),
+						sql`, `,
+					)})`,
+				),
+			);
+	}
+
 	async findById(id: string) {
 		const [entity] = await this.db.select(ENTITY_COLUMNS).from(coreEntity).where(eq(coreEntity.id, id));
 		return entity;

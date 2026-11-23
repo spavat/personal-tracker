@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 
 import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { bookDetailsQuery } from "../../../modules/reading-book/api";
@@ -15,12 +16,14 @@ export const Route = createFileRoute("/reading-book/book/$bookId/edition/$editio
 	},
 	pendingComponent: ModalPending,
 	errorComponent: ModalError,
-	validateSearch: withReturnToSchema,
+	// isbn: the edition to look up on Open Library when the form opens (a book just created from that ISBN)
+	// (a URL typed by hand reads digits as a number)
+	validateSearch: withReturnToSchema.extend({ isbn: z.union([z.string(), z.number().transform(String)]).optional() }),
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const { bookId, editionId } = Route.useParams();
-	const { returnTo } = Route.useSearch();
-	return <EditionForm bookId={bookId} editionId={editionId} returnTo={returnTo} />;
+	const { returnTo, isbn } = Route.useSearch();
+	return <EditionForm bookId={bookId} editionId={editionId} returnTo={returnTo} isbn={isbn} />;
 }

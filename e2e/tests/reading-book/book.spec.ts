@@ -21,9 +21,9 @@ test.describe("Reading Book - Details", () => {
 
 		const general = page.locator(".details .general");
 		await expect(general).toContainText("Auteur.ic.es: Lewis Carroll");
-		await expect(general).toContainText("Langue originale : en");
+		await expect(general).toContainText("Langue originale : anglais");
 		await expect(general).toContainText("Pays : gb");
-		await expect(page.locator("section.edition")).toContainText("en · 181 pages");
+		await expect(page.locator("section.edition")).toContainText("anglais · 181 pages");
 
 		await expect(page.getByRole("heading", { name: "Lecture #1" })).toBeVisible();
 		const model = page.locator(".card_item.model");
@@ -40,7 +40,7 @@ test.describe("Reading Book - Details", () => {
 		await expect(dialog.getByRole("textbox", { name: "Langue originale" })).toHaveValue("en");
 
 		await dialog.getByRole("textbox", { name: "Nom" }).fill("Alice in Wonderland");
-		await dialog.getByRole("textbox", { name: "Langue originale" }).fill("en-GB");
+		await dialog.getByRole("textbox", { name: "Langue originale" }).fill("fr");
 		await expect(dialog.getByRole("spinbutton", { name: "Année de publication" })).toHaveValue("");
 		await dialog.getByRole("spinbutton", { name: "Année de publication" }).fill("1865");
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
@@ -48,7 +48,7 @@ test.describe("Reading Book - Details", () => {
 		await expect(dialog).not.toBeVisible();
 		await expect(page.getByRole("heading", { name: "Alice in Wonderland" })).toBeVisible();
 		const general = page.locator(".details .general");
-		await expect(general).toContainText("Langue originale : en-GB");
+		await expect(general).toContainText("Langue originale : français");
 		await expect(general).toContainText("Année de publication : 1865");
 	});
 

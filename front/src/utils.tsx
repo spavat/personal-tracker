@@ -131,3 +131,14 @@ export function getCurrentOrPreviousDate() {
 
 	return targetDate.toString();
 }
+
+const LANGUAGE_NAMES = new Intl.DisplayNames(["fr"], { type: "language" });
+// The French name of an ISO 639-1 code ("ja" → "japonais"), the code itself when unknown
+export function languageName(code: string) {
+	try {
+		return LANGUAGE_NAMES.of(code) ?? code;
+	} catch {
+		// not a valid language tag
+		return code;
+	}
+}

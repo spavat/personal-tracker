@@ -1,8 +1,17 @@
-import { eq } from "drizzle-orm";
+import type { ExternalIds, ExternalSource } from "@personal-tracker/shared/common";
+
+import { and, eq, ne, or } from "drizzle-orm";
 
 import type { Drizzle } from "./drizzle.js";
 
-import { coreEntity, coreEntityGroup, coreEntityOrganization, coreEntityPerson, coreNode } from "./schema.js";
+import {
+	coreEntity,
+	coreEntityGroup,
+	coreEntityOrganization,
+	coreEntityPerson,
+	coreExternalId,
+	coreNode,
+} from "./schema.js";
 
 export type Tx = Parameters<Parameters<Drizzle["transaction"]>[0]>[0];
 export type NodeType = (typeof coreNode.$inferInsert)["type"];
@@ -45,4 +54,57 @@ export async function createEntity(
 	});
 	await tx.insert(ENTITY_SUBTYPE_TABLE[kind]).values({ id: entityId });
 	return entity;
+}
+
+type ExternalIdRow = { source: ExternalSource; externalId: string };
+
+// The rows of a node's external ids, as `{ openLibrary: "OL…" }`
+export function toExternalIds(rows: ExternalIdRow[]): ExternalIds {
+	return Object.fromEntries(rows.map(({ source, externalId }) => [source, externalId]));
+}
+
+function toRows(externalIds: ExternalIds) {
+	return Object.entries(externalIds).flatMap(([source, externalId]) =>
+		externalId ? [{ source: source as ExternalSource, externalId }] : [],
+	);
+}
+
+// The write failed because one of its external ids was saved on another node meanwhile (UNIQUE (source,
+// external_id)): Drizzle wraps the Postgres error in `cause`
+export function isExternalIdTaken(error: unknown) {
+	const cause =
+		error instanceof Error ? (error.cause as { code?: string; constraint?: string } | undefined) : undefined;
+	return cause?.code === "23505" && cause.constraint === "external_id_source_external_id_key";
+}
+
+// Replaces all the external ids of a node
+export async function setExternalIds(tx: Tx, nodeId: string, externalIds: ExternalIds) {
+	await tx.delete(coreExternalId).where(eq(coreExternalId.nodeId, nodeId));
+	const rows = toRows(externalIds);
+	if (rows.length) {
+		await tx.insert(coreExternalId).values(rows.map((row) => ({ ...row, nodeId })));
+	}
+}
+
+// The first of these external ids already held by another node than `nodeId` (none: a node to create)
+export async function findTakenExternalId(db: Tx | Drizzle, externalIds: ExternalIds, nodeId?: string) {
+	const rows = toRows(externalIds);
+	if (!rows.length) {
+		return undefined;
+	}
+	const [taken] = await db
+		.select({ source: coreExternalId.source, externalId: coreExternalId.externalId })
+		.from(coreExternalId)
+		.where(
+			and(
+				or(
+					...rows.map(({ source, externalId }) =>
+						and(eq(coreExternalId.source, source), eq(coreExternalId.externalId, externalId)),
+					),
+				),
+				nodeId ? ne(coreExternalId.nodeId, nodeId) : undefined,
+			),
+		)
+		.limit(1);
+	return taken as ExternalIdRow | undefined;
 }

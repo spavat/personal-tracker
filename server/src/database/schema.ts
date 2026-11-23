@@ -395,7 +395,7 @@ export const authVerification = auth.table(
 
 // Registry of everything that can be linked across modules: each linkable row shares its node's uuid.
 // See .scratch/connected-domains/spec.md
-export const coreNodeType = core.enum("node_type", ["entity", "book", "book_series"]);
+export const coreNodeType = core.enum("node_type", ["entity", "book", "book_series", "book_edition"]);
 
 export const coreNode = core.table("node", {
 	id: uuid().primaryKey().defaultRandom(),
@@ -403,6 +403,24 @@ export const coreNode = core.table("node", {
 	// display name, kept in sync with the row it stands for (search, link lists)
 	label: text().notNull(),
 });
+
+export const coreExternalSource = core.enum("external_source", ["openLibrary"]);
+
+// A node's id in an outside source (Open Library…): one per source, and an outside id names a single node
+export const coreExternalId = core.table(
+	"external_id",
+	{
+		nodeId: uuid()
+			.notNull()
+			.references(() => coreNode.id, { onDelete: "cascade" }),
+		source: coreExternalSource().notNull(),
+		externalId: text().notNull(),
+	},
+	(table) => [
+		primaryKey({ columns: [table.nodeId, table.source] }),
+		unique("external_id_source_external_id_key").on(table.source, table.externalId),
+	],
+);
 
 export const coreEntityKind = core.enum("entity_kind", ["person", "group", "organization"]);
 
@@ -519,7 +537,9 @@ export const readingEditionType = reading.enum("edition_type", ["print", "digita
 export const readingEdition = reading.table(
 	"edition",
 	{
-		id: uuid().primaryKey().defaultRandom(),
+		id: uuid()
+			.primaryKey()
+			.references(() => coreNode.id, { onDelete: "cascade" }),
 		bookId: uuid()
 			.notNull()
 			.references(() => readingBook.id, { onDelete: "cascade" }),

@@ -25,7 +25,7 @@ test.describe("Reading Book - List", () => {
 			"1",
 			alice.book,
 			"Lewis Carroll",
-			"en",
+			"anglais",
 			"",
 			"1",
 			"05/02/26",
@@ -80,7 +80,7 @@ test.describe("Reading Book - List", () => {
 		// Redirected to the page of the new book
 		await expect(page.getByRole("heading", { name: "New Test Book", level: 2 })).toBeVisible();
 		await expect(page.getByText("Auteur.ic.es: New Author")).toBeVisible();
-		await expect(page.getByText("Langue originale : fr")).toBeVisible();
+		await expect(page.getByText("Langue originale : français")).toBeVisible();
 
 		await page.getByRole("link", { name: "Liste" }).click();
 		await expect(bookRows(page)).toHaveCount(4);

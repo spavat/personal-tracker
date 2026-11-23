@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
 import { useIsOwner } from "../../../hooks/use-is-owner";
+import { languageName } from "../../../utils";
 import { bookDetailsQuery } from "../api";
 import EditionCard from "../components/EditionCard";
 import SeriesPath from "../components/SeriesPath";
@@ -60,7 +61,7 @@ export default function BookDetails({ bookId }: { bookId: string }) {
 							</b>
 						</span>
 						<br />
-						Langue originale : {book.originalLanguage}
+						Langue originale : {book.originalLanguage && languageName(book.originalLanguage)}
 						<br />
 						{book.originalYear !== null && (
 							<>

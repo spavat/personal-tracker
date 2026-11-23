@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+	coreExternalId,
 	coreNode,
 	readingBook,
 	readingBookContributor,
@@ -34,13 +35,19 @@ vi.mock("node:crypto", async (original) => ({
 }));
 
 // The book row the writes read back, holding a model, an edition and a reading of these ids
-function bookRow({ modelId = MODEL_UUID, editionId = EDITION_UUID, readingId = READING_UUID } = {}) {
+function bookRow({
+	modelId = MODEL_UUID,
+	editionId = EDITION_UUID,
+	readingId = READING_UUID,
+	externalIds = [] as Array<{ source: string; externalId: string }>,
+} = {}) {
 	return {
 		id: UUID,
 		title: "Dune",
 		originalLanguage: "en",
 		originalYear: 1965,
 		country: "us",
+		externalIds,
 		contributors: [{ role: "author", creditedAs: null, entity: { id: ENTITY_UUID, name: "Frank Herbert" } }],
 		series: [],
 		models: [{ id: modelId, name: "VO", tree: [] }],
@@ -58,6 +65,7 @@ function bookRow({ modelId = MODEL_UUID, editionId = EDITION_UUID, readingId = R
 				year: null,
 				coverKey: null,
 				modelId,
+				externalIds: [],
 				readings: [{ id: readingId, status: "complete", entries: [] }],
 			},
 		],
@@ -118,6 +126,21 @@ describe("reading-book routes", () => {
 			expect(ctx.db.select).toHaveBeenCalled();
 		});
 
+		it("GET /books/:id reads a stored language or country that isn't an ISO code", async () => {
+			const row = bookRow();
+			ctx.books.findFirst.mockResolvedValue({
+				...row,
+				originalLanguage: "Français",
+				country: "France",
+				editions: [{ ...row.editions[0], language: "VF" }],
+			});
+
+			const res = await ctx.app.inject({ method: "GET", url: `/reading-book/books/${UUID}` });
+
+			expect(res.statusCode).toBe(200);
+			expect(res.json()).toMatchObject({ originalLanguage: "Français", country: "France" });
+		});
+
 		it("GET /books/:id 404s on an unknown book", async () => {
 			const res = await ctx.app.inject({ method: "GET", url: `/reading-book/books/${UUID}` });
 			expect(res.statusCode).toBe(404);
@@ -149,8 +172,84 @@ describe("reading-book routes", () => {
 				readingBook,
 				readingBookContributor,
 				readingModel,
+				// the edition's node
+				coreNode,
 				readingEdition,
 			]);
+		});
+
+		it("POST /books saves the book's external ids and answers them", async () => {
+			await ctx.app.close();
+			// the author check counts 1 entity, then no node holds the id
+			ctx = await buildApp([{ id: UUID, count: 1 }]);
+			ctx.db.select
+				.mockImplementationOnce(() => ({ from: () => ({ where: async () => [{ count: 1 }] }) }))
+				.mockImplementationOnce(() => ({ from: () => ({ where: () => ({ limit: async () => [] }) }) }));
+			ctx.books.findFirst.mockResolvedValue(
+				bookRow({ externalIds: [{ source: "openLibrary", externalId: "OL893415W" }] }),
+			);
+
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: "/reading-book/books",
+				payload: {
+					book: "Dune",
+					authors: [{ entityId: ENTITY_UUID, creditedAs: null }],
+					originalLanguage: "en",
+					originalYear: 1965,
+					country: "us",
+					externalIds: { openLibrary: "OL893415W" },
+				},
+			});
+
+			expect(res.statusCode).toBe(201);
+			expect(res.json()).toMatchObject({ externalIds: { openLibrary: "OL893415W" } });
+			expect(tablesOf(ctx.db.insert)).toContain(coreExternalId);
+		});
+
+		it("POST /books refuses a language or a country that isn't a 2-letter code", async () => {
+			for (const fields of [{ originalLanguage: "français" }, { country: "France" }]) {
+				const res = await ctx.app.inject({
+					method: "POST",
+					url: "/reading-book/books",
+					payload: {
+						book: "Dune",
+						authors: [{ entityId: ENTITY_UUID, creditedAs: null }],
+						originalLanguage: "en",
+						originalYear: 1965,
+						country: "us",
+						...fields,
+					},
+				});
+				expect(res.statusCode).toBe(400);
+			}
+			expect(ctx.db.insert).not.toHaveBeenCalled();
+		});
+
+		it("POST /books refuses an external id held by another book", async () => {
+			await ctx.app.close();
+			// every select answers a row: the entity count, and the node holding the id
+			ctx = await buildApp([{ count: 1, source: "openLibrary", externalId: "OL893415W" }]);
+
+			const res = await ctx.app.inject({
+				method: "POST",
+				url: "/reading-book/books",
+				payload: {
+					book: "Dune",
+					authors: [{ entityId: ENTITY_UUID, creditedAs: null }],
+					originalLanguage: "en",
+					originalYear: 1965,
+					country: "us",
+					externalIds: { openLibrary: "OL893415W" },
+				},
+			});
+
+			expect(res.statusCode).toBe(409);
+			expect(res.json()).toMatchObject({
+				code: "external_id_taken",
+				params: { source: "openLibrary", externalId: "OL893415W" },
+			});
+			expect(ctx.db.insert).not.toHaveBeenCalled();
 		});
 
 		it("POST /books/:id/editions/:editionId/readings starts a reading on the edition", async () => {
@@ -202,7 +301,7 @@ describe("reading-book routes", () => {
 
 			expect(res.statusCode).toBe(201);
 			expect(res.json()).toMatchObject({ id: NEW_UUID });
-			expect(tablesOf(ctx.db.insert)).toEqual([readingEdition, readingEditionContributor]);
+			expect(tablesOf(ctx.db.insert)).toEqual([coreNode, readingEdition, readingEditionContributor]);
 		});
 
 		it("POST /books/:id/editions accepts a cover of several MB sent as a data URI", async () => {
@@ -262,6 +361,19 @@ describe("reading-book routes", () => {
 				payload: { type: "audio" },
 			});
 			expect(res.statusCode).toBe(400);
+		});
+
+		it("DELETE /books/:id/editions/:editionId deletes the edition through its node", async () => {
+			await ctx.app.close();
+			ctx = await buildApp([{ id: EDITION_UUID, coverKey: null, nbReadings: 0, nbBookEditions: 2 }]);
+
+			const res = await ctx.app.inject({
+				method: "DELETE",
+				url: `/reading-book/books/${UUID}/editions/${EDITION_UUID}`,
+			});
+
+			expect(res.statusCode).toBe(204);
+			expect(tablesOf(ctx.db.delete)).toEqual([coreNode]);
 		});
 
 		it("DELETE /books/:id/editions/:editionId refuses the book's last edition", async () => {

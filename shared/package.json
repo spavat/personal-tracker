@@ -15,6 +15,11 @@
 			"import": "./dist/schemas/calendar.schema.js",
 			"require": "./dist/schemas/calendar.schema.js"
 		},
+		"./common": {
+			"types": "./dist/schemas/common.schema.d.ts",
+			"import": "./dist/schemas/common.schema.js",
+			"require": "./dist/schemas/common.schema.js"
+		},
 		"./entity": {
 			"types": "./dist/schemas/entity.schema.d.ts",
 			"import": "./dist/schemas/entity.schema.js",

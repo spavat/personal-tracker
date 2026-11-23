@@ -45,7 +45,7 @@ test.describe("Reading Book - Editions", () => {
 		await expect(dialog).not.toBeVisible();
 
 		const card = edition(page, "Alice au pays des merveilles");
-		await expect(card).toContainText("Gallimard · Folio Classique · Livre · fr · 220 pages · 1994");
+		await expect(card).toContainText("Gallimard · Folio Classique · Livre · français · 220 pages · 1994");
 		await expect(card).toContainText("Traduction : H. Parisot");
 		const cover = card.getByRole("img", { name: "Couverture de Alice au pays des merveilles" });
 		await expect(cover).toHaveAttribute("src", /\/images\/reading-book\/edition\/[0-9a-f-]+\?v=[0-9a-f]+$/);
