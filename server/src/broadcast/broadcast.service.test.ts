@@ -64,7 +64,6 @@ describe("BroadcastService", () => {
 	describe("getProgram", () => {
 		it("sorts the episodes most recent first and adds the computed details", async () => {
 			repo.findById.mockResolvedValue({
-				_id: "mongo",
 				id: "p1",
 				name: "Prog",
 				episodes: [
@@ -75,7 +74,6 @@ describe("BroadcastService", () => {
 
 			const result = await service.getProgram("p1");
 
-			expect(result).not.toHaveProperty("_id");
 			expect(result.episodes.map((e) => e.date)).toEqual(["2024-03-01", "2024-01-01"]);
 			expect(result.details).toEqual({
 				episodes: 2,

@@ -288,4 +288,70 @@ export const relations = defineRelations(schema, (r) => ({
 			to: r.readingSeries.id,
 		}),
 	},
+	broadcastProgram: {
+		contributors: r.many.broadcastProgramContributor({
+			from: r.broadcastProgram.id,
+			to: r.broadcastProgramContributor.programId,
+		}),
+		seasons: r.many.broadcastSeason({
+			from: r.broadcastProgram.id,
+			to: r.broadcastSeason.programId,
+		}),
+		formats: r.many.broadcastFormat({
+			from: r.broadcastProgram.id,
+			to: r.broadcastFormat.programId,
+		}),
+		episodes: r.many.broadcastEpisode({
+			from: r.broadcastProgram.id,
+			to: r.broadcastEpisode.programId,
+		}),
+	},
+	broadcastProgramContributor: {
+		program: r.one.broadcastProgram({
+			from: r.broadcastProgramContributor.programId,
+			to: r.broadcastProgram.id,
+		}),
+		entity: r.one.coreEntity({
+			from: r.broadcastProgramContributor.entityId,
+			to: r.coreEntity.id,
+		}),
+	},
+	broadcastEpisode: {
+		program: r.one.broadcastProgram({
+			from: r.broadcastEpisode.programId,
+			to: r.broadcastProgram.id,
+		}),
+		season: r.one.broadcastSeason({
+			from: r.broadcastEpisode.seasonId,
+			to: r.broadcastSeason.id,
+		}),
+		format: r.one.broadcastFormat({
+			from: r.broadcastEpisode.formatId,
+			to: r.broadcastFormat.id,
+		}),
+		contributors: r.many.broadcastEpisodeContributor({
+			from: r.broadcastEpisode.id,
+			to: r.broadcastEpisodeContributor.episodeId,
+		}),
+		views: r.many.broadcastView({
+			from: r.broadcastEpisode.id,
+			to: r.broadcastView.episodeId,
+		}),
+	},
+	broadcastEpisodeContributor: {
+		episode: r.one.broadcastEpisode({
+			from: r.broadcastEpisodeContributor.episodeId,
+			to: r.broadcastEpisode.id,
+		}),
+		entity: r.one.coreEntity({
+			from: r.broadcastEpisodeContributor.entityId,
+			to: r.coreEntity.id,
+		}),
+	},
+	broadcastView: {
+		episode: r.one.broadcastEpisode({
+			from: r.broadcastView.episodeId,
+			to: r.broadcastEpisode.id,
+		}),
+	},
 }));

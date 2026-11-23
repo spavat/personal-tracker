@@ -395,7 +395,14 @@ export const authVerification = auth.table(
 
 // Registry of everything that can be linked across modules: each linkable row shares its node's uuid.
 // See .scratch/connected-domains/spec.md
-export const coreNodeType = core.enum("node_type", ["entity", "book", "book_series", "book_edition"]);
+export const coreNodeType = core.enum("node_type", [
+	"entity",
+	"book",
+	"book_series",
+	"book_edition",
+	"program",
+	"episode",
+]);
 
 export const coreNode = core.table("node", {
 	id: uuid().primaryKey().defaultRandom(),
@@ -639,4 +646,169 @@ export const readingSeriesItem = reading.table(
 		// a book or a sub-series
 		check("series_item_one_kind_check", sql`num_nonnulls(${table.bookId}, ${table.childSeriesId}) = 1`),
 	],
+);
+
+// Broadcast (podcasts, videos, radio and TV shows): a program's episodes are its releases, each listening/watching
+// is a view. A `catalog` program stores every release, a `feed` one only the episodes with a view or a status.
+// See .scratch/broadcast-postgres/spec.md
+export const broadcast = snakeCase.schema("broadcast");
+
+export const broadcastTracking = broadcast.enum("tracking", ["catalog", "feed"]);
+
+export const broadcastProgram = broadcast.table("program", {
+	id: uuid()
+		.primaryKey()
+		.references(() => coreNode.id, { onDelete: "cascade" }),
+	name: text().notNull(),
+	shortName: text(),
+	description: text(),
+	country: text(),
+	type: text(),
+	tracking: broadcastTracking().default("feed").notNull(),
+	// the feeds read for the latest episodes, the sync and the catalog import
+	rss: text(),
+	youtubeChannelId: text(),
+	youtubePlaylistId: text(),
+	links: text().array().default([]).notNull(),
+	profileKey: text(),
+	bannerKey: text(),
+	tags: text().array().default([]).notNull(),
+	private: boolean().default(false).notNull(),
+});
+
+export const broadcastProgramContributorRole = broadcast.enum("program_contributor_role", [
+	"host",
+	"producer",
+	"network",
+]);
+
+export const broadcastProgramContributor = broadcast.table(
+	"program_contributor",
+	{
+		programId: uuid()
+			.notNull()
+			.references(() => broadcastProgram.id, { onDelete: "cascade" }),
+		entityId: uuid()
+			.notNull()
+			.references(() => coreEntity.id),
+		role: broadcastProgramContributorRole().notNull(),
+		creditedAs: text(),
+		order: integer().default(0).notNull(),
+	},
+	(table) => [primaryKey({ columns: [table.programId, table.entityId, table.role] }), index().on(table.entityId)],
+);
+
+// Time grouping of a program's episodes ("Saison 2", "2024-2025")
+export const broadcastSeason = broadcast.table(
+	"season",
+	{
+		id: uuid().primaryKey().defaultRandom(),
+		programId: uuid()
+			.notNull()
+			.references(() => broadcastProgram.id, { onDelete: "cascade" }),
+		position: integer().notNull(),
+		label: text().notNull(),
+	},
+	(table) => [unique("season_program_id_position_key").on(table.programId, table.position)],
+);
+
+// Kind grouping of a program's episodes ("Vlog", "Review"), independent of the seasons
+export const broadcastFormat = broadcast.table(
+	"format",
+	{
+		id: uuid().primaryKey().defaultRandom(),
+		programId: uuid()
+			.notNull()
+			.references(() => broadcastProgram.id, { onDelete: "cascade" }),
+		label: text().notNull(),
+		// display order of the groups
+		position: integer().notNull(),
+		// title regex giving this format to the imported and synced episodes
+		match: text(),
+	},
+	(table) => [unique("format_program_id_label_key").on(table.programId, table.label)],
+);
+
+// planned = on the watchlist, skipped = not to watch; NULL otherwise ("watched" comes from the views)
+export const broadcastEpisodeStatus = broadcast.enum("episode_status", ["planned", "skipped"]);
+
+// A release. Its season and format belong to its program (checked by the service, not by the DB).
+export const broadcastEpisode = broadcast.table(
+	"episode",
+	{
+		id: uuid()
+			.primaryKey()
+			.references(() => coreNode.id, { onDelete: "cascade" }),
+		programId: uuid()
+			.notNull()
+			.references(() => broadcastProgram.id, { onDelete: "cascade" }),
+		seasonId: uuid().references(() => broadcastSeason.id, { onDelete: "set null" }),
+		formatId: uuid().references(() => broadcastFormat.id, { onDelete: "set null" }),
+		// order within the season, when the source gives one
+		position: integer(),
+		// the only displayed number: "12", "bonus", "Vlog 5"
+		numberLabel: text(),
+		name: text().notNull(),
+		shortName: text(),
+		type: text(),
+		// unknown for the episodes migrated from Mongo (only the listening date was kept)
+		releaseDate: date(),
+		// minutes
+		duration: integer(),
+		link: text(),
+		// RSS guid / YouTube videoId: unique within the program only
+		externalId: text(),
+		tags: text().array().default([]).notNull(),
+		// program tags not applied to this episode
+		ignoredTags: text().array().default([]).notNull(),
+		status: broadcastEpisodeStatus(),
+	},
+	(table) => [
+		unique("episode_program_id_external_id_key").on(table.programId, table.externalId),
+		index().on(table.programId, table.releaseDate),
+		index().on(table.seasonId),
+		index().on(table.formatId),
+	],
+);
+
+export const broadcastEpisodeContributorRole = broadcast.enum("episode_contributor_role", [
+	"host",
+	"guest",
+	"interviewee",
+]);
+
+export const broadcastEpisodeContributor = broadcast.table(
+	"episode_contributor",
+	{
+		episodeId: uuid()
+			.notNull()
+			.references(() => broadcastEpisode.id, { onDelete: "cascade" }),
+		entityId: uuid()
+			.notNull()
+			.references(() => coreEntity.id),
+		role: broadcastEpisodeContributorRole().notNull(),
+		creditedAs: text(),
+		order: integer().default(0).notNull(),
+	},
+	(table) => [primaryKey({ columns: [table.episodeId, table.entityId, table.role] }), index().on(table.entityId)],
+);
+
+// One listening/watching of an episode
+export const broadcastView = broadcast.table(
+	"view",
+	{
+		id: uuid().primaryKey().defaultRandom(),
+		episodeId: uuid()
+			.notNull()
+			.references(() => broadcastEpisode.id, { onDelete: "cascade" }),
+		date: date().notNull(),
+		// minutes watched; NULL = the whole episode
+		duration: integer(),
+		contextTags: text().array().default([]).notNull(),
+		comment: text(),
+		createdAt: localTimestamp()
+			.default(sql`now()`)
+			.notNull(),
+	},
+	(table) => [index().on(table.episodeId), index().on(table.date)],
 );

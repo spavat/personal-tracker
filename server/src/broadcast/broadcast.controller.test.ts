@@ -1,11 +1,14 @@
 import type { NestNodeApplication } from "@nestjs/platform-node";
 
+import { PgDialect } from "drizzle-orm/pg-core";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { broadcastProgram, broadcastView } from "../database/schema.js";
+import { makeFakeDrizzle } from "../test-support/fake-drizzle.js";
 import { makeFakeMongo } from "../test-support/fake-mongo.js";
 import { buildTestApp } from "../test-support/test-app.js";
 import { BroadcastModule } from "./broadcast.module.js";
@@ -13,11 +16,57 @@ import { BroadcastModule } from "./broadcast.module.js";
 const PROGRAM = "11111111-1111-4111-8111-111111111111";
 const OWNER = { user: { id: "owner" }, session: { id: "session" } };
 
-async function setup(session: unknown = OWNER) {
-	const { mongo, collection } = makeFakeMongo();
-	const app = await buildTestApp(BroadcastModule, { mongoDb: mongo.db, session });
-	return { app, programs: collection("broadcast"), sync: collection("broadcast_sync") };
+// A query chain awaiting to `result`, whatever is called on it
+function chainOf(result: unknown): Record<string, unknown> {
+	const chain: Record<string, unknown> = new Proxy(() => {}, {
+		get(_target, prop) {
+			if (prop === "then") {
+				return (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) =>
+					Promise.resolve(result).then(resolve, reject);
+			}
+			return () => chain;
+		},
+		apply: () => chain,
+	}) as unknown as Record<string, unknown>;
+	return chain;
 }
+
+// The fake Drizzle's selects answer the rows given for the table they read (none by default), its writes
+// `[{ id: PROGRAM }]`; the SQL of the `where` of each program read is kept
+async function setup(session: unknown = OWNER, rows = new Map<unknown, unknown[]>()) {
+	const { mongo, collection } = makeFakeMongo();
+	const { db } = makeFakeDrizzle({ builderResult: [{ id: PROGRAM }] });
+	const programWheres: string[] = [];
+	db.select = vi.fn(() => ({
+		from: (table: unknown) => {
+			const chain = chainOf(rows.get(table) ?? []);
+			if (table !== broadcastProgram) return chain;
+			return new Proxy(chain, {
+				get(target, key) {
+					if (key !== "where") return Reflect.get(target, key);
+					return (where: Parameters<PgDialect["sqlToQuery"]>[0] | undefined) => {
+						programWheres.push(where ? new PgDialect().sqlToQuery(where).sql : "");
+						return chain;
+					};
+				},
+			});
+		},
+	})) as unknown as typeof db.select;
+	const app = await buildTestApp(BroadcastModule, { mongoDb: mongo.db, drizzle: db, session });
+	return { app, db, programWheres, sync: collection("broadcast_sync") };
+}
+
+// A program row without feed
+const PROGRAM_ROW = {
+	id: PROGRAM,
+	name: "Prog",
+	links: [],
+	tags: [],
+	private: false,
+	rss: null,
+	youtubeChannelId: null,
+	youtubePlaylistId: null,
+};
 
 // An AntennaPod backup holding one listened episode, padded past the 100kb default body limit
 function antennaPodBackup() {
@@ -56,8 +105,7 @@ describe("BroadcastModule controllers", () => {
 
 			expect((await app.inject({ method: "GET", url: "/broadcast/programs" })).statusCode).toBe(200);
 
-			const [pipeline] = ctx.programs.aggregate.mock.calls[0] as unknown as [Array<{ $match?: object }>];
-			expect(pipeline[0].$match).toMatchObject({ private: { $ne: true } });
+			expect(ctx.programWheres[0]).toContain(`"program"."private" = $1`);
 		});
 
 		it("shows everything to the owner", async () => {
@@ -66,8 +114,7 @@ describe("BroadcastModule controllers", () => {
 
 			await app.inject({ method: "GET", url: "/broadcast/programs" });
 
-			const [pipeline] = ctx.programs.aggregate.mock.calls[0] as unknown as [Array<{ $match?: object }>];
-			expect(pipeline[0].$match).not.toHaveProperty("private");
+			expect(ctx.programWheres).toEqual([""]);
 		});
 
 		it("answers 404 to a visitor asking for a private program", async () => {
@@ -116,7 +163,7 @@ describe("BroadcastModule controllers", () => {
 			});
 
 			expect(res.statusCode).toBe(400);
-			expect(ctx.programs.insertOne).not.toHaveBeenCalled();
+			expect(ctx.db.insert).not.toHaveBeenCalled();
 		});
 
 		it("rejects a proposal validated as both a new program and an episode of an existing one", async () => {
@@ -130,13 +177,11 @@ describe("BroadcastModule controllers", () => {
 			});
 
 			expect(res.statusCode).toBe(400);
-			expect(ctx.programs.insertOne).not.toHaveBeenCalled();
+			expect(ctx.db.insert).not.toHaveBeenCalled();
 		});
 
 		it("answers 400 to the latest episodes of a program without feed", async () => {
-			const ctx = await setup();
-			app = ctx.app;
-			ctx.programs.findOne.mockResolvedValueOnce({ id: PROGRAM, refs: {}, episodes: [] });
+			({ app } = await setup(OWNER, new Map([[broadcastProgram, [PROGRAM_ROW]]])));
 
 			expect((await app.inject({ method: "GET", url: `/broadcast/latest/${PROGRAM}` })).statusCode).toBe(400);
 		});
@@ -184,7 +229,7 @@ describe("BroadcastModule controllers", () => {
 	});
 
 	it("POST /sync/:id/validate saves the episode, then removes the proposal", async () => {
-		const ctx = await setup();
+		const ctx = await setup(OWNER, new Map([[broadcastProgram, [PROGRAM_ROW]]]));
 		app = ctx.app;
 		const proposal = "33333333-3333-4333-8333-333333333333";
 
@@ -198,10 +243,7 @@ describe("BroadcastModule controllers", () => {
 		});
 
 		expect(res.statusCode).toBe(200);
-		expect(ctx.programs.updateOne).toHaveBeenCalledWith(
-			{ id: PROGRAM },
-			{ $push: { episodes: expect.objectContaining({ name: "Ep" }) } },
-		);
+		expect(ctx.db.insert).toHaveBeenCalledWith(broadcastView);
 		expect(ctx.sync.deleteOne).toHaveBeenCalledWith({ id: proposal });
 	});
 });

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from "vitest";
 
+import { BroadcastRepository } from "../broadcast/broadcast.repository.js";
 import { BookRepository } from "../reading-book/book.repository.js";
 import { makeFakeDrizzle } from "../test-support/fake-drizzle.js";
 import { makeCursor, makeFakeMongo } from "../test-support/fake-mongo.js";
@@ -23,9 +24,11 @@ describe("home routes", () => {
 	let ctx: Awaited<ReturnType<typeof buildApp>>;
 
 	let findBooks: MockInstance<BookRepository["findAll"]>;
+	let findLatestEpisodes: MockInstance<BroadcastRepository["findLatestEpisodes"]>;
 
 	beforeEach(async () => {
 		findBooks = vi.spyOn(BookRepository.prototype, "findAll").mockResolvedValue([]);
+		findLatestEpisodes = vi.spyOn(BroadcastRepository.prototype, "findLatestEpisodes").mockResolvedValue([]);
 		ctx = await buildApp();
 	});
 	afterEach(async () => {
@@ -61,13 +64,7 @@ describe("home routes", () => {
 			sortDirection: "desc",
 			limit: 6,
 		});
-		expect(pipelineOf(ctx.collection, "broadcast")).toEqual(
-			expect.arrayContaining([
-				{ $unwind: "$episodes" },
-				{ $sort: { "episodes.date": -1, "episodes.created": -1 } },
-				{ $limit: 6 },
-			]),
-		);
+		expect(findLatestEpisodes).toHaveBeenCalledWith(6);
 		expect(ctx.collection("music_listening").find).toHaveBeenCalledWith(
 			{},
 			expect.objectContaining({ sort: { listeningDate: -1, created: -1 }, limit: 10 }),
@@ -121,29 +118,15 @@ describe("home routes", () => {
 		]);
 	});
 
-	it("GET /latest groups the latest episodes by program, latest program first", async () => {
-		await ctx.app.inject({ method: "GET", url: "/home/latest" });
-
-		const pipeline = pipelineOf(ctx.collection, "broadcast");
-		const limitAt = pipeline.findIndex((stage) => "$limit" in stage);
-		const groupAt = pipeline.findIndex((stage) => "$group" in stage);
-		// limited on the episodes, before grouping them
-		expect(limitAt).toBeLessThan(groupAt);
-		expect(pipeline[groupAt]).toHaveProperty("$group._id", "$id");
-		expect(pipeline[groupAt + 1]).toEqual({ $sort: { latestEpisodeDate: -1, latestEpisodeCreated: -1 } });
-	});
-
 	it("GET /latest serves the program profile through the image proxy, not its S3 key", async () => {
-		ctx.collection("broadcast").aggregate.mockReturnValue(
-			makeCursor([
-				{
-					id: "p1",
-					name: "Le Masque",
-					profile: "personal-tracker/broadcast/p1.profile.avif",
-					episodes: [{ id: "e1", name: "Épisode", date: "2026-11-11", duration: 60 }],
-				},
-			]),
-		);
+		findLatestEpisodes.mockResolvedValue([
+			{
+				id: "p1",
+				name: "Le Masque",
+				profile: "personal-tracker/broadcast/p1.profile.avif",
+				episodes: [{ id: "e1", name: "Épisode", date: "2026-11-11", duration: 60, type: "podcast" }],
+			},
+		]);
 
 		const res = await ctx.app.inject({ method: "GET", url: "/home/latest" });
 		expect(res.json().broadcast).toEqual([
@@ -151,7 +134,7 @@ describe("home routes", () => {
 				id: "p1",
 				name: "Le Masque",
 				profile: "/images/broadcast/p1.profile",
-				episodes: [{ id: "e1", name: "Épisode", date: "2026-11-11", duration: 60 }],
+				episodes: [{ id: "e1", name: "Épisode", date: "2026-11-11", duration: 60, type: "podcast" }],
 			},
 		]);
 	});

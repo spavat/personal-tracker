@@ -772,6 +772,231 @@ async function seedReadingBooks(conn) {
 	}
 }
 
+// External refs (Youtube channel, RSS feeds, france.tv links) match the fixtures served by e2e/mocks/fetch-mock.mjs.
+// Written as the former Mongo documents; seedBroadcast turns each episode into an episode and its view (same id).
+const BROADCAST_PROGRAMS = [
+	{
+		id: "982fd13b-5f14-4131-ac1a-c0575fd80f17",
+		name: "Mock Podcast",
+		author: "Pod Caster",
+		network: "Mock Radio",
+		country: "fr",
+		type: "podcast",
+		description: "Un podcast de test",
+		tags: ["science"],
+		refs: { rss: "https://feeds.example.com/mock-podcast.xml" },
+		episodes: [
+			{
+				id: "ea2929e9-9a5f-465d-8074-4e54e83a3d19",
+				name: "Podcast épisode 0",
+				duration: 40,
+				date: "2026-10-10",
+				type: "podcast",
+				created: "2026-10-10T08:00:00",
+			},
+			{
+				id: "85bd54c7-6d92-464a-9523-c7c67016b8b5",
+				name: "Podcast épisode 1",
+				duration: 45,
+				durationReal: 30,
+				date: "2026-10-24",
+				type: "podcast",
+				link: "https://feeds.example.com/mock-podcast/1",
+				externalId: "mock-pod-1",
+				contextTags: ["metro"],
+				created: "2026-10-24T08:00:00",
+			},
+		],
+	},
+	{
+		id: "d06eac35-d504-433f-9e1b-6b1b33206dd3",
+		name: "Mock Tube",
+		author: "Mock Tuber",
+		country: "fr",
+		type: "youtube",
+		tags: ["tech"],
+		links: ["https://www.youtube.com/@mocktube"],
+		refs: { youtubeChannelId: "UCmocktube00000000000001" },
+		episodes: [
+			{
+				id: "5a00bdfc-ac2b-4129-8eb5-23a6dbd54e37",
+				name: "Vidéo de septembre",
+				duration: 20,
+				date: "2026-09-15",
+				type: "video",
+				created: "2026-09-15T20:00:00",
+			},
+			{
+				id: "02486dae-7781-4569-bea1-9ff8f30310de",
+				name: "Mock video 1",
+				duration: 15,
+				date: "2026-10-20",
+				type: "video",
+				link: "https://www.youtube.com/watch?v=vid00000001",
+				externalId: "vid00000001",
+				tags: ["tuto"],
+				comment: "Très bien",
+				created: "2026-10-20T20:00:00",
+			},
+		],
+	},
+	{
+		id: "f1d163a6-2dec-488d-97d3-c9de7ab16f49",
+		name: "Tour de France",
+		network: "France 2",
+		country: "fr",
+		type: "tv",
+		tags: ["sport"],
+		links: ["https://www.france.tv/sport/cyclisme/tour-de-france/"],
+		episodes: [
+			{
+				id: "376f982f-86a1-428b-9c58-7c66de8f7fa4",
+				name: "Étape 14",
+				duration: 250,
+				date: "2026-07-20",
+				type: "video",
+				created: "2026-07-20T18:00:00",
+			},
+		],
+	},
+	{
+		id: "574153df-656c-43ff-a5ee-d497a200908d",
+		name: "The Great Show",
+		author: "John Doe",
+		episodes: [
+			{
+				id: "621b2c2c-03e1-4f4a-a92a-d06bcd3e0936",
+				name: "Episode 1",
+				duration: 30,
+				date: "2026-05-20",
+				type: "video",
+				created: "2026-05-20T10:00:00",
+			},
+			{
+				id: "ce234d39-a74c-4bf4-ae05-51b1a3f50df0",
+				name: "Episode 2",
+				duration: 30,
+				date: "2026-05-27",
+				type: "video",
+				created: "2026-05-27T10:00:00",
+			},
+		],
+	},
+	{
+		id: "0639422a-c2f9-4bc5-97d1-bee2dc2e4753",
+		name: "Second Podcast",
+		type: "podcast",
+		tags: ["culture"],
+		refs: { rss: "https://feeds.example.com/second-podcast.xml" },
+		episodes: [
+			{
+				id: "24307a28-65ba-479b-880f-beb23e54c378",
+				name: "Second épisode",
+				duration: 30,
+				date: "2025-12-15",
+				type: "podcast",
+				created: "2025-12-15T09:00:00",
+			},
+		],
+	},
+	{
+		id: "5c1ea0c8-de21-485a-a517-ead72a55b8af",
+		name: "Old Show",
+		episodes: [
+			{
+				id: "c5c06fb0-3a10-4246-93de-9735fbb0c026",
+				name: "Old episode",
+				duration: 60,
+				date: "2025-03-10",
+				type: "video",
+				created: "2025-03-10T21:00:00",
+			},
+		],
+	},
+];
+
+/** @param {import("pg").Client} conn */
+async function seedBroadcast(conn) {
+	const entities = new Map();
+	async function entity(name, kind) {
+		const key = `${kind}|${name}`;
+		if (!entities.has(key)) {
+			const {
+				rows: [{ id }],
+			} = await conn.query(`INSERT INTO core.node (type, label) VALUES ('entity', $1) RETURNING id`, [name]);
+			await conn.query(`INSERT INTO core.entity (id, kind, name) VALUES ($1, $2, $3)`, [id, kind, name]);
+			await conn.query(`INSERT INTO core.entity_${kind} (id) VALUES ($1)`, [id]);
+			entities.set(key, id);
+		}
+		return entities.get(key);
+	}
+	for (const program of BROADCAST_PROGRAMS) {
+		await conn.query(`INSERT INTO core.node (id, type, label) VALUES ($1, 'program', $2)`, [
+			program.id,
+			program.name,
+		]);
+		await conn.query(
+			`INSERT INTO broadcast.program (id, name, country, type, description, tags, links, rss, youtube_channel_id)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+			[
+				program.id,
+				program.name,
+				program.country ?? null,
+				program.type ?? null,
+				program.description ?? null,
+				program.tags ?? [],
+				program.links ?? [],
+				program.refs?.rss ?? null,
+				program.refs?.youtubeChannelId ?? null,
+			],
+		);
+		if (program.author) {
+			await conn.query(
+				`INSERT INTO broadcast.program_contributor (program_id, entity_id, role) VALUES ($1, $2, 'host')`,
+				[program.id, await entity(program.author, "person")],
+			);
+		}
+		if (program.network) {
+			await conn.query(
+				`INSERT INTO broadcast.program_contributor (program_id, entity_id, role) VALUES ($1, $2, 'network')`,
+				[program.id, await entity(program.network, "organization")],
+			);
+		}
+		for (const episode of program.episodes) {
+			await conn.query(`INSERT INTO core.node (id, type, label) VALUES ($1, 'episode', $2)`, [
+				episode.id,
+				episode.name,
+			]);
+			await conn.query(
+				`INSERT INTO broadcast.episode (id, program_id, name, type, duration, link, external_id, tags)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+				[
+					episode.id,
+					program.id,
+					episode.name,
+					episode.type,
+					episode.duration,
+					episode.link ?? null,
+					episode.externalId ?? null,
+					episode.tags ?? [],
+				],
+			);
+			await conn.query(
+				`INSERT INTO broadcast.view (id, episode_id, date, duration, context_tags, comment, created_at)
+				 VALUES ($1, $1, $2, $3, $4, $5, $6)`,
+				[
+					episode.id,
+					episode.date,
+					episode.durationReal ?? null,
+					episode.contextTags ?? [],
+					episode.comment ?? null,
+					episode.created,
+				],
+			);
+		}
+	}
+}
+
 /** @param {import("pg").Client} conn */
 async function seedPostgres(conn) {
 	await conn.query(
@@ -877,6 +1102,7 @@ async function seedPostgres(conn) {
 	);
 
 	await seedReadingBooks(conn);
+	await seedBroadcast(conn);
 
 	// Explicit ids don't move identity sequences (unlike MySQL AUTO_INCREMENT): restart them after the seed
 	await conn.query(`
@@ -1364,148 +1590,6 @@ async function seedMongo(db) {
 		},
 	]);
 
-	// External refs (Youtube channel, RSS feeds, france.tv links) match the fixtures served by e2e/mocks/fetch-mock.mjs
-	await db.collection("broadcast").insertMany([
-		{
-			id: "982fd13b-5f14-4131-ac1a-c0575fd80f17",
-			name: "Mock Podcast",
-			author: "Pod Caster",
-			network: "Mock Radio",
-			country: "fr",
-			type: "podcast",
-			description: "Un podcast de test",
-			tags: ["science"],
-			refs: { rss: "https://feeds.example.com/mock-podcast.xml" },
-			episodes: [
-				{
-					id: "ea2929e9-9a5f-465d-8074-4e54e83a3d19",
-					name: "Podcast épisode 0",
-					duration: 40,
-					date: "2026-10-10",
-					type: "podcast",
-					created: "2026-10-10T08:00:00",
-				},
-				{
-					id: "85bd54c7-6d92-464a-9523-c7c67016b8b5",
-					name: "Podcast épisode 1",
-					duration: 45,
-					durationReal: 30,
-					date: "2026-10-24",
-					type: "podcast",
-					link: "https://feeds.example.com/mock-podcast/1",
-					externalId: "mock-pod-1",
-					contextTags: ["metro"],
-					created: "2026-10-24T08:00:00",
-				},
-			],
-		},
-		{
-			id: "d06eac35-d504-433f-9e1b-6b1b33206dd3",
-			name: "Mock Tube",
-			author: "Mock Tuber",
-			country: "fr",
-			type: "youtube",
-			tags: ["tech"],
-			links: ["https://www.youtube.com/@mocktube"],
-			refs: { youtubeChannelId: "UCmocktube00000000000001" },
-			episodes: [
-				{
-					id: "5a00bdfc-ac2b-4129-8eb5-23a6dbd54e37",
-					name: "Vidéo de septembre",
-					duration: 20,
-					date: "2026-09-15",
-					type: "video",
-					created: "2026-09-15T20:00:00",
-				},
-				{
-					id: "02486dae-7781-4569-bea1-9ff8f30310de",
-					name: "Mock video 1",
-					duration: 15,
-					date: "2026-10-20",
-					type: "video",
-					link: "https://www.youtube.com/watch?v=vid00000001",
-					externalId: "vid00000001",
-					tags: ["tuto"],
-					comment: "Très bien",
-					created: "2026-10-20T20:00:00",
-				},
-			],
-		},
-		{
-			id: "f1d163a6-2dec-488d-97d3-c9de7ab16f49",
-			name: "Tour de France",
-			network: "France 2",
-			country: "fr",
-			type: "tv",
-			tags: ["sport"],
-			links: ["https://www.france.tv/sport/cyclisme/tour-de-france/"],
-			episodes: [
-				{
-					id: "376f982f-86a1-428b-9c58-7c66de8f7fa4",
-					name: "Étape 14",
-					duration: 250,
-					date: "2026-07-20",
-					type: "video",
-					created: "2026-07-20T18:00:00",
-				},
-			],
-		},
-		{
-			id: "574153df-656c-43ff-a5ee-d497a200908d",
-			name: "The Great Show",
-			author: "John Doe",
-			episodes: [
-				{
-					id: "621b2c2c-03e1-4f4a-a92a-d06bcd3e0936",
-					name: "Episode 1",
-					duration: 30,
-					date: "2026-05-20",
-					type: "video",
-					created: "2026-05-20T10:00:00",
-				},
-				{
-					id: "ce234d39-a74c-4bf4-ae05-51b1a3f50df0",
-					name: "Episode 2",
-					duration: 30,
-					date: "2026-05-27",
-					type: "video",
-					created: "2026-05-27T10:00:00",
-				},
-			],
-		},
-		{
-			id: "0639422a-c2f9-4bc5-97d1-bee2dc2e4753",
-			name: "Second Podcast",
-			type: "podcast",
-			tags: ["culture"],
-			refs: { rss: "https://feeds.example.com/second-podcast.xml" },
-			episodes: [
-				{
-					id: "24307a28-65ba-479b-880f-beb23e54c378",
-					name: "Second épisode",
-					duration: 30,
-					date: "2025-12-15",
-					type: "podcast",
-					created: "2025-12-15T09:00:00",
-				},
-			],
-		},
-		{
-			id: "5c1ea0c8-de21-485a-a517-ead72a55b8af",
-			name: "Old Show",
-			episodes: [
-				{
-					id: "c5c06fb0-3a10-4246-93de-9735fbb0c026",
-					name: "Old episode",
-					duration: 60,
-					date: "2025-03-10",
-					type: "video",
-					created: "2025-03-10T21:00:00",
-				},
-			],
-		},
-	]);
-
 	// gopodder already initialized: the next sync reads e2e/mocks/responses/gopodder-episodes.json
 	await db.collection("broadcast_sync_state").insertOne({ _id: "gopodder", since: 1794400000 });
 }
@@ -1518,7 +1602,7 @@ async function resetDb() {
 			const conn = new Client({ connectionString: testPostgresUrl(workerIndex()) });
 			await conn.connect();
 			const { rows } = await conn.query(
-				"SELECT format('%I.%I', schemaname, tablename) AS name FROM pg_tables WHERE schemaname IN ('money', 'show', 'core', 'reading')",
+				"SELECT format('%I.%I', schemaname, tablename) AS name FROM pg_tables WHERE schemaname IN ('money', 'show', 'core', 'reading', 'broadcast')",
 			);
 			// One statement for every table, so foreign keys between them don't get in the way
 			await conn.query(`TRUNCATE ${rows.map((r) => r.name).join(", ")}`);

@@ -12,7 +12,7 @@ import { randomUUID } from "node:crypto";
 
 import { NotFoundError } from "../common/errors.js";
 import { BroadcastImagesStorage, type BroadcastImageKind } from "./broadcast-images.storage.js";
-import { buildEpisode, cleanEpisode, getDetails, type ProgramMongo, sortEpisodesDesc } from "./broadcast.entity.js";
+import { buildEpisode, cleanEpisode, getDetails, type ProgramDoc, sortEpisodesDesc } from "./broadcast.entity.js";
 import { BroadcastRepository } from "./broadcast.repository.js";
 import { getPodcastCoverImageUrl } from "./episode-feed.client.js";
 import { getFranceTvVideoInfo, getYoutubeChannelInfo, getYoutubeVideoInfo } from "./video-info.client.js";
@@ -51,7 +51,7 @@ export class BroadcastService {
 	async getProgram(programId: string) {
 		this.logger.log("getProgram");
 		const program = (await this.repo.findById(programId)) ?? notFound();
-		const { _id, episodes, ...rest } = program;
+		const { episodes, ...rest } = program;
 		const result = { ...this.images.resolveImages(rest), episodes: episodes?.toSorted(sortEpisodesDesc) ?? [] };
 		return { ...result, details: getDetails(result) };
 	}
@@ -190,12 +190,12 @@ export class BroadcastService {
 	}
 
 	// Only the images the program does not have yet
-	private uploadMissingImages(program: ProgramMongo, sources: Images) {
+	private uploadMissingImages(program: ProgramDoc, sources: Images) {
 		return this.upload(program.id, sources, (kind) => !program[kind]);
 	}
 
 	// An image already served by us (/images/broadcast/...) keeps its stored key
-	private async uploadGivenImages(programId: string, current: ProgramMongo | null, sources: Images) {
+	private async uploadGivenImages(programId: string, current: ProgramDoc | null, sources: Images) {
 		const images = await this.upload(programId, sources, (kind) => !this.images.isOwnUrl(sources[kind]!));
 		for (const kind of ["profile", "banner"] as const) {
 			if (sources[kind] && this.images.isOwnUrl(sources[kind]) && current?.[kind]) {
@@ -206,7 +206,7 @@ export class BroadcastService {
 	}
 
 	// A new program without images: from its YouTube channel, otherwise its podcast feed
-	private async fetchImagesFromRefs(programId: string, refs?: ProgramMongo["refs"]): Promise<Images> {
+	private async fetchImagesFromRefs(programId: string, refs?: ProgramDoc["refs"]): Promise<Images> {
 		try {
 			if (refs?.youtubeChannelId) {
 				const channel = await getYoutubeChannelInfo(`https://youtube.com/channel/${refs.youtubeChannelId}`);

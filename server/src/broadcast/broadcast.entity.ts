@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 
-export interface EpisodeMongo {
+// An episode as the API answers it: one view (id, date, durationReal, contextTags, comment, created) with the fields
+// of its episode (the release). The view/episode split reaches the API in ticket 04b.
+export interface EpisodeDoc {
 	id: string;
 	name: string;
 	shortName?: string;
@@ -13,10 +15,12 @@ export interface EpisodeMongo {
 	contextTags?: Array<string>;
 	ignoredTags?: Array<string>;
 	created?: string;
+	comment?: string;
 	externalId?: string;
 }
 
-export interface ProgramMongo {
+// A program as the API answers it: `author` and `network` are its credits joined with " && "
+export interface ProgramDoc {
 	id: string;
 	name: string;
 	shortName?: string;
@@ -26,10 +30,11 @@ export interface ProgramMongo {
 	links?: Array<string>;
 	profile?: string;
 	banner?: string;
-	episodes: Array<EpisodeMongo>;
+	episodes: Array<EpisodeDoc>;
 	tags?: Array<string>;
 	refs?: Partial<Record<string, string>>;
 	description?: string;
+	type?: string;
 	private?: boolean;
 }
 
@@ -60,13 +65,13 @@ export function cleanEpisode(episode: any) {
 // Tags of an episode: the program tags it does not ignore, plus its own (each once)
 export function getEpisodeTags(
 	programTags: Array<string> | undefined,
-	episode: Pick<EpisodeMongo, "tags" | "ignoredTags">,
+	episode: Pick<EpisodeDoc, "tags" | "ignoredTags">,
 ): Array<string> {
 	const ignored = episode.ignoredTags ?? [];
 	return [...new Set([...(programTags ?? []).filter((tag) => !ignored.includes(tag)), ...(episode.tags ?? [])])];
 }
 
-export function sortEpisodesDesc(a: EpisodeMongo, b: EpisodeMongo) {
+export function sortEpisodesDesc(a: EpisodeDoc, b: EpisodeDoc) {
 	if (b.date === a.date) {
 		return (b.created ?? "").localeCompare(a.created ?? "");
 	}

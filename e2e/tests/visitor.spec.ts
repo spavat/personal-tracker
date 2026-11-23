@@ -1,4 +1,4 @@
-import { expect, queryDb, resetDb, SEED, test, updateMongo } from "../fixtures";
+import { expect, queryDb, resetDb, SEED, test } from "../fixtures";
 
 // the server, behind the front proxy (relative to the worker's baseURL)
 const API = "/api";
@@ -161,7 +161,7 @@ test.describe("anonymous visitor", () => {
 		});
 
 		test.describe("private program", () => {
-			test.beforeEach(() => updateMongo("broadcast", { id: mockTube.id }, { $set: { private: true } }));
+			test.beforeEach(() => queryDb("UPDATE broadcast.program SET private = true WHERE id = $1", [mockTube.id]));
 			test.afterEach(resetDb);
 
 			test("is hidden from the list, the history and the search", async ({ page, request }) => {

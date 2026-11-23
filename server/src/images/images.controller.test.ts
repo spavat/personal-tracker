@@ -1,8 +1,9 @@
 import type { NestNodeApplication } from "@nestjs/platform-node";
 
 import { Readable } from "node:stream";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { BroadcastRepository } from "../broadcast/broadcast.repository.js";
 import { makeFakeDrizzle } from "../test-support/fake-drizzle.js";
 import { makeFakeMongo } from "../test-support/fake-mongo.js";
 import { buildTestApp, makeFakeStorage } from "../test-support/test-app.js";
@@ -26,7 +27,7 @@ async function setup(session: unknown = null) {
 	return {
 		app,
 		storage,
-		broadcast: collection("broadcast"),
+		broadcast: { findById: vi.spyOn(BroadcastRepository.prototype, "findById").mockResolvedValue(null) },
 		sport: collection("sport"),
 		game: collection("game"),
 		media: table("showMedia"),
@@ -37,6 +38,7 @@ describe("ImagesController", () => {
 	let app: NestNodeApplication;
 
 	afterEach(async () => {
+		vi.restoreAllMocks();
 		await app.close();
 	});
 
@@ -48,21 +50,24 @@ describe("ImagesController", () => {
 			);
 		});
 
-		it("looks the program up with the visitor's privacy filter, 404 without an image key", async () => {
+		// the repository hides the private programs from visitors (see broadcast.controller.test.ts)
+		it("looks the program up through the repository, 404 without an image key", async () => {
 			const ctx = await setup();
 			app = ctx.app;
 
 			const res = await app.inject({ method: "GET", url: "/images/broadcast/prog-1.profile" });
 
 			expect(res.statusCode).toBe(404);
-			expect(ctx.broadcast.findOne).toHaveBeenCalledWith({ private: { $ne: true }, id: "prog-1" });
+			expect(ctx.broadcast.findById).toHaveBeenCalledWith("prog-1");
 		});
 
 		it("streams the stored image with its type and a day of cache", async () => {
 			const ctx = await setup();
 			app = ctx.app;
-			ctx.broadcast.findOne.mockResolvedValue({
+			ctx.broadcast.findById.mockResolvedValue({
 				id: "prog-1",
+				name: "Prog",
+				episodes: [],
 				profile: "personal-tracker/broadcast/prog-1.profile.avif",
 			});
 			ctx.storage.get.mockResolvedValue(s3Object("avif-bytes"));
@@ -81,7 +86,7 @@ describe("ImagesController", () => {
 		it("404s when the object is missing from S3", async () => {
 			const ctx = await setup();
 			app = ctx.app;
-			ctx.broadcast.findOne.mockResolvedValue({ id: "prog-1", banner: "gone.avif" });
+			ctx.broadcast.findById.mockResolvedValue({ id: "prog-1", name: "Prog", episodes: [], banner: "gone.avif" });
 			ctx.storage.get.mockRejectedValue(new Error("NoSuchKey"));
 
 			expect((await app.inject({ method: "GET", url: "/images/broadcast/prog-1.banner" })).statusCode).toBe(404);
