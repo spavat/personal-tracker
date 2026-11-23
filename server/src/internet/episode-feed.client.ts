@@ -36,8 +36,8 @@ export async function fetchLatestEpisodes(url: string, type: RefIdsEnum): Promis
 		// A feed with a single item is parsed as an object, not an array
 		const items: Array<EpisodeRSSData> = [podcastData.rss.channel.item ?? []].flat();
 		response = items.map((episode) => ({
-			id: episode.guid,
-			title: episode.title,
+			id: String(episode.guid),
+			title: String(episode.title),
 			duration: episode["itunes:duration"] ?? 0,
 			durationInMinutes: convertDurationInMinutes(episode["itunes:duration"]),
 			date: Temporal.Instant.fromEpochMilliseconds(new Date(episode.pubDate).getTime())
