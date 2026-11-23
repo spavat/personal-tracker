@@ -3,8 +3,8 @@ import { Link } from "@tanstack/react-router";
 
 import { API_BASE_URL } from "../../../config";
 import { getStatusIcon } from "../../reading-manga/search-fn";
-import { formatPlayDuration } from "../duration";
 import { formatPlayDate, formatPlayDay } from "../origins";
+import { formatPlayDuration } from "../time.utils";
 import PlayDate from "./PlayDate";
 
 export default function GameCardGame({ game }: { game: Game }) {

@@ -6,8 +6,8 @@ import { useState } from "react";
 
 import MutationError from "../../../components/MutationError";
 import { gameDetailsQuery, gamesQuery, mergeGames } from "../api";
-import { formatPlayDuration } from "../duration";
 import { STORE_LABELS } from "../stores";
+import { formatPlayDuration } from "../time.utils";
 
 const storeIdsText = (game: GameWithOverview) =>
 	Object.entries(game.storeIds ?? {})

@@ -6,8 +6,8 @@ import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import MutationError from "../../../components/MutationError";
 import { formatFullDate } from "../../../utils";
 import { replaySync, runSync, syncStatusQuery, type SyncRunResult } from "../api";
-import { formatPlayDuration } from "../duration";
 import { STORE_LABELS } from "../stores";
+import { formatInstant, formatPlayDuration } from "../time.utils";
 
 // how a store gets configured, shown while it isn't
 const SETUP_HINTS: Record<GameStore, string> = {
@@ -15,13 +15,6 @@ const SETUP_HINTS: Record<GameStore, string> = {
 	gog: "Renseigner GOG_USERNAME dans server/.env (profil GOG public), puis redémarrer le serveur.",
 	epic: "Se connecter avec « legendary auth », puis lancer « npx tsx scripts/seed-epic-token.ts » depuis server/.",
 };
-
-/** A stored instant (UTC) in local date and time. */
-export function formatInstant(instant: string) {
-	return Temporal.Instant.from(instant)
-		.toZonedDateTimeISO(Temporal.Now.timeZoneId())
-		.toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
-}
 
 function runMessage(result: SyncRunResult) {
 	if (result.status === "error") return `Échec : ${result.error}`;

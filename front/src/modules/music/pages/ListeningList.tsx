@@ -25,7 +25,6 @@ export default function ListeningList({ period }: { period: string }) {
 		},
 		period,
 	});
-	let index = 1;
 
 	const listenings = listQuery.data;
 
@@ -61,7 +60,7 @@ export default function ListeningList({ period }: { period: string }) {
 							<td colSpan={isOwner ? 8 : 7}>Aucune écoute trouvée.</td>
 						</tr>
 					)}
-					{listenings.map((listening) => {
+					{listenings.map((listening, i) => {
 						let date = "????";
 						if (listening.releaseDate) {
 							date =
@@ -71,7 +70,7 @@ export default function ListeningList({ period }: { period: string }) {
 						}
 						return (
 							<tr key={listening.id}>
-								<td className="cell-index">{index++}</td>
+								<td className="cell-index">{i + 1}</td>
 								<td className="cell-date" data-label="Date d'écoute">
 									<DayDate date={listening.listeningDate} />
 								</td>

@@ -70,19 +70,6 @@ export default function SearchModal<T>({
 		setIndex(newIndex);
 	}
 
-	useHotkeys("up", () => navigateResults("up"), { enableOnFormTags: true });
-	useHotkeys("down", () => navigateResults("down"), { enableOnFormTags: true });
-	useHotkeys(
-		"enter",
-		(e) => {
-			if (data?.[index]) {
-				e.preventDefault(); // If focus was on menu link, it can prevent the navigation to the result
-				navigateTo(data?.[index]);
-			}
-		},
-		{ enableOnFormTags: true },
-	);
-
 	function closeModal() {
 		setSearch("");
 		setIndex(0);
@@ -105,6 +92,19 @@ export default function SearchModal<T>({
 	function clickProgram(item: T) {
 		navigateTo(item);
 	}
+
+	useHotkeys("up", () => navigateResults("up"), { enableOnFormTags: true });
+	useHotkeys("down", () => navigateResults("down"), { enableOnFormTags: true });
+	useHotkeys(
+		"enter",
+		(e) => {
+			if (data?.[index]) {
+				e.preventDefault(); // If focus was on menu link, it can prevent the navigation to the result
+				navigateTo(data?.[index]);
+			}
+		},
+		{ enableOnFormTags: true },
+	);
 
 	return (
 		<Modal className="search dialog-medium" isOpen={isOpen} onClose={closeModal} hasCloseBtn={false}>

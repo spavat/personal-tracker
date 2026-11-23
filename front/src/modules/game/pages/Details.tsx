@@ -6,9 +6,9 @@ import { useIsOwner } from "../../../hooks/use-is-owner";
 import { gameDetailsQuery } from "../api";
 import GameOriginBadge from "../components/GameOriginBadge";
 import PlayDate from "../components/PlayDate";
-import { formatPlayDuration } from "../duration";
 import { formatPlayDay } from "../origins";
 import { steamStoreUrl } from "../stores";
+import { formatPlayDuration } from "../time.utils";
 
 export default function GameDetails({ gameId }: { gameId: string }) {
 	const navigate = useNavigate();

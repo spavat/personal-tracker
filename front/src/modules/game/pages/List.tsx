@@ -4,9 +4,9 @@ import { PendingContent } from "../../../components/PendingContent";
 import { useIsOwner } from "../../../hooks/use-is-owner";
 import { useSortTable } from "../../../hooks/use-sort-table";
 import { gameListSort } from "../api";
-import { formatPlayDuration } from "../duration";
 import { formatPlayDate } from "../origins";
 import { steamStoreUrl } from "../stores";
+import { formatPlayDuration } from "../time.utils";
 
 export default function GameList() {
 	const navigate = useNavigate();

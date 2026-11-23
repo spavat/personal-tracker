@@ -23,7 +23,6 @@ export default function PlaceList() {
 		],
 	});
 
-	let index = 1;
 	return (
 		<>
 			<PageTitle title={`${MODULE_NAME} > Lieux`} />
@@ -34,9 +33,9 @@ export default function PlaceList() {
 						<tr>{headers.map((h) => h)}</tr>
 					</thead>
 					<tbody>
-						{query.data.map((place) => (
+						{query.data.map((place, i) => (
 							<tr key={`${place.id}`}>
-								<td className="cell-index">{index++}</td>
+								<td className="cell-index">{i + 1}</td>
 								<td className="cell-text">
 									<b>
 										<Link to="/shows/places/$placeId" params={{ placeId: String(place.id) }}>

@@ -6,7 +6,7 @@ import MutationError from "../../../components/MutationError";
 import { formatDate } from "../../../utils";
 import { deleteItem, gameDetailsQuery } from "../api";
 import PlayDate from "../components/PlayDate";
-import { formatPlayDuration } from "../duration";
+import { formatPlayDuration } from "../time.utils";
 
 export default function DeletePlayModalForm({
 	gameId,

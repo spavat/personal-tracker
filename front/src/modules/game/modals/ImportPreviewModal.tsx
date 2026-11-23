@@ -7,9 +7,9 @@ import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
 import { confirmImport, importPreviewQuery } from "../api";
 import PlayDate from "../components/PlayDate";
-import { formatPlayDuration } from "../duration";
 import { GAME_ORIGINS } from "../origins";
 import { STORE_LABELS } from "../stores";
+import { formatPlayDuration } from "../time.utils";
 
 const duration = (minutes: number) => formatPlayDuration(minutes) || "0min";
 
