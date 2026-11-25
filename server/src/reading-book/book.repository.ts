@@ -16,6 +16,7 @@ import { alias } from "drizzle-orm/pg-core";
 
 import type { EditionType, ReadingStatus } from "./book.entity.js";
 
+import { moveCredits } from "../database/credit.query.js";
 import { DRIZZLE } from "../database/database.tokens.js";
 import { Drizzle } from "../database/drizzle.js";
 import {
@@ -468,6 +469,13 @@ export class BookRepository {
 			...translations.map((row) => ({ ...row, role: "translator" as const })),
 			...publications.map((row) => ({ ...row, entityId: row.entityId!, role: "publisher" as const })),
 		];
+	}
+
+	// A merge: the book and edition credits of an entity, and the editions it publishes, go to another one
+	async moveEntityCredits(tx: Tx, fromId: string, toId: string) {
+		await moveCredits(tx, readingBookContributor, "book_id", fromId, toId);
+		await moveCredits(tx, readingEditionContributor, "edition_id", fromId, toId);
+		await tx.update(readingEdition).set({ publisherId: toId }).where(eq(readingEdition.publisherId, fromId));
 	}
 
 	async findEntity(id: string) {

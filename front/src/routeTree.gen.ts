@@ -53,6 +53,7 @@ import { Route as CalendarPeriodDateRouteImport } from './routes/calendar/$perio
 import { Route as ContextTagsListIndexRouteImport } from './routes/context-tags/_list.index'
 import { Route as ContextTagsListAddRouteImport } from './routes/context-tags/_list.add'
 import { Route as EntitiesEntityIdDetailsRouteImport } from './routes/entities/$entityId/_details'
+import { Route as EntitiesMergeIndexRouteImport } from './routes/entities/merge/index'
 import { Route as GameHistoryIndexRouteImport } from './routes/game/history/index'
 import { Route as GameHistoryYearRouteImport } from './routes/game/history/$year'
 import { Route as GameIntegrationsIntegrationsRouteImport } from './routes/game/integrations/_integrations'
@@ -445,6 +446,11 @@ const ContextTagsListAddRoute = ContextTagsListAddRouteImport.update({
 const EntitiesEntityIdDetailsRoute = EntitiesEntityIdDetailsRouteImport.update({
   id: '/$entityId/_details',
   path: '/$entityId',
+  getParentRoute: () => EntitiesRoute,
+} as any)
+const EntitiesMergeIndexRoute = EntitiesMergeIndexRouteImport.update({
+  id: '/merge/',
+  path: '/merge/',
   getParentRoute: () => EntitiesRoute,
 } as any)
 const GameHistoryIndexRoute = GameHistoryIndexRouteImport.update({
@@ -1498,6 +1504,7 @@ export interface FileRoutesByFullPath {
   '/broadcast/sync/': typeof BroadcastSyncIndexRoute
   '/broadcast/watchlist/': typeof BroadcastWatchlistIndexRoute
   '/context-tags/': typeof ContextTagsListIndexRoute
+  '/entities/merge/': typeof EntitiesMergeIndexRoute
   '/game/history/': typeof GameHistoryIndexRoute
   '/game/merge/': typeof GameMergeIndexRoute
   '/money/reports/': typeof MoneyReportsIndexRoute
@@ -1691,6 +1698,7 @@ export interface FileRoutesByTo {
   '/broadcast/stats': typeof BroadcastStatsIndexRoute
   '/broadcast/sync': typeof BroadcastSyncIndexRoute
   '/broadcast/watchlist': typeof BroadcastWatchlistIndexRoute
+  '/entities/merge': typeof EntitiesMergeIndexRoute
   '/game/history': typeof GameHistoryIndexRoute
   '/game/merge': typeof GameMergeIndexRoute
   '/money/reports': typeof MoneyReportsIndexRoute
@@ -1909,6 +1917,7 @@ export interface FileRoutesById {
   '/broadcast/sync/': typeof BroadcastSyncIndexRoute
   '/broadcast/watchlist/': typeof BroadcastWatchlistIndexRoute
   '/context-tags/_list/': typeof ContextTagsListIndexRoute
+  '/entities/merge/': typeof EntitiesMergeIndexRoute
   '/game/history/': typeof GameHistoryIndexRoute
   '/game/merge/': typeof GameMergeIndexRoute
   '/money/reports/': typeof MoneyReportsIndexRoute
@@ -2129,6 +2138,7 @@ export interface FileRouteTypes {
     | '/broadcast/sync/'
     | '/broadcast/watchlist/'
     | '/context-tags/'
+    | '/entities/merge/'
     | '/game/history/'
     | '/game/merge/'
     | '/money/reports/'
@@ -2322,6 +2332,7 @@ export interface FileRouteTypes {
     | '/broadcast/stats'
     | '/broadcast/sync'
     | '/broadcast/watchlist'
+    | '/entities/merge'
     | '/game/history'
     | '/game/merge'
     | '/money/reports'
@@ -2539,6 +2550,7 @@ export interface FileRouteTypes {
     | '/broadcast/sync/'
     | '/broadcast/watchlist/'
     | '/context-tags/_list/'
+    | '/entities/merge/'
     | '/game/history/'
     | '/game/merge/'
     | '/money/reports/'
@@ -3006,6 +3018,13 @@ declare module '@tanstack/react-router' {
       path: '/$entityId'
       fullPath: '/entities/$entityId'
       preLoaderRoute: typeof EntitiesEntityIdDetailsRouteImport
+      parentRoute: typeof EntitiesRoute
+    }
+    '/entities/merge/': {
+      id: '/entities/merge/'
+      path: '/merge'
+      fullPath: '/entities/merge/'
+      preLoaderRoute: typeof EntitiesMergeIndexRouteImport
       parentRoute: typeof EntitiesRoute
     }
     '/game/history/': {
@@ -4424,11 +4443,13 @@ const EntitiesEntityIdDetailsRouteWithChildren =
 interface EntitiesRouteChildren {
   EntitiesIndexRoute: typeof EntitiesIndexRoute
   EntitiesEntityIdDetailsRoute: typeof EntitiesEntityIdDetailsRouteWithChildren
+  EntitiesMergeIndexRoute: typeof EntitiesMergeIndexRoute
 }
 
 const EntitiesRouteChildren: EntitiesRouteChildren = {
   EntitiesIndexRoute: EntitiesIndexRoute,
   EntitiesEntityIdDetailsRoute: EntitiesEntityIdDetailsRouteWithChildren,
+  EntitiesMergeIndexRoute: EntitiesMergeIndexRoute,
 }
 
 const EntitiesRouteWithChildren = EntitiesRoute._addFileChildren(

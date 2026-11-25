@@ -220,4 +220,60 @@ test.describe("Entities - Répertoire", () => {
 			),
 		).toEqual([{ kind: "group", groups: 1, persons: 0 }]);
 	});
+
+	test("merge a duplicate into the main entity", async ({ page }) => {
+		const [{ id: podCaster }] = await queryDb(`SELECT id FROM core.entity WHERE name = 'Pod Caster'`);
+		// a duplicate: host of the same program (a credit Pod Caster already has) and guest of an episode
+		const [{ id: duplicate }] = await queryDb(
+			`INSERT INTO core.node (type, label) VALUES ('entity', 'P. Caster') RETURNING id`,
+		);
+		await queryDb(
+			`INSERT INTO core.entity (id, kind, name, sort_name) VALUES ($1, 'person', 'P. Caster', 'Caster, P.')`,
+			[duplicate],
+		);
+		await queryDb(`INSERT INTO core.entity_person (id) VALUES ($1)`, [duplicate]);
+		await queryDb(
+			`INSERT INTO broadcast.program_contributor (program_id, entity_id, role) VALUES ($1, $2, 'host')`,
+			[mockPodcast.id, duplicate],
+		);
+		await queryDb(
+			`INSERT INTO broadcast.episode_contributor (episode_id, entity_id, role) VALUES ($1, $2, 'guest')`,
+			[MOCK_EPISODE_ID, duplicate],
+		);
+
+		await page.goto("/entities");
+		await page.getByRole("link", { name: "Fusionner" }).click();
+		await expect(page).toHaveURL("/entities/merge");
+		await page.getByLabel("Filtrer : Entité principale").fill("pod caster");
+		await page.getByLabel("Entité principale", { exact: true }).selectOption(podCaster);
+		await page.getByLabel("Filtrer : Entité secondaire").fill("p. caster");
+		await page.getByLabel("Entité secondaire", { exact: true }).selectOption(duplicate);
+
+		await expect(page.locator(".merge")).toContainText("Il prend son nom de tri : Caster, P.");
+		await expect(page.locator(".merge")).toContainText("P. Caster est supprimé");
+		await page.getByRole("button", { name: "Fusionner" }).click();
+
+		await expect(page).toHaveURL(`/entities/${podCaster}`);
+		await expect(page.getByRole("heading", { name: "Pod Caster" })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "Invitations" })).toBeVisible();
+		expect(await queryDb(`SELECT count(*)::int AS n FROM core.node WHERE id = $1`, [duplicate])).toEqual([
+			{ n: 0 },
+		]);
+		// the host credit is not doubled, the guest credit moved
+		expect(
+			await queryDb(
+				`SELECT role, count(*)::int AS n FROM broadcast.program_contributor WHERE program_id = $1 GROUP BY role`,
+				[mockPodcast.id],
+			),
+		).toContainEqual({ role: "host", n: 1 });
+		expect(
+			await queryDb(
+				`SELECT entity_id FROM broadcast.episode_contributor WHERE episode_id = $1 AND role = 'guest'`,
+				[MOCK_EPISODE_ID],
+			),
+		).toEqual([{ entity_id: podCaster }]);
+		expect(await queryDb(`SELECT sort_name FROM core.entity WHERE id = $1`, [podCaster])).toEqual([
+			{ sort_name: "Caster, P." },
+		]);
+	});
 });

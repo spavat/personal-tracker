@@ -11,7 +11,7 @@ import { PortraitStorage } from "./portrait.storage.js";
 	imports: [DatabaseModule, StorageModule],
 	controllers: [EntitiesController],
 	providers: [EntitiesRepository, PortraitStorage, EntitiesService],
-	// read by the images proxy (the portrait key)
-	exports: [EntitiesRepository],
+	// read by the images proxy (the portrait key); the directory's merge deletes a portrait left over
+	exports: [EntitiesRepository, PortraitStorage],
 })
 export class EntitiesModule {}

@@ -217,6 +217,8 @@ test.describe("anonymous visitor", () => {
 			await expect(page.getByRole("link", { name: artists.bob.name })).toBeVisible();
 			// credited nowhere: only the owner sees her
 			await expect(page.getByRole("link", { name: artists.claire.name })).toHaveCount(0);
+			// the merge is the owner's
+			await expect(page.getByRole("link", { name: "Fusionner" })).toHaveCount(0);
 
 			await page.getByRole("link", { name: artists.bob.name }).click();
 			await expect(page.getByRole("heading", { name: artists.bob.name })).toBeVisible();

@@ -64,3 +64,12 @@ export type EntityDirectoryItem = z.infer<typeof EntityDirectoryItemSchema>;
 // search: in the names (the search modal)
 export const EntityDirectoryQuerystringRequestSchema = SortQSSchema.extend(SearchQSSchema.shape);
 export const EntityDirectoryResponseSchema = z.array(EntityDirectoryItemSchema);
+
+//
+// MERGE
+//
+// The main entity (keepId) gets every credit of the secondary one (removeId), which is then deleted
+export const EntityMergeBodySchema = z
+	.object({ keepId: z.uuid(), removeId: z.uuid() })
+	.refine(({ keepId, removeId }) => keepId !== removeId, { message: "two different entities", path: ["removeId"] });
+export type EntityMergeBody = z.infer<typeof EntityMergeBodySchema>;

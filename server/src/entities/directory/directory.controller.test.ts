@@ -64,4 +64,38 @@ describe("directory routes", () => {
 			episode: { episodes: 0 },
 		});
 	});
+
+	describe("POST /entities/merge", () => {
+		const OTHER = "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f";
+
+		it("is for the owner only", async () => {
+			app = await buildApp(null);
+			const res = await app.inject({
+				method: "POST",
+				url: "/entities/merge",
+				payload: { keepId: ID, removeId: OTHER },
+			});
+			expect(res.statusCode).toBe(401);
+		});
+
+		it("rejects merging an entity into itself", async () => {
+			app = await buildApp(OWNER);
+			const res = await app.inject({
+				method: "POST",
+				url: "/entities/merge",
+				payload: { keepId: ID, removeId: ID },
+			});
+			expect(res.statusCode).toBe(400);
+		});
+
+		it("404s on an unknown entity", async () => {
+			app = await buildApp(OWNER);
+			const res = await app.inject({
+				method: "POST",
+				url: "/entities/merge",
+				payload: { keepId: ID, removeId: OTHER },
+			});
+			expect(res.statusCode).toBe(404);
+		});
+	});
 });

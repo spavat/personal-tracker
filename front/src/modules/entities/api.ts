@@ -1,10 +1,9 @@
-import type { EntityDirectoryItem } from "@personal-tracker/shared/entity";
-
+import { type EntityDirectoryItem, type EntityMergeBody, EntityMergeBodySchema } from "@personal-tracker/shared/entity";
 import { queryOptions } from "@tanstack/react-query";
 
 import type { SortListConfig } from "../../hooks/use-sort-table";
 
-import { fetchJson, withQuery } from "../../api-utils";
+import { fetchJson, sendJson, withQuery } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
 
 // Every entity with its credits counted module by module ("entities": refreshed with the pickers' entities)
@@ -28,4 +27,16 @@ export const entityDetailsQuery = (id: string) =>
 // the entities named like the search, by name (the search modal)
 export function searchEntities(search: string) {
 	return fetchJson<EntityDirectoryItem[]>(withQuery(`${API_BASE_URL}/entities/directory`, { search }));
+}
+
+// every entity by name, for the merge's pickers (the list's cache when sorted by name)
+export const entityNamesQuery = () =>
+	queryOptions({
+		queryKey: [...entityDirectorySort.queryKey, "name", "asc"],
+		queryFn: () => getDirectory("name", "asc"),
+	});
+
+// the main entity gets the secondary's credits, the secondary is deleted: answers the main one
+export function mergeEntities(body: EntityMergeBody) {
+	return sendJson<EntityDirectoryItem>(`${API_BASE_URL}/entities/merge`, "POST", EntityMergeBodySchema.parse(body));
 }

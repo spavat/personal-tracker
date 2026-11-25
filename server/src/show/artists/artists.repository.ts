@@ -1,6 +1,8 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { and, AnyColumn, asc, desc, eq, isNotNull, sql, SQL } from "drizzle-orm";
 
+import type { Tx } from "../../database/node.query.js";
+
 import { contains } from "../../database/contains.query.js";
 import { DRIZZLE } from "../../database/database.tokens.js";
 import { Drizzle } from "../../database/drizzle.js";
@@ -158,6 +160,12 @@ export class ArtistsRepository {
 			.innerJoin(showSpectacle, eq(showSpectacle.id, showModel.spectacleId))
 			.where(and(eq(showModelRole.entityId, entityId), visibleSpectacle(showModel.spectacleId)))
 			.orderBy(asc(showSpectacle.name), asc(showModel.name), asc(showModelRole.order));
+	}
+
+	// A merge: the roles of an entity (in performances and cast models) go to another one
+	async moveEntityCredits(tx: Tx, fromId: string, toId: string) {
+		await tx.update(showRole).set({ entityId: toId }).where(eq(showRole.entityId, fromId));
+		await tx.update(showModelRole).set({ entityId: toId }).where(eq(showModelRole.entityId, fromId));
 	}
 
 	findByName(search: string) {

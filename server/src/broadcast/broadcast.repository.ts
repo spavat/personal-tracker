@@ -32,6 +32,7 @@ import type { CatalogEpisode } from "./sources/episode-feed.client.js";
 
 import { viewerIsOwner } from "../common/request-context.js";
 import { contains } from "../database/contains.query.js";
+import { moveCredits } from "../database/credit.query.js";
 import { DRIZZLE } from "../database/database.tokens.js";
 import { createNode, renameNode, type Tx } from "../database/node.query.js";
 import {
@@ -489,6 +490,12 @@ export class BroadcastRepository {
 				.groupBy(broadcastEpisodeContributor.entityId, broadcastEpisodeContributor.role),
 		]);
 		return { programs, episodes };
+	}
+
+	// A merge: the program and episode credits of an entity go to another one
+	async moveEntityCredits(tx: Tx, fromId: string, toId: string) {
+		await moveCredits(tx, broadcastProgramContributor, "program_id", fromId, toId);
+		await moveCredits(tx, broadcastEpisodeContributor, "episode_id", fromId, toId);
 	}
 
 	// The programs with a view in the period, each keeping only those views (and their episodes), the program
