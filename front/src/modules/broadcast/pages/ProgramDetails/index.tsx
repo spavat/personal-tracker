@@ -104,7 +104,7 @@ export default function ProgramDetails({ programId }: { programId: string }) {
 			<ProgramHeader program={program} />
 			<h2>
 				{isCatalog && (
-					<button type="button" onClick={() => setShowAsFeed(!showAsFeed)} aria-label="Switch view">
+					<button type="button" onClick={() => setShowAsFeed(!showAsFeed)} title="Change d'affichage">
 						<i className="fa-solid fa-right-left"></i>
 					</button>
 				)}

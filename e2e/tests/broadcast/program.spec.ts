@@ -152,7 +152,7 @@ test.describe("Broadcast - Program details", () => {
 		// the description is in the details only
 		await expect(row).not.toContainText("Première ligne");
 		const details = await openDetails(page, "Podcast épisode 0");
-		await expect(details.locator(".description")).toHaveText("Première ligne\nDeuxième ligne");
+		await expect(details.locator(".dialog-body > .description")).toHaveText("Première ligne\nDeuxième ligne");
 		await details.getByRole("button", { name: "Fermer" }).click();
 
 		// sent back unchanged: the stored cover is kept
@@ -424,16 +424,16 @@ test.describe("Broadcast - Program details", () => {
 		await expect(rows.first()).toHaveClass(/watched/);
 		await expect(rows.filter({ hasText: "Podcast épisode 3" }).locator(".cover-check")).toHaveCount(0);
 		const details = await openDetails(page, "Podcast épisode 3");
-		await expect(details.locator(".description")).toContainText("Le troisième épisode");
-		await expect(details.locator(".description")).toContainText("Avec un invité");
+		await expect(details.locator(".dialog-body > .description")).toContainText("Le troisième épisode");
+		await expect(details.locator(".dialog-body > .description")).toContainText("Avec un invité");
 		await expect(details).toContainText("Saison : Saison 2");
 		await expect(details).toContainText("0 vue(s)");
 		await details.getByRole("button", { name: "Fermer" }).click();
 		// the channel's image is the program's
 		await expect(rows.filter({ hasText: "Podcast épisode 4" }).locator(".episode-cover img")).toHaveCount(0);
 		// shown as a feed: one line per view, back to the releases
-		const viewSwitch = page.getByRole("group", { name: "Affichage" });
-		await viewSwitch.getByRole("button", { name: "Flux" }).click();
+		const viewSwitch = page.getByRole("button", { name: "Change d'affichage" });
+		await viewSwitch.click();
 		await expect(page.locator("table.catalog")).toHaveCount(0);
 		await expect(episodeRows(page)).toHaveCount(2);
 		// grouped by season, or flat
@@ -441,7 +441,7 @@ test.describe("Broadcast - Program details", () => {
 		await page.getByRole("checkbox", { name: "Grouper par saisons" }).uncheck();
 		await expect(page.locator("table.episodes tr.season-row")).toHaveCount(0);
 		await expect(episodeRows(page)).toHaveCount(2);
-		await viewSwitch.getByRole("button", { name: "Catalogue" }).click();
+		await viewSwitch.click();
 		await expect(rows).toHaveCount(5);
 		// imported again: nothing changes, the stored cover is kept
 		const storedCover = await coverOf("Podcast épisode 3");
@@ -505,7 +505,7 @@ test.describe("Broadcast - Program details", () => {
 		// 16:9: a video's
 		await expect(third.locator(".episode-cover")).toHaveClass(/wide/);
 		const details = await openDetails(page, "Mock video 3");
-		await expect(details.locator(".description")).toContainText("La troisième vidéo");
+		await expect(details.locator(".dialog-body > .description")).toContainText("La troisième vidéo");
 		const [{ type }] = await queryDb("SELECT type FROM broadcast.episode WHERE external_id = $1", ["vid00000003"]);
 		expect(type).toBe("video");
 	});
