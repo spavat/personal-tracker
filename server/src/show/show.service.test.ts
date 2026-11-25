@@ -22,7 +22,7 @@ describe("ShowService.search", () => {
 		const spectacleRepo = {
 			findByName: vi.fn().mockResolvedValue([{ id: 1, name: "Tosca", performance: [{}, {}] }]),
 		};
-		const artistRepo = { findByName: vi.fn().mockResolvedValue([{ id: 2, name: "Callas", role: [{}] }]) };
+		const artistRepo = { findByName: vi.fn().mockResolvedValue([{ id: 2, name: "Callas", showRoles: [{}] }]) };
 		const placeRepo = { findByName: vi.fn().mockResolvedValue([{ id: 3, name: "Bastille" }]) };
 
 		const service = new ShowService(
@@ -34,7 +34,7 @@ describe("ShowService.search", () => {
 
 		expect(await service.search("to")).toEqual([
 			{ id: 1, name: "Tosca", performance: [{}, {}], description: "2 représentations", type: "spectacle" },
-			{ id: 2, name: "Callas", role: [{}], description: "1 représentations", type: "artist" },
+			{ id: 2, name: "Callas", showRoles: [{}], description: "1 représentations", type: "artist" },
 			{ id: 3, name: "Bastille", type: "place" },
 		]);
 	});

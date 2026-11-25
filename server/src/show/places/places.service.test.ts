@@ -14,6 +14,8 @@ function fakeRepo() {
 	};
 }
 const asRepo = (r: ReturnType<typeof fakeRepo>) => r as unknown as PlacesRepository;
+const PLACE_ID = "00000000-0000-4000-8000-000000000007";
+const SPECTACLE_ID = "00000000-0000-4000-8000-000000000101";
 
 describe("PlacesService.list / Save / Delete", () => {
 	it("defaults the sort and forwards save/delete", async () => {
@@ -21,16 +23,16 @@ describe("PlacesService.list / Save / Delete", () => {
 		await new PlacesService(asRepo(repo)).list(undefined);
 		expect(repo.findAll).toHaveBeenCalledWith({ sortField: "name", sortDirection: "asc" });
 
-		repo.save.mockResolvedValue({ id: 3, name: "Bastille", formerNames: [] });
+		repo.save.mockResolvedValue({ id: PLACE_ID, name: "Bastille", formerNames: [] });
 		expect(await new PlacesService(asRepo(repo)).save({ name: "Bastille" } as any)).toEqual({
-			id: 3,
+			id: PLACE_ID,
 			name: "Bastille",
 			formerNames: [],
 		});
 		expect(repo.save).toHaveBeenCalledWith({ name: "Bastille" });
 
-		await new PlacesService(asRepo(repo)).delete(3);
-		expect(repo.delete).toHaveBeenCalledWith(3);
+		await new PlacesService(asRepo(repo)).delete(PLACE_ID);
+		expect(repo.delete).toHaveBeenCalledWith(PLACE_ID);
 	});
 });
 
@@ -38,11 +40,11 @@ describe("PlacesService.get", () => {
 	it("counts non-canceled performances and unique spectacles", async () => {
 		const repo = fakeRepo();
 		repo.findByIdWithPerformances.mockResolvedValue({
-			id: 7,
+			id: PLACE_ID,
 			name: "Bastille",
 			address: "Place de la Bastille",
 			country: "fr",
-			formerNames: [{ id: 1, placeId: 7, name: "Old Bastille", untilDate: "2024-02-01" }],
+			formerNames: [{ id: 1, placeId: PLACE_ID, name: "Old Bastille", untilDate: "2024-02-01" }],
 			performance: [
 				{
 					id: 1,
@@ -51,15 +53,15 @@ describe("PlacesService.get", () => {
 					spectacleId: 100,
 					spectacle: { id: 100, name: "Tosca" },
 					placeName: "Old Bastille",
-					place: { id: 7, name: "Bastille", country: "fr" },
+					place: { id: PLACE_ID, name: "Bastille", country: "fr" },
 				},
 				{
 					id: 2,
 					date: "2024-02-01",
 					canceled: true,
-					spectacleId: 101,
-					spectacle: { id: 101, name: "Norma" },
-					place: { id: 7, name: "Bastille", country: "fr" },
+					spectacleId: SPECTACLE_ID,
+					spectacle: { id: SPECTACLE_ID, name: "Norma" },
+					place: { id: PLACE_ID, name: "Bastille", country: "fr" },
 				},
 				{
 					id: 3,
@@ -67,15 +69,15 @@ describe("PlacesService.get", () => {
 					canceled: false,
 					spectacleId: 100,
 					spectacle: { id: 100, name: "Tosca" },
-					place: { id: 7, name: "Bastille", country: "fr" },
+					place: { id: PLACE_ID, name: "Bastille", country: "fr" },
 				},
 			],
 		});
 
-		const result = await new PlacesService(asRepo(repo)).get({ placeId: 7, groupBySpectacle: false });
+		const result = await new PlacesService(asRepo(repo)).get({ placeId: PLACE_ID, groupBySpectacle: false });
 
 		expect(result).toMatchObject({
-			id: 7,
+			id: PLACE_ID,
 			name: "Bastille",
 			country: "fr",
 			formerNames: [{ name: "Old Bastille", untilDate: "2024-02-01" }],

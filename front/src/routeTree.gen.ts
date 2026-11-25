@@ -139,7 +139,6 @@ import { Route as ReadingMangaListListAddRouteImport } from './routes/reading-ma
 import { Route as ReadingMangaMangaMangaIdEditRouteImport } from './routes/reading-manga/manga/$mangaId.edit'
 import { Route as ShowsArtistsArtistIdDetailsRouteImport } from './routes/shows/artists/$artistId/_details'
 import { Route as ShowsArtistsListIndexRouteImport } from './routes/shows/artists/_list.index'
-import { Route as ShowsArtistsListAddRouteImport } from './routes/shows/artists/_list.add'
 import { Route as ShowsHistoryYearAddRouteImport } from './routes/shows/history/$year.add'
 import { Route as ShowsPerformancesPerformanceIdCastingRouteImport } from './routes/shows/performances/$performanceId.casting'
 import { Route as ShowsPerformancesPerformanceIdDeleteRouteImport } from './routes/shows/performances/$performanceId.delete'
@@ -184,7 +183,6 @@ import { Route as ReadingMangaListListMangaIdEditRouteImport } from './routes/re
 import { Route as ReadingMangaMangaMangaIdReadingAddRouteImport } from './routes/reading-manga/manga/$mangaId.reading.add'
 import { Route as ShowsArtistsArtistIdDetailsIndexRouteImport } from './routes/shows/artists/$artistId/_details.index'
 import { Route as ShowsArtistsArtistIdDetailsEditRouteImport } from './routes/shows/artists/$artistId/_details.edit'
-import { Route as ShowsArtistsListDeleteArtistIdRouteImport } from './routes/shows/artists/_list.delete.$artistId'
 import { Route as ShowsArtistsListEditArtistIdRouteImport } from './routes/shows/artists/_list.edit.$artistId'
 import { Route as ShowsPlacesPlaceIdDetailsIndexRouteImport } from './routes/shows/places/$placeId/_details.index'
 import { Route as ShowsPlacesPlaceIdDetailsEditRouteImport } from './routes/shows/places/$placeId/_details.edit'
@@ -903,11 +901,6 @@ const ShowsArtistsListIndexRoute = ShowsArtistsListIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ShowsArtistsListRoute,
 } as any)
-const ShowsArtistsListAddRoute = ShowsArtistsListAddRouteImport.update({
-  id: '/add',
-  path: '/add',
-  getParentRoute: () => ShowsArtistsListRoute,
-} as any)
 const ShowsHistoryYearAddRoute = ShowsHistoryYearAddRouteImport.update({
   id: '/add',
   path: '/add',
@@ -1159,12 +1152,6 @@ const ShowsArtistsArtistIdDetailsEditRoute =
     id: '/edit',
     path: '/edit',
     getParentRoute: () => ShowsArtistsArtistIdDetailsRoute,
-  } as any)
-const ShowsArtistsListDeleteArtistIdRoute =
-  ShowsArtistsListDeleteArtistIdRouteImport.update({
-    id: '/delete/$artistId',
-    path: '/delete/$artistId',
-    getParentRoute: () => ShowsArtistsListRoute,
   } as any)
 const ShowsArtistsListEditArtistIdRoute =
   ShowsArtistsListEditArtistIdRouteImport.update({
@@ -1522,7 +1509,6 @@ export interface FileRoutesByFullPath {
   '/reading-manga/list/add': typeof ReadingMangaListListAddRoute
   '/reading-manga/manga/$mangaId/edit': typeof ReadingMangaMangaMangaIdEditRoute
   '/shows/artists/$artistId': typeof ShowsArtistsArtistIdDetailsRouteWithChildren
-  '/shows/artists/add': typeof ShowsArtistsListAddRoute
   '/shows/history/$year/add': typeof ShowsHistoryYearAddRoute
   '/shows/performances/$performanceId/casting': typeof ShowsPerformancesPerformanceIdCastingRoute
   '/shows/performances/$performanceId/delete': typeof ShowsPerformancesPerformanceIdDeleteRoute
@@ -1574,7 +1560,6 @@ export interface FileRoutesByFullPath {
   '/reading-manga/list/$mangaId/edit': typeof ReadingMangaListListMangaIdEditRoute
   '/reading-manga/manga/$mangaId/reading/add': typeof ReadingMangaMangaMangaIdReadingAddRoute
   '/shows/artists/$artistId/edit': typeof ShowsArtistsArtistIdDetailsEditRoute
-  '/shows/artists/delete/$artistId': typeof ShowsArtistsListDeleteArtistIdRoute
   '/shows/artists/edit/$artistId': typeof ShowsArtistsListEditArtistIdRoute
   '/shows/places/$placeId/edit': typeof ShowsPlacesPlaceIdDetailsEditRoute
   '/shows/places/delete/$placeId': typeof ShowsPlacesListDeletePlaceIdRoute
@@ -1713,7 +1698,6 @@ export interface FileRoutesByTo {
   '/reading-manga/history/$year/add': typeof ReadingMangaHistoryYearAddRoute
   '/reading-manga/list/add': typeof ReadingMangaListListAddRoute
   '/reading-manga/manga/$mangaId/edit': typeof ReadingMangaMangaMangaIdEditRoute
-  '/shows/artists/add': typeof ShowsArtistsListAddRoute
   '/shows/history/$year/add': typeof ShowsHistoryYearAddRoute
   '/shows/performances/$performanceId/casting': typeof ShowsPerformancesPerformanceIdCastingRoute
   '/shows/performances/$performanceId/delete': typeof ShowsPerformancesPerformanceIdDeleteRoute
@@ -1763,7 +1747,6 @@ export interface FileRoutesByTo {
   '/reading-manga/list/$mangaId/edit': typeof ReadingMangaListListMangaIdEditRoute
   '/reading-manga/manga/$mangaId/reading/add': typeof ReadingMangaMangaMangaIdReadingAddRoute
   '/shows/artists/$artistId/edit': typeof ShowsArtistsArtistIdDetailsEditRoute
-  '/shows/artists/delete/$artistId': typeof ShowsArtistsListDeleteArtistIdRoute
   '/shows/artists/edit/$artistId': typeof ShowsArtistsListEditArtistIdRoute
   '/shows/places/$placeId/edit': typeof ShowsPlacesPlaceIdDetailsEditRoute
   '/shows/places/delete/$placeId': typeof ShowsPlacesListDeletePlaceIdRoute
@@ -1929,7 +1912,6 @@ export interface FileRoutesById {
   '/reading-manga/list/_list/add': typeof ReadingMangaListListAddRoute
   '/reading-manga/manga/$mangaId/edit': typeof ReadingMangaMangaMangaIdEditRoute
   '/shows/artists/$artistId/_details': typeof ShowsArtistsArtistIdDetailsRouteWithChildren
-  '/shows/artists/_list/add': typeof ShowsArtistsListAddRoute
   '/shows/history/$year/add': typeof ShowsHistoryYearAddRoute
   '/shows/performances/$performanceId/casting': typeof ShowsPerformancesPerformanceIdCastingRoute
   '/shows/performances/$performanceId/delete': typeof ShowsPerformancesPerformanceIdDeleteRoute
@@ -1981,7 +1963,6 @@ export interface FileRoutesById {
   '/reading-manga/list/_list/$mangaId/edit': typeof ReadingMangaListListMangaIdEditRoute
   '/reading-manga/manga/$mangaId/reading/add': typeof ReadingMangaMangaMangaIdReadingAddRoute
   '/shows/artists/$artistId/_details/edit': typeof ShowsArtistsArtistIdDetailsEditRoute
-  '/shows/artists/_list/delete/$artistId': typeof ShowsArtistsListDeleteArtistIdRoute
   '/shows/artists/_list/edit/$artistId': typeof ShowsArtistsListEditArtistIdRoute
   '/shows/places/$placeId/_details/edit': typeof ShowsPlacesPlaceIdDetailsEditRoute
   '/shows/places/_list/delete/$placeId': typeof ShowsPlacesListDeletePlaceIdRoute
@@ -2146,7 +2127,6 @@ export interface FileRouteTypes {
     | '/reading-manga/list/add'
     | '/reading-manga/manga/$mangaId/edit'
     | '/shows/artists/$artistId'
-    | '/shows/artists/add'
     | '/shows/history/$year/add'
     | '/shows/performances/$performanceId/casting'
     | '/shows/performances/$performanceId/delete'
@@ -2198,7 +2178,6 @@ export interface FileRouteTypes {
     | '/reading-manga/list/$mangaId/edit'
     | '/reading-manga/manga/$mangaId/reading/add'
     | '/shows/artists/$artistId/edit'
-    | '/shows/artists/delete/$artistId'
     | '/shows/artists/edit/$artistId'
     | '/shows/places/$placeId/edit'
     | '/shows/places/delete/$placeId'
@@ -2337,7 +2316,6 @@ export interface FileRouteTypes {
     | '/reading-manga/history/$year/add'
     | '/reading-manga/list/add'
     | '/reading-manga/manga/$mangaId/edit'
-    | '/shows/artists/add'
     | '/shows/history/$year/add'
     | '/shows/performances/$performanceId/casting'
     | '/shows/performances/$performanceId/delete'
@@ -2387,7 +2365,6 @@ export interface FileRouteTypes {
     | '/reading-manga/list/$mangaId/edit'
     | '/reading-manga/manga/$mangaId/reading/add'
     | '/shows/artists/$artistId/edit'
-    | '/shows/artists/delete/$artistId'
     | '/shows/artists/edit/$artistId'
     | '/shows/places/$placeId/edit'
     | '/shows/places/delete/$placeId'
@@ -2552,7 +2529,6 @@ export interface FileRouteTypes {
     | '/reading-manga/list/_list/add'
     | '/reading-manga/manga/$mangaId/edit'
     | '/shows/artists/$artistId/_details'
-    | '/shows/artists/_list/add'
     | '/shows/history/$year/add'
     | '/shows/performances/$performanceId/casting'
     | '/shows/performances/$performanceId/delete'
@@ -2604,7 +2580,6 @@ export interface FileRouteTypes {
     | '/reading-manga/list/_list/$mangaId/edit'
     | '/reading-manga/manga/$mangaId/reading/add'
     | '/shows/artists/$artistId/_details/edit'
-    | '/shows/artists/_list/delete/$artistId'
     | '/shows/artists/_list/edit/$artistId'
     | '/shows/places/$placeId/_details/edit'
     | '/shows/places/_list/delete/$placeId'
@@ -3576,13 +3551,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShowsArtistsListIndexRouteImport
       parentRoute: typeof ShowsArtistsListRoute
     }
-    '/shows/artists/_list/add': {
-      id: '/shows/artists/_list/add'
-      path: '/add'
-      fullPath: '/shows/artists/add'
-      preLoaderRoute: typeof ShowsArtistsListAddRouteImport
-      parentRoute: typeof ShowsArtistsListRoute
-    }
     '/shows/history/$year/add': {
       id: '/shows/history/$year/add'
       path: '/add'
@@ -3890,13 +3858,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/shows/artists/$artistId/edit'
       preLoaderRoute: typeof ShowsArtistsArtistIdDetailsEditRouteImport
       parentRoute: typeof ShowsArtistsArtistIdDetailsRoute
-    }
-    '/shows/artists/_list/delete/$artistId': {
-      id: '/shows/artists/_list/delete/$artistId'
-      path: '/delete/$artistId'
-      fullPath: '/shows/artists/delete/$artistId'
-      preLoaderRoute: typeof ShowsArtistsListDeleteArtistIdRouteImport
-      parentRoute: typeof ShowsArtistsListRoute
     }
     '/shows/artists/_list/edit/$artistId': {
       id: '/shows/artists/_list/edit/$artistId'
@@ -4930,16 +4891,12 @@ const ReadingMangaRouteWithChildren = ReadingMangaRoute._addFileChildren(
 )
 
 interface ShowsArtistsListRouteChildren {
-  ShowsArtistsListAddRoute: typeof ShowsArtistsListAddRoute
   ShowsArtistsListIndexRoute: typeof ShowsArtistsListIndexRoute
-  ShowsArtistsListDeleteArtistIdRoute: typeof ShowsArtistsListDeleteArtistIdRoute
   ShowsArtistsListEditArtistIdRoute: typeof ShowsArtistsListEditArtistIdRoute
 }
 
 const ShowsArtistsListRouteChildren: ShowsArtistsListRouteChildren = {
-  ShowsArtistsListAddRoute: ShowsArtistsListAddRoute,
   ShowsArtistsListIndexRoute: ShowsArtistsListIndexRoute,
-  ShowsArtistsListDeleteArtistIdRoute: ShowsArtistsListDeleteArtistIdRoute,
   ShowsArtistsListEditArtistIdRoute: ShowsArtistsListEditArtistIdRoute,
 }
 

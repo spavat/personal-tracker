@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { entitiesQuery } from "../../../components/entity-api";
 import { ModalError, ModalPending } from "../../../components/ModalStatus";
-import { artistsQuery, performanceDetailsQuery } from "../../../modules/show/api";
+import { performanceDetailsQuery } from "../../../modules/show/api";
 import CastingModalForm from "../../../modules/show/modals/CastingModalForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/shows/performances/$performanceId/casting
 	loader: ({ context, params }) =>
 		Promise.all([
 			context.queryClient.query({ ...performanceDetailsQuery(params.performanceId), staleTime: "static" }),
-			context.queryClient.query({ ...artistsQuery(), staleTime: "static" }),
+			context.queryClient.query({ ...entitiesQuery("person"), staleTime: "static" }),
 		]),
 	pendingComponent: ModalPending,
 	errorComponent: ModalError,

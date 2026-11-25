@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { entitiesQuery } from "../../../../components/entity-api";
 import { ModalError, ModalPending } from "../../../../components/ModalStatus";
-import { artistsQuery } from "../../../../modules/show/api";
 import ModelModalForm from "../../../../modules/show/modals/ModelModalForm";
 import { withReturnToSchema } from "../../../../router/search-params";
 
 export const Route = createFileRoute("/shows/spectacles/$spectacleId/_details/addModel")({
 	staticData: { modal: true },
-	loader: ({ context }) => context.queryClient.query({ ...artistsQuery(), staleTime: "static" }),
+	loader: ({ context }) => context.queryClient.query({ ...entitiesQuery("person"), staleTime: "static" }),
 	pendingComponent: ModalPending,
 	errorComponent: ModalError,
 	validateSearch: withReturnToSchema,

@@ -1,8 +1,9 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { and, asc, eq, gte, isNotNull, lt, notInArray, sql } from "drizzle-orm";
+import { and, asc, eq, gte, lt, notInArray, sql } from "drizzle-orm";
 
 import { DRIZZLE } from "../../database/database.tokens.js";
 import { Drizzle } from "../../database/drizzle.js";
+import { createNode } from "../../database/node.query.js";
 import {
 	showPerformance,
 	showPlace,
@@ -92,13 +93,13 @@ export class PerformancesRepository {
 				place: true,
 				spectacle: true,
 				role: {
-					with: { artist: true },
+					with: { entity: true },
 				},
 			},
 		});
 	}
 
-	findByIdWithDetails(performanceId: number) {
+	findByIdWithDetails(performanceId: string) {
 		return this.db.query.showPerformance.findFirst({
 			where: { id: performanceId, ...visiblePerformanceWhere() },
 			extras: { placeName: placeNameAt },
@@ -109,7 +110,7 @@ export class PerformancesRepository {
 							with: {
 								roles: {
 									orderBy: (role, { asc }) => [asc(role.order)],
-									with: { artist: true },
+									with: { entity: true },
 								},
 							},
 						},
@@ -118,14 +119,14 @@ export class PerformancesRepository {
 				place: true,
 				role: {
 					with: {
-						artist: true,
+						entity: true,
 					},
 				},
 			},
 		});
 	}
 
-	async findSpectacleMediaKind(tx: any, spectacleId: number, mediaId: string) {
+	async findSpectacleMediaKind(tx: any, spectacleId: string, mediaId: string) {
 		const [link] = await tx
 			.select({ kind: showSpectacleMedia.kind })
 			.from(showSpectacleMedia)
@@ -133,19 +134,25 @@ export class PerformancesRepository {
 		return link?.kind;
 	}
 
-	insertPlace(tx: any, place: any) {
-		return tx.insert(showPlace).values(place).returning({ id: showPlace.id });
+	async insertPlace(tx: any, place: any): Promise<string> {
+		const id = await createNode(tx, { type: "show_place", label: place.name });
+		await tx.insert(showPlace).values({ ...place, id });
+		return id;
 	}
 
-	insertWork(tx: any, work: any) {
-		return tx.insert(showWork).values(work).returning({ id: showWork.id });
+	async insertWork(tx: any, work: any): Promise<string> {
+		const id = await createNode(tx, { type: "show_work", label: work.name });
+		await tx.insert(showWork).values({ ...work, id });
+		return id;
 	}
 
-	insertSpectacle(tx: any, spectacle: any) {
-		return tx.insert(showSpectacle).values(spectacle).returning({ id: showSpectacle.id });
+	async insertSpectacle(tx: any, spectacle: any): Promise<string> {
+		const id = await createNode(tx, { type: "show_spectacle", label: spectacle.name });
+		await tx.insert(showSpectacle).values({ ...spectacle, id });
+		return id;
 	}
 
-	savePerformance(tx: any, performanceId: number | undefined, data: any) {
+	savePerformance(tx: any, performanceId: string | undefined, data: any) {
 		if (performanceId) {
 			return tx.update(showPerformance).set(data).where(eq(showPerformance.id, performanceId)).returning();
 		}
@@ -165,28 +172,20 @@ export class PerformancesRepository {
 				set: {
 					name: sql`excluded.name`,
 					main: sql`excluded.main`,
-					artistId: sql`excluded.artist_id`,
+					entityId: sql`excluded.entity_id`,
 					status: sql`excluded.status`,
 					order: sql`excluded."order"`,
-					pictureId: sql`excluded.picture_id`,
 				},
 			});
 	}
 
-	findRolePictures(tx: any, performanceId: number): Promise<{ artistId: number; pictureId: string }[]> {
-		return tx
-			.selectDistinct({ artistId: showRole.artistId, pictureId: showRole.pictureId })
-			.from(showRole)
-			.where(and(eq(showRole.performanceId, performanceId), isNotNull(showRole.pictureId)));
-	}
-
 	// the casting roles reference the performance: they go first
-	async delete(tx: any, performanceId: number) {
+	async delete(tx: any, performanceId: string) {
 		await tx.delete(showRole).where(eq(showRole.performanceId, performanceId));
 		return tx.delete(showPerformance).where(eq(showPerformance.id, performanceId)).returning();
 	}
 
-	deleteRolesExcept(tx: any, performanceId: number, incomingIds: number[], insertedIds: number[]) {
+	deleteRolesExcept(tx: any, performanceId: string, incomingIds: string[], insertedIds: string[]) {
 		return tx
 			.delete(showRole)
 			.where(

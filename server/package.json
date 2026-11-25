@@ -12,6 +12,7 @@
 		"create-owner": "node --env-file-if-exists=.env dist/scripts/create-owner.js",
 		"seed-epic-token": "node --env-file-if-exists=.env dist/scripts/seed-epic-token.js",
 		"check-stored-data": "node --env-file-if-exists=.env dist/scripts/check-stored-data.js",
+		"clean-show-media": "node --env-file-if-exists=.env dist/scripts/clean-show-media.js",
 		"migrate-broadcast": "node --env-file-if-exists=.env dist/scripts/migrate-broadcast.js",
 		"rename-broadcast-data": "node --env-file-if-exists=.env dist/scripts/rename-broadcast-data.js",
 		"import-strava": "node --env-file-if-exists=.env dist/scripts/import-strava.js",

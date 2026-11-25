@@ -1,12 +1,13 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import type { SaveWorkBody } from "./work.entity.js";
 
 import { viewerIsOwner } from "../../common/request-context.js";
 import { DRIZZLE } from "../../database/database.tokens.js";
 import { Drizzle } from "../../database/drizzle.js";
-import { showWork } from "../../database/schema.js";
+import { createNode, renameNode } from "../../database/node.query.js";
+import { coreNode, showWork } from "../../database/schema.js";
 import { hasVisiblePerformance, visiblePerformanceWhere } from "../performances/visible-performance.query.js";
 import { placeNameAt } from "../places/places.repository.js";
 
@@ -40,7 +41,7 @@ export class WorksRepository {
 		});
 	}
 
-	findByIdWithSpectacles(id: number) {
+	findByIdWithSpectacles(id: string) {
 		return this.db.query.showWork.findFirst({
 			where: { id },
 			with: {
@@ -49,16 +50,27 @@ export class WorksRepository {
 		});
 	}
 
-	// undefined when updating an unknown id
-	async save(data: SaveWorkBody) {
-		const [work] = data.id
-			? await this.db.update(showWork).set(data).where(eq(showWork.id, data.id)).returning()
-			: await this.db.insert(showWork).values(data).returning();
-		return work;
+	save({ id, ...data }: SaveWorkBody) {
+		return this.db.transaction(async (tx) => {
+			if (id) {
+				const [work] = await tx.update(showWork).set(data).where(eq(showWork.id, id)).returning();
+				if (work) await renameNode(tx, id, work.name);
+				return work;
+			}
+			const nodeId = await createNode(tx, { type: "show_work", label: data.name });
+			const [work] = await tx
+				.insert(showWork)
+				.values({ ...data, id: nodeId })
+				.returning();
+			return work;
+		});
 	}
 
-	// false for an unknown id
-	async delete(id: number) {
-		return (await this.db.delete(showWork).where(eq(showWork.id, id)).returning({ id: showWork.id })).length > 0;
+	async delete(id: string) {
+		const deleted = await this.db
+			.delete(coreNode)
+			.where(and(eq(coreNode.id, id), eq(coreNode.type, "show_work")))
+			.returning({ id: coreNode.id });
+		return deleted.length > 0;
 	}
 }

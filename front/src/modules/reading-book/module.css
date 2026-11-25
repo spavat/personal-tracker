@@ -135,8 +135,7 @@
 				width: 6em;
 			}
 		}
-		/* an image's preview left of the drop zone that replaces it (author portrait, edition cover) */
-		.portrait-input,
+		/* a cover's preview left of the drop zone that replaces it (the portraits: PortraitField in App.css) */
 		.cover-input {
 			display: flex;
 			gap: 12px;
@@ -146,13 +145,6 @@
 				flex: 1;
 				margin-bottom: 0;
 			}
-		}
-		.portrait-preview {
-			width: 120px;
-			aspect-ratio: 1;
-			object-fit: cover;
-			border-radius: 50%;
-			flex-shrink: 0;
 		}
 		.card-cover {
 			float: left;

@@ -1,16 +1,14 @@
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useOptimistic, useTransition } from "react";
 import { Fragment } from "react/jsx-runtime";
 
-import MutationError from "../../../components/MutationError";
 import PageTitle from "../../../components/PageTitle";
 import { PendingContent } from "../../../components/PendingContent";
 import { useStoredValue } from "../../../hooks/stored-value";
 import { useIsOwner } from "../../../hooks/use-is-owner";
 import { formatDate, getPeriodDifference } from "../../../utils";
-import { artistDetailsQuery, saveArtist } from "../api";
-import MediaGallery from "../components/MediaGallery";
+import { artistDetailsQuery } from "../api";
 import { MODULE_NAME } from "../constants";
 import { formatShowDate, mediaSrc } from "../utils";
 
@@ -32,21 +30,15 @@ export default function ArtistDetails({ artistId }: { artistId: string }) {
 
 	const { data: details } = useSuspenseQuery(artistDetailsQuery(artistId, groupBySpectacle));
 
-	const queryClient = useQueryClient();
-	const mainPictureMutation = useMutation({
-		mutationFn: (pictureId: string | null) => saveArtist({ id: details.id, name: details.name, pictureId }),
-		onSuccess: () => queryClient.invalidateQueries({ queryKey: ["shows", "artists", artistId] }),
-	});
-
 	let index = 1;
 	return (
 		<>
 			<PageTitle title={`${MODULE_NAME} > Artiste > ${details.name}`} />
 			<div className="presentation-with-picture">
 				<div className="picture">
-					{details.pictureUrl ? (
+					{details.picture ? (
 						<img
-							src={mediaSrc(details.pictureUrl)}
+							src={mediaSrc(details.picture)}
 							alt={details.name}
 							className="artist-picture"
 							style={{ viewTransitionName: `artist-portrait-${details.id}` }}
@@ -110,20 +102,6 @@ export default function ArtistDetails({ artistId }: { artistId: string }) {
 					</span>
 				</div>
 			</div>
-			{isOwner && (
-				<>
-					<MediaGallery
-						owner={{ artistId: details.id }}
-						cropAspect={1}
-						media={details.media}
-						invalidateKey={["shows", "artists", artistId]}
-						mainPictureId={details.pictureId}
-						onSetMain={(pictureId) => mainPictureMutation.mutate(pictureId)}
-					/>
-					<MutationError error={mainPictureMutation.error} />
-				</>
-			)}
-
 			<h2>
 				Liste des représentations
 				<label>

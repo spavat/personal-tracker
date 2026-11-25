@@ -1,13 +1,13 @@
-import type { ArtistMedia, SpectacleMedia, SpectacleMediaKind } from "@personal-tracker/shared/show";
+import type { SpectacleMedia, SpectacleMediaKind } from "@personal-tracker/shared/show";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import ImageCropper from "../../../components/ImageCropper";
 import MutationError from "../../../components/MutationError";
 import { useIsOwner } from "../../../hooks/use-is-owner";
-import { deleteMedia, type MediaOwner, reorderMedia, spectaclesQuery, updateMedia, uploadMedia } from "../api";
+import { deleteMedia, type MediaOwner, reorderMedia, updateMedia, uploadMedia } from "../api";
 import { mediaSrc, readFile } from "../utils";
 
 const MEDIA_KIND_LABELS: Record<SpectacleMediaKind, string> = {
@@ -21,31 +21,23 @@ type UploadInputs = {
 	url: string;
 	label: string;
 	kind: SpectacleMediaKind;
-	spectacleId: string;
 };
 
 export default function MediaGallery({
 	owner,
 	media,
 	invalidateKey,
-	mainPictureId,
-	onSetMain,
 	cropAspect,
 }: {
 	owner: MediaOwner;
 	// width / height of the crop frame (1 = square)
 	cropAspect: number;
-	media: Array<SpectacleMedia | ArtistMedia>;
+	media: Array<SpectacleMedia>;
 	// details query to refresh after a change
 	invalidateKey: Array<unknown>;
-	// artist only: main photo
-	mainPictureId?: string | null;
-	onSetMain?: (mediaId: string | null) => void;
 }) {
 	const isOwner = useIsOwner();
 	const queryClient = useQueryClient();
-	const isArtist = "artistId" in owner;
-	const { data: spectacleList = [] } = useQuery({ ...spectaclesQuery(), enabled: isOwner && isArtist });
 
 	function refresh() {
 		queryClient.invalidateQueries({ queryKey: invalidateKey });
@@ -56,7 +48,7 @@ export default function MediaGallery({
 	const [isDragOver, setIsDragOver] = useState(false);
 	const [cropSrc, setCropSrc] = useState<string | null>(null);
 	const { register, handleSubmit, reset, control, setValue } = useForm<UploadInputs>({
-		defaultValues: { url: "", label: "", kind: "poster", spectacleId: "" },
+		defaultValues: { url: "", label: "", kind: "poster" },
 	});
 	const url = useWatch({ control, name: "url" });
 
@@ -93,7 +85,6 @@ export default function MediaGallery({
 				source,
 				label: values.label,
 				kind: values.kind,
-				spectacleId: values.spectacleId ? Number(values.spectacleId) : null,
 			});
 		},
 		onSuccess: () => {
@@ -121,8 +112,8 @@ export default function MediaGallery({
 		.filter(Boolean)
 		.join(" ");
 	const updateMutation = useMutation({
-		mutationFn: ({ item, label }: { item: SpectacleMedia | ArtistMedia; label: string }) =>
-			updateMedia(owner, item.id, { label, spectacleId: "spectacleId" in item ? item.spectacleId : undefined }),
+		mutationFn: ({ item, label }: { item: SpectacleMedia; label: string }) =>
+			updateMedia(owner, item.id, { label }),
 		onSuccess: refresh,
 	});
 	const reorderMutation = useMutation({
@@ -134,7 +125,7 @@ export default function MediaGallery({
 		onSuccess: refresh,
 	});
 
-	function rename(item: SpectacleMedia | ArtistMedia) {
+	function rename(item: SpectacleMedia) {
 		const label = window.prompt("Libellé", item.label);
 		if (label !== null) {
 			updateMutation.mutate({ item, label });
@@ -148,7 +139,7 @@ export default function MediaGallery({
 		reorderMutation.mutate(ids);
 	}
 
-	function remove(item: SpectacleMedia | ArtistMedia) {
+	function remove(item: SpectacleMedia) {
 		if (window.confirm(`Supprimer « ${item.label || "ce média"} » ?`)) {
 			deleteMutation.mutate(item.id);
 		}
@@ -163,7 +154,7 @@ export default function MediaGallery({
 			<h3>Médias ({media.length})</h3>
 			<div className="media-gallery">
 				{media.map((item, index) => (
-					<figure key={item.id} className={item.id === mainPictureId ? "main" : ""}>
+					<figure key={item.id}>
 						<a href={mediaSrc(item.url)} target="_blank" rel="noreferrer">
 							{item.contentType.startsWith("image/") ? (
 								<img src={mediaSrc(item.url)} alt={item.label} loading="lazy" />
@@ -171,18 +162,8 @@ export default function MediaGallery({
 								<i className="fa-regular fa-file-pdf"></i>
 							)}
 						</a>
-						{isOwner && onSetMain && item.contentType.startsWith("image/") && (
-							<button
-								type="button"
-								className="set-main"
-								title={item.id === mainPictureId ? "Retirer la photo principale" : "Photo principale"}
-								onClick={() => onSetMain(item.id === mainPictureId ? null : item.id)}
-							>
-								<i className={`${item.id === mainPictureId ? "fa-solid" : "fa-regular"} fa-star`}></i>
-							</button>
-						)}
 						<figcaption>
-							{"kind" in item && <span className="smalltext">{MEDIA_KIND_LABELS[item.kind]} </span>}
+							<span className="smalltext">{MEDIA_KIND_LABELS[item.kind]} </span>
 							{item.label}
 							{isOwner && (
 								<span className="actions">
@@ -275,24 +256,13 @@ export default function MediaGallery({
 							autoComplete="off"
 							{...register("label")}
 						/>
-						{isArtist ? (
-							<select {...register("spectacleId")} title="Spectacle">
-								<option value="">Aucun spectacle</option>
-								{spectacleList.map((spectacle) => (
-									<option key={spectacle.id} value={spectacle.id}>
-										{spectacle.name}
-									</option>
-								))}
-							</select>
-						) : (
-							<select {...register("kind")}>
-								{(["poster", "photo", "programme"] as const).map((kind) => (
-									<option key={kind} value={kind}>
-										{MEDIA_KIND_LABELS[kind]}
-									</option>
-								))}
-							</select>
-						)}
+						<select {...register("kind")}>
+							{(["poster", "photo", "programme"] as const).map((kind) => (
+								<option key={kind} value={kind}>
+									{MEDIA_KIND_LABELS[kind]}
+								</option>
+							))}
+						</select>
 						<button type="submit" disabled={uploadMutation.isPending}>
 							<i className="fa-regular fa-plus"></i> {uploadMutation.isPending ? "Envoi…" : "Ajouter"}
 						</button>

@@ -151,37 +151,43 @@ export const SEED = {
 		secondPodcast: { id: "0639422a-c2f9-4bc5-97d1-bee2dc2e4753", name: "Second Podcast" },
 		oldShow: { id: "5c1ea0c8-de21-485a-a517-ead72a55b8af", name: "Old Show" },
 	},
+	// uuids written in e2e/seed.js: one prefix per table, the former integer id at the end
 	show: {
 		works: {
-			miserables: { id: 1, name: "Les Misérables" },
-			hamlet: { id: 2, name: "Hamlet" },
+			miserables: { id: "51000000-0000-4000-8000-000000000001", name: "Les Misérables" },
+			hamlet: { id: "51000000-0000-4000-8000-000000000002", name: "Hamlet" },
 		},
 		spectacles: {
-			miserablesParis: { id: 1, name: "Les Misérables (Paris)" },
-			miserablesLondres: { id: 2, name: "Les Misérables (Londres)" },
-			hamlet: { id: 3, name: "Hamlet" },
+			miserablesParis: { id: "52000000-0000-4000-8000-000000000001", name: "Les Misérables (Paris)" },
+			miserablesLondres: { id: "52000000-0000-4000-8000-000000000002", name: "Les Misérables (Londres)" },
+			hamlet: { id: "52000000-0000-4000-8000-000000000003", name: "Hamlet" },
 		},
 		places: {
-			chatelet: { id: 1, name: "Théâtre du Châtelet", formerName: "Théâtre Musical de Paris" },
-			sondheim: { id: 2, name: "Sondheim Theatre" },
-			comedie: { id: 3, name: "Comédie-Française" },
-			empty: { id: 4, name: "Salle vide" },
+			chatelet: {
+				id: "53000000-0000-4000-8000-000000000001",
+				name: "Théâtre du Châtelet",
+				formerName: "Théâtre Musical de Paris",
+			},
+			sondheim: { id: "53000000-0000-4000-8000-000000000002", name: "Sondheim Theatre" },
+			comedie: { id: "53000000-0000-4000-8000-000000000003", name: "Comédie-Française" },
+			empty: { id: "53000000-0000-4000-8000-000000000004", name: "Salle vide" },
 		},
+		// person entities, credited in the roles (Claire in none)
 		artists: {
-			alice: { id: 1, name: "Alice Martin" },
-			bob: { id: 2, name: "Bob Smith" },
-			claire: { id: 3, name: "Claire Dubois" },
+			alice: { id: "56000000-0000-4000-8000-000000000001", name: "Alice Martin" },
+			bob: { id: "56000000-0000-4000-8000-000000000002", name: "Bob Smith" },
+			claire: { id: "56000000-0000-4000-8000-000000000003", name: "Claire Dubois" },
 		},
 		// 1: 2025-03-20 Paris (cast), 2: 2025-11-08 Londres (cast), 3: 2026-02-14 Hamlet, 4: 2026-02-21 Paris canceled,
 		// 5: 2026-04-10 Paris (cast), 6: 2026-09-05 Hamlet (no cast), 7: 2027-01-15 Londres (future)
 		performances: {
-			paris2025: 1,
-			londres2025: 2,
-			hamlet2026: 3,
-			parisCanceled: 4,
-			paris2026: 5,
-			hamletSept: 6,
-			future: 7,
+			paris2025: "54000000-0000-4000-8000-000000000001",
+			londres2025: "54000000-0000-4000-8000-000000000002",
+			hamlet2026: "54000000-0000-4000-8000-000000000003",
+			parisCanceled: "54000000-0000-4000-8000-000000000004",
+			paris2026: "54000000-0000-4000-8000-000000000005",
+			hamletSept: "54000000-0000-4000-8000-000000000006",
+			future: "54000000-0000-4000-8000-000000000007",
 		},
 	},
 	money: {

@@ -2,37 +2,41 @@ import { describe, expect, it } from "vitest";
 
 import { toPerformanceView, toRoleView } from "./performance.entity.js";
 
+const PERFORMANCE_ID = "00000000-0000-4000-8000-000000000010";
+const PLACE_ID = "00000000-0000-4000-8000-000000000007";
+const SPECTACLE_ID = "00000000-0000-4000-8000-000000000100";
+const ROLE_ID = "00000000-0000-4000-8000-000000000003";
 const performance = {
-	id: 10,
+	id: PERFORMANCE_ID,
 	date: "2024-01-01 20:00:00",
-	placeId: 7,
-	spectacleId: 100,
+	placeId: PLACE_ID,
+	spectacleId: SPECTACLE_ID,
 	canceled: false,
 	seat: "A1",
 	casting_status: "complete" as const,
 	casting_origin: "program" as const,
 	posterId: "11111111-1111-4111-8111-111111111111",
 	placeName: "Old Bastille",
-	place: { id: 7, name: "Bastille", address: "", country: "fr", link: null },
-	spectacle: { id: 100, name: "Tosca" },
+	place: { id: PLACE_ID, name: "Bastille", address: "", country: "fr", link: null },
+	spectacle: { id: SPECTACLE_ID, name: "Tosca" },
 };
 
+const ENTITY_ID = "00000000-0000-4000-8000-000000000005";
 const role = {
-	id: 3,
-	artistId: 5,
-	performanceId: 10,
+	id: ROLE_ID,
+	entityId: ENTITY_ID,
+	performanceId: PERFORMANCE_ID,
 	name: "Tosca",
 	status: null,
 	main: true,
 	order: 1,
-	pictureId: null,
-	artist: { id: 5, name: "Callas", pictureId: "22222222-2222-4222-8222-222222222222" },
+	entity: { id: ENTITY_ID, name: "Callas", pictureKey: `personal-tracker/entity/${ENTITY_ID}.ab12cd34.avif` },
 };
 
 describe("toPerformanceView", () => {
 	it("nests the place, named as it was at the performance date, and the spectacle", () => {
 		expect(toPerformanceView(performance)).toEqual({
-			id: 10,
+			id: PERFORMANCE_ID,
 			date: "2024-01-01 20:00:00",
 			canceled: false,
 			seat: "A1",
@@ -40,8 +44,8 @@ describe("toPerformanceView", () => {
 			casting_origin: "program",
 			posterId: "11111111-1111-4111-8111-111111111111",
 			posterUrl: "/images/show/11111111-1111-4111-8111-111111111111",
-			place: { id: 7, name: "Old Bastille", country: "fr" },
-			spectacle: { id: 100, name: "Tosca" },
+			place: { id: PLACE_ID, name: "Old Bastille", country: "fr" },
+			spectacle: { id: SPECTACLE_ID, name: "Tosca" },
 			roles: undefined,
 		});
 	});
@@ -56,21 +60,19 @@ describe("toPerformanceView", () => {
 });
 
 describe("toRoleView", () => {
-	it("nests the artist and falls back to the artist's main photo", () => {
+	it("nests the artist with the entity portrait", () => {
 		expect(toRoleView(role)).toEqual({
-			id: 3,
+			id: ROLE_ID,
 			name: "Tosca",
 			main: true,
 			status: null,
 			order: 1,
-			pictureId: null,
-			artist: { id: 5, name: "Callas" },
-			pictureUrl: "/images/show/22222222-2222-4222-8222-222222222222",
+			artist: { id: ENTITY_ID, name: "Callas" },
+			picture: `/images/entity/${ENTITY_ID}?v=ab12cd34`,
 		});
 	});
 
-	it("prefers the role portrait", () => {
-		const pictureId = "33333333-3333-4333-8333-333333333333";
-		expect(toRoleView({ ...role, pictureId }).pictureUrl).toBe(`/images/show/${pictureId}`);
+	it("has no picture without portrait", () => {
+		expect(toRoleView({ ...role, entity: { ...role.entity, pictureKey: null } }).picture).toBeNull();
 	});
 });

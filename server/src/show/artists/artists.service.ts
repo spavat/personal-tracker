@@ -2,10 +2,8 @@ import type { ArtistListResponse } from "@personal-tracker/shared/show";
 
 import { Injectable, Logger } from "@nestjs/common";
 
-import { NotFoundError } from "../../common/errors.js";
-import { sortByMediaOrder, toArtistMedia } from "../media/media.entity.js";
 import { toPerformanceView } from "../performances/performance.entity.js";
-import { type SaveArtistBody, toArtistView } from "./artist.entity.js";
+import { toArtistView } from "./artist.entity.js";
 import { ArtistsRepository } from "./artists.repository.js";
 
 @Injectable()
@@ -25,7 +23,7 @@ export class ArtistsService {
 		}));
 	}
 
-	async get({ artistId, groupBySpectacle }: { artistId: number; groupBySpectacle: boolean }) {
+	async get({ artistId, groupBySpectacle }: { artistId: string; groupBySpectacle: boolean }) {
 		this.logger.log("get");
 		const artistData = await this.repo.findByIdWithPerformances(artistId);
 		if (!artistData) {
@@ -39,9 +37,9 @@ export class ArtistsService {
 		};
 		let groups;
 		if (groupBySpectacle) {
-			const spectacles: Record<number, any> = {};
-			artistData?.role?.forEach((role) => {
-				const spectacleId = role.performance?.spectacleId ?? 0;
+			const spectacles: Record<string, any> = {};
+			artistData.showRoles.forEach((role) => {
+				const spectacleId = role.performance?.spectacleId ?? "";
 				if (!spectacles[spectacleId]) {
 					spectacles[spectacleId] = role.performance?.spectacle;
 					spectacles[spectacleId].performances = [];
@@ -53,43 +51,31 @@ export class ArtistsService {
 			});
 			groups = Object.values(spectacles);
 			stats.nbSpectacles = groups.length;
-			stats.nbPerformances = artistData?.role?.length;
-			stats.lastPerformance = artistData?.role.at(-1)?.performance?.date ?? "";
+			stats.nbPerformances = artistData.showRoles.length;
+			stats.lastPerformance = artistData.showRoles.at(-1)?.performance?.date ?? "";
 		} else {
-			const uniqueShows = new Set<number>();
+			const uniqueShows = new Set<string>();
 			groups = [
 				{
-					performances: artistData?.role?.map((role) => {
-						uniqueShows.add(role.performance?.spectacleId ?? 0);
+					performances: artistData.showRoles.map((role) => {
+						uniqueShows.add(role.performance?.spectacleId ?? "");
 						return { ...toPerformanceView(role.performance!), role: role.name ?? "" };
 					}),
 				},
 			];
 			stats.nbSpectacles = uniqueShows.size;
-			stats.nbPerformances = artistData?.role?.length;
+			stats.nbPerformances = artistData.showRoles.length;
 			stats.lastPerformance = groups[0].performances.at(-1)?.date ?? "";
 		}
 
 		return {
 			...toArtistView(artistData),
-			media: sortByMediaOrder(artistData.mediaLinks ?? []).map(toArtistMedia),
+			kind: artistData.kind,
+			sortName: artistData.sortName,
 			groups: Object.values(groups).toSorted((a, b) =>
 				(a.performances?.[0]?.date ?? "").localeCompare(b.performances?.[0]?.date ?? ""),
 			),
 			stats,
 		};
-	}
-
-	async save(data: SaveArtistBody) {
-		this.logger.log("save");
-		const artist = await this.repo.save(data);
-		return artist ? toArtistView(artist) : null;
-	}
-
-	async delete(id: number) {
-		this.logger.log("delete");
-		if (!(await this.repo.delete(id))) {
-			throw new NotFoundError("artist");
-		}
 	}
 }

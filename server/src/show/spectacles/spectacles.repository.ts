@@ -6,6 +6,7 @@ import type { SaveSpectacleBody } from "./spectacle.entity.js";
 import { contains } from "../../database/contains.query.js";
 import { DRIZZLE } from "../../database/database.tokens.js";
 import { Drizzle } from "../../database/drizzle.js";
+import { createNode, renameNode } from "../../database/node.query.js";
 import { showSpectacle } from "../../database/schema.js";
 import { hasVisiblePerformance, visiblePerformanceWhere } from "../performances/visible-performance.query.js";
 import { placeNameAt } from "../places/places.repository.js";
@@ -36,7 +37,7 @@ export class SpectaclesRepository {
 		});
 	}
 
-	findByIdWithDetails(id: number) {
+	findByIdWithDetails(id: string) {
 		return this.db.query.showSpectacle.findFirst({
 			where: { id, ...hasVisiblePerformance() },
 			with: {
@@ -48,7 +49,7 @@ export class SpectaclesRepository {
 						place: true,
 						role: {
 							with: {
-								artist: true,
+								entity: true,
 							},
 						},
 					},
@@ -58,7 +59,7 @@ export class SpectaclesRepository {
 						roles: {
 							orderBy: (role, { asc }) => [asc(role.order)],
 							with: {
-								artist: true,
+								entity: true,
 							},
 						},
 					},
@@ -87,11 +88,23 @@ export class SpectaclesRepository {
 		});
 	}
 
-	// undefined when updating an unknown id
-	async save({ models: _models, ...data }: SaveSpectacleBody) {
-		const [spectacle] = data.id
-			? await this.db.update(showSpectacle).set(data).where(eq(showSpectacle.id, data.id)).returning()
-			: await this.db.insert(showSpectacle).values(data).returning();
-		return spectacle;
+	save({ models: _models, id, ...data }: SaveSpectacleBody) {
+		return this.db.transaction(async (tx) => {
+			if (id) {
+				const [spectacle] = await tx
+					.update(showSpectacle)
+					.set(data)
+					.where(eq(showSpectacle.id, id))
+					.returning();
+				if (spectacle) await renameNode(tx, id, spectacle.name);
+				return spectacle;
+			}
+			const nodeId = await createNode(tx, { type: "show_spectacle", label: data.name });
+			const [spectacle] = await tx
+				.insert(showSpectacle)
+				.values({ ...data, id: nodeId })
+				.returning();
+			return spectacle;
+		});
 	}
 }

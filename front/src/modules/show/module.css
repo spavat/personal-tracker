@@ -267,9 +267,6 @@
 				border: 1px solid var(--light-border-color);
 				border-radius: 8px;
 
-				&.main {
-					border-color: var(--primary-color);
-				}
 				a {
 					display: flex;
 					align-items: center;
@@ -283,13 +280,6 @@
 				}
 				.fa-file-pdf {
 					font-size: 4rem;
-				}
-				.set-main {
-					position: absolute;
-					top: 10px;
-					left: 10px;
-					background: rgb(0 0 0 / 55%);
-					color: #ffd54f;
 				}
 				figcaption {
 					margin-top: 4px;
@@ -343,52 +333,6 @@
 			}
 			input[type="file"] {
 				display: none;
-			}
-		}
-
-		/* the dialog widens to keep room for the table next to the panel */
-		dialog:has(.crop-panel) {
-			width: 75%;
-		}
-		.with-crop-panel {
-			display: flex;
-			gap: 12px;
-			align-items: flex-start;
-
-			.crop-panel-main {
-				flex: 1 1 0;
-				min-width: 0;
-			}
-			.crop-panel {
-				display: flex;
-				flex-direction: column;
-				gap: 8px;
-				flex: 0 0 340px;
-				position: sticky;
-				top: 0;
-			}
-			@media (max-width: 768px) {
-				flex-direction: column;
-				align-items: stretch;
-
-				.crop-panel {
-					flex-basis: auto;
-					position: static;
-				}
-			}
-		}
-
-		.role-portrait {
-			display: flex;
-			align-items: center;
-			gap: 6px;
-		}
-		.artist-photo-button {
-			cursor: pointer;
-			padding: 4px;
-
-			&.error {
-				color: var(--error-color, red);
 			}
 		}
 

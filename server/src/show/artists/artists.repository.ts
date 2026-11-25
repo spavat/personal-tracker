@@ -1,14 +1,18 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { and, AnyColumn, asc, desc, eq, getColumns, sql, SQL } from "drizzle-orm";
-
-import type { SaveArtistBody } from "./artist.entity.js";
+import { and, AnyColumn, asc, desc, eq, sql, SQL } from "drizzle-orm";
 
 import { contains } from "../../database/contains.query.js";
 import { DRIZZLE } from "../../database/database.tokens.js";
 import { Drizzle } from "../../database/drizzle.js";
-import { showArtist, showPerformance, showRole } from "../../database/schema.js";
+import { coreEntity, showModelRole, showPerformance, showRole } from "../../database/schema.js";
 import { hasVisiblePerformance, visiblePerformanceDate } from "../performances/visible-performance.query.js";
 import { placeNameAt } from "../places/places.repository.js";
+
+// An artist is an entity credited in a show role or model role. Self-contained, for RQB RAW filters too.
+function isShowCredited(entityId: AnyColumn) {
+	return sql`(exists (select 1 from ${showRole} where ${showRole.entityId} = ${entityId})
+		or exists (select 1 from ${showModelRole} where ${showModelRole.entityId} = ${entityId}))`;
+}
 
 @Injectable()
 export class ArtistsRepository {
@@ -23,41 +27,44 @@ export class ArtistsRepository {
 		const colNbSpectacles = sql<number>`count(distinct(${showPerformance.spectacleId}))`.mapWith(Number);
 		let sortValue: AnyColumn | SQL<number> | null = null;
 		if (sortField === "name") {
-			sortValue = showArtist.name;
+			sortValue = coreEntity.name;
 		} else if (sortField === "nbPerformances") {
 			sortValue = colNbPerformances;
 		} else if (sortField === "nbSpectacles") {
 			sortValue = colNbSpectacles;
 		}
 
-		return this.db
-			.select({
-				...getColumns(showArtist),
-				nbPerformances: colNbPerformances.as("nbPerformances"),
-				nbSpectacles: colNbSpectacles.as("nbSpectacles"),
-			})
-			.from(showArtist)
-			.leftJoin(showRole, eq(showRole.artistId, showArtist.id))
-			.leftJoin(
-				showPerformance,
-				and(eq(showPerformance.id, showRole.performanceId), visiblePerformanceDate(showPerformance.date)),
-			)
-			.groupBy(showArtist.id)
-			.orderBy(sortFn(sql`${sortValue}`));
+		return (
+			this.db
+				.select({
+					id: coreEntity.id,
+					name: coreEntity.name,
+					pictureKey: coreEntity.pictureKey,
+					nbPerformances: colNbPerformances.as("nbPerformances"),
+					nbSpectacles: colNbSpectacles.as("nbSpectacles"),
+				})
+				.from(coreEntity)
+				.leftJoin(showRole, eq(showRole.entityId, coreEntity.id))
+				.leftJoin(
+					showPerformance,
+					and(eq(showPerformance.id, showRole.performanceId), visiblePerformanceDate(showPerformance.date)),
+				)
+				.where(isShowCredited(coreEntity.id))
+				.groupBy(coreEntity.id)
+				// ties by name: uuids give no creation order
+				.orderBy(sortFn(sql`${sortValue}`), asc(coreEntity.name))
+		);
 	}
 
-	async findByIdWithPerformances(artistId: number) {
-		const artist = await this.db.query.showArtist.findFirst({
-			where: { id: artistId },
+	async findByIdWithPerformances(entityId: string) {
+		const artist = await this.db.query.coreEntity.findFirst({
+			columns: { id: true, kind: true, name: true, sortName: true, pictureKey: true },
+			where: { id: entityId },
 			with: {
-				mediaLinks: {
-					with: { media: true },
-				},
-				role: {
+				showRoles: {
 					where: hasVisiblePerformance(),
 					with: {
 						performance: {
-							orderBy: (performance, { asc }) => [asc(performance.date)],
 							extras: { placeName: placeNameAt },
 							with: {
 								spectacle: true,
@@ -69,18 +76,19 @@ export class ArtistsRepository {
 			},
 		});
 
-		artist?.role.sort((a, b) => (a.performance?.date ?? "").localeCompare(b.performance?.date ?? ""));
+		artist?.showRoles.sort((a, b) => (a.performance?.date ?? "").localeCompare(b.performance?.date ?? ""));
 
 		return artist;
 	}
 
 	findByName(search: string) {
-		return this.db.query.showArtist.findMany({
+		return this.db.query.coreEntity.findMany({
+			columns: { id: true, name: true },
 			where: {
-				RAW: (t) => contains(t.name, search),
+				RAW: (t) => and(contains(t.name, search), isShowCredited(t.id))!,
 			},
 			with: {
-				role: {
+				showRoles: {
 					where: hasVisiblePerformance(),
 					with: {
 						performance: true,
@@ -88,20 +96,5 @@ export class ArtistsRepository {
 				},
 			},
 		});
-	}
-
-	// undefined when updating an unknown id
-	async save(data: SaveArtistBody) {
-		const [artist] = data.id
-			? await this.db.update(showArtist).set(data).where(eq(showArtist.id, data.id)).returning()
-			: await this.db.insert(showArtist).values(data).returning();
-		return artist;
-	}
-
-	// false for an unknown id
-	async delete(id: number) {
-		return (
-			(await this.db.delete(showArtist).where(eq(showArtist.id, id)).returning({ id: showArtist.id })).length > 0
-		);
 	}
 }

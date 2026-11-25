@@ -68,7 +68,6 @@ test.describe("anonymous visitor", () => {
 		});
 
 		for (const url of [
-			"/shows/artists/add",
 			`/shows/artists/edit/${artists.alice.id}`,
 			`/shows/artists/${artists.alice.id}/edit`,
 			`/shows/performances/${performances.paris2025}/casting`,
@@ -85,8 +84,16 @@ test.describe("anonymous visitor", () => {
 			expect((await request.get(`${API}/show/artists/`)).status()).toBe(200);
 			expect((await request.get(`${API}/show/performances/${performances.paris2025}`)).status()).toBe(200);
 			expect((await request.get(`${API}/show/reports?from=2026-01-01&to=2026-12-31`)).status()).toBe(401);
-			expect((await request.post(`${API}/show/artists`, { data: { name: "Intrus" } })).status()).toBe(401);
-			expect((await request.delete(`${API}/show/artists/${artists.alice.id}`)).status()).toBe(401);
+			expect((await request.post(`${API}/entities`, { data: { kind: "person", name: "Intrus" } })).status()).toBe(
+				401,
+			);
+			expect(
+				(
+					await request.put(`${API}/entities/${artists.alice.id}`, {
+						data: { kind: "person", name: "Intrus" },
+					})
+				).status(),
+			).toBe(401);
 			expect((await request.delete(`${API}/show/performances/${performances.paris2025}`)).status()).toBe(401);
 		});
 	});

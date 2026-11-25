@@ -114,7 +114,7 @@ export const DailyGameSchema = z.object({
 	),
 });
 export const DailyShowSchema = z.object({
-	id: z.number(),
+	id: z.uuid(),
 	name: z.string(),
 	time: z.string(),
 	place: z.string(),

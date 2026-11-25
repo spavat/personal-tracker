@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useFormContext } from "react-hook-form";
 
 import { worksQuery } from "../api";
+import { emptyToUndefined } from "../utils";
 import { type SpectacleForm } from "./SpectacleForm.utils";
 
 export default function SpectacleFormComponent({ title, onNewWork }: { title?: string; onNewWork: () => void }) {
@@ -36,8 +37,8 @@ export default function SpectacleFormComponent({ title, onNewWork }: { title?: s
 						{isFetching ? (
 							<>...</>
 						) : (
-							<select {...register("spectacle.workId", { valueAsNumber: true })}>
-								<option key={"empty"} value="0"></option>
+							<select {...register("spectacle.workId", { setValueAs: emptyToUndefined })}>
+								<option key={"empty"} value=""></option>
 								{data?.map((work) => (
 									<option key={work.id} value={work.id}>
 										{work.name}

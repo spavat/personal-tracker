@@ -3,7 +3,7 @@ import z from "zod";
 
 // the performance's id: the api sends it in the path
 const CastingFormSchema = SaveCastingBodyRequestSchema.extend({
-	performanceId: z.number(),
+	performanceId: z.uuid(),
 	roles: z.array(RoleSchema.partial({ id: true, status: true })),
 });
 

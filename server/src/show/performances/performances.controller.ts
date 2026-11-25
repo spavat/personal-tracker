@@ -37,7 +37,7 @@ export class PerformancesController {
 	@Get(":performanceId")
 	@Public()
 	@SerializeOptions({ schema: PerformanceDetailsResponseSchema })
-	get(@Param({ schema: PerformanceDetailsParamsRequestSchema }) { performanceId }: { performanceId: number }) {
+	get(@Param({ schema: PerformanceDetailsParamsRequestSchema }) { performanceId }: { performanceId: string }) {
 		return orNotFound(this.service.get(performanceId), "performance");
 	}
 
@@ -52,7 +52,7 @@ export class PerformancesController {
 	@Put(":id")
 	@SerializeOptions({ schema: SavePerformanceResponseSchema })
 	update(
-		@Param({ schema: DeletePerformanceParamsRequestSchema }) { id }: { id: number },
+		@Param({ schema: DeletePerformanceParamsRequestSchema }) { id }: { id: string },
 		@Body({ schema: SavePerformanceBodyRequestSchema }) body: SavePerformanceBody,
 	) {
 		return this.service.save(body, id);
@@ -62,7 +62,7 @@ export class PerformancesController {
 	@Put(":id/casting")
 	@HttpCode(204)
 	async saveCasting(
-		@Param({ schema: DeletePerformanceParamsRequestSchema }) { id }: { id: number },
+		@Param({ schema: DeletePerformanceParamsRequestSchema }) { id }: { id: string },
 		@Body({ schema: SaveCastingBodyRequestSchema }) body: SaveCastingBody,
 	) {
 		await this.service.saveCasting(id, body);
@@ -71,7 +71,7 @@ export class PerformancesController {
 	// the casting roles, and their portraits used nowhere else, are deleted along with the performance
 	@Delete(":id")
 	@HttpCode(204)
-	async delete(@Param({ schema: DeletePerformanceParamsRequestSchema }) { id }: { id: number }) {
+	async delete(@Param({ schema: DeletePerformanceParamsRequestSchema }) { id }: { id: string }) {
 		await this.service.delete(id);
 	}
 }

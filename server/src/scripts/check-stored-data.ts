@@ -18,7 +18,6 @@ import {
 import { MusicGenreSchema } from "@personal-tracker/shared/music";
 import { MangaSchema } from "@personal-tracker/shared/reading-manga";
 import {
-	ArtistSchema,
 	ModelSchema,
 	PerformanceSchema,
 	PlaceSchema,
@@ -38,7 +37,6 @@ import {
 	moneyPaymentType,
 	moneyTag,
 	moneyTransaction,
-	showArtist,
 	showModel,
 	showPerformance,
 	showPlace,
@@ -63,7 +61,6 @@ const TABLES: Array<[name: string, table: PgTable, schema: z.ZodType]> = [
 	["money.payment_type", moneyPaymentType, PaymentTypeSchema],
 	["money.tag", moneyTag, TagSchema],
 	["money.transaction", moneyTransaction, TransactionRowSchema],
-	["show.artist", showArtist, ArtistSchema],
 	["show.model", showModel, ModelSchema.omit({ roles: true })],
 	["show.performance", showPerformance, PerformanceSchema],
 	["show.place", showPlace, PlaceSchema],

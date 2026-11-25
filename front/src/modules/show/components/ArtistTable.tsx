@@ -82,7 +82,7 @@ export default function ArtistTable({
 										onClick={() =>
 											navigate({
 												to: "/shows/artists/edit/$artistId",
-												params: { artistId: String(artist.id) },
+												params: { artistId: artist.id },
 												search: { returnTo: location.pathname },
 												replace: true,
 												resetScroll: false,
@@ -93,26 +93,6 @@ export default function ArtistTable({
 										}
 									>
 										<i className="fa-regular fa-pen-to-square"></i>
-									</button>
-									&nbsp;
-									<button
-										type="button"
-										title="Supprimer"
-										onClick={() =>
-											navigate({
-												to: "/shows/artists/delete/$artistId",
-												params: { artistId: String(artist.id) },
-												search: { returnTo: location.pathname },
-												replace: true,
-												resetScroll: false,
-												mask: {
-													to: "/shows/artists",
-												},
-											})
-										}
-										disabled={artist.nbSpectacles > 0 || artist.nbPerformances > 0}
-									>
-										<i className="fa-regular fa-trash-can"></i>
 									</button>
 								</td>
 							)}

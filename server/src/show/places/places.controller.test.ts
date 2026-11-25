@@ -5,6 +5,7 @@ import { buildTestApp } from "../../test-support/test-app.js";
 import { ShowModule } from "../show.module.js";
 
 const OWNER = { user: { id: "owner" }, session: { id: "session" } };
+const PLACE_ID = "00000000-0000-4000-8000-000000000003";
 
 async function buildApp(builderResult?: unknown) {
 	const { db } = makeFakeDrizzle({ builderResult });
@@ -27,7 +28,7 @@ describe("show/places routes", () => {
 		expect(ctx.db.select).toHaveBeenCalled();
 	});
 
-	it("GET /:id rejects a non-numeric id", async () => {
+	it("GET /:id rejects an id that is not a uuid", async () => {
 		expect((await ctx.app.inject({ method: "GET", url: "/show/places/abc" })).statusCode).toBe(400);
 	});
 
@@ -38,13 +39,13 @@ describe("show/places routes", () => {
 	});
 
 	it("PUT /:id persists a valid place and replaces its former names", async () => {
-		const place = { id: 3, name: "Bastille", address: "Paris", country: "fr", link: null };
+		const place = { id: PLACE_ID, name: "Bastille", address: "Paris", country: "fr", link: null };
 		await ctx.app.close();
 		ctx = await buildApp([place]);
 		const formerNames = [{ name: "Old Bastille", untilDate: "2027-01-01" }];
 		const res = await ctx.app.inject({
 			method: "PUT",
-			url: "/show/places/3",
+			url: `/show/places/${PLACE_ID}`,
 			payload: { ...place, formerNames },
 		});
 		expect(res.statusCode).toBe(200);
@@ -57,7 +58,7 @@ describe("show/places routes", () => {
 	it("PUT /:id 404s when updating an unknown place", async () => {
 		const res = await ctx.app.inject({
 			method: "PUT",
-			url: "/show/places/3",
+			url: `/show/places/${PLACE_ID}`,
 			payload: { name: "Bastille", address: "Paris", country: "fr", formerNames: [] },
 		});
 		expect(res.statusCode).toBe(404);
@@ -83,8 +84,8 @@ describe("show/places routes", () => {
 
 	it("DELETE /:id answers 204", async () => {
 		await ctx.app.close();
-		ctx = await buildApp([{ id: 3 }]);
-		const res = await ctx.app.inject({ method: "DELETE", url: "/show/places/3" });
+		ctx = await buildApp([{ id: PLACE_ID }]);
+		const res = await ctx.app.inject({ method: "DELETE", url: `/show/places/${PLACE_ID}` });
 		expect(res.statusCode).toBe(204);
 		expect(ctx.db.delete).toHaveBeenCalled();
 	});

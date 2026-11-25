@@ -11,6 +11,7 @@ import { MediaService } from "./media.service.js";
 const TX = { tx: true };
 const MEDIA_ID = "0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e";
 const OTHER_ID = "7c1e2d3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f";
+const SPECTACLE_ID = "00000000-0000-4000-8000-000000000007";
 
 function fakeRepo() {
 	return {
@@ -21,11 +22,6 @@ function fakeRepo() {
 			.mockResolvedValue([
 				{ kind: "poster", media: { id: MEDIA_ID, key: "k", label: "S1", contentType: "image/avif" } },
 			]),
-		findArtistMedia: vi
-			.fn()
-			.mockResolvedValue([
-				{ spectacleId: null, media: { id: OTHER_ID, key: "k", label: "", contentType: "image/avif" } },
-			]),
 		linkExists: vi.fn().mockResolvedValue(true),
 		findMediaIds: vi.fn().mockResolvedValue([MEDIA_ID, OTHER_ID]),
 		nextOrder: vi.fn().mockResolvedValue(3),
@@ -34,7 +30,6 @@ function fakeRepo() {
 		setFile: vi.fn(),
 		updateLabel: vi.fn(),
 		insertLink: vi.fn(),
-		updateArtistLink: vi.fn(),
 		deleteLink: vi.fn().mockResolvedValue([{ mediaId: MEDIA_ID }]),
 		countLinks: vi.fn().mockResolvedValue(0),
 		deleteMedia: vi
@@ -58,7 +53,10 @@ describe("MediaService.list", () => {
 	it("lists a spectacle's media of one kind", async () => {
 		const repo = fakeRepo();
 		expect(
-			await new MediaService(asRepo(repo), asStorage(fakeStorage())).list({ spectacleId: 7 }, "poster"),
+			await new MediaService(asRepo(repo), asStorage(fakeStorage())).list(
+				{ spectacleId: SPECTACLE_ID },
+				"poster",
+			),
 		).toEqual([
 			{
 				id: MEDIA_ID,
@@ -68,23 +66,7 @@ describe("MediaService.list", () => {
 				kind: "poster",
 			},
 		]);
-		expect(repo.findSpectacleMedia).toHaveBeenCalledWith(7, "poster");
-	});
-
-	it("lists an artist's media", async () => {
-		const repo = fakeRepo();
-		expect(await new MediaService(asRepo(repo), asStorage(fakeStorage())).list({ artistId: 3 }, undefined)).toEqual(
-			[
-				{
-					id: OTHER_ID,
-					label: "",
-					contentType: "image/avif",
-					url: "/images/show/7c1e2d3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
-					spectacleId: null,
-				},
-			],
-		);
-		expect(repo.findArtistMedia).toHaveBeenCalledWith(3);
+		expect(repo.findSpectacleMedia).toHaveBeenCalledWith(SPECTACLE_ID, "poster");
 	});
 });
 
@@ -93,7 +75,10 @@ describe("MediaService.upload", () => {
 		const repo = fakeRepo();
 		const storage = fakeStorage();
 		const data = { source: "data:image/png;base64,AA", label: "Saison 2", kind: "poster" as const };
-		const result = await new MediaService(asRepo(repo), asStorage(storage)).upload({ spectacleId: 7 }, data);
+		const result = await new MediaService(asRepo(repo), asStorage(storage)).upload(
+			{ spectacleId: SPECTACLE_ID },
+			data,
+		);
 
 		expect(result).toEqual({
 			id: MEDIA_ID,
@@ -102,9 +87,9 @@ describe("MediaService.upload", () => {
 			url: "/images/show/0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e",
 		});
 		// appended after the owner's last media
-		expect(repo.nextOrder).toHaveBeenCalledWith(TX, { spectacleId: 7 });
+		expect(repo.nextOrder).toHaveBeenCalledWith(TX, { spectacleId: SPECTACLE_ID });
 		expect(repo.insertMedia).toHaveBeenCalledWith(TX, "Saison 2", 3);
-		expect(repo.insertLink).toHaveBeenCalledWith(TX, { spectacleId: 7 }, MEDIA_ID, data);
+		expect(repo.insertLink).toHaveBeenCalledWith(TX, { spectacleId: SPECTACLE_ID }, MEDIA_ID, data);
 		expect(storage.uploadFromSource).toHaveBeenCalledWith(
 			"personal-tracker/show/media/0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e",
 			"data:image/png;base64,AA",
@@ -120,34 +105,13 @@ describe("MediaService.upload", () => {
 		const repo = fakeRepo();
 		const storage = fakeStorage();
 		await new MediaService(asRepo(repo), asStorage(storage)).upload(
-			{ spectacleId: 7 },
+			{ spectacleId: SPECTACLE_ID },
 			{ source: "s", label: "", kind: "programme" },
 		);
 		expect(storage.uploadFromSource).toHaveBeenCalledWith(
 			"personal-tracker/show/media/0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e",
 			"s",
 			"photo",
-		);
-	});
-
-	it("stores an artist portrait with its spectacle context", async () => {
-		const repo = fakeRepo();
-		const storage = fakeStorage();
-		await new MediaService(asRepo(repo), asStorage(storage)).upload(
-			{ artistId: 3 },
-			{ source: "https://x/y.jpg", label: "", spectacleId: 7, kind: "poster" },
-		);
-
-		expect(repo.insertLink).toHaveBeenCalledWith(
-			TX,
-			{ artistId: 3 },
-			MEDIA_ID,
-			expect.objectContaining({ spectacleId: 7 }),
-		);
-		expect(storage.uploadFromSource).toHaveBeenCalledWith(
-			"personal-tracker/show/media/0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e",
-			"https://x/y.jpg",
-			"portrait",
 		);
 	});
 
@@ -158,7 +122,7 @@ describe("MediaService.upload", () => {
 
 		await expect(
 			new MediaService(asRepo(repo), asStorage(storage)).upload(
-				{ spectacleId: 999 },
+				{ spectacleId: "00000000-0000-4000-8000-000000000999" },
 				{ source: "s", label: "", kind: "poster" },
 			),
 		).rejects.toThrow("fk");
@@ -185,7 +149,7 @@ describe("MediaService.reorder", () => {
 		const repo = fakeRepo();
 		expect(
 			await new MediaService(asRepo(repo), asStorage(fakeStorage())).reorder(
-				{ spectacleId: 7 },
+				{ spectacleId: SPECTACLE_ID },
 				{ mediaIds: [OTHER_ID, MEDIA_ID] },
 			),
 		).toBeUndefined();
@@ -200,7 +164,10 @@ describe("MediaService.reorder", () => {
 	])("rejects %s with a 400", async (_, mediaIds) => {
 		const repo = fakeRepo();
 		await expect(
-			new MediaService(asRepo(repo), asStorage(fakeStorage())).reorder({ artistId: 3 }, { mediaIds }),
+			new MediaService(asRepo(repo), asStorage(fakeStorage())).reorder(
+				{ spectacleId: SPECTACLE_ID },
+				{ mediaIds },
+			),
 		).rejects.toBeInstanceOf(BadRequestError);
 		expect(repo.setOrder).not.toHaveBeenCalled();
 	});
@@ -211,28 +178,23 @@ describe("MediaService.update", () => {
 		const repo = fakeRepo();
 		repo.linkExists.mockResolvedValue(false);
 		expect(
-			await new MediaService(asRepo(repo), asStorage(fakeStorage())).update({ spectacleId: 7 }, MEDIA_ID, {
-				label: "x",
-			}),
+			await new MediaService(asRepo(repo), asStorage(fakeStorage())).update(
+				{ spectacleId: SPECTACLE_ID },
+				MEDIA_ID,
+				{
+					label: "x",
+				},
+			),
 		).toBeNull();
 		expect(repo.updateLabel).not.toHaveBeenCalled();
 	});
 
-	it("updates a poster label only", async () => {
+	it("updates the label", async () => {
 		const repo = fakeRepo();
-		await new MediaService(asRepo(repo), asStorage(fakeStorage())).update({ spectacleId: 7 }, MEDIA_ID, {
+		await new MediaService(asRepo(repo), asStorage(fakeStorage())).update({ spectacleId: SPECTACLE_ID }, MEDIA_ID, {
 			label: "x",
 		});
 		expect(repo.updateLabel).toHaveBeenCalledWith(TX, MEDIA_ID, "x");
-		expect(repo.updateArtistLink).not.toHaveBeenCalled();
-	});
-
-	it("updates a portrait label and spectacle context", async () => {
-		const repo = fakeRepo();
-		await new MediaService(asRepo(repo), asStorage(fakeStorage())).update({ artistId: 3 }, MEDIA_ID, {
-			label: "x",
-		});
-		expect(repo.updateArtistLink).toHaveBeenCalledWith(TX, 3, MEDIA_ID, null);
 	});
 });
 
@@ -242,7 +204,7 @@ describe("MediaService.delete", () => {
 		const storage = fakeStorage();
 		repo.deleteLink.mockResolvedValue([]);
 		expect(
-			await new MediaService(asRepo(repo), asStorage(storage)).delete({ spectacleId: 7 }, MEDIA_ID),
+			await new MediaService(asRepo(repo), asStorage(storage)).delete({ spectacleId: SPECTACLE_ID }, MEDIA_ID),
 		).toBeNull();
 		expect(storage.deleteObject).not.toHaveBeenCalled();
 	});
@@ -250,9 +212,9 @@ describe("MediaService.delete", () => {
 	it("deletes the media and its file once the last link is gone", async () => {
 		const repo = fakeRepo();
 		const storage = fakeStorage();
-		expect(await new MediaService(asRepo(repo), asStorage(storage)).delete({ spectacleId: 7 }, MEDIA_ID)).toBe(
-			true,
-		);
+		expect(
+			await new MediaService(asRepo(repo), asStorage(storage)).delete({ spectacleId: SPECTACLE_ID }, MEDIA_ID),
+		).toBe(true);
 		expect(repo.deleteMedia).toHaveBeenCalledWith(TX, MEDIA_ID);
 		expect(storage.deleteObject).toHaveBeenCalledWith(
 			"personal-tracker/show/media/0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e.avif",
@@ -263,7 +225,7 @@ describe("MediaService.delete", () => {
 		const repo = fakeRepo();
 		const storage = fakeStorage();
 		repo.countLinks.mockResolvedValue(1);
-		await new MediaService(asRepo(repo), asStorage(storage)).delete({ artistId: 3 }, MEDIA_ID);
+		await new MediaService(asRepo(repo), asStorage(storage)).delete({ spectacleId: SPECTACLE_ID }, MEDIA_ID);
 		expect(repo.deleteMedia).not.toHaveBeenCalled();
 		expect(storage.deleteObject).not.toHaveBeenCalled();
 	});
@@ -273,7 +235,7 @@ describe("MediaService.delete", () => {
 		const storage = fakeStorage();
 		repo.deleteLink.mockRejectedValue(Object.assign(new Error("query failed"), { cause: { code: "23503" } }));
 		await expect(
-			new MediaService(asRepo(repo), asStorage(storage)).delete({ spectacleId: 7 }, MEDIA_ID),
+			new MediaService(asRepo(repo), asStorage(storage)).delete({ spectacleId: SPECTACLE_ID }, MEDIA_ID),
 		).rejects.toBeInstanceOf(ConflictError);
 	});
 
@@ -282,9 +244,9 @@ describe("MediaService.delete", () => {
 		const storage = fakeStorage();
 		storage.deleteObject.mockRejectedValue(new Error("s3 down"));
 		const warn = vi.spyOn(Logger.prototype, "warn").mockImplementation(() => {});
-		expect(await new MediaService(asRepo(repo), asStorage(storage)).delete({ spectacleId: 7 }, MEDIA_ID)).toBe(
-			true,
-		);
+		expect(
+			await new MediaService(asRepo(repo), asStorage(storage)).delete({ spectacleId: SPECTACLE_ID }, MEDIA_ID),
+		).toBe(true);
 		expect(warn).toHaveBeenCalled();
 		warn.mockRestore();
 	});

@@ -8,18 +8,18 @@ import { mediaSrc } from "../utils";
 // children: what the artist is shown for (a role, counts…)
 export default function Card({
 	artist,
-	pictureUrl,
+	picture,
 	children,
 }: {
 	artist: ArtistRef;
-	pictureUrl: string | null;
+	picture: string | null;
 	children?: ReactNode;
 }) {
 	return (
 		<div className="card_item artist">
-			{pictureUrl ? (
+			{picture ? (
 				<img
-					src={mediaSrc(pictureUrl)}
+					src={mediaSrc(picture)}
 					alt=""
 					className="portrait-card"
 					loading="lazy"

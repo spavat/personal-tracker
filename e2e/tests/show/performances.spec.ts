@@ -12,7 +12,7 @@ function castingRows(page: Page) {
 	return page.locator(".base_content table.casting tbody tr");
 }
 
-async function openPerformance(page: Page, id: number, spectacleName: string) {
+async function openPerformance(page: Page, id: string, spectacleName: string) {
 	await page.goto(`/shows/performances/${id}`);
 	await expect(page.getByRole("heading", { name: spectacleName })).toBeVisible();
 }
@@ -176,17 +176,18 @@ test.describe("Shows - Performances", () => {
 		const dialog = await openCastingModal(page, "Ajouter le casting");
 		await dialog.locator('tfoot input[name="role"]').fill("Hamlet");
 		await dialog.locator("tfoot .search-select input").fill("Denis Laurent");
-		await dialog.getByText("Créer l'artiste « Denis Laurent »").click();
+		await dialog.getByText("Créer la personne « Denis Laurent »").click();
 		// the list closes once the artist is created and selected (until then, "Ajouter" does nothing)
-		await expect(dialog.getByText("Créer l'artiste « Denis Laurent »")).toBeHidden();
+		await expect(dialog.getByText("Créer la personne « Denis Laurent »")).toBeHidden();
 		await expect(dialog.locator("tfoot .search-select input")).toHaveValue("Denis Laurent");
 		await dialog.locator("tfoot").getByRole("button", { name: "Ajouter" }).click();
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(dialog).not.toBeVisible();
 		await expect(castingRows(page).first()).toContainText("Denis Laurent");
+		// a person entity, now an artist: credited in a role
 		await page.goto("/shows/artists");
-		await expect(page.locator(".card_item.artist")).toHaveCount(4);
+		await expect(page.locator(".card_item.artist")).toHaveCount(3);
 	});
 
 	test("edit the casting: apply the model and remove a role", async ({ page }) => {

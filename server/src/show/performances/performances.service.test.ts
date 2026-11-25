@@ -1,8 +1,5 @@
-import { Logger } from "@nestjs/common";
 import { describe, expect, it, vi } from "vitest";
 
-import type { MediaStorageRepository } from "../media/media-storage.repository.js";
-import type { MediaRepository } from "../media/media.repository.js";
 import type { PerformancesRepository } from "./performances.repository.js";
 
 import { BadRequestError, NotFoundError } from "../../common/errors.js";
@@ -14,24 +11,32 @@ function fakeRepo() {
 		findAllWithDetails: vi.fn().mockResolvedValue([]),
 		findByIdWithDetails: vi.fn().mockResolvedValue(null),
 		runInTransaction: vi.fn(async (fn: (t: unknown) => unknown) => fn(tx)),
-		insertPlace: vi.fn().mockResolvedValue([{ id: 70 }]),
-		insertWork: vi.fn().mockResolvedValue([{ id: 80 }]),
-		insertSpectacle: vi.fn().mockResolvedValue([{ id: 90 }]),
-		savePerformance: vi.fn().mockResolvedValue([{ id: 11 }]),
-		insertRoles: vi.fn().mockResolvedValue([{ id: 50 }]),
+		insertPlace: vi.fn().mockResolvedValue(NEW_PLACE_ID),
+		insertWork: vi.fn().mockResolvedValue("00000000-0000-4000-8000-000000000080"),
+		insertSpectacle: vi.fn().mockResolvedValue("00000000-0000-4000-8000-000000000090"),
+		savePerformance: vi.fn().mockResolvedValue([{ id: "00000000-0000-4000-8000-000000000011" }]),
+		insertRoles: vi.fn().mockResolvedValue([{ id: NEW_ROLE_ID }]),
 		upsertRoles: vi.fn().mockResolvedValue(undefined),
 		deleteRolesExcept: vi.fn().mockResolvedValue(undefined),
-		delete: vi.fn().mockResolvedValue([{ id: 10 }]),
+		delete: vi.fn().mockResolvedValue([{ id: PERFORMANCE_ID }]),
 		findSpectacleMediaKind: vi.fn().mockResolvedValue("poster"),
 		tx,
 	};
 }
 const asRepo = (r: ReturnType<typeof fakeRepo>) => r as unknown as PerformancesRepository;
+const PERFORMANCE_ID = "00000000-0000-4000-8000-000000000010";
+const PLACE_ID = "00000000-0000-4000-8000-000000000007";
+const SPECTACLE_ID = "00000000-0000-4000-8000-000000000100";
+const WORK_ID = "00000000-0000-4000-8000-000000000001";
+const MODEL_ID = "00000000-0000-4000-8000-000000000020";
+const ROLE_ID = "00000000-0000-4000-8000-000000000002";
+const NEW_ROLE_ID = "00000000-0000-4000-8000-000000000050";
+const NEW_PLACE_ID = "00000000-0000-4000-8000-000000000070";
 
 describe("PerformancesService.list", () => {
 	it("forwards the date range to the repository", async () => {
 		const repo = fakeRepo();
-		await new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).list({
+		await new PerformancesService(asRepo(repo)).list({
 			from: "2024-01-01",
 			to: "2024-12-31",
 		});
@@ -44,7 +49,7 @@ describe("PerformancesService.list", () => {
 
 	it("forwards the sort direction", async () => {
 		const repo = fakeRepo();
-		await new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).list({
+		await new PerformancesService(asRepo(repo)).list({
 			sort: ["date", "desc"],
 		});
 		expect(repo.findAllWithDetails).toHaveBeenCalledWith({ sortDirection: "desc" });
@@ -56,11 +61,7 @@ describe("PerformancesService.list", () => {
 			{ id: 1, posterId: "11111111-1111-4111-8111-111111111111" },
 			{ id: 2, posterId: null },
 		]);
-		const result = await new PerformancesService(
-			asRepo(repo),
-			{} as MediaRepository,
-			{} as MediaStorageRepository,
-		).list({});
+		const result = await new PerformancesService(asRepo(repo)).list({});
 		expect(result.map((p) => p.posterUrl)).toEqual(["/images/show/11111111-1111-4111-8111-111111111111", null]);
 	});
 });
@@ -69,67 +70,65 @@ describe("PerformancesService.get", () => {
 	it("returns the performance view with the spectacle and its models", async () => {
 		const repo = fakeRepo();
 		const spectacle = {
-			id: 100,
+			id: SPECTACLE_ID,
 			name: "Tosca",
-			workId: 1,
-			models: [{ id: 20, name: "Cast A", spectacleId: 100, roles: [] }],
+			workId: WORK_ID,
+			models: [{ id: MODEL_ID, name: "Cast A", spectacleId: SPECTACLE_ID, roles: [] }],
 		};
 		repo.findByIdWithDetails.mockResolvedValue({
-			id: 10,
+			id: PERFORMANCE_ID,
 			date: "2024-01-01",
-			spectacleId: 100,
+			spectacleId: SPECTACLE_ID,
 			spectacle,
 			placeName: "Old Bastille",
-			place: { id: 7, name: "Bastille", country: "fr" },
+			place: { id: PLACE_ID, name: "Bastille", country: "fr" },
 			posterId: "11111111-1111-4111-8111-111111111111",
 			role: [],
 		});
 
-		const result = await new PerformancesService(
-			asRepo(repo),
-			{} as MediaRepository,
-			{} as MediaStorageRepository,
-		).get(10);
+		const result = await new PerformancesService(asRepo(repo)).get(PERFORMANCE_ID);
 
 		expect(result).toMatchObject({
-			id: 10,
+			id: PERFORMANCE_ID,
 			posterUrl: "/images/show/11111111-1111-4111-8111-111111111111",
-			place: { id: 7, name: "Old Bastille", country: "fr" },
+			place: { id: PLACE_ID, name: "Old Bastille", country: "fr" },
 			roles: [],
 		});
 		expect(result?.spectacle).toEqual({
-			id: 100,
+			id: SPECTACLE_ID,
 			name: "Tosca",
-			workId: 1,
-			models: [{ id: 20, name: "Cast A", roles: [] }],
+			workId: WORK_ID,
+			models: [{ id: MODEL_ID, name: "Cast A", roles: [] }],
 		});
 	});
 
 	it("returns null for an unknown performance", async () => {
-		expect(
-			await new PerformancesService(asRepo(fakeRepo()), {} as MediaRepository, {} as MediaStorageRepository).get(
-				10,
-			),
-		).toBeNull();
+		expect(await new PerformancesService(asRepo(fakeRepo())).get(PERFORMANCE_ID)).toBeNull();
 	});
 });
 
 describe("PerformancesService.save", () => {
 	it("saves the performance directly when place and spectacle ids are already known", async () => {
 		const repo = fakeRepo();
-		await new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save(
+		await new PerformancesService(asRepo(repo)).save(
 			{
-				performance: { date: "2024-01-01", canceled: false, seat: "A1", placeId: 7, spectacleId: 100 },
+				performance: {
+					date: "2024-01-01",
+					canceled: false,
+					seat: "A1",
+					placeId: PLACE_ID,
+					spectacleId: SPECTACLE_ID,
+				},
 			} as any,
-			3,
+			PERFORMANCE_ID,
 		);
 
 		expect(repo.insertPlace).not.toHaveBeenCalled();
 		expect(repo.insertSpectacle).not.toHaveBeenCalled();
 		expect(repo.savePerformance).toHaveBeenCalledWith(
 			repo.tx,
-			3,
-			expect.objectContaining({ placeId: 7, spectacleId: 100, date: "2024-01-01" }),
+			PERFORMANCE_ID,
+			expect.objectContaining({ placeId: PLACE_ID, spectacleId: SPECTACLE_ID, date: "2024-01-01" }),
 		);
 	});
 
@@ -137,44 +136,52 @@ describe("PerformancesService.save", () => {
 		const repo = fakeRepo();
 		repo.savePerformance.mockResolvedValue([]);
 		await expect(
-			new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save(
+			new PerformancesService(asRepo(repo)).save(
 				{
-					performance: { date: "2024-01-01", placeId: 7, spectacleId: 100 },
+					performance: { date: "2024-01-01", placeId: PLACE_ID, spectacleId: SPECTACLE_ID },
 				} as any,
-				3,
+				PERFORMANCE_ID,
 			),
 		).rejects.toMatchObject({ params: { resource: "performance" } });
 	});
 
 	it("creates a place when only a place payload is given", async () => {
 		const repo = fakeRepo();
-		await new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save({
-			performance: { date: "2024-01-01", spectacleId: 100 },
+		await new PerformancesService(asRepo(repo)).save({
+			performance: { date: "2024-01-01", spectacleId: SPECTACLE_ID },
 			place: { name: "New Hall" },
 		} as any);
 
 		expect(repo.insertPlace).toHaveBeenCalledWith(repo.tx, { name: "New Hall" });
-		expect(repo.savePerformance).toHaveBeenCalledWith(repo.tx, undefined, expect.objectContaining({ placeId: 70 }));
+		expect(repo.savePerformance).toHaveBeenCalledWith(
+			repo.tx,
+			undefined,
+			expect.objectContaining({ placeId: NEW_PLACE_ID }),
+		);
 	});
 
 	it("saves a poster of kind poster from the spectacle", async () => {
 		const repo = fakeRepo();
-		await new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save(
+		await new PerformancesService(asRepo(repo)).save(
 			{
 				performance: {
 					date: "2024-01-01",
-					placeId: 7,
-					spectacleId: 100,
+					placeId: PLACE_ID,
+					spectacleId: SPECTACLE_ID,
 					posterId: "11111111-1111-4111-8111-111111111111",
 				},
 			} as any,
-			3,
+			PERFORMANCE_ID,
 		);
 
-		expect(repo.findSpectacleMediaKind).toHaveBeenCalledWith(repo.tx, 100, "11111111-1111-4111-8111-111111111111");
+		expect(repo.findSpectacleMediaKind).toHaveBeenCalledWith(
+			repo.tx,
+			SPECTACLE_ID,
+			"11111111-1111-4111-8111-111111111111",
+		);
 		expect(repo.savePerformance).toHaveBeenCalledWith(
 			repo.tx,
-			3,
+			PERFORMANCE_ID,
 			expect.objectContaining({ posterId: "11111111-1111-4111-8111-111111111111" }),
 		);
 	});
@@ -186,16 +193,16 @@ describe("PerformancesService.save", () => {
 		const repo = fakeRepo();
 		repo.findSpectacleMediaKind.mockResolvedValue(kind);
 		await expect(
-			new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save(
+			new PerformancesService(asRepo(repo)).save(
 				{
 					performance: {
 						date: "2024-01-01",
-						placeId: 7,
-						spectacleId: 100,
+						placeId: PLACE_ID,
+						spectacleId: SPECTACLE_ID,
 						posterId: "11111111-1111-4111-8111-111111111111",
 					},
 				} as any,
-				3,
+				PERFORMANCE_ID,
 			),
 		).rejects.toBeInstanceOf(BadRequestError);
 		expect(repo.savePerformance).not.toHaveBeenCalled();
@@ -203,11 +210,11 @@ describe("PerformancesService.save", () => {
 
 	it("does not check anything without a poster", async () => {
 		const repo = fakeRepo();
-		await new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).save(
+		await new PerformancesService(asRepo(repo)).save(
 			{
-				performance: { date: "2024-01-01", placeId: 7, spectacleId: 100 },
+				performance: { date: "2024-01-01", placeId: PLACE_ID, spectacleId: SPECTACLE_ID },
 			} as any,
-			3,
+			PERFORMANCE_ID,
 		);
 		expect(repo.findSpectacleMediaKind).not.toHaveBeenCalled();
 	});
@@ -217,90 +224,30 @@ describe("PerformancesService.saveCasting", () => {
 	it("inserts new roles, upserts existing ones and prunes the rest", async () => {
 		const repo = fakeRepo();
 
-		await new PerformancesService(asRepo(repo), {} as MediaRepository, {} as MediaStorageRepository).saveCasting(
-			10,
-			{
-				roles: [{ name: "New" }, { id: 2, name: "Existing" }],
-			} as any,
-		);
+		await new PerformancesService(asRepo(repo)).saveCasting(PERFORMANCE_ID, {
+			roles: [{ name: "New" }, { id: ROLE_ID, name: "Existing" }],
+		} as any);
 
-		expect(repo.insertRoles).toHaveBeenCalledWith(repo.tx, [{ name: "New", performanceId: 10 }]);
-		expect(repo.upsertRoles).toHaveBeenCalledWith(repo.tx, [{ id: 2, name: "Existing", performanceId: 10 }]);
-		expect(repo.deleteRolesExcept).toHaveBeenCalledWith(repo.tx, 10, [2], [50]);
+		expect(repo.insertRoles).toHaveBeenCalledWith(repo.tx, [{ name: "New", performanceId: PERFORMANCE_ID }]);
+		expect(repo.upsertRoles).toHaveBeenCalledWith(repo.tx, [
+			{ id: ROLE_ID, name: "Existing", performanceId: PERFORMANCE_ID },
+		]);
+		expect(repo.deleteRolesExcept).toHaveBeenCalledWith(repo.tx, PERFORMANCE_ID, [ROLE_ID], [NEW_ROLE_ID]);
 	});
 });
 
 describe("PerformancesService.delete", () => {
-	const KEY = "personal-tracker/show/media/p1.avif";
-
-	function fakeMediaRepo() {
-		return {
-			countPictureUses: vi.fn().mockResolvedValue(0),
-			deleteLink: vi.fn().mockResolvedValue([{ mediaId: "p1" }]),
-			countLinks: vi.fn().mockResolvedValue(0),
-			deleteMedia: vi.fn().mockResolvedValue([{ key: KEY }]),
-		};
-	}
-	function fakeStorage() {
-		return { deleteObject: vi.fn().mockResolvedValue(undefined) };
-	}
-	function build(pictures: { artistId: number; pictureId: string }[] = []) {
-		const repo = { ...fakeRepo(), findRolePictures: vi.fn().mockResolvedValue(pictures) };
-		const mediaRepo = fakeMediaRepo();
-		const storage = fakeStorage();
-		const service = new PerformancesService(asRepo(repo), mediaRepo as any, storage as any);
-		return { repo, mediaRepo, storage, service };
-	}
-
 	it("deletes the performance inside a transaction", async () => {
-		const { repo, mediaRepo, storage, service } = build();
-		await service.delete(10);
-		expect(repo.findRolePictures).toHaveBeenCalledWith(repo.tx, 10);
-		expect(repo.delete).toHaveBeenCalledWith(repo.tx, 10);
-		expect(mediaRepo.deleteLink).not.toHaveBeenCalled();
-		expect(storage.deleteObject).not.toHaveBeenCalled();
+		const repo = fakeRepo();
+		await new PerformancesService(asRepo(repo)).delete(PERFORMANCE_ID);
+		expect(repo.delete).toHaveBeenCalledWith(repo.tx, PERFORMANCE_ID);
 	});
 
-	it("throws a 404 when nothing was deleted, without touching the pictures", async () => {
-		const { repo, mediaRepo, storage, service } = build([{ artistId: 1, pictureId: "p1" }]);
+	it("throws a 404 when nothing was deleted", async () => {
+		const repo = fakeRepo();
 		repo.delete.mockResolvedValue([]);
-		await expect(service.delete(10)).rejects.toBeInstanceOf(NotFoundError);
-		expect(mediaRepo.countPictureUses).not.toHaveBeenCalled();
-		expect(storage.deleteObject).not.toHaveBeenCalled();
-	});
-
-	it("removes a portrait used by no one else, then its file", async () => {
-		const { repo, mediaRepo, storage, service } = build([{ artistId: 1, pictureId: "p1" }]);
-		await service.delete(10);
-		expect(mediaRepo.countPictureUses).toHaveBeenCalledWith(repo.tx, 1, "p1");
-		expect(mediaRepo.deleteLink).toHaveBeenCalledWith(repo.tx, { artistId: 1 }, "p1");
-		expect(mediaRepo.deleteMedia).toHaveBeenCalledWith(repo.tx, "p1");
-		expect(storage.deleteObject).toHaveBeenCalledWith(KEY);
-	});
-
-	it("keeps a portrait still used by another role or as the artist photo", async () => {
-		const { mediaRepo, storage, service } = build([{ artistId: 1, pictureId: "p1" }]);
-		mediaRepo.countPictureUses.mockResolvedValue(1);
-		await service.delete(10);
-		expect(mediaRepo.deleteLink).not.toHaveBeenCalled();
-		expect(storage.deleteObject).not.toHaveBeenCalled();
-	});
-
-	it("keeps the media and its file while another gallery still links it", async () => {
-		const { mediaRepo, storage, service } = build([{ artistId: 1, pictureId: "p1" }]);
-		mediaRepo.countLinks.mockResolvedValue(1);
-		await service.delete(10);
-		expect(mediaRepo.deleteLink).toHaveBeenCalled();
-		expect(mediaRepo.deleteMedia).not.toHaveBeenCalled();
-		expect(storage.deleteObject).not.toHaveBeenCalled();
-	});
-
-	it("only logs a failed S3 delete", async () => {
-		const { storage, service } = build([{ artistId: 1, pictureId: "p1" }]);
-		storage.deleteObject.mockRejectedValue(new Error("S3 down"));
-		const warn = vi.spyOn(Logger.prototype, "warn").mockImplementation(() => {});
-		await service.delete(10);
-		expect(warn).toHaveBeenCalled();
-		warn.mockRestore();
+		await expect(new PerformancesService(asRepo(repo)).delete(PERFORMANCE_ID)).rejects.toBeInstanceOf(
+			NotFoundError,
+		);
 	});
 });

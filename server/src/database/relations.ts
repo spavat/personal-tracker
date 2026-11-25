@@ -75,12 +75,15 @@ export const relations = defineRelations(schema, (r) => ({
 			to: r.moneyTag.id.through(r.moneyTransactionTag.tagId),
 		}),
 	},
-	showArtist: {
-		role: r.many.showRole(),
-		mediaLinks: r.many.showArtistMedia(),
-		picture: r.one.showMedia({
-			from: r.showArtist.pictureId,
-			to: r.showMedia.id,
+	// the show credits of an entity (the artist pages)
+	coreEntity: {
+		showRoles: r.many.showRole({
+			from: r.coreEntity.id,
+			to: r.showRole.entityId,
+		}),
+		showModelRoles: r.many.showModelRole({
+			from: r.coreEntity.id,
+			to: r.showModelRole.entityId,
 		}),
 	},
 	showModel: {
@@ -95,13 +98,9 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.showModelRole.modelId,
 			to: r.showModel.id,
 		}),
-		artist: r.one.showArtist({
-			from: r.showModelRole.artistId,
-			to: r.showArtist.id,
-		}),
-		picture: r.one.showMedia({
-			from: r.showModelRole.pictureId,
-			to: r.showMedia.id,
+		entity: r.one.coreEntity({
+			from: r.showModelRole.entityId,
+			to: r.coreEntity.id,
 		}),
 	},
 	showPlace: {
@@ -148,13 +147,9 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.showRole.performanceId,
 			to: r.showPerformance.id,
 		}),
-		artist: r.one.showArtist({
-			from: r.showRole.artistId,
-			to: r.showArtist.id,
-		}),
-		picture: r.one.showMedia({
-			from: r.showRole.pictureId,
-			to: r.showMedia.id,
+		entity: r.one.coreEntity({
+			from: r.showRole.entityId,
+			to: r.coreEntity.id,
 		}),
 	},
 	showWork: {
@@ -168,20 +163,6 @@ export const relations = defineRelations(schema, (r) => ({
 		media: r.one.showMedia({
 			from: r.showSpectacleMedia.mediaId,
 			to: r.showMedia.id,
-		}),
-	},
-	showArtistMedia: {
-		artist: r.one.showArtist({
-			from: r.showArtistMedia.artistId,
-			to: r.showArtist.id,
-		}),
-		media: r.one.showMedia({
-			from: r.showArtistMedia.mediaId,
-			to: r.showMedia.id,
-		}),
-		spectacle: r.one.showSpectacle({
-			from: r.showArtistMedia.spectacleId,
-			to: r.showSpectacle.id,
 		}),
 	},
 	readingBook: {

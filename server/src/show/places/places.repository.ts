@@ -6,7 +6,8 @@ import type { SavePlaceBody } from "./place.entity.js";
 import { contains } from "../../database/contains.query.js";
 import { DRIZZLE } from "../../database/database.tokens.js";
 import { Drizzle } from "../../database/drizzle.js";
-import { showPerformance, showPlace, showPlaceFormerName } from "../../database/schema.js";
+import { createNode, renameNode } from "../../database/node.query.js";
+import { coreNode, showPerformance, showPlace, showPlaceFormerName } from "../../database/schema.js";
 import { visiblePerformanceDate, visiblePerformanceWhere } from "../performances/visible-performance.query.js";
 
 // Name of the place at the time of the performance:
@@ -48,22 +49,25 @@ export class PlacesRepository {
 			sortValue = colNbSpectacles;
 		}
 
-		return this.db
-			.select({
-				...getColumns(showPlace),
-				nbPerformances: colNbPerformances.as("nbPerformances"),
-				nbSpectacles: colNbSpectacles.as("nbSpectacles"),
-			})
-			.from(showPlace)
-			.leftJoin(
-				showPerformance,
-				and(eq(showPerformance.placeId, showPlace.id), visiblePerformanceDate(showPerformance.date)),
-			)
-			.groupBy(showPlace.id)
-			.orderBy(sortFn(sql`${sortValue}`));
+		return (
+			this.db
+				.select({
+					...getColumns(showPlace),
+					nbPerformances: colNbPerformances.as("nbPerformances"),
+					nbSpectacles: colNbSpectacles.as("nbSpectacles"),
+				})
+				.from(showPlace)
+				.leftJoin(
+					showPerformance,
+					and(eq(showPerformance.placeId, showPlace.id), visiblePerformanceDate(showPerformance.date)),
+				)
+				.groupBy(showPlace.id)
+				// ties by name: uuids give no creation order
+				.orderBy(sortFn(sql`${sortValue}`), asc(showPlace.name))
+		);
 	}
 
-	findByIdWithPerformances(placeId: number) {
+	findByIdWithPerformances(placeId: string) {
 		return this.db.query.showPlace.findFirst({
 			where: { id: placeId },
 			with: {
@@ -102,12 +106,19 @@ export class PlacesRepository {
 		});
 	}
 
-	save({ formerNames, ...data }: SavePlaceBody) {
-		// undefined when updating an unknown id
+	save({ formerNames, id, ...data }: SavePlaceBody) {
 		return this.db.transaction(async (tx) => {
-			const [place] = data.id
-				? await tx.update(showPlace).set(data).where(eq(showPlace.id, data.id)).returning()
-				: await tx.insert(showPlace).values(data).returning();
+			let place;
+			if (id) {
+				[place] = await tx.update(showPlace).set(data).where(eq(showPlace.id, id)).returning();
+				if (place) await renameNode(tx, id, place.name);
+			} else {
+				const nodeId = await createNode(tx, { type: "show_place", label: data.name });
+				[place] = await tx
+					.insert(showPlace)
+					.values({ ...data, id: nodeId })
+					.returning();
+			}
 			if (!place) {
 				return undefined;
 			}
@@ -123,8 +134,11 @@ export class PlacesRepository {
 		});
 	}
 
-	// false for an unknown id
-	async delete(id: number) {
-		return (await this.db.delete(showPlace).where(eq(showPlace.id, id)).returning({ id: showPlace.id })).length > 0;
+	async delete(id: string) {
+		const deleted = await this.db
+			.delete(coreNode)
+			.where(and(eq(coreNode.id, id), eq(coreNode.type, "show_place")))
+			.returning({ id: coreNode.id });
+		return deleted.length > 0;
 	}
 }

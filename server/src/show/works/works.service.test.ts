@@ -14,6 +14,7 @@ function fakeRepo() {
 	};
 }
 const asRepo = (r: ReturnType<typeof fakeRepo>) => r as unknown as WorksRepository;
+const WORK_ID = "00000000-0000-4000-8000-000000000004";
 
 describe("WorksService", () => {
 	it("list returns the repository list", async () => {
@@ -66,8 +67,8 @@ describe("WorksService", () => {
 
 	it("get delegates to findByIdWithSpectacles", () => {
 		const repo = fakeRepo();
-		new WorksService(asRepo(repo)).get(4);
-		expect(repo.findByIdWithSpectacles).toHaveBeenCalledWith(4);
+		new WorksService(asRepo(repo)).get(WORK_ID);
+		expect(repo.findByIdWithSpectacles).toHaveBeenCalledWith(WORK_ID);
 	});
 
 	it("save returns the saved work, delete persists", async () => {
@@ -78,7 +79,7 @@ describe("WorksService", () => {
 			name: "Tosca",
 		});
 		expect(repo.save).toHaveBeenCalledWith({ name: "Tosca" });
-		await new WorksService(asRepo(repo)).delete(4);
-		expect(repo.delete).toHaveBeenCalledWith(4);
+		await new WorksService(asRepo(repo)).delete(WORK_ID);
+		expect(repo.delete).toHaveBeenCalledWith(WORK_ID);
 	});
 });

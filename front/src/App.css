@@ -782,16 +782,7 @@
 	}
 
 	/* TABLE */
-	.game .list,
-	.reading-book .list,
-	.reading-manga .list,
-	.broadcast .list,
-	.music .list,
-	.sport .list,
-	.shows .list,
-	.money .list,
-	.context-tags .list,
-	.lifespan .list {
+	.list {
 		background-color: var(--secondary-background);
 		border-collapse: collapse;
 		color: var(--main-color);
@@ -1322,6 +1313,25 @@
 		input[type="file"] {
 			display: none;
 		}
+	}
+
+	/* PortraitField (components/PortraitField.tsx): the portrait's preview left of the drop zone that replaces it */
+	.portrait-input {
+		display: flex;
+		gap: 12px;
+		align-items: center;
+		margin-bottom: 8px;
+		.image-drop-zone {
+			flex: 1;
+			margin-bottom: 0;
+		}
+	}
+	.portrait-preview {
+		width: 120px;
+		aspect-ratio: 1;
+		object-fit: cover;
+		border-radius: 50%;
+		flex-shrink: 0;
 	}
 
 	/* ImageCropper (components/ImageCropper.tsx) */

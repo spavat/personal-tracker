@@ -11,11 +11,9 @@ import { BadRequestError, ConflictError } from "../../common/errors.js";
 import { MediaStorageRepository } from "./media-storage.repository.js";
 import {
 	imageKindFor,
-	isArtistOwner,
 	mediaKey,
 	mediaUrl,
 	sortByMediaOrder,
-	toArtistMedia,
 	toSpectacleMedia,
 	type MediaOwner,
 } from "./media.entity.js";
@@ -41,9 +39,7 @@ export class MediaService {
 
 	async list(owner: MediaOwner, kind: SpectacleMediaKind | undefined) {
 		this.logger.log("list");
-		return isArtistOwner(owner)
-			? sortByMediaOrder(await this.repo.findArtistMedia(owner.artistId)).map(toArtistMedia)
-			: sortByMediaOrder(await this.repo.findSpectacleMedia(owner.spectacleId, kind)).map(toSpectacleMedia);
+		return sortByMediaOrder(await this.repo.findSpectacleMedia(owner.spectacleId, kind)).map(toSpectacleMedia);
 	}
 
 	upload(owner: MediaOwner, data: UploadMediaBodyRequest) {
@@ -53,7 +49,7 @@ export class MediaService {
 			const [{ id }] = await this.repo.insertMedia(tx, data.label, order);
 			// link before the upload: an unknown owner fails here, without leaving an orphan file in S3
 			await this.repo.insertLink(tx, owner, id, data);
-			const file = await this.storage.uploadFromSource(mediaKey(id), data.source, imageKindFor(owner, data.kind));
+			const file = await this.storage.uploadFromSource(mediaKey(id), data.source, imageKindFor(data.kind));
 			await this.repo.setFile(tx, id, file);
 			return { id, label: data.label, contentType: file.contentType, url: mediaUrl(id) };
 		});
@@ -65,12 +61,7 @@ export class MediaService {
 			return null;
 		}
 
-		await this.repo.runInTransaction(async (tx) => {
-			await this.repo.updateLabel(tx, mediaId, data.label);
-			if (isArtistOwner(owner)) {
-				await this.repo.updateArtistLink(tx, owner.artistId, mediaId, data.spectacleId ?? null);
-			}
-		});
+		await this.repo.runInTransaction((tx) => this.repo.updateLabel(tx, mediaId, data.label));
 
 		// the updated media, as the gallery lists it
 		return (await this.list(owner, undefined)).find((media) => media.id === mediaId) ?? null;

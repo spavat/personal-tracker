@@ -7,7 +7,6 @@ import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
 import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-query";
 import { modelDetailsQuery, saveModel } from "../api";
-import CropPanel from "../components/CropPanel";
 import ModelRoleFormComponent from "../forms/ModelRoleForm";
 import { ModelForm, ModelFormSchema, onSubmitModel } from "../forms/ModelRoleForm.utils";
 
@@ -44,13 +43,13 @@ export default function ModelModalForm({
 			name: data?.name,
 			spectacleId: data?.spectacleId,
 			roles: data?.roles.map((r) => {
-				const { id, main, name, order, artistId } = r;
-				return { id, main, name, order, artistId };
+				const { id, main, name, order, entityId } = r;
+				return { id, main, name, order, entityId };
 			}),
 		};
 	} else {
 		defaultValues = {
-			spectacleId: parseInt(spectacleId ?? "0", 10),
+			spectacleId: spectacleId ?? "",
 			name: "",
 			roles: [],
 		};
@@ -84,9 +83,7 @@ export default function ModelModalForm({
 						<h2 id="dialog-title">{modelId ? "Modifier le modèle" : "Ajouter un modèle"}</h2>
 					</div>
 					<div className="dialog-body single-panel">
-						<CropPanel>
-							<ModelRoleFormComponent />
-						</CropPanel>
+						<ModelRoleFormComponent />
 					</div>
 
 					<div className="dialog-footer">

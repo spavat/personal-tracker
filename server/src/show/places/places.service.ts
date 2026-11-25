@@ -21,7 +21,7 @@ export class PlacesService {
 		return places as Array<PlaceListResponse>;
 	}
 
-	async get({ placeId, groupBySpectacle }: { placeId: number; groupBySpectacle: boolean }) {
+	async get({ placeId, groupBySpectacle }: { placeId: string; groupBySpectacle: boolean }) {
 		this.logger.log("get");
 		const placeData = await this.repo.findByIdWithPerformances(placeId);
 		if (!placeData) return null;
@@ -32,11 +32,11 @@ export class PlacesService {
 			lastPerformance: placeData?.performance?.at(-1)?.date ?? "",
 		};
 		let groups;
-		const uniqueShows = new Set<number>();
+		const uniqueShows = new Set<string>();
 		if (groupBySpectacle) {
-			const spectacles: Record<number, any> = {};
+			const spectacles: Record<string, any> = {};
 			placeData?.performance?.forEach((perf) => {
-				const spectacleId = perf.spectacleId ?? 0;
+				const spectacleId = perf.spectacleId;
 				if (!perf.canceled) {
 					uniqueShows.add(perf.spectacleId);
 				}
@@ -82,7 +82,7 @@ export class PlacesService {
 		return (await this.repo.save(data)) ?? null;
 	}
 
-	async delete(id: number) {
+	async delete(id: string) {
 		this.logger.log("delete");
 		if (!(await this.repo.delete(id))) {
 			throw new NotFoundError("place");

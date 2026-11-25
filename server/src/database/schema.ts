@@ -83,26 +83,10 @@ export const moneyPaymentType = money.table(
 	(table) => [index().on(table.accountId)],
 );
 
-export const showArtist = show.table(
-	"artist",
-	{
-		id: integer().primaryKey().generatedByDefaultAsIdentity(),
-		name: varchar({ length: 100 }),
-		pictureId: uuid(),
-	},
-	(table) => [
-		foreignKey({
-			name: "artist_main_picture_fkey",
-			columns: [table.id, table.pictureId],
-			foreignColumns: [showArtistMedia.artistId, showArtistMedia.mediaId],
-		}),
-	],
-);
-
 export const showModel = show.table("model", {
-	id: integer().primaryKey().generatedByDefaultAsIdentity(),
+	id: uuid().primaryKey().defaultRandom(),
 	name: varchar({ length: 100 }).notNull(),
-	spectacleId: integer()
+	spectacleId: uuid()
 		.notNull()
 		.references(() => showSpectacle.id),
 });
@@ -110,23 +94,15 @@ export const showModel = show.table("model", {
 export const showModelRole = show.table(
 	"model_role",
 	{
-		id: integer().primaryKey().generatedByDefaultAsIdentity(),
+		id: uuid().primaryKey().defaultRandom(),
 		name: varchar({ length: 100 }),
 		main: boolean(),
-		artistId: integer().references(() => showArtist.id),
-		modelId: integer().references(() => showModel.id),
+		// the artist: a person entity (none yet: a role still to cast)
+		entityId: uuid().references(() => coreEntity.id),
+		modelId: uuid().references(() => showModel.id),
 		order: integer(),
-		pictureId: uuid(),
 	},
-	(table) => [
-		index().on(table.artistId),
-		index().on(table.modelId),
-		foreignKey({
-			name: "model_role_picture_fkey",
-			columns: [table.artistId, table.pictureId],
-			foreignColumns: [showArtistMedia.artistId, showArtistMedia.mediaId],
-		}),
-	],
+	(table) => [index().on(table.entityId), index().on(table.modelId)],
 );
 
 export const showCastingStatus = show.enum("casting_status", ["tbd", "unknown", "partial", "complete"]);
@@ -135,10 +111,10 @@ export const showCastingOrigin = show.enum("casting_origin", ["na", "program", "
 export const showPerformance = show.table(
 	"performance",
 	{
-		id: integer().primaryKey().generatedByDefaultAsIdentity(),
+		id: uuid().primaryKey().defaultRandom(),
 		date: localTimestamp().notNull(),
-		placeId: integer().references(() => showPlace.id),
-		spectacleId: integer()
+		placeId: uuid().references(() => showPlace.id),
+		spectacleId: uuid()
 			.notNull()
 			.references(() => showSpectacle.id),
 		canceled: boolean().default(false).notNull(),
@@ -159,7 +135,9 @@ export const showPerformance = show.table(
 );
 
 export const showPlace = show.table("place", {
-	id: integer().primaryKey().generatedByDefaultAsIdentity(),
+	id: uuid()
+		.primaryKey()
+		.references(() => coreNode.id, { onDelete: "cascade" }),
 	name: varchar({ length: 100 }).notNull(),
 	address: text().notNull(),
 	country: varchar({ length: 2 }).notNull(),
@@ -169,8 +147,8 @@ export const showPlace = show.table("place", {
 export const showPlaceFormerName = show.table(
 	"place_former_name",
 	{
-		id: integer().primaryKey().generatedByDefaultAsIdentity(),
-		placeId: integer()
+		id: uuid().primaryKey().defaultRandom(),
+		placeId: uuid()
 			.notNull()
 			.references(() => showPlace.id, { onDelete: "cascade" }),
 		name: varchar({ length: 100 }).notNull(),
@@ -182,30 +160,26 @@ export const showPlaceFormerName = show.table(
 export const showRole = show.table(
 	"role",
 	{
-		id: integer().primaryKey().generatedByDefaultAsIdentity(),
-		artistId: integer().references(() => showArtist.id),
-		performanceId: integer().references(() => showPerformance.id),
+		id: uuid().primaryKey().defaultRandom(),
+		// the artist: a person entity
+		entityId: uuid().references(() => coreEntity.id),
+		performanceId: uuid().references(() => showPerformance.id),
 		name: varchar({ length: 100 }),
 		status: varchar({ length: 45 }),
 		main: boolean().default(false),
 		order: integer(),
-		pictureId: uuid(),
 	},
-	(table) => [
-		foreignKey({
-			name: "role_picture_fkey",
-			columns: [table.artistId, table.pictureId],
-			foreignColumns: [showArtistMedia.artistId, showArtistMedia.mediaId],
-		}),
-	],
+	(table) => [index().on(table.entityId)],
 );
 
 export const showSpectacle = show.table(
 	"spectacle",
 	{
-		id: integer().primaryKey().generatedByDefaultAsIdentity(),
+		id: uuid()
+			.primaryKey()
+			.references(() => coreNode.id, { onDelete: "cascade" }),
 		name: varchar({ length: 100 }).notNull(),
-		workId: integer()
+		workId: uuid()
 			.notNull()
 			.references(() => showWork.id),
 		description: text(),
@@ -218,7 +192,9 @@ export const showSpectacle = show.table(
 );
 
 export const showWork = show.table("work", {
-	id: integer().primaryKey().generatedByDefaultAsIdentity(),
+	id: uuid()
+		.primaryKey()
+		.references(() => coreNode.id, { onDelete: "cascade" }),
 	name: varchar({ length: 100 }).notNull(),
 });
 
@@ -238,7 +214,7 @@ export const showSpectacleMediaKind = show.enum("spectacle_media_kind", ["poster
 export const showSpectacleMedia = show.table(
 	"spectacle_media",
 	{
-		spectacleId: integer()
+		spectacleId: uuid()
 			.notNull()
 			.references(() => showSpectacle.id, { onDelete: "cascade" }),
 		mediaId: uuid()
@@ -247,22 +223,6 @@ export const showSpectacleMedia = show.table(
 		kind: showSpectacleMediaKind().default("poster").notNull(),
 	},
 	(table) => [primaryKey({ columns: [table.spectacleId, table.mediaId] }), index().on(table.mediaId)],
-);
-
-export const showArtistMedia = show.table(
-	"artist_media",
-	{
-		artistId: integer()
-			.notNull()
-			// annotated: artist.pictureId points back to this table
-			.references((): AnyPgColumn => showArtist.id, { onDelete: "cascade" }),
-		mediaId: uuid()
-			.notNull()
-			.references(() => showMedia.id, { onDelete: "cascade" }),
-		// optional context: portrait taken for a given spectacle
-		spectacleId: integer().references(() => showSpectacle.id, { onDelete: "set null" }),
-	},
-	(table) => [primaryKey({ columns: [table.artistId, table.mediaId] }), index().on(table.mediaId)],
 );
 
 export const moneyTransactionTag = money.table(
@@ -402,6 +362,9 @@ export const coreNodeType = core.enum("node_type", [
 	"book_edition",
 	"program",
 	"episode",
+	"show_work",
+	"show_spectacle",
+	"show_place",
 ]);
 
 export const coreNode = core.table("node", {

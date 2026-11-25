@@ -21,7 +21,7 @@ function performanceRows(page: Page) {
 	return page.locator("table.performances tbody tr").filter({ has: page.locator("td:nth-child(2)") });
 }
 
-async function openPlace(page: Page, place: { id: number; name: string }) {
+async function openPlace(page: Page, place: { id: string; name: string }) {
 	await page.goto(`/shows/places/${place.id}`);
 	await expect(page.getByRole("heading", { name: place.name })).toBeVisible();
 }
@@ -29,12 +29,12 @@ async function openPlace(page: Page, place: { id: number; name: string }) {
 test.describe("Shows - Places", () => {
 	test.afterEach(resetDb);
 
-	test("list shows the places sorted by number of performances", async ({ page }) => {
+	test("list shows the places sorted by number of performances, then by name", async ({ page }) => {
 		await page.goto("/shows/places");
 		await expect(placeNames(page)).toHaveText([
-			places.chatelet.name,
-			places.sondheim.name,
 			places.comedie.name,
+			places.sondheim.name,
+			places.chatelet.name,
 			places.empty.name,
 		]);
 		await expect(placeRow(page, places.sondheim.name).locator(".fi-gb")).toBeAttached();
@@ -107,11 +107,11 @@ test.describe("Shows - Places", () => {
 
 		await expect(dialog).not.toBeVisible();
 		await expect(placeNames(page)).toHaveText([
-			places.chatelet.name,
-			places.sondheim.name,
 			places.comedie.name,
-			places.empty.name,
+			places.sondheim.name,
+			places.chatelet.name,
 			"Opéra Garnier",
+			places.empty.name,
 		]);
 	});
 

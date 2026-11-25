@@ -18,7 +18,7 @@ export class ModelsController {
 
 	@Get(":id")
 	@SerializeOptions({ schema: ModelDetailsResponseSchema })
-	get(@Param({ schema: ModelDetailsParamsRequestSchema }) { id }: { id: number }) {
+	get(@Param({ schema: ModelDetailsParamsRequestSchema }) { id }: { id: string }) {
 		return orNotFound(this.service.get(id), "model");
 	}
 
@@ -32,7 +32,7 @@ export class ModelsController {
 	@Put(":id")
 	@SerializeOptions({ schema: SaveModelResponseSchema })
 	update(
-		@Param({ schema: ModelDetailsParamsRequestSchema }) { id }: { id: number },
+		@Param({ schema: ModelDetailsParamsRequestSchema }) { id }: { id: string },
 		@Body({ schema: SaveModelBodyRequestSchema }) body: z.infer<typeof SaveModelBodyRequestSchema>,
 	) {
 		return this.service.save({ ...body, id });
@@ -40,7 +40,7 @@ export class ModelsController {
 
 	@Delete(":id")
 	@HttpCode(204)
-	async delete(@Param({ schema: DeleteModelParamsRequestSchema }) { id }: { id: number }) {
+	async delete(@Param({ schema: DeleteModelParamsRequestSchema }) { id }: { id: string }) {
 		await this.service.delete(id);
 	}
 }

@@ -1,12 +1,13 @@
 import * as z from "zod";
 
 import {
-	NumberIdParamsSchema,
 	OptionalPeriodQSSchema,
 	PeriodQSSchema,
 	SearchQSSchema,
 	SortQSSchema,
+	UUIDParamsSchema,
 } from "./common.schema";
+import { EntityKindSchema } from "./entity.schema";
 
 //
 // COMMON
@@ -28,15 +29,13 @@ export const GroupedBySpectacleRequestSchema = z.object({
 // OBJECTS
 //
 export const ArtistSchema = z.object({
-	id: z.int(),
-	name: z.string().max(100).nonempty(),
-	// main photo: one of the artist's media
-	pictureId: z.uuid().nullable().optional(),
+	id: z.uuid(),
+	name: z.string().nonempty(),
 });
 export type Artist = z.infer<typeof ArtistSchema>;
 
 export const PlaceSchema = z.object({
-	id: z.int(),
+	id: z.uuid(),
 	name: z.string().max(100).nonempty(),
 	address: z.string(),
 	country: z.string(),
@@ -57,23 +56,21 @@ export const PlaceFormerNameSchema = z.object({
 export type PlaceFormerName = z.infer<typeof PlaceFormerNameSchema>;
 
 export const RoleSchema = z.object({
-	id: z.int(),
+	id: z.uuid(),
 	name: z.string(),
 	main: z.boolean(),
-	artistId: z.number().positive(),
+	entityId: z.uuid(),
 	status: z.string().nullish(),
 	order: z.number(),
-	// portrait for this role: one of the artist's media
-	pictureId: z.uuid().nullable().optional(),
 });
 
 export const PerformanceSchema = z.object({
-	id: z.int(),
+	id: z.uuid(),
 	date: z.iso.datetime({ local: true }),
 	canceled: z.boolean(),
 	seat: z.string().max(45),
-	placeId: z.int().nullish(),
-	spectacleId: z.int(),
+	placeId: z.uuid().nullish(),
+	spectacleId: z.uuid(),
 	casting_status: z.enum(["tbd", "unknown", "partial", "complete"]).default("tbd"),
 	casting_origin: z.enum(["na", "program", "performance"]).default("na"),
 	// one of the spectacle's media of kind poster
@@ -82,24 +79,22 @@ export const PerformanceSchema = z.object({
 export type Performance = z.infer<typeof PerformanceSchema>;
 
 export const RoleModelSchema = z.object({
-	id: z.int(),
+	id: z.uuid(),
 	name: z.string(),
 	main: z.boolean(),
-	artistId: z.number().optional().nullable(),
+	entityId: z.uuid().optional().nullable(),
 	order: z.number(),
-	// portrait for this role: one of the artist's media, copied to the performance roles
-	pictureId: z.uuid().nullable().optional(),
 });
 export const ModelSchema = z.object({
-	id: z.int(),
+	id: z.uuid(),
 	name: z.string().max(100).nonempty(),
-	spectacleId: z.int(),
+	spectacleId: z.uuid(),
 	roles: z.array(RoleModelSchema),
 });
 export type Model = z.infer<typeof ModelSchema>;
 
 export const WorkSchema = z.object({
-	id: z.int(),
+	id: z.uuid(),
 	name: z.string().max(100).nonempty(),
 });
 
@@ -110,9 +105,9 @@ export const SpectacleLinkSchema = z.object({
 export type SpectacleLink = z.infer<typeof SpectacleLinkSchema>;
 
 export const SpectacleSchema = z.object({
-	id: z.int(),
+	id: z.uuid(),
 	name: z.string().max(100).nonempty(),
-	workId: z.int(),
+	workId: z.uuid(),
 	description: z.string().nullable().optional(),
 	descriptionSource: z.url().nullable().optional(),
 	links: z.array(SpectacleLinkSchema).optional(),
@@ -132,13 +127,13 @@ export const ArtistRefSchema = ArtistSchema.pick({ id: true, name: true });
 export type ArtistRef = z.infer<typeof ArtistRefSchema>;
 
 export const ArtistViewSchema = ArtistSchema.extend({
-	pictureUrl: z.string().nullable(),
+	picture: z.string().nullable(),
 });
 export type ArtistView = z.infer<typeof ArtistViewSchema>;
 
-export const RoleViewSchema = RoleSchema.omit({ artistId: true }).extend({
+export const RoleViewSchema = RoleSchema.omit({ entityId: true }).extend({
 	artist: ArtistRefSchema,
-	pictureUrl: z.string().nullable(),
+	picture: z.string().nullable(),
 });
 export type RoleView = z.infer<typeof RoleViewSchema>;
 
@@ -152,7 +147,7 @@ export const PerformanceViewSchema = PerformanceSchema.omit({ placeId: true, spe
 export type PerformanceView = z.infer<typeof PerformanceViewSchema>;
 
 // a model role may have no artist yet
-export const ModelRoleViewSchema = RoleModelSchema.omit({ artistId: true }).extend({
+export const ModelRoleViewSchema = RoleModelSchema.omit({ entityId: true }).extend({
 	artist: ArtistRefSchema.nullable(),
 });
 export type ModelRoleView = z.infer<typeof ModelRoleViewSchema>;
@@ -173,7 +168,7 @@ export const PerformanceListQuerystringRequestSchema = OptionalPeriodQSSchema.ex
 //
 // Request
 export const PerformanceDetailsParamsRequestSchema = z.object({
-	performanceId: z.coerce.number(),
+	performanceId: z.uuid(),
 });
 // Response
 export const PerformanceDetailsResponseSchema = PerformanceViewSchema.extend({
@@ -184,7 +179,7 @@ export type PerformanceDetailsResponse = z.infer<typeof PerformanceDetailsRespon
 //
 // PERFORMANCE: DELETE
 //
-export const DeletePerformanceParamsRequestSchema = NumberIdParamsSchema;
+export const DeletePerformanceParamsRequestSchema = UUIDParamsSchema;
 
 const ItemOverviewSchema = z.object({
 	nbPerformances: z.number(),
@@ -218,28 +213,18 @@ export const ArtistListQuerystringRequestSchema = SortQSSchema;
 // ARTIST: DETAILS
 //
 // Request
-export const ArtistDetailsParamsRequestSchema = NumberIdParamsSchema;
+export const ArtistDetailsParamsRequestSchema = UUIDParamsSchema;
 export const ArtistDetailsQuerystringRequestSchema = GroupedBySpectacleRequestSchema;
 // Response
 export const ArtistDetailsResponseSchema = ArtistViewSchema.extend({
-	media: z.array(z.lazy(() => ArtistMediaSchema)),
+	// the entity's other fields, sent back unchanged when the artist is edited (PUT /entities/:id)
+	kind: EntityKindSchema,
+	sortName: z.string().nullable(),
 	// with the role played by the artist
 	groups: z.array(PerformanceGroupSchema(PerformanceViewSchema.extend({ role: z.string() }))),
 	stats: StatsArtistPlaceSchema,
 });
 export type ArtistDetailsResponse = z.infer<typeof ArtistDetailsResponseSchema>;
-
-//
-// ARTIST: SAVE
-//
-// Request
-export const SaveArtistBodyRequestSchema = ArtistSchema.omit({ id: true });
-export type SaveArtistBodyRequest = z.infer<typeof SaveArtistBodyRequestSchema>;
-
-//
-// ARTIST: DELETE
-//
-export const DeleteArtistParamsRequestSchema = NumberIdParamsSchema;
 
 //
 // PLACE: LIST
@@ -251,7 +236,7 @@ export const PlaceListQuerystringRequestSchema = SortQSSchema;
 // PLACE: DETAILS
 //
 // Request
-export const PlaceDetailsParamsRequestSchema = NumberIdParamsSchema;
+export const PlaceDetailsParamsRequestSchema = UUIDParamsSchema;
 export const PlaceDetailsQuerystringRequestSchema = GroupedBySpectacleRequestSchema;
 // Response
 export const PlaceDetailsResponseSchema = PlaceSchema.extend({
@@ -280,13 +265,13 @@ export const SavePlaceResponseSchema = PlaceSchema.extend({
 //
 // PLACE: DELETE
 //
-export const DeletePlaceParamsRequestSchema = NumberIdParamsSchema;
+export const DeletePlaceParamsRequestSchema = UUIDParamsSchema;
 
 //
 // MODEL: DETAILS
 //
 // Request
-export const ModelDetailsParamsRequestSchema = NumberIdParamsSchema;
+export const ModelDetailsParamsRequestSchema = UUIDParamsSchema;
 // Response
 export const ModelDetailsResponseSchema = ModelSchema.extend({
 	spectacle: SpectacleSchema,
@@ -297,13 +282,7 @@ export type ModelDetailsResponse = z.infer<typeof ModelDetailsResponseSchema>;
 //
 // Request
 export const SaveModelBodyRequestSchema = ModelSchema.omit({ id: true }).extend({
-	roles: z
-		.array(
-			RoleModelSchema.partial({ id: true }).extend({
-				artist: z.string().optional(),
-			}),
-		)
-		.nonempty(),
+	roles: z.array(RoleModelSchema.partial({ id: true })).nonempty(),
 });
 export type SaveModelBodyRequest = z.infer<typeof SaveModelBodyRequestSchema>;
 // Response (without the roles: the front reloads the model)
@@ -312,7 +291,7 @@ export const SaveModelResponseSchema = ModelSchema.omit({ roles: true });
 //
 // MODEL: DELETE
 //
-export const DeleteModelParamsRequestSchema = NumberIdParamsSchema;
+export const DeleteModelParamsRequestSchema = UUIDParamsSchema;
 
 //
 // CASTING
@@ -373,7 +352,7 @@ export type WorkGroupedListResponse = z.infer<typeof WorkGroupedListResponseSche
 // WORK: DETAILS
 //
 // Request
-export const WorkDetailsParamsRequestSchema = NumberIdParamsSchema;
+export const WorkDetailsParamsRequestSchema = UUIDParamsSchema;
 // Response
 export const WorkDetailsResponseSchema = WorkSchema.extend({
 	spectacles: z.array(SpectacleSchema),
@@ -388,7 +367,7 @@ export const SaveWorkBodyRequestSchema = WorkSchema.omit({ id: true });
 //
 // WORK: DELETE
 //
-export const DeleteWorkParamsRequestSchema = NumberIdParamsSchema;
+export const DeleteWorkParamsRequestSchema = UUIDParamsSchema;
 
 //
 // SPECTACLE: LIST
@@ -413,7 +392,7 @@ export type SpectacleGroupedListResponse = z.infer<typeof SpectacleGroupedListRe
 // SPECTACLE: DETAILS
 //
 // Request
-export const SpectacleDetailsParamsRequestSchema = NumberIdParamsSchema;
+export const SpectacleDetailsParamsRequestSchema = UUIDParamsSchema;
 // Response
 export const SpectacleDetailsResponseSchema = SpectacleSchema.omit({ models: true }).extend({
 	performances: z.array(PerformanceViewSchema),
@@ -502,21 +481,11 @@ export const SpectacleMediaSchema = MediaSchema.extend({
 	kind: SpectacleMediaKindSchema,
 });
 export type SpectacleMedia = z.infer<typeof SpectacleMediaSchema>;
-export const ArtistMediaSchema = MediaSchema.extend({
-	spectacleId: z.number().nullable(),
-});
-export type ArtistMedia = z.infer<typeof ArtistMediaSchema>;
 // Request
 export const SpectacleMediaParamsRequestSchema = z.object({
-	spectacleId: z.coerce.number(),
+	spectacleId: z.uuid(),
 });
 export const SpectacleMediaIdParamsRequestSchema = SpectacleMediaParamsRequestSchema.extend({
-	mediaId: z.uuid(),
-});
-export const ArtistMediaParamsRequestSchema = z.object({
-	artistId: z.coerce.number(),
-});
-export const ArtistMediaIdParamsRequestSchema = ArtistMediaParamsRequestSchema.extend({
 	mediaId: z.uuid(),
 });
 export const SpectacleMediaListQuerystringRequestSchema = z.object({
@@ -524,13 +493,11 @@ export const SpectacleMediaListQuerystringRequestSchema = z.object({
 });
 const MediaFieldsSchema = z.object({
 	label: z.string().max(100).default(""),
-	// only for artist media: the spectacle the portrait was taken for
-	spectacleId: z.number().nullable().optional(),
 });
 // source: data URI or remote URL of an image (stored as AVIF) or a PDF (stored as-is)
 export const UploadMediaBodyRequestSchema = MediaFieldsSchema.extend({
 	source: z.string().min(1),
-	// only for spectacle media; recordings go through a signed direct upload (not available yet)
+	// recordings go through a signed direct upload (not available yet)
 	kind: SpectacleMediaKindSchema.exclude(["recording"]).default("poster"),
 });
 export type UploadMediaBodyRequest = z.infer<typeof UploadMediaBodyRequestSchema>;
@@ -551,7 +518,7 @@ export const SearchQuerystringRequestSchema = SearchQSSchema;
 export const SearchResponseSchema = z.array(
 	z.object({
 		type: z.enum(["spectacle", "artist", "place"]),
-		id: z.int(),
+		id: z.uuid(),
 		name: z.string(),
 		// the number of performances (spectacles, artists)
 		description: z.string().optional(),
@@ -582,7 +549,7 @@ export const GetReportResponseSchema = z.object({
 	}),
 	periodList: z.array(
 		z.object({
-			id: z.number(),
+			id: z.uuid(),
 			rank: z.number(),
 			name: z.string(),
 			isNew: z.boolean(),
@@ -591,7 +558,7 @@ export const GetReportResponseSchema = z.object({
 	),
 	totalList: z.array(
 		z.object({
-			id: z.number(),
+			id: z.uuid(),
 			rank: z.number(),
 			move: z.enum(["up", "down", ""]),
 			name: z.string(),

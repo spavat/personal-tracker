@@ -10,7 +10,7 @@ export class ModelsService {
 
 	constructor(private readonly repo: ModelsRepository) {}
 
-	get(id: number) {
+	get(id: string) {
 		this.logger.log("get");
 		return this.repo.findByIdWithDetails(id);
 	}
@@ -39,22 +39,13 @@ export class ModelsService {
 		});
 	}
 
-	private async processRoleModel(tx: any, roles: SaveModelBody["roles"], modelId: number) {
+	private async processRoleModel(tx: any, roles: SaveModelBody["roles"], modelId: string) {
 		for (const role of roles) {
-			let artistId = null;
-			if (role.artistId) {
-				// artist exist
-				artistId = role.artistId;
-			} else if (role.artist) {
-				// new artist
-				const [newArtistId] = await this.repo.insertArtist(tx, role.artist);
-				artistId = newArtistId.id;
-			}
-			await this.repo.insertModelRole(tx, { ...role, artistId, modelId });
+			await this.repo.insertModelRole(tx, { ...role, entityId: role.entityId ?? null, modelId });
 		}
 	}
 
-	async delete(id: number) {
+	async delete(id: string) {
 		this.logger.log("delete");
 		await this.repo.runInTransaction(async (tx) => {
 			await this.repo.deleteModelRoles(tx, id);

@@ -2,9 +2,6 @@ import type { z } from "zod";
 
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, SerializeOptions } from "@nestjs/common";
 import {
-	ArtistMediaIdParamsRequestSchema,
-	ArtistMediaParamsRequestSchema,
-	ArtistMediaSchema,
 	MediaSchema,
 	ReorderMediaBodyRequestSchema,
 	SpectacleMediaIdParamsRequestSchema,
@@ -26,7 +23,7 @@ type Update = z.infer<typeof UpdateMediaBodyRequestSchema>;
 type Reorder = z.infer<typeof ReorderMediaBodyRequestSchema>;
 
 // Files can be sent as base64 data URIs: within the 15mb JSON limit (body-parsers.ts).
-// The spectacle (poster, photo, programme) and artist (portraits) routes share the same service methods.
+// The spectacle media: posters, photos, programmes.
 @Controller()
 export class MediaController {
 	constructor(private readonly service: MediaService) {}
@@ -37,7 +34,7 @@ export class MediaController {
 	@Public()
 	@SerializeOptions({ schema: SpectacleMediaSchema })
 	listSpectacle(
-		@Param({ schema: SpectacleMediaParamsRequestSchema }) { spectacleId }: { spectacleId: number },
+		@Param({ schema: SpectacleMediaParamsRequestSchema }) { spectacleId }: { spectacleId: string },
 		@Query({ schema: SpectacleMediaListQuerystringRequestSchema })
 		{ kind }: z.infer<typeof SpectacleMediaListQuerystringRequestSchema>,
 	) {
@@ -48,7 +45,7 @@ export class MediaController {
 	@HttpCode(201)
 	@SerializeOptions({ schema: MediaSchema })
 	uploadSpectacle(
-		@Param({ schema: SpectacleMediaParamsRequestSchema }) { spectacleId }: { spectacleId: number },
+		@Param({ schema: SpectacleMediaParamsRequestSchema }) { spectacleId }: { spectacleId: string },
 		@Body({ schema: UploadMediaBodyRequestSchema }) body: Upload,
 	) {
 		return this.service.upload({ spectacleId }, body);
@@ -57,7 +54,7 @@ export class MediaController {
 	@Put("spectacles/:spectacleId/order")
 	@HttpCode(204)
 	async reorderSpectacle(
-		@Param({ schema: SpectacleMediaParamsRequestSchema }) { spectacleId }: { spectacleId: number },
+		@Param({ schema: SpectacleMediaParamsRequestSchema }) { spectacleId }: { spectacleId: string },
 		@Body({ schema: ReorderMediaBodyRequestSchema }) body: Reorder,
 	) {
 		await this.service.reorder({ spectacleId }, body);
@@ -69,7 +66,7 @@ export class MediaController {
 		@Param({ schema: SpectacleMediaIdParamsRequestSchema }) {
 			spectacleId,
 			mediaId,
-		}: { spectacleId: number; mediaId: string },
+		}: { spectacleId: string; mediaId: string },
 		@Body({ schema: UpdateMediaBodyRequestSchema }) body: Update,
 	) {
 		return this.update({ spectacleId }, mediaId, body);
@@ -82,65 +79,11 @@ export class MediaController {
 			spectacleId,
 			mediaId,
 		}: {
-			spectacleId: number;
+			spectacleId: string;
 			mediaId: string;
 		},
 	) {
 		return this.delete({ spectacleId }, mediaId);
-	}
-
-	// --- artist ---
-
-	@Get("artists/:artistId")
-	@Public()
-	@SerializeOptions({ schema: ArtistMediaSchema })
-	listArtist(@Param({ schema: ArtistMediaParamsRequestSchema }) { artistId }: { artistId: number }) {
-		return this.service.list({ artistId }, undefined);
-	}
-
-	@Post("artists/:artistId")
-	@HttpCode(201)
-	@SerializeOptions({ schema: MediaSchema })
-	uploadArtist(
-		@Param({ schema: ArtistMediaParamsRequestSchema }) { artistId }: { artistId: number },
-		@Body({ schema: UploadMediaBodyRequestSchema }) body: Upload,
-	) {
-		return this.service.upload({ artistId }, body);
-	}
-
-	@Put("artists/:artistId/order")
-	@HttpCode(204)
-	async reorderArtist(
-		@Param({ schema: ArtistMediaParamsRequestSchema }) { artistId }: { artistId: number },
-		@Body({ schema: ReorderMediaBodyRequestSchema }) body: Reorder,
-	) {
-		await this.service.reorder({ artistId }, body);
-	}
-
-	@Put("artists/:artistId/:mediaId")
-	@SerializeOptions({ schema: ArtistMediaSchema })
-	updateArtist(
-		@Param({ schema: ArtistMediaIdParamsRequestSchema }) {
-			artistId,
-			mediaId,
-		}: { artistId: number; mediaId: string },
-		@Body({ schema: UpdateMediaBodyRequestSchema }) body: Update,
-	) {
-		return this.update({ artistId }, mediaId, body);
-	}
-
-	@Delete("artists/:artistId/:mediaId")
-	@HttpCode(204)
-	deleteArtist(
-		@Param({ schema: ArtistMediaIdParamsRequestSchema }) {
-			artistId,
-			mediaId,
-		}: {
-			artistId: number;
-			mediaId: string;
-		},
-	) {
-		return this.delete({ artistId }, mediaId);
 	}
 
 	private async update(owner: MediaOwner, mediaId: string, body: Update) {

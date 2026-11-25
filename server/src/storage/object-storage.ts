@@ -1,4 +1,10 @@
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+	DeleteObjectCommand,
+	GetObjectCommand,
+	ListObjectsV2Command,
+	PutObjectCommand,
+	S3Client,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Inject, Injectable } from "@nestjs/common";
 
@@ -24,6 +30,20 @@ export class ObjectStorage {
 
 	delete(key: string) {
 		return this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
+	}
+
+	// Every key under the prefix (S3 answers them by pages of 1000)
+	async list(prefix: string) {
+		const keys: string[] = [];
+		let token: string | undefined;
+		do {
+			const page = await this.client.send(
+				new ListObjectsV2Command({ Bucket: this.bucket, Prefix: prefix, ContinuationToken: token }),
+			);
+			keys.push(...(page.Contents ?? []).flatMap(({ Key }) => (Key ? [Key] : [])));
+			token = page.NextContinuationToken;
+		} while (token);
+		return keys;
 	}
 
 	// A short-lived URL downloading the object as `filename`

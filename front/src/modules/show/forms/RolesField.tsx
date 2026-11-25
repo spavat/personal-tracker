@@ -12,7 +12,7 @@ import {
 	useWatch,
 } from "react-hook-form";
 
-import ArtistSearchSelect from "../components/ArtistSearchSelect";
+import EntitySearchSelect from "../../../components/EntitySearchSelect";
 import DraggableItemRow from "./DraggableItemRow";
 
 interface RolesFieldProps<T extends FieldValues> {
@@ -21,17 +21,9 @@ interface RolesFieldProps<T extends FieldValues> {
 	setValue: UseFormSetValue<T>;
 	name: ArrayPath<T>;
 	variant: "model" | "cast";
-	spectacleId?: number;
 }
 
-export function RolesField<T extends FieldValues>({
-	control,
-	register,
-	setValue,
-	name,
-	variant,
-	spectacleId,
-}: RolesFieldProps<T>) {
+export function RolesField<T extends FieldValues>({ control, register, setValue, name, variant }: RolesFieldProps<T>) {
 	const { fields, append, remove, move } = useFieldArray({ control, name });
 
 	const {
@@ -42,17 +34,17 @@ export function RolesField<T extends FieldValues>({
 		handleSubmit: handleSubmitTemp,
 	} = useForm();
 
-	const tempArtistId = useWatch({ control: controlTemp, name: "artistId" });
+	const tempEntityId = useWatch({ control: controlTemp, name: "entityId" });
 
 	const addModelRole = handleSubmitTemp((values) => {
-		if (values.role && (values.artistId || variant === "model")) {
+		if (values.role && (values.entityId || variant === "model")) {
 			append({
 				order: 0,
 				name: values.role,
 				main: values.main,
-				artistId: values.artistId,
+				entityId: values.entityId,
 			} as any);
-			setValueTemp("artistId", 0);
+			setValueTemp("entityId", null);
 			setValueTemp("role", "");
 		}
 	});
@@ -66,7 +58,6 @@ export function RolesField<T extends FieldValues>({
 						<th>Rôle</th>
 						<th>Principal</th>
 						<th>Artiste</th>
-						<th>Portrait</th>
 						{variant === "cast" && <th>Statut</th>}
 						<th>Actions</th>
 						<th></th>
@@ -94,12 +85,11 @@ export function RolesField<T extends FieldValues>({
 								name={`${name}.${index}` as Path<T>}
 								onRemove={() => remove(index)}
 								variant={variant}
-								spectacleId={spectacleId}
 							/>
 						))}
 						{fields.length === 0 && (
 							<tr>
-								<td className="empty-table" colSpan={variant === "cast" ? 8 : 7}>
+								<td className="empty-table" colSpan={variant === "cast" ? 7 : 6}>
 									Aucun rôle enregistré
 								</td>
 							</tr>
@@ -125,12 +115,13 @@ export function RolesField<T extends FieldValues>({
 							<input type="checkbox" {...registerTemp("main")} />
 						</td>
 						<td>
-							<ArtistSearchSelect
-								value={tempArtistId}
-								onChange={(artistId: number) => setValueTemp("artistId", artistId)}
+							<EntitySearchSelect
+								kind="person"
+								value={tempEntityId}
+								onChange={(id) => setValueTemp("entityId", id)}
+								aria-label="Artiste du nouveau rôle"
 							/>
 						</td>
-						<td></td>
 						{variant === "cast" && <td></td>}
 						<td>
 							<button type="button" onClick={addModelRole}>

@@ -4,12 +4,10 @@ import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { saveEntity } from "../../../components/entity-api";
-import ImageCropper from "../../../components/ImageCropper";
-import ImageDropZone from "../../../components/ImageDropZone";
 import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
+import PortraitField from "../../../components/PortraitField";
 import { authorDetailsQuery } from "../api";
-import { coverSrc } from "../utils";
 
 type AuthorFormData = {
 	name: string;
@@ -17,15 +15,6 @@ type AuthorFormData = {
 	// the server's URL (unchanged), an image URL or a data URI (new), empty (no portrait)
 	picture: string;
 };
-
-function readFile(file: File): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onload = (e) => resolve(e.target?.result as string);
-		reader.onerror = reject;
-		reader.readAsDataURL(file);
-	});
-}
 
 export default function AuthorForm({ authorId, returnTo }: { authorId: string; returnTo: string }) {
 	const navigate = useNavigate();
@@ -43,19 +32,7 @@ export default function AuthorForm({ authorId, returnTo }: { authorId: string; r
 		defaultValues: { name: author.name, sortName: author.sortName ?? "", picture: author.picture ?? "" },
 	});
 	const picture = useWatch({ control, name: "picture" });
-	// image being cropped: blob: of a picked or pasted file, or the URL typed
-	const [cropSrc, setCropSrc] = useState<string | null>(null);
-
-	function openCropper(src: string) {
-		setCropSrc((previous) => {
-			if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous);
-			return src;
-		});
-	}
-	function closeCropper() {
-		if (cropSrc?.startsWith("blob:")) URL.revokeObjectURL(cropSrc);
-		setCropSrc(null);
-	}
+	const [isCropping, setIsCropping] = useState(false);
 
 	const saveMutation = useMutation({
 		mutationFn: (data: AuthorFormData) =>
@@ -77,11 +54,8 @@ export default function AuthorForm({ authorId, returnTo }: { authorId: string; r
 	});
 
 	function closeModal() {
-		closeCropper();
 		navigate({ to: returnTo, replace: true, resetScroll: false });
 	}
-
-	const isUrl = /^https?:\/\//.test(picture.trim());
 
 	return (
 		<form onSubmit={handleSubmit((data) => saveMutation.mutate(data))}>
@@ -117,54 +91,21 @@ export default function AuthorForm({ authorId, returnTo }: { authorId: string; r
 					</div>
 					<div className="panel">
 						<h3>Portrait</h3>
-						{cropSrc ? (
-							<ImageCropper
-								src={cropSrc}
-								aspect={1}
-								onCancel={closeCropper}
-								onConfirm={async (file) => {
-									setValue("picture", await readFile(file), { shouldDirty: true });
-									closeCropper();
-								}}
-							/>
-						) : (
-							<div className="form-grid">
-								<div className="form-field full-width">
-									{/* the current portrait, left of the zone that replaces it */}
-									<div className="portrait-input">
-										{picture && (
-											<img src={coverSrc(picture)} alt="Portrait" className="portrait-preview" />
-										)}
-										{/* a dropped, picked or pasted image goes straight to the cropper */}
-										<ImageDropZone onImage={(file) => openCropper(URL.createObjectURL(file))} />
-									</div>
-									<div className="full-fields-row">
-										<input
-											{...register("picture")}
-											type="text"
-											placeholder="ou https://…"
-											aria-label="URL de l'image"
-											autoComplete="off"
-											className="flex"
-										/>
-										{isUrl && (
-											<button type="button" onClick={() => openCropper(picture.trim())}>
-												Recadrer
-											</button>
-										)}
-										{picture && (
-											<button
-												type="button"
-												onClick={() => setValue("picture", "", { shouldDirty: true })}
-												title="Retirer le portrait"
-											>
-												<i className="fa-regular fa-trash-can"></i>
-											</button>
-										)}
-									</div>
-								</div>
-							</div>
-						)}
+						<PortraitField
+							value={picture}
+							onChange={(value) => setValue("picture", value, { shouldDirty: true })}
+							onCroppingChange={setIsCropping}
+							urlInput={
+								<input
+									{...register("picture")}
+									type="text"
+									placeholder="ou https://…"
+									aria-label="URL de l'image"
+									autoComplete="off"
+									className="flex"
+								/>
+							}
+						/>
 					</div>
 				</div>
 				<div className="dialog-footer">
@@ -172,7 +113,7 @@ export default function AuthorForm({ authorId, returnTo }: { authorId: string; r
 					<button type="button" onClick={closeModal}>
 						Annuler
 					</button>
-					<button type="submit" className="main" disabled={saveMutation.isPending || cropSrc !== null}>
+					<button type="submit" className="main" disabled={saveMutation.isPending || isCropping}>
 						Enregistrer
 					</button>
 				</div>

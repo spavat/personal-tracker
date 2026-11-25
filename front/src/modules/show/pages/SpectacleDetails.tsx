@@ -23,8 +23,8 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 
 	const { data: details } = useSuspenseQuery(spectacleDetailsQuery(spectacleId));
 
-	const [openedEpisodes, setOpenedEpisodes] = useState<Set<number>>(() => new Set());
-	function toggleSecondRow(id: number) {
+	const [openedEpisodes, setOpenedEpisodes] = useState<Set<string>>(() => new Set());
+	function toggleSecondRow(id: string) {
 		setOpenedEpisodes((prev) => {
 			const next = new Set(prev);
 			if (next.has(id)) {
@@ -191,9 +191,9 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 												<td colSpan={5}>
 													{(perf.roles ?? []).map((role) => (
 														<li key={role.id}>
-															{role.pictureUrl && (
+															{role.picture && (
 																<img
-																	src={mediaSrc(role.pictureUrl)}
+																	src={mediaSrc(role.picture)}
 																	alt=""
 																	className="portrait-thumb"
 																	loading="lazy"

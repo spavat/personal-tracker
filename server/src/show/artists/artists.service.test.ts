@@ -9,11 +9,10 @@ function fakeRepo() {
 		findAll: vi.fn().mockResolvedValue([]),
 		findByIdWithPerformances: vi.fn().mockResolvedValue(null),
 		findByName: vi.fn().mockResolvedValue([]),
-		save: vi.fn().mockResolvedValue(undefined),
-		delete: vi.fn().mockResolvedValue(true),
 	};
 }
 const asRepo = (r: ReturnType<typeof fakeRepo>) => r as unknown as ArtistsRepository;
+const ARTIST_ID = "00000000-0000-4000-8000-000000000001";
 
 describe("ArtistsService.list", () => {
 	it("defaults the sort to name asc", async () => {
@@ -29,56 +28,21 @@ describe("ArtistsService.list", () => {
 	});
 });
 
-describe("ArtistsService.save / delete", () => {
-	it("save persists then returns the saved artist view", async () => {
-		const repo = fakeRepo();
-		repo.save.mockResolvedValue({ id: 7, name: "Callas", pictureId: null });
-		const data = { name: "Callas" };
-		expect(await new ArtistsService(asRepo(repo)).save(data as any)).toEqual({
-			id: 7,
-			name: "Callas",
-			pictureId: null,
-			pictureUrl: null,
-		});
-		expect(repo.save).toHaveBeenCalledWith(data);
-	});
-
-	it("save returns null when updating an unknown artist", async () => {
-		const repo = fakeRepo();
-		expect(await new ArtistsService(asRepo(repo)).save({ id: 5, name: "X" })).toBeNull();
-	});
-
-	it("delete removes the artist", async () => {
-		const repo = fakeRepo();
-		await new ArtistsService(asRepo(repo)).delete(5);
-		expect(repo.delete).toHaveBeenCalledWith(5);
-	});
-});
-
 describe("ArtistsService.get", () => {
 	it("returns null when the artist is unknown", async () => {
 		const repo = fakeRepo();
-		expect(await new ArtistsService(asRepo(repo)).get({ artistId: 1, groupBySpectacle: false })).toBeNull();
+		expect(await new ArtistsService(asRepo(repo)).get({ artistId: ARTIST_ID, groupBySpectacle: false })).toBeNull();
 	});
 
 	it("flattens roles into a single performances group with stats (not grouped by spectacle)", async () => {
 		const repo = fakeRepo();
 		repo.findByIdWithPerformances.mockResolvedValue({
-			id: 1,
+			id: ARTIST_ID,
+			kind: "person",
 			name: "Callas",
-			pictureId: "22222222-2222-4222-8222-222222222222",
-			mediaLinks: [
-				{
-					spectacleId: 100,
-					media: {
-						id: "22222222-2222-4222-8222-222222222222",
-						key: "k",
-						label: "",
-						contentType: "image/avif",
-					},
-				},
-			],
-			role: [
+			sortName: null,
+			pictureKey: null,
+			showRoles: [
 				{
 					name: "Tosca",
 					performance: {
@@ -108,22 +72,17 @@ describe("ArtistsService.get", () => {
 			],
 		});
 
-		const result = (await new ArtistsService(asRepo(repo)).get({ artistId: 1, groupBySpectacle: false })) as any;
+		const result = (await new ArtistsService(asRepo(repo)).get({
+			artistId: ARTIST_ID,
+			groupBySpectacle: false,
+		})) as any;
 
 		expect(result).toMatchObject({
-			id: 1,
+			id: ARTIST_ID,
+			kind: "person",
 			name: "Callas",
-			pictureId: "22222222-2222-4222-8222-222222222222",
-			pictureUrl: "/images/show/22222222-2222-4222-8222-222222222222",
-			media: [
-				{
-					id: "22222222-2222-4222-8222-222222222222",
-					label: "",
-					contentType: "image/avif",
-					url: "/images/show/22222222-2222-4222-8222-222222222222",
-					spectacleId: 100,
-				},
-			],
+			sortName: null,
+			picture: null,
 			stats: { nbPerformances: 2, nbSpectacles: 1, lastPerformance: "2024-03-01" },
 		});
 		expect(result.groups).toHaveLength(1);

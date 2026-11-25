@@ -5,6 +5,7 @@ import { buildTestApp } from "../../test-support/test-app.js";
 import { ShowModule } from "../show.module.js";
 
 const OWNER = { user: { id: "owner" }, session: { id: "session" } };
+const WORK_ID = "00000000-0000-4000-8000-000000000004";
 
 async function buildApp(builderResult?: unknown) {
 	const { db, table } = makeFakeDrizzle({ builderResult });
@@ -31,7 +32,7 @@ describe("show/works routes", () => {
 		expect((await ctx.app.inject({ method: "GET", url: "/show/works/grouped" })).statusCode).toBe(200);
 	});
 
-	it("GET /:id rejects a non-numeric id", async () => {
+	it("GET /:id rejects an id that is not a uuid", async () => {
 		expect((await ctx.app.inject({ method: "GET", url: "/show/works/abc" })).statusCode).toBe(400);
 	});
 
@@ -39,23 +40,24 @@ describe("show/works routes", () => {
 		expect((await ctx.app.inject({ method: "POST", url: "/show/works", payload: {} })).statusCode).toBe(400);
 
 		await ctx.app.close();
-		ctx = await buildApp([{ id: 4, name: "Tosca" }]);
+		ctx = await buildApp([{ id: WORK_ID, name: "Tosca" }]);
 		const res = await ctx.app.inject({ method: "POST", url: "/show/works", payload: { name: "Tosca" } });
 		expect(res.statusCode).toBe(201);
-		expect(res.json()).toEqual({ id: 4, name: "Tosca" });
+		expect(res.json()).toEqual({ id: WORK_ID, name: "Tosca" });
 		expect(ctx.db.insert).toHaveBeenCalled();
 	});
 
 	it("PUT /:id 404s when updating an unknown work", async () => {
 		expect(
-			(await ctx.app.inject({ method: "PUT", url: "/show/works/4", payload: { name: "Tosca" } })).statusCode,
+			(await ctx.app.inject({ method: "PUT", url: `/show/works/${WORK_ID}`, payload: { name: "Tosca" } }))
+				.statusCode,
 		).toBe(404);
 	});
 
 	it("DELETE /:id answers 204", async () => {
 		await ctx.app.close();
-		ctx = await buildApp([{ id: 4 }]);
-		expect((await ctx.app.inject({ method: "DELETE", url: "/show/works/4" })).statusCode).toBe(204);
+		ctx = await buildApp([{ id: WORK_ID }]);
+		expect((await ctx.app.inject({ method: "DELETE", url: `/show/works/${WORK_ID}` })).statusCode).toBe(204);
 		expect(ctx.db.delete).toHaveBeenCalled();
 	});
 });

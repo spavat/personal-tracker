@@ -9,7 +9,7 @@ import CastingRoleFormComponent from "../forms/CastingRoleForm";
 import { CastingForm, onSubmitCasting } from "../forms/CastingRoleForm.utils";
 
 interface Inputs extends CastingForm {
-	model?: number;
+	model?: string;
 }
 
 export default function CastingModalForm({ performanceId, returnTo }: { performanceId: string; returnTo: string }) {
@@ -31,17 +31,17 @@ export default function CastingModalForm({ performanceId, returnTo }: { performa
 	let defaultValues: Inputs | null = null;
 	if (data) {
 		defaultValues = {
-			performanceId: parseInt(performanceId ?? "0"),
+			performanceId,
 			// copy: the data is shared with the performance page cache
-			roles: (data.roles ?? []).map(({ artist, pictureUrl: _pictureUrl, ...r }) => ({
+			roles: (data.roles ?? []).map(({ artist, picture: _picture, ...r }) => ({
 				...r,
-				artistId: artist.id,
+				entityId: artist.id,
 				order: 0, // Order are processed before submit
 			})),
 		};
 	} else {
 		defaultValues = {
-			performanceId: parseInt(performanceId ?? "0"),
+			performanceId,
 			roles: [],
 		};
 	}
@@ -51,7 +51,7 @@ export default function CastingModalForm({ performanceId, returnTo }: { performa
 		defaultValues: defaultValues as any,
 	});
 
-	function applyModel(modelId: number) {
+	function applyModel(modelId: string) {
 		const model = data.spectacle.models?.find((model) => model.id === modelId);
 		if (model) {
 			methods.setValue(
@@ -60,8 +60,7 @@ export default function CastingModalForm({ performanceId, returnTo }: { performa
 					order: role.order,
 					name: role.name,
 					main: role.main,
-					artistId: role.artist?.id ?? 0,
-					pictureId: role.pictureId,
+					entityId: role.artist?.id ?? "",
 				})),
 			);
 		}
@@ -100,8 +99,7 @@ export default function CastingModalForm({ performanceId, returnTo }: { performa
 								<span>
 									<select
 										{...methods.register("model", {
-											valueAsNumber: true,
-											onChange: (e) => applyModel(Number(e.target.value)),
+											onChange: (e) => applyModel(e.target.value),
 										})}
 									>
 										<option></option>
@@ -114,7 +112,7 @@ export default function CastingModalForm({ performanceId, returnTo }: { performa
 								</span>
 							</h3>
 						)}
-						<CastingRoleFormComponent spectacleId={data.spectacle.id} />
+						<CastingRoleFormComponent />
 					</div>
 
 					<div className="dialog-footer">

@@ -49,9 +49,9 @@ export default function Card({ performance }: { performance: PerformanceView }) 
 						<ul>
 							{(performance.roles ?? []).map((role) => (
 								<li key={role.id}>
-									{role.pictureUrl && (
+									{role.picture && (
 										<img
-											src={mediaSrc(role.pictureUrl)}
+											src={mediaSrc(role.picture)}
 											alt=""
 											className="portrait-thumb in-list"
 											loading="lazy"

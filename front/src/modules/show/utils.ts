@@ -36,3 +36,6 @@ export function posterRibbon({ canceled, date }: { canceled: boolean; date: stri
 	if (canceled) return "ribbon-canceled";
 	return isFutureShow(date) ? "ribbon-upcoming" : "";
 }
+
+// a <select> of ids: its empty option means no id
+export const emptyToUndefined = (value: string) => value || undefined;

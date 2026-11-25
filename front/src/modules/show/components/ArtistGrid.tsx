@@ -60,7 +60,7 @@ export default function ArtistGrid({ artists }: { artists: ArtistListResponse[] 
 					}}
 				>
 					{artists.slice(row.index * columns, (row.index + 1) * columns).map((artist) => (
-						<CardArtist key={artist.id} artist={artist} pictureUrl={artist.pictureUrl}>
+						<CardArtist key={artist.id} artist={artist} picture={artist.picture}>
 							{artist.nbSpectacles} spectacle(s) · {artist.nbPerformances} représentation(s)
 						</CardArtist>
 					))}

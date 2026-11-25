@@ -5,8 +5,7 @@ import { buildTestApp } from "../../test-support/test-app.js";
 import { ShowModule } from "../show.module.js";
 
 const OWNER = { user: { id: "owner" }, session: { id: "session" } };
-
-const callas = { id: 7, name: "Callas", pictureId: null };
+const ARTIST_ID = "00000000-0000-4000-8000-000000000005";
 
 async function buildApp(builderResult?: unknown) {
 	const { db, table } = makeFakeDrizzle({ builderResult });
@@ -30,51 +29,23 @@ describe("show/artists routes", () => {
 		expect(ctx.db.select).toHaveBeenCalled();
 	});
 
-	it("GET /:id rejects a non-numeric id", async () => {
+	it("GET /:id rejects an id that is not a uuid", async () => {
 		expect((await ctx.app.inject({ method: "GET", url: "/show/artists/abc" })).statusCode).toBe(400);
 	});
 
 	it("GET /:id 404s for an unknown artist", async () => {
-		const res = await ctx.app.inject({ method: "GET", url: "/show/artists/5" });
+		const res = await ctx.app.inject({ method: "GET", url: `/show/artists/${ARTIST_ID}` });
 		expect(res.statusCode).toBe(404);
 		expect(res.json()).toMatchObject({ statusCode: 404, code: "not_found", params: { resource: "artist" } });
-		expect(ctx.table("showArtist").findFirst).toHaveBeenCalled();
+		expect(ctx.table("coreEntity").findFirst).toHaveBeenCalled();
 	});
 
-	it("POST / rejects an empty body", async () => {
-		expect((await ctx.app.inject({ method: "POST", url: "/show/artists", payload: {} })).statusCode).toBe(400);
-	});
-
-	it("POST / creates an artist: 201 with the created artist", async () => {
-		await ctx.app.close();
-		ctx = await buildApp([callas]);
-		const res = await ctx.app.inject({ method: "POST", url: "/show/artists", payload: { name: "Callas" } });
-		expect(res.statusCode).toBe(201);
-		expect(res.json()).toEqual({ ...callas, pictureUrl: null });
-		expect(ctx.db.insert).toHaveBeenCalled();
-	});
-
-	it("PUT /:id updates an artist: 200 with the updated artist", async () => {
-		await ctx.app.close();
-		ctx = await buildApp([callas]);
-		const res = await ctx.app.inject({ method: "PUT", url: "/show/artists/7", payload: callas });
-		expect(res.statusCode).toBe(200);
-		expect(res.json()).toEqual({ ...callas, pictureUrl: null });
-		expect(ctx.db.update).toHaveBeenCalled();
-	});
-
-	it("PUT /:id 404s when updating an unknown artist", async () => {
-		const res = await ctx.app.inject({ method: "PUT", url: "/show/artists/7", payload: callas });
-		expect(res.statusCode).toBe(404);
-	});
-
-	it("DELETE /:id answers 204 without body, 404 for an unknown artist", async () => {
-		expect((await ctx.app.inject({ method: "DELETE", url: "/show/artists/5" })).statusCode).toBe(404);
-		await ctx.app.close();
-		ctx = await buildApp([{ id: 5 }]);
-		const res = await ctx.app.inject({ method: "DELETE", url: "/show/artists/5" });
-		expect(res.statusCode).toBe(204);
-		expect(res.body).toBe("");
-		expect(ctx.db.delete).toHaveBeenCalled();
+	// an artist is an entity: written through /entities
+	it.each([
+		["POST", "/show/artists"],
+		["PUT", `/show/artists/${ARTIST_ID}`],
+		["DELETE", `/show/artists/${ARTIST_ID}`],
+	] as const)("%s %s is not a route", async (method, url) => {
+		expect((await ctx.app.inject({ method, url, payload: { name: "Callas" } })).statusCode).toBe(404);
 	});
 });

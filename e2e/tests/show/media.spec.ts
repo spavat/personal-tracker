@@ -2,7 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 
 import { expect, queryDb, resetDb, SEED, test } from "../../fixtures";
 
-const { spectacles, artists, performances } = SEED.show;
+const { spectacles, performances } = SEED.show;
 
 // 2x3 red PNG: big enough for sharp, small enough to inline
 const PNG = Buffer.from(
@@ -97,74 +97,5 @@ test.describe("Shows - Media", () => {
 		await expect(page.getByText("Média utilisé")).toBeVisible();
 		await gallery(page).filter({ hasText: "Saison 1" }).getByTitle("Supprimer").click();
 		await expect(gallery(page)).toHaveCount(2);
-	});
-
-	test("artist photos: main photo and role portrait", async ({ page }) => {
-		await page.goto(`/shows/artists/${artists.bob.id}`);
-		await upload(page, { name: "bob.png", mimeType: "image/png", buffer: PNG }, "Portrait");
-		await upload(page, { name: "javert.png", mimeType: "image/png", buffer: PNG }, "Javert");
-
-		await gallery(page).filter({ hasText: "Portrait" }).getByTitle("Photo principale").click();
-		await expectImageLoaded(page.locator(".presentation-with-picture img.artist-picture"));
-
-		// rename through the prompt
-		page.once("dialog", (d) => d.accept("Javert 2025"));
-		await gallery(page).filter({ hasText: "Javert" }).getByTitle("Renommer").click();
-		await expect(gallery(page).filter({ hasText: "Javert 2025" })).toHaveCount(1);
-
-		// no role portrait: the cast shows the main photo, then the chosen portrait
-		await page.goto(`/shows/performances/${performances.londres2025}`);
-		const bobRow = page.locator(".base_content table.casting tbody tr").filter({ hasText: artists.bob.name });
-		await expect(bobRow.locator("img.portrait-thumb")).toHaveCount(1);
-		const mainSrc = await bobRow.locator("img.portrait-thumb").getAttribute("src");
-
-		await page.getByRole("button", { name: "Editer le casting" }).click();
-		const dialog = page.getByRole("dialog", { name: "Casting de la représentation" });
-		const portrait = dialog.locator("tbody tr").first().locator(".media-picker").getByTitle("Javert 2025");
-		await expectImageLoaded(portrait.locator("img"));
-		expect((await portrait.locator("img").boundingBox())?.height).toBe(48);
-		await portrait.click();
-		await dialog.getByRole("button", { name: "Enregistrer" }).click();
-		await expect(dialog).not.toBeVisible();
-		await expect(bobRow.locator("img.portrait-thumb")).not.toHaveAttribute("src", mainSrc!);
-		await expectImageLoaded(bobRow.locator("img.portrait-thumb"));
-	});
-
-	test("artist photo from the casting: main photo, then role portrait", async ({ page }) => {
-		await page.goto(`/shows/performances/${performances.hamletSept}`);
-		await page.getByRole("button", { name: "Ajouter le casting" }).click();
-		const dialog = page.getByRole("dialog", { name: "Casting de la représentation" });
-		await dialog.locator('tfoot input[name="role"]').fill("Hamlet");
-		await dialog.locator("tfoot .search-select input").fill("Denis Laurent");
-		await dialog.getByText("Créer l'artiste « Denis Laurent »").click();
-		// the list closes once the artist is created and selected (until then, "Ajouter" does nothing)
-		await expect(dialog.getByText("Créer l'artiste « Denis Laurent »")).toBeHidden();
-		await dialog.locator("tfoot").getByRole("button", { name: "Ajouter" }).click();
-
-		const row = dialog.locator("tbody tr").first();
-		// a new artist has no photo: the first one becomes the main photo, and is selected for the role
-		await row
-			.getByTitle("Ajouter la photo de l'artiste", { exact: true })
-			.locator("input")
-			.setInputFiles({ name: "denis.png", mimeType: "image/png", buffer: PNG });
-		await expect(row.locator(".media-picker img")).toHaveCount(1);
-		await expect(row.locator(".media-picker button.selected img")).toHaveCount(1);
-
-		// the next one is the portrait of this role, from a URL: the server downloads it
-		// absolute (the src is relative to the front, under /api)
-		const url = await row.locator(".media-picker img").evaluate((img: HTMLImageElement) => img.src);
-		page.once("dialog", (d) => d.accept(url));
-		await row.getByTitle("Ajouter un portrait pour ce rôle depuis une URL", { exact: true }).click();
-		await expect(row.locator(".media-picker img")).toHaveCount(2);
-		await expect(row.locator(".media-picker button.selected img")).toHaveCount(1);
-		await dialog.getByRole("button", { name: "Enregistrer" }).click();
-		await expect(dialog).not.toBeVisible();
-
-		const [artist] = await queryDb(
-			"SELECT a.picture_id, r.picture_id AS role_picture_id FROM show.artist a JOIN show.role r ON r.artist_id = a.id WHERE a.name = 'Denis Laurent'",
-		);
-		expect(artist.picture_id).toBeTruthy();
-		expect(artist.role_picture_id).toBeTruthy();
-		expect(artist.role_picture_id).not.toBe(artist.picture_id);
 	});
 });

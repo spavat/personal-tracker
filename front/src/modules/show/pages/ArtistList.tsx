@@ -1,4 +1,4 @@
-import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
+import { Outlet } from "@tanstack/react-router";
 
 import DisplaySelector from "../../../components/DisplaySelector";
 import PageTitle from "../../../components/PageTitle";
@@ -12,8 +12,6 @@ import ArtistTable from "../components/ArtistTable";
 import { MODULE_NAME } from "../constants";
 
 export default function ArtistList() {
-	const navigate = useNavigate();
-	const location = useLocation();
 	const isOwner = useIsOwner();
 	const { query, headers, isPending } = useSortTable({
 		...artistListSort,
@@ -54,29 +52,6 @@ export default function ArtistList() {
 			</PendingContent>
 
 			<Outlet />
-			{isOwner && (
-				<div className="fab-container">
-					<button
-						type="button"
-						className="fab-main"
-						aria-label="Ajouter un artiste"
-						onClick={() =>
-							navigate({
-								to: "/shows/artists/add",
-								search: { returnTo: location.pathname },
-								replace: true,
-								resetScroll: false,
-								mask: { to: "/shows/artists" },
-							})
-						}
-					>
-						<div className="pulse"></div>
-						<div className="heart-line" aria-hidden="true">
-							<i className="fa-solid fa-plus"></i>
-						</div>
-					</button>
-				</div>
-			)}
 		</>
 	);
 }

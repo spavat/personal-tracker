@@ -6,16 +6,19 @@ import type {
 } from "@personal-tracker/shared/show";
 import type { z } from "zod";
 
-import type { showArtist, showPerformance, showPlace, showRole, showSpectacle } from "../../database/schema.js";
+import type { coreEntity, showPerformance, showPlace, showRole, showSpectacle } from "../../database/schema.js";
 
+import { portraitUrl } from "../../entities/entity.entity.js";
 import { optionalMediaUrl } from "../media/media.entity.js";
 
 export type SavePerformanceBody = z.infer<typeof SavePerformanceBodyRequestSchema>;
 export type SaveCastingBody = z.infer<typeof SaveCastingBodyRequestSchema>;
 
-// Rows of the relational queries: performance with { place, spectacle, role: { with: { artist } } }
+// Rows of the relational queries: performance with { place, spectacle, role: { with: { entity } } }
 // and extras { placeName: placeNameAt }
-type RoleRow = typeof showRole.$inferSelect & { artist: typeof showArtist.$inferSelect | null };
+type RoleRow = typeof showRole.$inferSelect & {
+	entity: Pick<typeof coreEntity.$inferSelect, "id" | "name" | "pictureKey"> | null;
+};
 type PerformanceRow = typeof showPerformance.$inferSelect & {
 	placeName: string;
 	place: typeof showPlace.$inferSelect | null;
@@ -31,10 +34,8 @@ export function toRoleView(role: RoleRow): RoleView {
 		main: role.main ?? false,
 		status: role.status,
 		order: role.order ?? 0,
-		pictureId: role.pictureId,
-		artist: { id: role.artistId ?? 0, name: role.artist?.name ?? "" },
-		// role portrait, else the artist's main photo
-		pictureUrl: optionalMediaUrl(role.pictureId ?? role.artist?.pictureId),
+		artist: { id: role.entityId ?? "", name: role.entity?.name ?? "" },
+		picture: role.entity ? portraitUrl(role.entity.id, role.entity.pictureKey) : null,
 	};
 }
 

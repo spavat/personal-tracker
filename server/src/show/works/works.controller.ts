@@ -39,7 +39,7 @@ export class WorksController {
 
 	@Get(":id")
 	@SerializeOptions({ schema: WorkDetailsResponseSchema })
-	get(@Param({ schema: WorkDetailsParamsRequestSchema }) { id }: { id: number }) {
+	get(@Param({ schema: WorkDetailsParamsRequestSchema }) { id }: { id: string }) {
 		return orNotFound(this.service.get(id), "work");
 	}
 
@@ -52,7 +52,7 @@ export class WorksController {
 	@Put(":id")
 	@SerializeOptions({ schema: WorkSchema })
 	update(
-		@Param({ schema: WorkDetailsParamsRequestSchema }) { id }: { id: number },
+		@Param({ schema: WorkDetailsParamsRequestSchema }) { id }: { id: string },
 		@Body({ schema: SaveWorkBodyRequestSchema }) body: SaveWorkBody,
 	) {
 		return orNotFound(this.service.save({ ...body, id }), "work");
@@ -60,7 +60,7 @@ export class WorksController {
 
 	@Delete(":id")
 	@HttpCode(204)
-	async delete(@Param({ schema: DeleteWorkParamsRequestSchema }) { id }: { id: number }) {
+	async delete(@Param({ schema: DeleteWorkParamsRequestSchema }) { id }: { id: string }) {
 		await this.service.delete(id);
 	}
 }

@@ -14,12 +14,15 @@ function fakeRepo() {
 	};
 }
 const asRepo = (r: ReturnType<typeof fakeRepo>) => r as unknown as SpectaclesRepository;
+const SPECTACLE_ID = "00000000-0000-4000-8000-000000000001";
+const WORK_ID = "00000000-0000-4000-8000-000000000002";
+const ENTITY_ID = "00000000-0000-4000-8000-000000000005";
 
 describe("SpectaclesService.list", () => {
 	it("returns the repository list", async () => {
 		const repo = fakeRepo();
-		repo.findAll.mockResolvedValue([{ id: 1 }]);
-		expect(await new SpectaclesService(asRepo(repo)).list()).toEqual([{ id: 1 }]);
+		repo.findAll.mockResolvedValue([{ id: SPECTACLE_ID }]);
+		expect(await new SpectaclesService(asRepo(repo)).list()).toEqual([{ id: SPECTACLE_ID }]);
 	});
 });
 
@@ -33,7 +36,7 @@ describe("SpectaclesService.listGrouped", () => {
 		const place = { id: 7, name: "Bastille", country: "fr" };
 		repo.findAllWithPerformancesAndPlaces.mockResolvedValue([
 			{
-				id: 1,
+				id: SPECTACLE_ID,
 				name: "Tosca",
 				performance: [
 					{ id: 10, date: "2024-02-01", canceled: true, placeId: 7, placeName: "Bastille", place },
@@ -41,7 +44,7 @@ describe("SpectaclesService.listGrouped", () => {
 				],
 			},
 			{
-				id: 2,
+				id: "00000000-0000-4000-8000-0000000000c2",
 				name: "Carmen",
 				performance: [
 					{
@@ -64,15 +67,15 @@ describe("SpectaclesService.listGrouped", () => {
 
 describe("SpectaclesService.get", () => {
 	it("returns null for an unknown spectacle", async () => {
-		expect(await new SpectaclesService(asRepo(fakeRepo())).get(1)).toBeNull();
+		expect(await new SpectaclesService(asRepo(fakeRepo())).get(SPECTACLE_ID)).toBeNull();
 	});
 
 	it("maps performances, cast and models into the response shape", async () => {
 		const repo = fakeRepo();
 		repo.findByIdWithDetails.mockResolvedValue({
-			id: 1,
+			id: SPECTACLE_ID,
 			name: "Tosca",
-			workId: 2,
+			workId: WORK_ID,
 			description: "Drame lyrique",
 			descriptionSource: "https://fr.wikipedia.org/wiki/Tosca",
 			links: [{ label: "Wikipédia", url: "https://fr.wikipedia.org/wiki/Tosca" }],
@@ -85,19 +88,17 @@ describe("SpectaclesService.get", () => {
 					seat: "A1",
 					casting_status: "ok",
 					casting_origin: "manual",
-					spectacleId: 1,
+					spectacleId: SPECTACLE_ID,
 					placeName: "Old Bastille",
 					place: { id: 7, name: "Bastille", country: "fr" },
 					posterId: "11111111-1111-4111-8111-111111111111",
-					// no role portrait: falls back to the artist's main photo
 					role: [
 						{
 							id: 3,
-							artistId: 5,
-							artist: { name: "Callas", pictureId: "22222222-2222-4222-8222-222222222222" },
+							entityId: ENTITY_ID,
+							entity: { id: ENTITY_ID, name: "Callas", pictureKey: null },
 							name: "Tosca",
 							status: "confirmed",
-							pictureId: null,
 						},
 					],
 				},
@@ -111,10 +112,9 @@ describe("SpectaclesService.get", () => {
 							id: 4,
 							name: "Lead",
 							main: true,
-							artistId: 5,
+							entityId: ENTITY_ID,
 							order: 1,
-							artist: { id: 5, name: "Callas" },
-							pictureId: "33333333-3333-4333-8333-333333333333",
+							entity: { id: ENTITY_ID, name: "Callas" },
 						},
 					],
 				},
@@ -132,12 +132,12 @@ describe("SpectaclesService.get", () => {
 			],
 		});
 
-		const result = await new SpectaclesService(asRepo(repo)).get(1);
+		const result = await new SpectaclesService(asRepo(repo)).get(SPECTACLE_ID);
 
 		expect(result).toEqual({
-			id: 1,
+			id: SPECTACLE_ID,
 			name: "Tosca",
-			workId: 2,
+			workId: WORK_ID,
 			description: "Drame lyrique",
 			descriptionSource: "https://fr.wikipedia.org/wiki/Tosca",
 			links: [{ label: "Wikipédia", url: "https://fr.wikipedia.org/wiki/Tosca" }],
@@ -151,7 +151,7 @@ describe("SpectaclesService.get", () => {
 					posterId: "11111111-1111-4111-8111-111111111111",
 					posterUrl: "/images/show/11111111-1111-4111-8111-111111111111",
 					place: { id: 7, name: "Old Bastille", country: "fr" },
-					spectacle: { id: 1, name: "Tosca" },
+					spectacle: { id: SPECTACLE_ID, name: "Tosca" },
 					roles: [
 						{
 							id: 3,
@@ -159,9 +159,8 @@ describe("SpectaclesService.get", () => {
 							main: false,
 							status: "confirmed",
 							order: 0,
-							pictureId: null,
-							artist: { id: 5, name: "Callas" },
-							pictureUrl: "/images/show/22222222-2222-4222-8222-222222222222",
+							artist: { id: ENTITY_ID, name: "Callas" },
+							picture: null,
 						},
 					],
 					casting_status: "ok",
@@ -178,8 +177,7 @@ describe("SpectaclesService.get", () => {
 							name: "Lead",
 							main: true,
 							order: 1,
-							pictureId: "33333333-3333-4333-8333-333333333333",
-							artist: { id: 5, name: "Callas" },
+							artist: { id: ENTITY_ID, name: "Callas" },
 						},
 					],
 				},
@@ -200,7 +198,7 @@ describe("SpectaclesService.get", () => {
 describe("SpectaclesService.save", () => {
 	it("saves through the repository", async () => {
 		const repo = fakeRepo();
-		const data = { id: 1, name: "Tosca", workId: 2, links: [], tracklist: "# Acte 1" };
+		const data = { id: SPECTACLE_ID, name: "Tosca", workId: WORK_ID, links: [], tracklist: "# Acte 1" };
 		repo.save.mockResolvedValue(data);
 		expect(await new SpectaclesService(asRepo(repo)).save(data)).toEqual(data);
 		expect(repo.save).toHaveBeenCalledWith(data);

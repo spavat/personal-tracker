@@ -1,17 +1,12 @@
-import type { ArtistView, SaveArtistBodyRequest } from "@personal-tracker/shared/show";
+import type { ArtistView } from "@personal-tracker/shared/show";
 
-import type { showArtist } from "../../database/schema.js";
+import { portraitUrl } from "../../entities/entity.entity.js";
 
-import { optionalMediaUrl } from "../media/media.entity.js";
-
-// the body, with the id of the path on an update (none: created)
-export type SaveArtistBody = SaveArtistBodyRequest & { id?: number };
-
-export function toArtistView(artist: typeof showArtist.$inferSelect): ArtistView {
+// An artist is a person entity: its portrait is the entity's
+export function toArtistView(artist: { id: string; name: string; pictureKey: string | null }): ArtistView {
 	return {
 		id: artist.id,
-		name: artist.name ?? "",
-		pictureId: artist.pictureId,
-		pictureUrl: optionalMediaUrl(artist.pictureId),
+		name: artist.name,
+		picture: portraitUrl(artist.id, artist.pictureKey),
 	};
 }

@@ -4,6 +4,7 @@ import { useFormContext, useWatch } from "react-hook-form";
 
 import { placesQuery, spectacleMediaQuery, spectaclesQuery } from "../api";
 import MediaPicker from "../components/MediaPicker";
+import { emptyToUndefined } from "../utils";
 import { type PerformanceForm } from "./PerformanceForm.utils";
 
 export default function PerformanceFormComponent({
@@ -25,7 +26,7 @@ export default function PerformanceFormComponent({
 	const { data: spectacleList = [], isFetching: spectacleListIsFetching } = useQuery(spectaclesQuery());
 	const { data: placeList = [], isFetching: placeListIsFetching } = useQuery(placesQuery());
 	const { data: posters = [] } = useQuery({
-		...spectacleMediaQuery(spectacleId ?? 0, "poster"),
+		...spectacleMediaQuery(spectacleId ?? "", "poster"),
 		enabled: !!spectacleId,
 	});
 
@@ -45,13 +46,13 @@ export default function PerformanceFormComponent({
 	}, [placeId, showFormPart]);
 
 	const clickNewSpectacle = () => {
-		setValue("performance.spectacleId", 0);
+		setValue("performance.spectacleId", undefined);
 		clearPoster();
 		showFormPart("spectacle");
 	};
 
 	const clickNewPlace = () => {
-		setValue("performance.placeId", 0);
+		setValue("performance.placeId", undefined);
 		showFormPart("place");
 	};
 
@@ -72,9 +73,12 @@ export default function PerformanceFormComponent({
 							<>...</>
 						) : (
 							<select
-								{...register("performance.spectacleId", { valueAsNumber: true, onChange: clearPoster })}
+								{...register("performance.spectacleId", {
+									setValueAs: emptyToUndefined,
+									onChange: clearPoster,
+								})}
 							>
-								<option key={"empty"} value="0"></option>
+								<option key={"empty"} value=""></option>
 								{spectacleList?.map((spectacle) => (
 									<option key={spectacle.id} value={spectacle.id}>
 										{spectacle.name}
@@ -108,8 +112,8 @@ export default function PerformanceFormComponent({
 						{placeListIsFetching ? (
 							<>...</>
 						) : (
-							<select {...register("performance.placeId", { valueAsNumber: true })}>
-								<option key={"empty"} value="0"></option>
+							<select {...register("performance.placeId", { setValueAs: emptyToUndefined })}>
+								<option key={"empty"} value=""></option>
 								{placeList.map((place) => (
 									<option key={place.id} value={place.id}>
 										{place.name}

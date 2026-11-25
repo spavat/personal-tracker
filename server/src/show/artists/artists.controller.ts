@@ -1,21 +1,19 @@
 import type { z } from "zod";
 
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, SerializeOptions } from "@nestjs/common";
+import { Controller, Get, Param, Query, SerializeOptions } from "@nestjs/common";
 import {
 	ArtistDetailsParamsRequestSchema,
 	ArtistDetailsQuerystringRequestSchema,
 	ArtistDetailsResponseSchema,
 	ArtistListQuerystringRequestSchema,
 	ArtistListResponseSchema,
-	ArtistViewSchema,
-	DeleteArtistParamsRequestSchema,
-	SaveArtistBodyRequestSchema,
 } from "@personal-tracker/shared/show";
 
 import { Public } from "../../auth/public.decorator.js";
 import { orNotFound } from "../show-reply.utils.js";
 import { ArtistsService } from "./artists.service.js";
 
+// Read only: an artist is an entity, edited through /entities and created by the casting and model forms
 @Controller()
 export class ArtistsController {
 	constructor(private readonly service: ArtistsService) {}
@@ -35,31 +33,10 @@ export class ArtistsController {
 	@Public()
 	@SerializeOptions({ schema: ArtistDetailsResponseSchema })
 	get(
-		@Param({ schema: ArtistDetailsParamsRequestSchema }) { id }: { id: number },
+		@Param({ schema: ArtistDetailsParamsRequestSchema }) { id }: { id: string },
 		@Query({ schema: ArtistDetailsQuerystringRequestSchema })
 		{ groupBySpectacle }: z.infer<typeof ArtistDetailsQuerystringRequestSchema>,
 	) {
 		return orNotFound(this.service.get({ artistId: id, groupBySpectacle }), "artist");
-	}
-
-	@Post()
-	@SerializeOptions({ schema: ArtistViewSchema })
-	create(@Body({ schema: SaveArtistBodyRequestSchema }) body: z.infer<typeof SaveArtistBodyRequestSchema>) {
-		return orNotFound(this.service.save(body), "artist");
-	}
-
-	@Put(":id")
-	@SerializeOptions({ schema: ArtistViewSchema })
-	update(
-		@Param({ schema: ArtistDetailsParamsRequestSchema }) { id }: { id: number },
-		@Body({ schema: SaveArtistBodyRequestSchema }) body: z.infer<typeof SaveArtistBodyRequestSchema>,
-	) {
-		return orNotFound(this.service.save({ ...body, id }), "artist");
-	}
-
-	@Delete(":id")
-	@HttpCode(204)
-	async delete(@Param({ schema: DeleteArtistParamsRequestSchema }) { id }: { id: number }) {
-		await this.service.delete(id);
 	}
 }

@@ -34,7 +34,7 @@ export class ShowService {
 				};
 			}),
 			...artists.map((artist) => {
-				return { ...artist, description: `${artist.role.length} représentations`, type: "artist" };
+				return { ...artist, description: `${artist.showRoles.length} représentations`, type: "artist" };
 			}),
 			...places.map((s) => ({ ...s, type: "place" })),
 		];

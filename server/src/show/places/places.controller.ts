@@ -37,7 +37,7 @@ export class PlacesController {
 	@Public()
 	@SerializeOptions({ schema: PlaceDetailsResponseSchema })
 	get(
-		@Param({ schema: PlaceDetailsParamsRequestSchema }) { id }: { id: number },
+		@Param({ schema: PlaceDetailsParamsRequestSchema }) { id }: { id: string },
 		@Query({ schema: PlaceDetailsQuerystringRequestSchema })
 		{ groupBySpectacle }: z.infer<typeof PlaceDetailsQuerystringRequestSchema>,
 	) {
@@ -53,7 +53,7 @@ export class PlacesController {
 	@Put(":id")
 	@SerializeOptions({ schema: SavePlaceResponseSchema })
 	update(
-		@Param({ schema: PlaceDetailsParamsRequestSchema }) { id }: { id: number },
+		@Param({ schema: PlaceDetailsParamsRequestSchema }) { id }: { id: string },
 		@Body({ schema: SavePlaceBodyRequestSchema }) body: SavePlaceBody,
 	) {
 		return orNotFound(this.service.save({ ...body, id }), "place");
@@ -61,7 +61,7 @@ export class PlacesController {
 
 	@Delete(":id")
 	@HttpCode(204)
-	async delete(@Param({ schema: DeletePlaceParamsRequestSchema }) { id }: { id: number }) {
+	async delete(@Param({ schema: DeletePlaceParamsRequestSchema }) { id }: { id: string }) {
 		await this.service.delete(id);
 	}
 }

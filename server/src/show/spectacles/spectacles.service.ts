@@ -133,7 +133,7 @@ export class SpectaclesService {
 			.toSorted((a, b) => b.name.localeCompare(a.name));
 	}
 
-	async get(id: number): Promise<SpectacleDetailsResponse | null> {
+	async get(id: string): Promise<SpectacleDetailsResponse | null> {
 		this.logger.log("get");
 		const spec = await this.repo.findByIdWithDetails(id);
 		if (!spec) {

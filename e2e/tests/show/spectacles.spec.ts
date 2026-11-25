@@ -17,7 +17,7 @@ function performanceRows(page: Page) {
 	return page.locator("table.performances tbody tr").filter({ has: page.locator("td:nth-child(3)") });
 }
 
-async function openSpectacle(page: Page, spectacle: { id: number; name: string }) {
+async function openSpectacle(page: Page, spectacle: { id: string; name: string }) {
 	await page.goto(`/shows/spectacles/${spectacle.id}`);
 	await expect(page.getByRole("heading", { name: spectacle.name, exact: true })).toBeVisible();
 }

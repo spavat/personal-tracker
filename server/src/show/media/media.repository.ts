@@ -5,15 +5,8 @@ import { and, count, eq, max } from "drizzle-orm";
 
 import { DRIZZLE } from "../../database/database.tokens.js";
 import { Drizzle } from "../../database/drizzle.js";
-import {
-	showArtist,
-	showArtistMedia,
-	showMedia,
-	showModelRole,
-	showRole,
-	showSpectacleMedia,
-} from "../../database/schema.js";
-import { isArtistOwner, type MediaOwner } from "./media.entity.js";
+import { showMedia, showSpectacleMedia } from "../../database/schema.js";
+import { type MediaOwner } from "./media.entity.js";
 
 @Injectable()
 export class MediaRepository {
@@ -28,64 +21,36 @@ export class MediaRepository {
 		return media?.key;
 	}
 
-	findSpectacleMedia(spectacleId: number, kind?: SpectacleMediaKind) {
+	findSpectacleMedia(spectacleId: string, kind?: SpectacleMediaKind) {
 		return this.db.query.showSpectacleMedia.findMany({
 			where: kind ? { spectacleId, kind } : { spectacleId },
 			with: { media: true },
 		});
 	}
 
-	findArtistMedia(artistId: number) {
-		return this.db.query.showArtistMedia.findMany({
-			where: { artistId },
-			with: { media: true },
-		});
-	}
-
 	async linkExists(owner: MediaOwner, mediaId: string) {
-		const [link] = isArtistOwner(owner)
-			? await this.db
-					.select({ mediaId: showArtistMedia.mediaId })
-					.from(showArtistMedia)
-					.where(and(eq(showArtistMedia.artistId, owner.artistId), eq(showArtistMedia.mediaId, mediaId)))
-			: await this.db
-					.select({ mediaId: showSpectacleMedia.mediaId })
-					.from(showSpectacleMedia)
-					.where(
-						and(
-							eq(showSpectacleMedia.spectacleId, owner.spectacleId),
-							eq(showSpectacleMedia.mediaId, mediaId),
-						),
-					);
+		const [link] = await this.db
+			.select({ mediaId: showSpectacleMedia.mediaId })
+			.from(showSpectacleMedia)
+			.where(and(eq(showSpectacleMedia.spectacleId, owner.spectacleId), eq(showSpectacleMedia.mediaId, mediaId)));
 		return link !== undefined;
 	}
 
 	async findMediaIds(owner: MediaOwner): Promise<string[]> {
-		const rows = isArtistOwner(owner)
-			? await this.db
-					.select({ mediaId: showArtistMedia.mediaId })
-					.from(showArtistMedia)
-					.where(eq(showArtistMedia.artistId, owner.artistId))
-			: await this.db
-					.select({ mediaId: showSpectacleMedia.mediaId })
-					.from(showSpectacleMedia)
-					.where(eq(showSpectacleMedia.spectacleId, owner.spectacleId));
+		const rows = await this.db
+			.select({ mediaId: showSpectacleMedia.mediaId })
+			.from(showSpectacleMedia)
+			.where(eq(showSpectacleMedia.spectacleId, owner.spectacleId));
 		return rows.map((row) => row.mediaId);
 	}
 
 	/** Position after the owner's last media. */
 	async nextOrder(tx: any, owner: MediaOwner): Promise<number> {
-		const [row] = isArtistOwner(owner)
-			? await tx
-					.select({ last: max(showMedia.order) })
-					.from(showArtistMedia)
-					.innerJoin(showMedia, eq(showMedia.id, showArtistMedia.mediaId))
-					.where(eq(showArtistMedia.artistId, owner.artistId))
-			: await tx
-					.select({ last: max(showMedia.order) })
-					.from(showSpectacleMedia)
-					.innerJoin(showMedia, eq(showMedia.id, showSpectacleMedia.mediaId))
-					.where(eq(showSpectacleMedia.spectacleId, owner.spectacleId));
+		const [row] = await tx
+			.select({ last: max(showMedia.order) })
+			.from(showSpectacleMedia)
+			.innerJoin(showMedia, eq(showMedia.id, showSpectacleMedia.mediaId))
+			.where(eq(showSpectacleMedia.spectacleId, owner.spectacleId));
 		return row?.last === null || row?.last === undefined ? 0 : row.last + 1;
 	}
 
@@ -106,39 +71,15 @@ export class MediaRepository {
 		return tx.update(showMedia).set({ label }).where(eq(showMedia.id, id));
 	}
 
-	insertLink(
-		tx: any,
-		owner: MediaOwner,
-		mediaId: string,
-		{ kind, spectacleId }: { kind: SpectacleMediaKind; spectacleId?: number | null },
-	) {
-		return isArtistOwner(owner)
-			? tx.insert(showArtistMedia).values({ artistId: owner.artistId, mediaId, spectacleId: spectacleId ?? null })
-			: tx.insert(showSpectacleMedia).values({ spectacleId: owner.spectacleId, mediaId, kind });
-	}
-
-	updateArtistLink(tx: any, artistId: number, mediaId: string, spectacleId: number | null) {
-		return tx
-			.update(showArtistMedia)
-			.set({ spectacleId })
-			.where(and(eq(showArtistMedia.artistId, artistId), eq(showArtistMedia.mediaId, mediaId)));
+	insertLink(tx: any, owner: MediaOwner, mediaId: string, { kind }: { kind: SpectacleMediaKind }) {
+		return tx.insert(showSpectacleMedia).values({ spectacleId: owner.spectacleId, mediaId, kind });
 	}
 
 	deleteLink(tx: any, owner: MediaOwner, mediaId: string): Promise<unknown[]> {
-		return isArtistOwner(owner)
-			? tx
-					.delete(showArtistMedia)
-					.where(and(eq(showArtistMedia.artistId, owner.artistId), eq(showArtistMedia.mediaId, mediaId)))
-					.returning({ mediaId: showArtistMedia.mediaId })
-			: tx
-					.delete(showSpectacleMedia)
-					.where(
-						and(
-							eq(showSpectacleMedia.spectacleId, owner.spectacleId),
-							eq(showSpectacleMedia.mediaId, mediaId),
-						),
-					)
-					.returning({ mediaId: showSpectacleMedia.mediaId });
+		return tx
+			.delete(showSpectacleMedia)
+			.where(and(eq(showSpectacleMedia.spectacleId, owner.spectacleId), eq(showSpectacleMedia.mediaId, mediaId)))
+			.returning({ mediaId: showSpectacleMedia.mediaId });
 	}
 
 	async countLinks(tx: any, mediaId: string) {
@@ -146,28 +87,7 @@ export class MediaRepository {
 			.select({ n: count() })
 			.from(showSpectacleMedia)
 			.where(eq(showSpectacleMedia.mediaId, mediaId));
-		const [artists] = await tx
-			.select({ n: count() })
-			.from(showArtistMedia)
-			.where(eq(showArtistMedia.mediaId, mediaId));
-		return (spectacles?.n ?? 0) + (artists?.n ?? 0);
-	}
-
-	// roles, model roles and the artist's main photo all point to the artist's link
-	async countPictureUses(tx: any, artistId: number, mediaId: string) {
-		const [roles] = await tx
-			.select({ n: count() })
-			.from(showRole)
-			.where(and(eq(showRole.artistId, artistId), eq(showRole.pictureId, mediaId)));
-		const [modelRoles] = await tx
-			.select({ n: count() })
-			.from(showModelRole)
-			.where(and(eq(showModelRole.artistId, artistId), eq(showModelRole.pictureId, mediaId)));
-		const [artists] = await tx
-			.select({ n: count() })
-			.from(showArtist)
-			.where(and(eq(showArtist.id, artistId), eq(showArtist.pictureId, mediaId)));
-		return (roles?.n ?? 0) + (modelRoles?.n ?? 0) + (artists?.n ?? 0);
+		return spectacles?.n ?? 0;
 	}
 
 	deleteMedia(tx: any, id: string): Promise<{ key: string }[]> {

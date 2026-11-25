@@ -160,9 +160,9 @@ export default function PerformanceDetails({ performanceId }: { performanceId: s
 													to="/shows/artists/$artistId"
 													params={{ artistId: String(role.artist.id) }}
 												>
-													{role.pictureUrl && (
+													{role.picture && (
 														<img
-															src={mediaSrc(role.pictureUrl)}
+															src={mediaSrc(role.picture)}
 															alt=""
 															className="portrait-thumb in-list"
 															loading="lazy"
@@ -182,7 +182,7 @@ export default function PerformanceDetails({ performanceId }: { performanceId: s
 						) : (
 							<div className="grid artists">
 								{(details.roles ?? []).map((role) => (
-									<CardArtist key={role.id} artist={role.artist} pictureUrl={role.pictureUrl}>
+									<CardArtist key={role.id} artist={role.artist} picture={role.picture}>
 										{role.name}{" "}
 										{role.status && (
 											<div>

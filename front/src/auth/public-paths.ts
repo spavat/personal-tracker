@@ -1,12 +1,12 @@
 // Pages an anonymous visitor may open; everything else redirects to the home page.
 // Must match the routes flagged `config: { public: true }` on the server.
-// Ids are digits (show) or uuids (broadcast, reading-book, reading-manga, game) only, so /add, /edit/… and /delete/… pages stay private.
+// Ids are uuids only, so /add, /edit/… and /delete/… pages stay private.
 const PUBLIC_PATHS = [
 	/^\/$/,
 	/^\/login$/,
 	/^\/shows(\/(history|performances|spectacles|works|artists|places))?$/,
 	/^\/shows\/history\/\d+$/,
-	/^\/shows\/(performances|spectacles|artists|places)\/\d+$/,
+	/^\/shows\/(performances|spectacles|artists|places)\/[0-9a-f-]{36}$/,
 	/^\/broadcast(\/(history|list|stats))?$/,
 	/^\/broadcast\/history\/\d{4}-\d{2}$/,
 	/^\/broadcast\/stats\/\d{4}$/,

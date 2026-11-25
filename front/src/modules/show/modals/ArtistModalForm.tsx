@@ -1,91 +1,114 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
+import { useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 
+import { saveEntity } from "../../../components/entity-api";
 import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
-import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-query";
-import { artistDetailsQuery, saveArtist } from "../api";
-import ArtistFormComponent from "../forms/ArtistForm";
-import {
-	type ArtistForm,
-	ArtistFormSchema,
-	ArtistFormSchemaTransformation,
-	onSubmitArtist,
-} from "../forms/ArtistForm.utils";
+import PortraitField from "../../../components/PortraitField";
+import { artistDetailsQuery } from "../api";
 
-interface Inputs extends ArtistForm {}
+type ArtistFormData = {
+	name: string;
+	// the server's URL (unchanged), an image URL or a data URI (new), empty (no portrait)
+	picture: string;
+};
 
-export default function ArtistModalForm({ artistId, returnTo }: { artistId?: string; returnTo: string }) {
+// An artist is an entity: saved through /entities, its other fields (kind, sort name) sent back unchanged
+export default function ArtistModalForm({ artistId, returnTo }: { artistId: string; returnTo: string }) {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
-	const data = useOptionalSuspenseQuery(artistId ? artistDetailsQuery(artistId, false) : undefined);
+	const { data: artist } = useSuspenseQuery(artistDetailsQuery(artistId, false));
+
+	const {
+		control,
+		register,
+		handleSubmit,
+		setValue,
+		formState: { errors },
+	} = useForm<ArtistFormData>({
+		// data is loaded before the modal opens: applied once, never overwritten by a background refetch
+		defaultValues: { name: artist.name, picture: artist.picture ?? "" },
+	});
+	const picture = useWatch({ control, name: "picture" });
+	const [isCropping, setIsCropping] = useState(false);
+
 	const saveMutation = useMutation({
-		mutationFn: saveArtist,
+		mutationFn: (data: ArtistFormData) =>
+			saveEntity(
+				{
+					kind: artist.kind,
+					name: data.name.trim(),
+					sortName: artist.sortName,
+					picture: data.picture.trim() || null,
+				},
+				artist.id,
+			),
 		onSuccess: () => {
-			methods.reset();
-			if (artistId) {
-				queryClient.invalidateQueries({ queryKey: ["shows", "artists", artistId] });
-				if (returnTo.endsWith("/artists")) {
-					queryClient.invalidateQueries({ queryKey: ["shows", "artists"] });
-				}
-			} else {
-				queryClient.invalidateQueries({ queryKey: ["shows", "artists"] });
-			}
+			// the name and the portrait show on the casts, the cards and the pickers
+			queryClient.invalidateQueries({ queryKey: ["shows"] });
+			queryClient.invalidateQueries({ queryKey: ["entities"] });
 			closeModal();
 		},
 	});
 
-	let defaultValues: Inputs | null = null;
-	if (data) {
-		defaultValues = {
-			artist: ArtistFormSchemaTransformation.parse(data),
-		};
-	}
-
-	const methods = useForm<Inputs>({
-		resolver: zodResolver(ArtistFormSchema),
-		// data is loaded before the modal opens: applied once, never overwritten by a background refetch
-		defaultValues: defaultValues as any,
-	});
-
 	function closeModal() {
-		methods.reset();
-		navigate({
-			to: returnTo,
-			replace: true,
-			resetScroll: false,
-		});
+		navigate({ to: returnTo, replace: true, resetScroll: false });
 	}
-
-	const onSubmit: SubmitHandler<Inputs> = (data) => {
-		const dataArtist = onSubmitArtist(data);
-		saveMutation.mutate(dataArtist);
-	};
 
 	return (
-		<FormProvider {...methods}>
-			<form onSubmit={methods.handleSubmit(onSubmit)}>
-				<Modal className="form dialog-medium" isOpen={true} onClose={closeModal} hasCloseBtn={true}>
-					<div className="dialog-header">
-						<h2 id="dialog-title">{artistId ? "Modifier l'artiste" : "Ajouter un artiste"}</h2>
+		<form onSubmit={handleSubmit((data) => saveMutation.mutate(data))}>
+			<Modal className="form dialog-medium" isOpen={true} onClose={closeModal} hasCloseBtn={true}>
+				<div className="dialog-header">
+					<h2 id="dialog-title">Modifier l'artiste</h2>
+				</div>
+				<div className="dialog-body">
+					<div className="panel">
+						<h3>Général</h3>
+						<div className="form-grid">
+							<label className="form-field full-width">
+								<span>
+									Nom <span className="req">*</span>
+								</span>
+								<input
+									{...register("name", { validate: (v) => v.trim() !== "" })}
+									type="text"
+									autoComplete="off"
+								/>
+								{errors.name && <span className="error">Le nom est obligatoire</span>}
+							</label>
+						</div>
 					</div>
-					<div className="dialog-body">
-						<ArtistFormComponent />
+					<div className="panel">
+						<h3>Portrait</h3>
+						<PortraitField
+							value={picture}
+							onChange={(value) => setValue("picture", value, { shouldDirty: true })}
+							onCroppingChange={setIsCropping}
+							urlInput={
+								<input
+									{...register("picture")}
+									type="text"
+									placeholder="ou https://…"
+									aria-label="URL de l'image"
+									autoComplete="off"
+									className="flex"
+								/>
+							}
+						/>
 					</div>
-
-					<div className="dialog-footer">
-						<MutationError error={saveMutation.error} />
-						<button type="button" onClick={closeModal}>
-							Annuler
-						</button>
-						<button type="submit" className="main" disabled={saveMutation.isPending}>
-							Enregistrer
-						</button>
-					</div>
-				</Modal>
-			</form>
-		</FormProvider>
+				</div>
+				<div className="dialog-footer">
+					<MutationError error={saveMutation.error} />
+					<button type="button" onClick={closeModal}>
+						Annuler
+					</button>
+					<button type="submit" className="main" disabled={saveMutation.isPending || isCropping}>
+						Enregistrer
+					</button>
+				</div>
+			</Modal>
+		</form>
 	);
 }

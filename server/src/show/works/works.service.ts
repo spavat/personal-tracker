@@ -168,7 +168,7 @@ export class WorksService {
 			.toSorted((a, b) => b.name.localeCompare(a.name));
 	}
 
-	async get(id: number) {
+	async get(id: string) {
 		this.logger.log("get");
 		const work = await this.repo.findByIdWithSpectacles(id);
 		if (!work) return null;
@@ -181,7 +181,7 @@ export class WorksService {
 		return (await this.repo.save(data)) ?? null;
 	}
 
-	async delete(id: number) {
+	async delete(id: string) {
 		this.logger.log("delete");
 		if (!(await this.repo.delete(id))) {
 			throw new NotFoundError("work");

@@ -1,11 +1,10 @@
-import { useFormContext, useWatch } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 
 import { ModelForm } from "./ModelRoleForm.utils";
 import { RolesField } from "./RolesField";
 
 export default function ModelRoleFormComponent() {
 	const { control, register, formState, setValue } = useFormContext<ModelForm>();
-	const spectacleId = useWatch({ control, name: "spectacleId" });
 
 	return (
 		<>
@@ -22,14 +21,7 @@ export default function ModelRoleFormComponent() {
 			</div>
 			<div className="panel">
 				<h3>Casting</h3>
-				<RolesField
-					control={control}
-					register={register}
-					setValue={setValue}
-					name="roles"
-					variant="model"
-					spectacleId={spectacleId}
-				/>
+				<RolesField control={control} register={register} setValue={setValue} name="roles" variant="model" />
 			</div>
 			{Object.keys(formState.errors).length > 0 && (
 				<div className="panel">{Object.keys(formState.errors).join(", ")}</div>

@@ -40,7 +40,7 @@ export class SpectaclesController {
 	@Get(":id")
 	@Public()
 	@SerializeOptions({ schema: SpectacleDetailsResponseSchema })
-	get(@Param({ schema: SpectacleDetailsParamsRequestSchema }) { id }: { id: number }) {
+	get(@Param({ schema: SpectacleDetailsParamsRequestSchema }) { id }: { id: string }) {
 		return orNotFound(this.service.get(id), "spectacle");
 	}
 
@@ -53,7 +53,7 @@ export class SpectaclesController {
 	@Put(":id")
 	@SerializeOptions({ schema: SpectacleSchema })
 	update(
-		@Param({ schema: SpectacleDetailsParamsRequestSchema }) { id }: { id: number },
+		@Param({ schema: SpectacleDetailsParamsRequestSchema }) { id }: { id: string },
 		@Body({ schema: SaveSpectacleBodyRequestSchema }) body: SaveSpectacleBody,
 	) {
 		return orNotFound(this.service.save({ ...body, id }), "spectacle");

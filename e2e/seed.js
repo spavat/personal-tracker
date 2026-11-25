@@ -1060,45 +1060,87 @@ async function seedPostgres(conn) {
 		`INSERT INTO money.transaction_tag (transaction_id, tag_id)
 		 VALUES (1, 1), (4, 1), (6, 1), (7, 2)`,
 	);
-	await conn.query(`INSERT INTO show.work (id, name) VALUES (1, 'Les Misérables'), (2, 'Hamlet')`);
+	// fixed uuids, the same as SEED.show in fixtures/index.ts: one prefix per table, the old integer id at the end
+	const work = (n) => `51000000-0000-4000-8000-00000000000${n}`;
+	const spectacle = (n) => `52000000-0000-4000-8000-00000000000${n}`;
+	const place = (n) => `53000000-0000-4000-8000-00000000000${n}`;
+	const performance = (n) => `54000000-0000-4000-8000-00000000000${n}`;
+	const model = (n) => `55000000-0000-4000-8000-00000000000${n}`;
+	// the artists are person entities
+	const artist = (n) => `56000000-0000-4000-8000-00000000000${n}`;
+	const SHOW_NODES = [
+		[work(1), "show_work", "Les Misérables"],
+		[work(2), "show_work", "Hamlet"],
+		[spectacle(1), "show_spectacle", "Les Misérables (Paris)"],
+		[spectacle(2), "show_spectacle", "Les Misérables (Londres)"],
+		[spectacle(3), "show_spectacle", "Hamlet"],
+		[place(1), "show_place", "Théâtre du Châtelet"],
+		[place(2), "show_place", "Sondheim Theatre"],
+		[place(3), "show_place", "Comédie-Française"],
+		[place(4), "show_place", "Salle vide"],
+		[artist(1), "entity", "Alice Martin"],
+		[artist(2), "entity", "Bob Smith"],
+		[artist(3), "entity", "Claire Dubois"],
+	];
+	for (const [id, type, label] of SHOW_NODES) {
+		await conn.query(`INSERT INTO core.node (id, type, label) VALUES ($1, $2, $3)`, [id, type, label]);
+	}
+	await conn.query(`INSERT INTO show.work (id, name) VALUES ($1, 'Les Misérables'), ($2, 'Hamlet')`, [
+		work(1),
+		work(2),
+	]);
 	await conn.query(
 		`INSERT INTO show.spectacle (id, name, work_id)
-		 VALUES (1, 'Les Misérables (Paris)', 1), (2, 'Les Misérables (Londres)', 1), (3, 'Hamlet', 2)`,
+		 VALUES ($1, 'Les Misérables (Paris)', $4), ($2, 'Les Misérables (Londres)', $4), ($3, 'Hamlet', $5)`,
+		[spectacle(1), spectacle(2), spectacle(3), work(1), work(2)],
 	);
 	await conn.query(
 		`INSERT INTO show.place (id, name, address, country, link)
-		 VALUES (1, 'Théâtre du Châtelet', '1 place du Châtelet, Paris', 'fr', 'https://www.chatelet.com'),
-		 (2, 'Sondheim Theatre', '51 Shaftesbury Avenue, London', 'gb', NULL),
-		 (3, 'Comédie-Française', '1 place Colette, Paris', 'fr', NULL),
-		 (4, 'Salle vide', '', 'fr', NULL)`,
+		 VALUES ($1, 'Théâtre du Châtelet', '1 place du Châtelet, Paris', 'fr', 'https://www.chatelet.com'),
+		 ($2, 'Sondheim Theatre', '51 Shaftesbury Avenue, London', 'gb', NULL),
+		 ($3, 'Comédie-Française', '1 place Colette, Paris', 'fr', NULL),
+		 ($4, 'Salle vide', '', 'fr', NULL)`,
+		[place(1), place(2), place(3), place(4)],
 	);
 	// Performance 1 is before the rename: listed with the former name
 	await conn.query(
-		`INSERT INTO show.place_former_name (place_id, name, until_date) VALUES (1, 'Théâtre Musical de Paris', '2025-06-01')`,
+		`INSERT INTO show.place_former_name (place_id, name, until_date) VALUES ($1, 'Théâtre Musical de Paris', '2025-06-01')`,
+		[place(1)],
 	);
 	await conn.query(
 		`INSERT INTO show.performance (id, date, place_id, spectacle_id, canceled, seat, casting_status, casting_origin)
-		 VALUES (1, '2025-03-20 20:00:00', 1, 1, false, 'B7', 'complete', 'program'),
-		 (2, '2025-11-08 19:30:00', 2, 2, false, 'D12', 'partial', 'performance'),
-		 (3, '2026-02-14 20:00:00', 3, 3, false, '', 'unknown', 'na'),
-		 (4, '2026-02-21 20:00:00', 1, 1, true, 'A12', 'tbd', 'na'),
-		 (5, '2026-04-10 20:30:00', 1, 1, false, 'C3', 'complete', 'performance'),
-		 (6, '2026-09-05 15:00:00', 3, 3, false, 'F1', 'tbd', 'na'),
-		 (7, '2027-01-15 20:00:00', 2, 2, false, 'E5', 'tbd', 'na')`,
+		 VALUES ($1, '2025-03-20 20:00:00', $8, $11, false, 'B7', 'complete', 'program'),
+		 ($2, '2025-11-08 19:30:00', $9, $12, false, 'D12', 'partial', 'performance'),
+		 ($3, '2026-02-14 20:00:00', $10, $13, false, '', 'unknown', 'na'),
+		 ($4, '2026-02-21 20:00:00', $8, $11, true, 'A12', 'tbd', 'na'),
+		 ($5, '2026-04-10 20:30:00', $8, $11, false, 'C3', 'complete', 'performance'),
+		 ($6, '2026-09-05 15:00:00', $10, $13, false, 'F1', 'tbd', 'na'),
+		 ($7, '2027-01-15 20:00:00', $9, $12, false, 'E5', 'tbd', 'na')`,
+		[1, 2, 3, 4, 5, 6, 7]
+			.map(performance)
+			.concat([place(1), place(2), place(3), spectacle(1), spectacle(2), spectacle(3)]),
 	);
 	await conn.query(
-		`INSERT INTO show.artist (id, name) VALUES (1, 'Alice Martin'), (2, 'Bob Smith'), (3, 'Claire Dubois')`,
+		`INSERT INTO core.entity (id, kind, name)
+		 VALUES ($1, 'person', 'Alice Martin'), ($2, 'person', 'Bob Smith'), ($3, 'person', 'Claire Dubois')`,
+		[artist(1), artist(2), artist(3)],
 	);
+	await conn.query(`INSERT INTO core.entity_person (id) VALUES ($1), ($2), ($3)`, [artist(1), artist(2), artist(3)]);
 	await conn.query(
-		`INSERT INTO show.role (artist_id, performance_id, name, status, main, "order")
-		 VALUES (1, 1, 'Fantine', NULL, true, 1), (2, 1, 'Javert', NULL, false, 2),
-		 (2, 2, 'Javert', 'doublure', false, 1),
-		 (1, 5, 'Fantine', NULL, true, 1)`,
+		`INSERT INTO show.role (entity_id, performance_id, name, status, main, "order")
+		 VALUES ($4, $1, 'Fantine', NULL, true, 1), ($5, $1, 'Javert', NULL, false, 2),
+		 ($5, $2, 'Javert', 'doublure', false, 1),
+		 ($4, $3, 'Fantine', NULL, true, 1)`,
+		[performance(1), performance(2), performance(5), artist(1), artist(2)],
 	);
-	await conn.query(`INSERT INTO show.model (id, name, spectacle_id) VALUES (1, 'Distribution 2026', 1)`);
+	await conn.query(`INSERT INTO show.model (id, name, spectacle_id) VALUES ($1, 'Distribution 2026', $2)`, [
+		model(1),
+		spectacle(1),
+	]);
 	await conn.query(
-		`INSERT INTO show.model_role (name, main, artist_id, model_id, "order")
-		 VALUES ('Fantine', true, 1, 1, 1), ('Javert', false, NULL, 1, 2)`,
+		`INSERT INTO show.model_role (name, main, entity_id, model_id, "order")
+		 VALUES ('Fantine', true, $2, $1, 1), ('Javert', false, NULL, $1, 2)`,
+		[model(1), artist(1)],
 	);
 
 	await seedReadingBooks(conn);

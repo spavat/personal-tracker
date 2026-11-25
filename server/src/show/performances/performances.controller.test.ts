@@ -5,6 +5,9 @@ import { buildTestApp } from "../../test-support/test-app.js";
 import { ShowModule } from "../show.module.js";
 
 const OWNER = { user: { id: "owner" }, session: { id: "session" } };
+const PERFORMANCE_ID = "00000000-0000-4000-8000-000000000010";
+const PLACE_ID = "00000000-0000-4000-8000-000000000007";
+const SPECTACLE_ID = "00000000-0000-4000-8000-000000000100";
 
 // no real S3 call when a deleted performance takes role portraits with it
 vi.mock("../media/media-storage.repository", () => ({
@@ -34,7 +37,7 @@ describe("show/performances routes", () => {
 		expect(ctx.table("showPerformance").findMany).toHaveBeenCalled();
 	});
 
-	it("GET /:performanceId rejects a non-numeric id", async () => {
+	it("GET /:performanceId rejects an id that is not a uuid", async () => {
 		expect((await ctx.app.inject({ method: "GET", url: "/show/performances/abc" })).statusCode).toBe(400);
 	});
 
@@ -44,12 +47,12 @@ describe("show/performances routes", () => {
 
 	it("POST / creates a performance: 201 with the saved row", async () => {
 		const saved = {
-			id: 11,
+			id: "00000000-0000-4000-8000-000000000011",
 			date: "2024-01-01T20:00:00",
 			canceled: false,
 			seat: "A1",
-			placeId: 7,
-			spectacleId: 100,
+			placeId: PLACE_ID,
+			spectacleId: SPECTACLE_ID,
 			casting_status: "tbd",
 			casting_origin: "na",
 			posterId: null,
@@ -60,7 +63,13 @@ describe("show/performances routes", () => {
 			method: "POST",
 			url: "/show/performances",
 			payload: {
-				performance: { date: "2024-01-01T20:00", canceled: false, seat: "A1", placeId: 7, spectacleId: 100 },
+				performance: {
+					date: "2024-01-01T20:00",
+					canceled: false,
+					seat: "A1",
+					placeId: PLACE_ID,
+					spectacleId: SPECTACLE_ID,
+				},
 			},
 		});
 		expect(res.statusCode).toBe(201);
@@ -72,8 +81,8 @@ describe("show/performances routes", () => {
 			method: "POST",
 			url: "/show/performances",
 			payload: {
-				spectacle: { name: "Tosca", workId: 0 },
-				performance: { date: "2024-01-01T20:00", canceled: false, seat: "", placeId: 7, spectacleId: 0 },
+				spectacle: { name: "Tosca" },
+				performance: { date: "2024-01-01T20:00", canceled: false, seat: "", placeId: PLACE_ID },
 			},
 		});
 		expect(res.statusCode).toBe(400);
@@ -83,8 +92,8 @@ describe("show/performances routes", () => {
 	it("PUT /:id/casting runs inside a transaction and answers 204", async () => {
 		const res = await ctx.app.inject({
 			method: "PUT",
-			url: "/show/performances/10/casting",
-			payload: { performanceId: 10, roles: [] },
+			url: `/show/performances/${PERFORMANCE_ID}/casting`,
+			payload: { performanceId: PERFORMANCE_ID, roles: [] },
 		});
 		expect(res.statusCode).toBe(204);
 		expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
@@ -92,8 +101,8 @@ describe("show/performances routes", () => {
 
 	it("DELETE /:id deletes inside a transaction: 204", async () => {
 		await ctx.app.close();
-		ctx = await buildApp([{ id: 10 }]);
-		const res = await ctx.app.inject({ method: "DELETE", url: "/show/performances/10" });
+		ctx = await buildApp([{ id: PERFORMANCE_ID }]);
+		const res = await ctx.app.inject({ method: "DELETE", url: `/show/performances/${PERFORMANCE_ID}` });
 		expect(res.statusCode).toBe(204);
 		expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
 	});
@@ -101,10 +110,12 @@ describe("show/performances routes", () => {
 	it("DELETE /:id 404s when the performance is unknown", async () => {
 		await ctx.app.close();
 		ctx = await buildApp([]);
-		expect((await ctx.app.inject({ method: "DELETE", url: "/show/performances/10" })).statusCode).toBe(404);
+		expect(
+			(await ctx.app.inject({ method: "DELETE", url: `/show/performances/${PERFORMANCE_ID}` })).statusCode,
+		).toBe(404);
 	});
 
-	it("DELETE /:id rejects a non-numeric id", async () => {
+	it("DELETE /:id rejects an id that is not a uuid", async () => {
 		expect((await ctx.app.inject({ method: "DELETE", url: "/show/performances/abc" })).statusCode).toBe(400);
 	});
 });
