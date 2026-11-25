@@ -1,6 +1,39 @@
 // Mongo `broadcast` documents -> the rows of the Postgres `broadcast` schema (ticket 03 of
 // .scratch/broadcast-postgres). Pure: the script migrate-broadcast.ts writes the rows.
-import type { Episode, Program } from "@personal-tracker/shared/broadcast";
+// The documents of the Mongo `broadcast` collection: one episode per listening
+export interface MongoEpisode {
+	id: string;
+	name: string;
+	shortName?: string;
+	duration: number;
+	durationReal?: number;
+	date: string;
+	type: string;
+	link?: string;
+	tags?: string[];
+	contextTags?: string[];
+	ignoredTags?: string[];
+	created?: string;
+	comment?: string;
+	externalId?: string;
+}
+export interface MongoProgram {
+	id: string;
+	name: string;
+	shortName?: string;
+	author?: string;
+	country?: string;
+	network?: string;
+	links?: string[];
+	profile?: string;
+	banner?: string;
+	episodes: MongoEpisode[];
+	tags?: string[];
+	refs?: { rss?: string; youtubeChannelId?: string; youtubePlaylistId?: string };
+	description?: string;
+	type?: string;
+	private?: boolean;
+}
 
 export interface ProgramRow {
 	id: string;
@@ -56,7 +89,6 @@ export interface CreditRow {
 // 2026-11-23. An organization making the program is credited `producer`, not `host`.
 export const AUTHOR_OVERRIDES: Record<string, { name?: string; kind: CreditRow["kind"] }> = {
 	Acrimed: { kind: "organization" },
-	AlphaCast: { kind: "organization" },
 	"Amaury Sport Organisation": { kind: "organization" },
 	Babymonster: { kind: "group" },
 	"BBC Learning English": { kind: "organization" },
@@ -128,13 +160,13 @@ export function titleKey(title: string) {
 		.replace(/[^\p{L}\p{N}]+/gu, "");
 }
 
-const byListening = (a: Episode, b: Episode) =>
+const byListening = (a: MongoEpisode, b: MongoEpisode) =>
 	a.date.localeCompare(b.date) || (a.created ?? "").localeCompare(b.created ?? "");
 
 // One episode per release: the Mongo episodes of a program sharing an externalId are its listenings. The oldest
 // gives the episode its id and fields, the tags of every listening are kept.
-function groupListenings(program: Program) {
-	const groups = new Map<string, Episode[]>();
+function groupListenings(program: MongoProgram) {
+	const groups = new Map<string, MongoEpisode[]>();
 	for (const episode of (program.episodes ?? []).toSorted(byListening)) {
 		const key = text(episode.externalId) ?? `id:${episode.id}`;
 		groups.set(key, [...(groups.get(key) ?? []), episode]);
@@ -142,7 +174,7 @@ function groupListenings(program: Program) {
 	return [...groups.values()];
 }
 
-export function toBroadcastRows(documents: Program[]): BroadcastRows {
+export function toBroadcastRows(documents: MongoProgram[]): BroadcastRows {
 	const rows: BroadcastRows = { programs: [], credits: [], episodes: [], views: [], merged: 0, conflicts: [] };
 
 	for (const program of documents) {

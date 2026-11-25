@@ -1,15 +1,15 @@
-import type { Episode, Program } from "@personal-tracker/shared/broadcast";
-
 import { describe, expect, it } from "vitest";
+
+import type { MongoEpisode, MongoProgram } from "./broadcast-migration.utils.js";
 
 import { titleKey, toBroadcastRows } from "./broadcast-migration.utils.js";
 
-const episode = (fields: Partial<Episode> & Pick<Episode, "id" | "name" | "date">): Episode => ({
+const episode = (fields: Partial<MongoEpisode> & Pick<MongoEpisode, "id" | "name" | "date">): MongoEpisode => ({
 	duration: 30,
 	type: "podcast",
 	...fields,
 });
-const program = (fields: Partial<Program> & Pick<Program, "id" | "episodes">): Program => ({
+const program = (fields: Partial<MongoProgram> & Pick<MongoProgram, "id" | "episodes">): MongoProgram => ({
 	name: "Tolkien",
 	...fields,
 });

@@ -59,7 +59,7 @@ export default function DetailsDay({ date, returnTo }: DayProps) {
 							<div className="panel">
 								<h3>Émissions</h3>
 								{data.broadcast.map((item) => (
-									<p key={item.episodeId}>
+									<p key={item.viewId}>
 										{item.programName} - {item.episodeName} (
 										{getDurationString(item.durationReal ?? item.duration)}
 										{item.durationReal ? "*" : ""})

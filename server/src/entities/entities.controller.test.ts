@@ -72,7 +72,7 @@ describe("entities routes", () => {
 		expect(ctx.db.insert).not.toHaveBeenCalled();
 	});
 
-	it("PUT /:id 404s when no entity has this id and kind", async () => {
+	it("PUT /:id 404s when no entity has this id", async () => {
 		const res = await ctx.app.inject({ method: "PUT", url: `/entities/${ID}`, payload: CARROLL });
 		expect(res.statusCode).toBe(404);
 		expect(ctx.db.update).not.toHaveBeenCalled();

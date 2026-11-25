@@ -72,6 +72,7 @@ export const DailyBroadcastSchema = z.object({
 	programId: z.uuid(),
 	programName: z.string(),
 	episodeId: z.uuid(),
+	viewId: z.uuid(),
 	episodeName: z.string(),
 	duration: z.number(),
 	durationReal: z.number().optional(),

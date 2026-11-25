@@ -1,3 +1,5 @@
+import { youtubeThumbnail } from "./youtube-link.utils.js";
+
 interface YoutubeAuthorInfos {
 	name: string;
 	description: string;
@@ -14,6 +16,9 @@ export interface YoutubeEpisodeInfos {
 	durationInMinutes: number;
 	uploadDate: string;
 	link: string;
+	// plain text, and the URL of the video's image
+	description?: string;
+	cover?: string;
 }
 
 function getMinimalYoutubeUrl(inputUrl: string) {
@@ -63,6 +68,8 @@ export async function getYoutubeVideoInfo(url: string): Promise<YoutubeEpisodeIn
 		durationInMinutes: Math.round(Number(videoDetails.lengthSeconds) / 60),
 		uploadDate: microformat?.uploadDate,
 		link: microformat.canonicalUrl,
+		...(videoDetails.shortDescription ? { description: String(videoDetails.shortDescription).trim() } : {}),
+		cover: youtubeThumbnail(videoDetails.videoId),
 	};
 }
 
@@ -103,14 +110,14 @@ function extractVideoObject(html: string): any {
 	return null;
 }
 
-// "PT1H51M27S" -> 6687
+// "PT1H51M27S" -> 6687, "P1DT2H" -> 93600, "P0D" -> 0
 export function isoDurationToSeconds(iso: string): number {
-	const match = iso.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
-	if (!match) {
+	const match = iso.match(/^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/);
+	if (!match || iso === "P" || iso.endsWith("T")) {
 		throw new Error(`Invalid ISO duration: ${iso}`);
 	}
-	const [, hours = "0", minutes = "0", seconds = "0"] = match;
-	return Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds);
+	const [, days = "0", hours = "0", minutes = "0", seconds = "0"] = match;
+	return Number(days) * 86400 + Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds);
 }
 
 // "championnats-du-monde-de-cyclisme-sur-piste" -> "Championnats du monde de cyclisme sur piste"
@@ -130,6 +137,7 @@ export function parseFranceTvPage(html: string, url: string): YoutubeEpisodeInfo
 	const segments = new URL(link).pathname.split("/").filter(Boolean);
 	const programSlug = segments.at(-2) ?? "";
 	const durationInMinutes = Math.round(isoDurationToSeconds(video.duration) / 60);
+	const thumbnail = [video.thumbnailUrl ?? []].flat()[0];
 
 	return {
 		id: segments.at(-1)?.match(/^\d+/)?.[0] ?? "",
@@ -145,6 +153,8 @@ export function parseFranceTvPage(html: string, url: string): YoutubeEpisodeInfo
 		durationInMinutes,
 		uploadDate: video.uploadDate,
 		link,
+		...(video.description ? { description: String(video.description).trim() } : {}),
+		...(thumbnail ? { cover: String(thumbnail) } : {}),
 	};
 }
 

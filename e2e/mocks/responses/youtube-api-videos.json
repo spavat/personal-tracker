@@ -1,0 +1,29 @@
+{
+	"items": [
+		{
+			"id": "vid00000009",
+			"snippet": { "title": "Mock live à venir", "publishedAt": "2026-10-30T10:00:00Z", "liveBroadcastContent": "upcoming" },
+			"contentDetails": { "duration": "P0D" }
+		},
+		{
+			"id": "vid00000003",
+			"snippet": {
+				"title": "Mock video 3",
+				"description": "La troisième vidéo\nAvec un lien : https://example.com",
+				"publishedAt": "2026-10-23T10:00:00Z",
+				"liveBroadcastContent": "none"
+			},
+			"contentDetails": { "duration": "PT10M" }
+		},
+		{
+			"id": "vid00000002",
+			"snippet": { "title": "Mock video 2", "publishedAt": "2026-10-22T10:00:00Z", "liveBroadcastContent": "none" },
+			"contentDetails": { "duration": "PT8M20S" }
+		},
+		{
+			"id": "vid00000001",
+			"snippet": { "title": "Mock video 1", "publishedAt": "2026-10-21T10:00:00Z", "liveBroadcastContent": "none" },
+			"contentDetails": { "duration": "PT15M" }
+		}
+	]
+}

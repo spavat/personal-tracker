@@ -6,7 +6,7 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { contains } from "../database/contains.query.js";
 import { DRIZZLE } from "../database/database.tokens.js";
 import { Drizzle } from "../database/drizzle.js";
-import { createEntity, renameNode } from "../database/node.query.js";
+import { changeEntityKind, createEntity, renameNode } from "../database/node.query.js";
 import { coreEntity } from "../database/schema.js";
 
 const ENTITY_COLUMNS = {
@@ -80,13 +80,20 @@ export class EntitiesRepository {
 		return this.db.transaction((tx) => createEntity(tx, entity));
 	}
 
-	// undefined when no entity has this id and kind
+	// undefined when no entity has this id. Another kind moves the entity to it (see changeEntityKind).
 	update({ id, kind, name, sortName, pictureKey }: EntityFields) {
 		return this.db.transaction(async (tx) => {
+			const [current] = await tx.select({ kind: coreEntity.kind }).from(coreEntity).where(eq(coreEntity.id, id));
+			if (!current) {
+				return undefined;
+			}
+			if (current.kind !== kind) {
+				await changeEntityKind(tx, id, current.kind, kind);
+			}
 			const [entity] = await tx
 				.update(coreEntity)
 				.set({ name, sortName, pictureKey })
-				.where(and(eq(coreEntity.id, id), eq(coreEntity.kind, kind)))
+				.where(eq(coreEntity.id, id))
 				.returning(ENTITY_COLUMNS);
 			if (!entity) {
 				return undefined;

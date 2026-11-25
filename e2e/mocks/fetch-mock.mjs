@@ -24,6 +24,9 @@ const ROUTES = {
 		"youtube-feed-mocktube.xml",
 		XML,
 	],
+	// YouTube Data API (YOUTUBE_API_KEY set in playwright.config.ts): the uploads of Mock Tube, whatever the query
+	"https://www.googleapis.com/youtube/v3/playlistItems": ["youtube-api-playlist-items.json", "application/json"],
+	"https://www.googleapis.com/youtube/v3/videos": ["youtube-api-videos.json", "application/json"],
 	// Podcasts
 	"https://feeds.example.com/mock-podcast.xml": ["podcast-mock.xml", XML],
 	"https://feeds.example.com/second-podcast.xml": ["podcast-second.xml", XML],
@@ -44,6 +47,13 @@ const ROUTES = {
 	"https://images.example.com/newchannel-profile.svg": ["profile.svg", SVG],
 	"https://images.example.com/newchannel-banner.svg": ["banner.svg", SVG],
 	"https://images.example.com/podcast-cover.svg": ["profile.svg", SVG],
+	"https://images.example.com/episode-cover.svg": ["profile.svg", SVG],
+	// the covers of the Youtube videos (i.ytimg.com/vi/<videoId>/mqdefault.jpg)
+	...Object.fromEntries(
+		["vid00000001", "vid00000002", "vid00000003", "vid00000004", "vid00000005", "vid00000006", "newvideo001"].map(
+			(videoId) => [`https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`, ["profile.svg", SVG]],
+		),
+	),
 	"https://images.example.com/book-cover.svg": ["profile.svg", SVG],
 };
 

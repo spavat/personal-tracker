@@ -27,7 +27,8 @@ export const EntityListResponseSchema = z.array(EntitySchema);
 //
 // SAVE
 //
-// Creates the entity when no id is given. The kind can't change on update.
+// Creates the entity when no id is given. Another kind on update moves the entity to it (its credits are kept, the
+// fields of its former kind are lost).
 // `picture`: the URL given by the server or left out = unchanged, another URL or a data URI = new portrait,
 // null = no portrait
 export const SaveEntityBodyRequestSchema = EntitySchema.omit({ id: true }).extend({

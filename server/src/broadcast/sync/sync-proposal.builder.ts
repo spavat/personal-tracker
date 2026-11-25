@@ -1,14 +1,14 @@
-import type { LatestEpisodesResponse } from "@personal-tracker/shared/broadcast";
-
 import { Logger } from "@nestjs/common";
+import { type LatestEpisodesResponse, matchFormat } from "@personal-tracker/shared/broadcast";
 
 import type { BroadcastImagesStorage } from "../broadcast-images.storage.js";
+import type { EpisodeDoc } from "../broadcast.entity.js";
 import type { BroadcastRepository } from "../broadcast.repository.js";
 import type { LatestEpisodesCache } from "../latest-episodes.cache.js";
 import type { ListenedEpisode } from "./sync.entity.js";
 import type { SyncProposalMongo } from "./sync.repository.js";
 
-import { fetchLatestEpisodes } from "../episode-feed.client.js";
+import { fetchLatestEpisodes } from "../sources/episode-feed.client.js";
 
 function conv(duration: number) {
 	const durationInSec = Math.round(duration / 1000);
@@ -28,11 +28,11 @@ function conv(duration: number) {
 	return result.trim();
 }
 
-// Latest saved episode with this external id (relistening): flagged on the proposal, never skipped
-function findAlreadySaved(episodes: Array<{ externalId?: string; date: string }> | undefined, externalId: string) {
-	const date = (episodes ?? [])
+// Latest view of the saved episode with this external id (relistening): flagged on the proposal, never skipped
+function findAlreadySaved(episodes: Array<EpisodeDoc>, externalId: string) {
+	const date = episodes
 		.filter((episode) => episode.externalId !== undefined && String(episode.externalId) === String(externalId))
-		.map((episode) => episode.date)
+		.flatMap((episode) => episode.views.map((view) => view.date))
 		.sort()
 		.at(-1);
 	return date ? { alreadySaved: { date } } : {};
@@ -88,6 +88,47 @@ export class SyncProposalBuilder {
 		}
 		const programWithCover = this.imageStorage.resolveImages(program);
 		const alreadySaved = findAlreadySaved(program.episodes, listened.episodeId);
+		const proposalDate =
+			localDatetime.hour < 4 ? localDatetime.toPlainDate().subtract({ days: 1 }) : localDatetime.toPlainDate();
+		const view = (duration: number) => ({
+			...(listened.percentListened <= 95
+				? { durationReal: Math.round(duration * (listened.percentListened / 100)) }
+				: {}),
+			date: proposalDate.toString(),
+			created: localDatetime.toString(),
+		});
+
+		// an episode already stored (imported in a catalog, or listened before): the view goes to it, with its fields
+		const stored = program.episodes.find(
+			({ externalId }) => externalId !== undefined && String(externalId) === String(listened.episodeId),
+		);
+		if (stored) {
+			const duration = stored.duration || Math.round(Number(listened.duration) / 60 / 1000);
+			return {
+				origin,
+				...alreadySaved,
+				proposition: {
+					programId: program.id,
+					...(programWithCover.profile ? { programProfile: programWithCover.profile } : {}),
+					name: stored.name,
+					...(stored.shortName ? { shortName: stored.shortName } : {}),
+					duration,
+					type: stored.type || "podcast",
+					...(stored.releaseDate ? { releaseDate: stored.releaseDate } : {}),
+					...(stored.link ? { link: stored.link } : {}),
+					...(stored.description ? { description: stored.description } : {}),
+					...(stored.cover ? { cover: stored.cover } : {}),
+					externalId: String(listened.episodeId),
+					...(stored.seasonId ? { seasonId: stored.seasonId } : {}),
+					...(stored.formatId ? { formatId: stored.formatId } : {}),
+					...(stored.position !== undefined ? { position: stored.position } : {}),
+					...(stored.numberLabel ? { numberLabel: stored.numberLabel } : {}),
+					...(stored.tags ? { tags: stored.tags } : {}),
+					...(stored.ignoredTags ? { ignoredTags: stored.ignoredTags } : {}),
+					...view(duration),
+				},
+			};
+		}
 
 		let latest: LatestEpisodesResponse;
 		try {
@@ -104,32 +145,30 @@ export class SyncProposalBuilder {
 		if (!matchedEpisode) {
 			return { origin, ...alreadySaved };
 		}
-		const proposalDate =
-			localDatetime.hour < 4 ? localDatetime.toPlainDate().subtract({ days: 1 }) : localDatetime.toPlainDate();
-
 		let durationInMinutes = matchedEpisode.durationInMinutes;
 		if (!durationInMinutes && listened.duration) {
 			durationInMinutes = Math.round(Number(listened.duration) / 60 / 1000);
 		}
+
+		// the format whose match rule fits the title, pre-selected
+		const format = matchFormat(await this.repo.findFormats(program.id), matchedEpisode.title);
 
 		return {
 			origin,
 			...alreadySaved,
 			proposition: {
 				programId: program.id,
+				...(format ? { formatId: format.id } : {}),
 				...(programWithCover.profile ? { programProfile: programWithCover.profile } : {}),
 				name: matchedEpisode.title,
 				duration: durationInMinutes,
-				...(listened.percentListened <= 95
-					? {
-							durationReal: Math.round(durationInMinutes * (listened.percentListened / 100)),
-						}
-					: {}),
-				date: proposalDate.toString(),
 				type: "podcast",
+				releaseDate: matchedEpisode.date,
 				link: matchedEpisode.link,
+				...(matchedEpisode.description ? { description: matchedEpisode.description } : {}),
+				...(matchedEpisode.cover ? { cover: matchedEpisode.cover } : {}),
 				externalId: String(matchedEpisode.id),
-				created: localDatetime.toString(),
+				...view(durationInMinutes),
 			},
 		};
 	}

@@ -3,7 +3,7 @@ import type { z } from "zod";
 
 import { Injectable, Logger } from "@nestjs/common";
 
-import { getEpisodeTags, sortByDuration } from "../broadcast.entity.js";
+import { getEpisodeTags, sortByDuration, viewDuration, viewsOf } from "../broadcast.entity.js";
 import { BroadcastRepository } from "../broadcast.repository.js";
 
 export type StatsQuery = z.infer<typeof StatsRequestSchema>;
@@ -26,8 +26,8 @@ export class StatsService {
 		let nbEpisodes = 0;
 		for (const program of programs) {
 			byProgram[program.id] ??= { name: program.shortName || program.name, duration: 0 };
-			for (const episode of program.episodes) {
-				const duration = episode.durationReal ?? episode.duration;
+			for (const { episode, view } of viewsOf(program.episodes)) {
+				const duration = viewDuration(episode, view);
 				nbEpisodes += 1;
 				total += duration;
 				byProgram[program.id].duration += duration;
@@ -70,12 +70,12 @@ export class StatsService {
 
 		const programs = await this.repo.findEpisodesInRange({ from: from.toString(), to: today.toString() });
 		for (const program of programs) {
-			for (const episode of program.episodes) {
-				if (dayDistribution[episode.date] === undefined) {
-					this.logger.error(`Ignoring an episode of ${episode.date}, out of ${from} - ${today}`);
+			for (const { episode, view } of viewsOf(program.episodes)) {
+				if (dayDistribution[view.date] === undefined) {
+					this.logger.error(`Ignoring a view of ${view.date}, out of ${from} - ${today}`);
 					continue;
 				}
-				dayDistribution[episode.date] += episode.durationReal ?? episode.duration;
+				dayDistribution[view.date] += viewDuration(episode, view);
 			}
 		}
 

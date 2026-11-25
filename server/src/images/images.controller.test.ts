@@ -27,7 +27,12 @@ async function setup(session: unknown = null) {
 	return {
 		app,
 		storage,
-		broadcast: { findById: vi.spyOn(BroadcastRepository.prototype, "findById").mockResolvedValue(null) },
+		broadcast: {
+			findById: vi.spyOn(BroadcastRepository.prototype, "findById").mockResolvedValue(null),
+			findEpisodeCover: vi
+				.spyOn(BroadcastRepository.prototype, "findEpisodeCover")
+				.mockResolvedValue(undefined as never),
+		},
 		sport: collection("sport"),
 		game: collection("game"),
 		media: table("showMedia"),
@@ -66,7 +71,9 @@ describe("ImagesController", () => {
 			app = ctx.app;
 			ctx.broadcast.findById.mockResolvedValue({
 				id: "prog-1",
+				tracking: "feed",
 				name: "Prog",
+				credits: [],
 				episodes: [],
 				profile: "personal-tracker/broadcast/prog-1.profile.avif",
 			});
@@ -86,10 +93,46 @@ describe("ImagesController", () => {
 		it("404s when the object is missing from S3", async () => {
 			const ctx = await setup();
 			app = ctx.app;
-			ctx.broadcast.findById.mockResolvedValue({ id: "prog-1", name: "Prog", episodes: [], banner: "gone.avif" });
+			ctx.broadcast.findById.mockResolvedValue({
+				id: "prog-1",
+				tracking: "feed",
+				name: "Prog",
+				credits: [],
+				episodes: [],
+				banner: "gone.avif",
+			});
 			ctx.storage.get.mockRejectedValue(new Error("NoSuchKey"));
 
 			expect((await app.inject({ method: "GET", url: "/images/broadcast/prog-1.banner" })).statusCode).toBe(404);
+		});
+	});
+
+	describe("broadcast episode", () => {
+		const EPISODE = "22222222-2222-4222-8222-222222222222";
+
+		it("rejects a non-uuid id, without a lookup", async () => {
+			const ctx = await setup();
+			app = ctx.app;
+			expect((await app.inject({ method: "GET", url: "/images/broadcast/episode/x" })).statusCode).toBe(400);
+			expect(ctx.broadcast.findEpisodeCover).not.toHaveBeenCalled();
+		});
+
+		// the repository hides the episodes of a private program from visitors
+		it("404s for an episode without cover, streams the stored one otherwise", async () => {
+			const ctx = await setup();
+			app = ctx.app;
+			expect((await app.inject({ method: "GET", url: `/images/broadcast/episode/${EPISODE}` })).statusCode).toBe(
+				404,
+			);
+			expect(ctx.broadcast.findEpisodeCover).toHaveBeenCalledWith(EPISODE);
+
+			ctx.broadcast.findEpisodeCover.mockResolvedValue({
+				coverKey: "personal-tracker/broadcast/episode/abc.avif",
+			});
+			ctx.storage.get.mockResolvedValue(s3Object("img"));
+			const res = await app.inject({ method: "GET", url: `/images/broadcast/episode/${EPISODE}?v=abc` });
+			expect(res.statusCode).toBe(200);
+			expect(ctx.storage.get).toHaveBeenCalledWith("personal-tracker/broadcast/episode/abc.avif");
 		});
 	});
 

@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 
-import { expect, resetDb, SEED, test } from "../../fixtures";
+import { expect, queryDb, resetDb, SEED, test } from "../../fixtures";
 
 // External pages and feeds are served by e2e/mocks/fetch-mock.mjs (fixtures in e2e/mocks/responses)
 const { mockPodcast, mockTube, tourDeFrance, greatShow } = SEED.broadcast;
@@ -63,6 +63,22 @@ test.describe("Broadcast - Add episode", () => {
 		await expect(dialog).not.toBeVisible();
 		await expect(page.locator("table.episodes")).toContainText("Podcast épisode 3");
 		await expect(page.locator(".presentation .stats")).toContainText("3 épisodes");
+	});
+
+	test("pick an episode already listened: a second view of the same episode", async ({ page }) => {
+		const dialog = await openAddModal(page, mockPodcast);
+		await latestEpisodes(dialog).getByText("Podcast épisode 1").click();
+		await expect(episodeField(dialog, "Id externe")).toHaveValue("mock-pod-1");
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+
+		await expect(dialog).not.toBeVisible();
+		await expect(page.locator("table.episodes tbody tr", { hasText: "Podcast épisode 1" })).toHaveCount(2);
+		expect(
+			await queryDb(
+				`SELECT count(DISTINCT e.id)::int AS episodes, count(v.id)::int AS views
+				 FROM broadcast.episode e JOIN broadcast.view v ON v.episode_id = e.id WHERE e.external_id = 'mock-pod-1'`,
+			),
+		).toEqual([{ episodes: 1, views: 2 }]);
 	});
 
 	test("pick a latest Youtube video: its duration comes from the video page", async ({ page }) => {
@@ -142,7 +158,7 @@ test.describe("Broadcast - Add episode", () => {
 		const programPanel = dialog.locator(".form_part_2");
 		await expect(programPanel.getByRole("textbox", { name: "Titre *", exact: true })).toHaveValue("New Channel");
 		await expect(programPanel.getByRole("textbox", { name: "Description" })).toHaveValue("Une nouvelle chaine");
-		await expect(programPanel.getByRole("combobox", { name: "Type" })).toHaveValue("youtube");
+		await expect(programPanel.getByRole("combobox", { name: "Type", exact: true })).toHaveValue("youtube");
 		await expect(programPanel.locator('select[name="program.refs.0.key"]')).toHaveValue("youtubeChannelId");
 		await expect(programPanel.locator('input[name="program.refs.0.value"]')).toHaveValue(
 			"UCnewchannel000000000001",

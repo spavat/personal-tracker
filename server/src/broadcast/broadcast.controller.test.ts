@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { broadcastProgram, broadcastView } from "../database/schema.js";
+import { broadcastEpisode, broadcastProgram, broadcastView } from "../database/schema.js";
 import { makeFakeDrizzle } from "../test-support/fake-drizzle.js";
 import { makeFakeMongo } from "../test-support/fake-mongo.js";
 import { buildTestApp } from "../test-support/test-app.js";
@@ -180,6 +180,29 @@ describe("BroadcastModule controllers", () => {
 			expect(ctx.db.insert).not.toHaveBeenCalled();
 		});
 
+		it("rejects an episode created with neither a view nor the status planned, or with both", async () => {
+			const ctx = await setup();
+			app = ctx.app;
+			const episode = { name: "Ep", duration: 10, type: "podcast" };
+			const create = (payload: object) =>
+				app.inject({ method: "POST", url: `/broadcast/programs/${PROGRAM}/episodes`, payload });
+
+			expect((await create(episode)).statusCode).toBe(400);
+			expect((await create({ ...episode, view: { date: "2026-10-01" }, status: "planned" })).statusCode).toBe(
+				400,
+			);
+			expect(
+				(
+					await app.inject({
+						method: "PUT",
+						url: `/broadcast/programs/${PROGRAM}/episodes/${PROGRAM}/status`,
+						payload: { status: "watched" },
+					})
+				).statusCode,
+			).toBe(400);
+			expect(ctx.db.insert).not.toHaveBeenCalled();
+		});
+
 		it("answers 400 to the latest episodes of a program without feed", async () => {
 			({ app } = await setup(OWNER, new Map([[broadcastProgram, [PROGRAM_ROW]]])));
 
@@ -229,7 +252,26 @@ describe("BroadcastModule controllers", () => {
 	});
 
 	it("POST /sync/:id/validate saves the episode, then removes the proposal", async () => {
-		const ctx = await setup(OWNER, new Map([[broadcastProgram, [PROGRAM_ROW]]]));
+		// the fake's writes answer the id PROGRAM: the new episode has it, then reads back as this row
+		const episodeRow = {
+			episode: {
+				id: PROGRAM,
+				programId: PROGRAM,
+				name: "Ep",
+				duration: 30,
+				type: "podcast",
+				tags: [],
+				ignoredTags: [],
+			},
+			view: null,
+		};
+		const ctx = await setup(
+			OWNER,
+			new Map<unknown, unknown[]>([
+				[broadcastProgram, [PROGRAM_ROW]],
+				[broadcastEpisode, [episodeRow]],
+			]),
+		);
 		app = ctx.app;
 		const proposal = "33333333-3333-4333-8333-333333333333";
 
@@ -238,7 +280,7 @@ describe("BroadcastModule controllers", () => {
 			url: `/broadcast/sync/${proposal}/validate`,
 			payload: {
 				programId: PROGRAM,
-				episode: { name: "Ep", duration: 30, date: "2026-10-01", type: "podcast", tags: [], contextTags: [] },
+				episode: { name: "Ep", duration: 30, type: "podcast", tags: [], view: { date: "2026-10-01" } },
 			},
 		});
 

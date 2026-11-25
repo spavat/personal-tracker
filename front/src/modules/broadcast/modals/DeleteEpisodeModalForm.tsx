@@ -3,22 +3,24 @@ import { useNavigate } from "@tanstack/react-router";
 
 import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
-import { deleteItem, programDetailsQuery } from "../api";
+import { deleteLine, programDetailsQuery } from "../api";
+import { toLines } from "../episode-lines";
 
+// Deletes a line: its view (the episode goes too when it was its last view)
 export default function DeleteEpisodeModalForm({
 	programId,
-	episodeId,
+	viewId,
 	returnTo,
 }: {
 	programId: string;
-	episodeId: string;
+	viewId: string;
 	returnTo: string;
 }) {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 
 	const saveMutation = useMutation({
-		mutationFn: deleteItem,
+		mutationFn: deleteLine,
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["programs"] });
 			queryClient.invalidateQueries({ queryKey: ["program", programId] });
@@ -29,10 +31,7 @@ export default function DeleteEpisodeModalForm({
 	const { data } = useSuspenseQuery(programDetailsQuery(programId));
 
 	function deleteAndClose() {
-		saveMutation.mutate({
-			programId: programId,
-			episodeId: episodeId,
-		});
+		saveMutation.mutate({ programId, episodeId: episode.episodeId, viewId });
 	}
 
 	function closeModal() {
@@ -43,7 +42,7 @@ export default function DeleteEpisodeModalForm({
 		});
 	}
 
-	const episode = data.episodes.find((ep) => ep.id === episodeId)!;
+	const episode = toLines(data.episodes).find((line) => line.id === viewId)!;
 
 	return (
 		<Modal className={"form modal dialog-medium"} isOpen={true} onClose={closeModal} hasCloseBtn={true}>

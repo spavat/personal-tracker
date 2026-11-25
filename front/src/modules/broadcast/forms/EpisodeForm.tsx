@@ -5,11 +5,20 @@ import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import Badge from "../../../components/Badge";
 import BadgeEdit from "../../../components/BadgeEdit";
 import TagBadge from "../../../components/TagBadge";
-import { programsQuery } from "../api";
-import { type EpisodeInputs } from "./EpisodeForm.utils";
+import { programDetailsQuery, programsQuery } from "../api";
+import { readImageFile, resolveImagePreviewSrc } from "../images";
+import CreditRows from "./CreditRows";
+import { EPISODE_CREDIT_ROLES, type EpisodeInputs } from "./EpisodeForm.utils";
 
 export default function EpisodeForm() {
-	const { control, register } = useFormContext<EpisodeInputs & { programId?: string }>();
+	const { control, register, setValue } = useFormContext<EpisodeInputs & { programId?: string }>();
+	const cover = useWatch({ control, name: "episode.cover" });
+
+	async function onCoverFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+		const file = e.target.files?.[0];
+		if (!file) return;
+		setValue("episode.cover", await readImageFile(file), { shouldDirty: true });
+	}
 	const [showParentTags, setShowParentTags] = useState(false);
 
 	const {
@@ -43,6 +52,10 @@ export default function EpisodeForm() {
 	const { data: programs } = useQuery(programsQuery());
 	const parentTags = programs?.find((p) => p.id === programId)?.tags ?? [];
 	const ignorableTags = parentTags.filter((tag) => !fieldsIgnoredTags.some((field) => field.value === tag));
+	// its seasons and formats (a new program has none)
+	const { data: program } = useQuery({ ...programDetailsQuery(programId ?? ""), enabled: Boolean(programId) });
+	const seasons = program?.seasons ?? [];
+	const formats = program?.formats ?? [];
 
 	// Ignored tags of another program mean nothing for the new one
 	const previousProgramId = useRef(programId);
@@ -65,6 +78,42 @@ export default function EpisodeForm() {
 						</span>
 						<input {...register("episode.name", { required: true })} type="text" autoComplete="off" />
 					</label>
+
+					<label className="form-field">
+						<span>Numéro</span>
+						<input
+							{...register("episode.numberLabel")}
+							type="text"
+							autoComplete="off"
+							placeholder="12, bonus, Vlog 5…"
+						/>
+					</label>
+					{seasons.length > 0 && (
+						<label className="form-field">
+							<span>Saison</span>
+							<select {...register("episode.seasonId")}>
+								<option value="">Aucune</option>
+								{seasons.map((season) => (
+									<option key={season.id} value={season.id}>
+										{season.label}
+									</option>
+								))}
+							</select>
+						</label>
+					)}
+					{formats.length > 0 && (
+						<label className="form-field">
+							<span>Format</span>
+							<select {...register("episode.formatId")}>
+								<option value="">Aucun</option>
+								{formats.map((format) => (
+									<option key={format.id} value={format.id}>
+										{format.label}
+									</option>
+								))}
+							</select>
+						</label>
+					)}
 
 					<label className="form-field">
 						<span>
@@ -118,6 +167,35 @@ export default function EpisodeForm() {
 						/>
 					</label>
 					<label className="form-field full-width">
+						<span>Description</span>
+						<textarea className="description" {...register("episode.description")}></textarea>
+					</label>
+					<div className="form-field full-width">
+						<label htmlFor="episode-cover">
+							<span>Couverture</span>
+						</label>
+						<input
+							id="episode-cover"
+							{...register("episode.cover")}
+							type="text"
+							placeholder="https://…"
+							autoComplete="off"
+						/>
+						<input
+							type="file"
+							accept="image/*"
+							aria-label="Fichier de couverture"
+							onChange={onCoverFileChange}
+						/>
+						{cover && (
+							<img
+								src={resolveImagePreviewSrc(cover)}
+								alt="Couverture"
+								className="image-preview cover-preview"
+							/>
+						)}
+					</div>
+					<label className="form-field full-width">
 						<span>Commentaire</span>
 						<textarea className="comment" {...register("episode.comment")}></textarea>
 					</label>
@@ -127,6 +205,13 @@ export default function EpisodeForm() {
 						</span>
 						<input {...register("episode.created")} type="datetime-local" step="1" />
 					</label>
+				</div>
+			</div>
+
+			<div className="panel">
+				<h3>Participants</h3>
+				<div className="form-grid">
+					<CreditRows name="episode.credits" roles={EPISODE_CREDIT_ROLES} label="Invité·es, animation" />
 				</div>
 			</div>
 

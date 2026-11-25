@@ -62,14 +62,18 @@ describe("EntitiesService.save", () => {
 		expect(portraits.deleteObject).toHaveBeenCalledWith(OLD_KEY);
 	});
 
-	it("404s on an unknown entity or another kind, before uploading anything", async () => {
-		for (const current of [undefined, { pictureKey: null, kind: "organization" as const }]) {
-			const { repo, portraits, service } = build(current);
-			await expect(
-				service.update(ID, { ...CARROLL, picture: "https://example.com/p.jpg" }),
-			).rejects.toBeInstanceOf(NotFoundError);
-			expect(portraits.upload).not.toHaveBeenCalled();
-			expect(repo.update).not.toHaveBeenCalled();
-		}
+	it("404s on an unknown entity, before uploading anything", async () => {
+		const { repo, portraits, service } = build(undefined);
+		await expect(service.update(ID, { ...CARROLL, picture: "https://example.com/p.jpg" })).rejects.toBeInstanceOf(
+			NotFoundError,
+		);
+		expect(portraits.upload).not.toHaveBeenCalled();
+		expect(repo.update).not.toHaveBeenCalled();
+	});
+
+	it("saves another kind: the repository moves the entity to it", async () => {
+		const { repo, service } = build({ pictureKey: null, kind: "organization" });
+		await service.update(ID, CARROLL);
+		expect(repo.update).toHaveBeenCalledWith(expect.objectContaining({ id: ID, kind: "person" }));
 	});
 });

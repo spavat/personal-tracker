@@ -8,8 +8,8 @@ import { Injectable, Logger } from "@nestjs/common";
 
 import { BadRequestError, UpstreamError } from "../../common/errors.js";
 import { BroadcastRepository } from "../broadcast.repository.js";
-import { fetchLatestEpisodes } from "../episode-feed.client.js";
 import { LatestEpisodesCache } from "../latest-episodes.cache.js";
+import { fetchLatestEpisodes } from "../sources/episode-feed.client.js";
 
 const CACHE_HOURS = 2;
 // The program ref read for each source, in order of preference when none is forced
@@ -32,32 +32,34 @@ export class LatestService {
 		return { dateTimeUtc: now(), type, latestEpisodes: await this.fetch(url, type) };
 	}
 
-	// The latest episodes of a program's feed, cached 2 hours unless a source is forced; `view` flags those already saved
+	// The latest episodes of a program's feed, cached 2 hours unless a source is forced; each one stored is flagged
+	// with `view` (it has one) and its status, read anew on each call
 	async latestForProgram(programId: string, force: RefIdsEnum | undefined): Promise<LatestEpisodesResponse> {
 		this.logger.log("latestForProgram");
-		if (!force) {
-			const cached = this.cache.get(programId);
-			if (cached && this.hoursSince(cached.dateTimeUtc) < CACHE_HOURS) {
-				return cached;
-			}
+		const program = await this.repo.findById(programId);
+		let response = force ? undefined : this.cache.get(programId);
+		if (!response || this.hoursSince(response.dateTimeUtc) >= CACHE_HOURS) {
+			const type = force ?? REF_TYPES.find((refType) => program?.refs?.[refType]);
+			const url = type ? program?.refs?.[type] : undefined;
+			if (!type || !url) throw new BadRequestError("broadcast.no_feed", "no feed to read");
+			response = { dateTimeUtc: now(), type, latestEpisodes: await this.fetch(url, type) };
+			if (response.latestEpisodes.length) this.cache.set(programId, response);
 		}
 
-		const program = await this.repo.findById(programId);
-		const type = force ?? REF_TYPES.find((refType) => program?.refs?.[refType]);
-		const url = type ? program?.refs?.[type] : undefined;
-		if (!type || !url) throw new BadRequestError("broadcast.no_feed", "no feed to read");
-
-		const savedExternalIds = new Set(
-			(program?.episodes ?? []).flatMap((episode) => (episode.externalId ? [episode.externalId] : [])),
+		const stored = new Map(
+			(program?.episodes ?? []).flatMap((episode) => (episode.externalId ? [[episode.externalId, episode]] : [])),
 		);
-		const latestEpisodes = (await this.fetch(url, type)).map((episode) => ({
-			...episode,
-			view: Boolean(episode.id && savedExternalIds.has(episode.id)),
-		}));
-		const response = { dateTimeUtc: now(), type, latestEpisodes };
-
-		if (latestEpisodes.length) this.cache.set(programId, response);
-		return response;
+		return {
+			...response,
+			latestEpisodes: response.latestEpisodes.map(({ view: _view, status: _status, ...episode }) => {
+				const saved = stored.get(episode.id);
+				return {
+					...episode,
+					view: Boolean(saved?.views.length),
+					...(saved?.status ? { status: saved.status } : {}),
+				};
+			}),
+		};
 	}
 
 	private async fetch(url: string, type: RefIdsEnum) {

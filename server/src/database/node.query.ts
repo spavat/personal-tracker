@@ -56,6 +56,15 @@ export async function createEntity(
 	return entity;
 }
 
+// Moves an entity to another kind: its subtype row (and the fields specific to its former kind) is replaced. The
+// credits point to the entity, not to its kind: they stay.
+export async function changeEntityKind(tx: Tx, id: string, from: EntityKind, to: EntityKind) {
+	// the subtype row references (id, kind): it goes before the kind changes
+	await tx.delete(ENTITY_SUBTYPE_TABLE[from]).where(eq(ENTITY_SUBTYPE_TABLE[from].id, id));
+	await tx.update(coreEntity).set({ kind: to }).where(eq(coreEntity.id, id));
+	await tx.insert(ENTITY_SUBTYPE_TABLE[to]).values({ id });
+}
+
 type ExternalIdRow = { source: ExternalSource; externalId: string };
 
 // The rows of a node's external ids, as `{ openLibrary: "OL…" }`

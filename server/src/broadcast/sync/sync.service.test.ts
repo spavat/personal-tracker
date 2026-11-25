@@ -1,7 +1,7 @@
 import { Test } from "@nestjs/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../episode-feed.client.js", () => ({
+vi.mock("../sources/episode-feed.client.js", () => ({
 	fetchLatestEpisodes: vi.fn().mockResolvedValue([]),
 	fetchPodcastTitle: vi.fn().mockResolvedValue(undefined),
 }));
@@ -14,8 +14,8 @@ import { ConflictError, NotFoundError } from "../../common/errors.js";
 import { BroadcastImagesStorage } from "../broadcast-images.storage.js";
 import { BroadcastRepository } from "../broadcast.repository.js";
 import { BroadcastService } from "../broadcast.service.js";
-import { fetchLatestEpisodes, fetchPodcastTitle } from "../episode-feed.client.js";
 import { LatestEpisodesCache } from "../latest-episodes.cache.js";
+import { fetchLatestEpisodes, fetchPodcastTitle } from "../sources/episode-feed.client.js";
 import { GopodderClient } from "./gopodder.client.js";
 import { SyncStateRepository } from "./sync-state.repository.js";
 import { extractListenedEpisodesFromBuffer } from "./sync.entity.js";
@@ -51,7 +51,7 @@ const PLAY = {
 
 describe("SyncService", () => {
 	let service: SyncService;
-	const repo = { findByRssUrl: vi.fn(), findById: vi.fn(), setRssRef: vi.fn() };
+	const repo = { findByRssUrl: vi.fn(), findById: vi.fn(), setRssRef: vi.fn(), findFormats: vi.fn() };
 	const syncRepo = {
 		count: vi.fn(),
 		insertMany: vi.fn(),
@@ -70,10 +70,11 @@ describe("SyncService", () => {
 
 	beforeEach(async () => {
 		vi.resetAllMocks();
+		repo.findFormats.mockResolvedValue([]);
 		fetchLatest.mockResolvedValue([]);
 		fetchTitle.mockResolvedValue(undefined);
 		extract.mockReturnValue([]);
-		repo.findByRssUrl.mockResolvedValue({ id: "p1", name: "Prog" });
+		repo.findByRssUrl.mockResolvedValue({ id: "p1", name: "Prog", episodes: [] });
 		syncRepo.count.mockResolvedValue(0);
 		syncRepo.findAllWithSource.mockResolvedValue([]);
 		syncRepo.findByPodcastUrl.mockResolvedValue([]);
@@ -110,14 +111,40 @@ describe("SyncService", () => {
 			expect(proposals[1].proposition).toBeUndefined();
 		});
 
-		it("flags an episode already saved in the program, without skipping it", async () => {
+		it("pre-selects the first format, in order, whose match rule fits the title (case ignored)", async () => {
+			repo.findFormats.mockResolvedValue([
+				{ id: "f2", position: 2, label: "Épisode", match: "episode" },
+				{ id: "broken", position: 0, label: "Cassé", match: "(" },
+				{ id: "f1", position: 1, label: "Bonus", match: "^EPISODE \\d$" },
+			]);
+			extract.mockReturnValue([LISTENED]);
+			fetchLatest.mockResolvedValue([EPISODE_1] as never);
+
+			await service.uploadAntennaPod(new Uint8Array([1]));
+
+			// the invalid rule is skipped, f1 comes before f2
+			expect(syncRepo.insertMany.mock.calls[0][0][0].proposition).toMatchObject({ formatId: "f1" });
+		});
+
+		it("flags an episode already saved in the program, without skipping it: the proposal keeps its fields", async () => {
 			repo.findByRssUrl.mockResolvedValue({
 				id: "p1",
 				name: "Prog",
 				episodes: [
-					{ externalId: "guid-1", date: "2026-09-01" },
-					{ externalId: "guid-1", date: "2026-09-15" },
-					{ externalId: "other", date: "2026-09-20" },
+					{
+						externalId: "guid-1",
+						name: "Saved title",
+						duration: 40,
+						type: "podcast",
+						seasonId: "s1",
+						numberLabel: "3",
+						position: 3,
+						releaseDate: "2026-08-01",
+						description: "Saved description",
+						cover: "/images/broadcast/episode/e1?v=abc",
+						views: [{ date: "2026-09-01" }, { date: "2026-09-15" }],
+					},
+					{ externalId: "other", views: [{ date: "2026-09-20" }] },
 				],
 			});
 			extract.mockReturnValue([LISTENED]);
@@ -127,8 +154,35 @@ describe("SyncService", () => {
 
 			expect(syncRepo.insertMany.mock.calls[0][0][0]).toMatchObject({
 				alreadySaved: { date: "2026-09-15" },
-				proposition: { name: "Episode 1" },
+				proposition: {
+					name: "Saved title",
+					duration: 40,
+					seasonId: "s1",
+					numberLabel: "3",
+					position: 3,
+					releaseDate: "2026-08-01",
+					description: "Saved description",
+					// the stored cover, kept when the proposal is validated
+					cover: "/images/broadcast/episode/e1?v=abc",
+					externalId: "guid-1",
+				},
 			});
+		});
+
+		it("proposes a view of an imported episode the latest episodes no longer hold", async () => {
+			repo.findByRssUrl.mockResolvedValue({
+				id: "p1",
+				name: "Prog",
+				episodes: [{ externalId: "guid-1", name: "Old release", duration: 40, type: "podcast", views: [] }],
+			});
+			extract.mockReturnValue([LISTENED]);
+			fetchLatest.mockResolvedValue([] as never);
+
+			await service.uploadAntennaPod(new Uint8Array([1]));
+
+			const [proposal] = syncRepo.insertMany.mock.calls[0][0];
+			expect(proposal.alreadySaved).toBeUndefined();
+			expect(proposal.proposition).toMatchObject({ programId: "p1", name: "Old release", externalId: "guid-1" });
 		});
 
 		it("is refused with ConflictError while proposals already exist", async () => {
@@ -184,7 +238,9 @@ describe("SyncService", () => {
 				// known program, episode missing from its feed: not an unknown feed
 				{ id: "s4", listened: LISTENED },
 			]);
-			repo.findByRssUrl.mockImplementation(async (url: string) => (url === "http://feed" ? { id: "p1" } : null));
+			repo.findByRssUrl.mockImplementation(async (url: string) =>
+				url === "http://feed" ? { id: "p1", episodes: [] } : null,
+			);
 
 			expect(await service.unknownFeeds()).toEqual([
 				{ rssUrl: "http://untitled", title: "http://untitled", count: 1 },

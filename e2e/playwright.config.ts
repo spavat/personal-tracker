@@ -41,6 +41,8 @@ export default defineConfig<{}, { asOwner: boolean }>({
 				"GOPODDER_URL=https://gopodder.example.com",
 				"GOPODDER_USERNAME=tracker",
 				"GOPODDER_PASSWORD=e2e-password",
+				// the YouTube Data API is served by fetch-mock too
+				"YOUTUBE_API_KEY=e2e-key",
 				// no daily store sync, and no real store account from server/.env
 				"GAME_SYNC_SCHEDULER=off",
 				"STEAM_API_KEY=",

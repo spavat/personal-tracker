@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-import { expect, resetDb, SEED, test } from "../../fixtures";
+import { expect, pickEntity, resetDb, SEED, test } from "../../fixtures";
 
 const { mockPodcast, mockTube, tourDeFrance, greatShow, secondPodcast, oldShow } = SEED.broadcast;
 
@@ -78,8 +78,9 @@ test.describe("Broadcast - List", () => {
 	test("add a Youtube program: its images are fetched and stored", async ({ page }) => {
 		const dialog = await openAddModal(page);
 		await dialog.getByRole("textbox", { name: "Titre *", exact: true }).fill("New Channel");
-		await dialog.getByRole("textbox", { name: "Auteur" }).fill("New Author");
-		await dialog.getByRole("combobox", { name: "Type" }).selectOption("youtube");
+		await dialog.getByRole("button", { name: "Ajouter un crédit" }).click();
+		await pickEntity(dialog, "Crédits 1", "New Author");
+		await dialog.getByRole("combobox", { name: "Type", exact: true }).selectOption("youtube");
 		await dialog.getByRole("button", { name: "Ajouter un lien" }).click();
 		await dialog.locator('input[name="program.links.0.value"]').fill("https://www.youtube.com/@newchannel");
 		await dialog.getByText("Ajouter un tag").click();
@@ -123,11 +124,15 @@ test.describe("Broadcast - List", () => {
 		const dialog = page.getByRole("dialog", { name: "Modifier programme" });
 		await expect(dialog).toBeVisible();
 		await expect(dialog.getByRole("textbox", { name: "Titre *", exact: true })).toHaveValue(greatShow.name);
-		await expect(dialog.getByRole("textbox", { name: "Auteur" })).toHaveValue("John Doe");
+		await expect(dialog.getByRole("textbox", { name: "Crédits 1", exact: true })).toHaveValue("John Doe");
 
-		await dialog.getByRole("textbox", { name: "Auteur" }).fill("Jane Doe");
-		await dialog.getByRole("textbox", { name: "Réseau" }).fill("Great Network");
-		await dialog.getByRole("combobox", { name: "Type" }).selectOption("media");
+		await pickEntity(dialog, "Crédits 1", "Jane Doe");
+		// a network credit picks an organization
+		await dialog.getByRole("button", { name: "Ajouter un crédit" }).click();
+		await dialog.getByRole("combobox", { name: "Crédits 2 : rôle" }).selectOption("network");
+		await expect(dialog.getByRole("combobox", { name: "Crédits 2 : type" })).toHaveValue("organization");
+		await pickEntity(dialog, "Crédits 2", "Great Network");
+		await dialog.getByRole("combobox", { name: "Type", exact: true }).selectOption("media");
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(dialog).not.toBeVisible();

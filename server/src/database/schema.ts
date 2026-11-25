@@ -756,6 +756,10 @@ export const broadcastEpisode = broadcast.table(
 		// minutes
 		duration: integer(),
 		link: text(),
+		// plain text (a feed's HTML converted)
+		description: text(),
+		// S3 key of the cover (served by /images/broadcast/episode/:id)
+		coverKey: text(),
 		// RSS guid / YouTube videoId: unique within the program only
 		externalId: text(),
 		tags: text().array().default([]).notNull(),

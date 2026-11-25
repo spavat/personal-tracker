@@ -7,6 +7,7 @@ import { LatestModule } from "./latest/latest.module.js";
 import { ReviewModule } from "./review/review.module.js";
 import { StatsModule } from "./stats/stats.module.js";
 import { SyncModule } from "./sync/sync.module.js";
+import { WatchlistModule } from "./watchlist/watchlist.module.js";
 
 @Module({
 	imports: [
@@ -15,6 +16,7 @@ import { SyncModule } from "./sync/sync.module.js";
 		ReviewModule,
 		StatsModule,
 		SyncModule,
+		WatchlistModule,
 		RouterModule.register([
 			{
 				path: "broadcast",
@@ -24,6 +26,7 @@ import { SyncModule } from "./sync/sync.module.js";
 					{ path: "review", module: ReviewModule },
 					{ path: "stats", module: StatsModule },
 					{ path: "sync", module: SyncModule },
+					{ path: "watchlist", module: WatchlistModule },
 				],
 			},
 		]),

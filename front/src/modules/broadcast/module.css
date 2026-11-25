@@ -1,5 +1,129 @@
 @layer modules {
 	.broadcast {
+		.grid {
+			grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+		}
+
+		/* seasons / formats modal: an ordered list, dragged by its handle */
+		ul.group-items {
+			list-style: none;
+			padding: 0;
+			margin: 0 0 8px;
+			li {
+				align-items: center;
+				margin-bottom: 6px;
+			}
+			.drag-handle {
+				cursor: grab;
+			}
+		}
+		/* above the episodes: the format filter, the seasons / formats buttons */
+		.episodes-tools {
+			display: flex;
+			gap: 8px;
+			align-items: center;
+			justify-content: flex-end;
+			margin: 8px 0;
+		}
+		/* a season's header among the episode lines */
+		tr.season-row td {
+			padding-top: 12px;
+		}
+		.number-label {
+			color: var(--text-secondary, inherit);
+		}
+		/* a catalog: the releases already watched fade */
+		/* a catalog: the releases watched stand out, the skipped ones fade */
+		table.catalog tr.watched td {
+			background-color: color-mix(in srgb, lightblue 22%, transparent);
+		}
+		table.catalog tr.skipped td:not([data-label="Actions"]) {
+			opacity: 0.4;
+			text-decoration: line-through;
+		}
+		.episode-status {
+			white-space: nowrap;
+			color: var(--text-secondary, inherit);
+		}
+		button[aria-pressed="true"] {
+			background-color: var(--primary-color);
+			color: var(--main-color);
+		}
+		table.catalog .cell-views {
+			white-space: nowrap;
+		}
+		.import-result {
+			color: var(--text-secondary, inherit);
+		}
+		/* an episode line's title: its cover, its folded description */
+		.episode-title {
+			display: flex;
+			gap: 8px;
+			align-items: center;
+		}
+		.episode-cover {
+			flex: none;
+			position: relative;
+			display: inline-block;
+			/* width: 48px; */
+			height: 48px;
+			img {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				border-radius: 4px;
+				display: block;
+			}
+			/* &.wide {
+				width: 85px;
+			} */
+			&.large {
+				/* width: 120px; */
+				height: 120px;
+				margin-right: 10px;
+				/* &.wide {
+					width: 213px;
+				} */
+			}
+			.cover-check {
+				position: absolute;
+				right: -4px;
+				bottom: -4px;
+				color: limegreen;
+				background: var(--main-background);
+				border-radius: 50%;
+				font-size: 14px;
+			}
+		}
+		.link-button {
+			background: none;
+			border: none;
+			padding: 0;
+			color: inherit;
+			font: inherit;
+			text-align: left;
+			cursor: pointer;
+			&:hover {
+				text-decoration: underline;
+			}
+		}
+		.episode-details {
+			.description {
+				white-space: pre-line;
+				max-height: 15lh;
+				overflow: scroll;
+			}
+			.episode-views {
+				margin-top: 12px;
+			}
+		}
+		/* a credited entity edited under its row */
+		.credit-entity-editor {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px;
+			margin: 0 0 8px;
+		}
 		h3 > span {
 			font-size: 14px;
 			font-weight: normal;
@@ -226,7 +350,8 @@
 			border-radius: 8px;
 			object-fit: cover;
 		}
-		.profile-preview {
+		.profile-preview,
+		.cover-preview {
 			width: 120px;
 			height: 120px;
 		}

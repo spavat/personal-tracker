@@ -4,11 +4,14 @@ import { ReactNode } from "react";
 
 import { API_BASE_URL } from "../../../config";
 import { formatFullDate, getDurationString } from "../../../utils";
+import { toLines } from "../episode-lines";
 
 export default function CardProgram({ program }: { program: Program }) {
+	// one line per view, oldest first
+	const lines = toLines(program.episodes, "asc");
 	let lastSeenString = null;
-	if (program.episodes.length > 0) {
-		const lastSeen = program.episodes[program.episodes.length - 1];
+	if (lines.length > 0) {
+		const lastSeen = lines[lines.length - 1];
 
 		lastSeenString = (
 			<>
@@ -18,10 +21,9 @@ export default function CardProgram({ program }: { program: Program }) {
 		);
 	}
 
-	const total = program.episodes.reduce((sum, episode) => (episode.durationReal ?? episode.duration) + sum, 0);
+	const total = lines.reduce((sum, line) => (line.durationReal ?? line.duration) + sum, 0);
 
 	const hasSubtitle = Boolean(program.author || program.network);
-	console.log("program.profile ok", program.profile);
 	return (
 		<div className="card_item">
 			{program.profile && (
@@ -50,14 +52,14 @@ export default function CardProgram({ program }: { program: Program }) {
 			{lastSeenString}
 			<details>
 				<summary>
-					{program.episodes.length} épisode
-					{program.episodes.length > 1 ? "s" : ""} ({getDurationString(total)})
+					{lines.length} épisode
+					{lines.length > 1 ? "s" : ""} ({getDurationString(total)})
 				</summary>
-				{program.episodes.map((episode) => {
+				{lines.map((episode) => {
 					const episodeLink = episode.link ?? "";
 					const type: ReactNode = episode.link ? <a href={episodeLink}>{episode.type}</a> : episode.type;
 					return (
-						<div key={`${program.id}-${episode.id}-${episode.date}`}>
+						<div key={episode.id}>
 							<span className="monospace">{formatFullDate(episode.date)}</span>: <b>{episode.name}</b>{" "}
 							{getDurationString(episode.durationReal ?? episode.duration)}
 							{episode.durationReal ? "*" : ""} ({type})

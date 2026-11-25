@@ -1,4 +1,4 @@
-import { EpisodeDataFromSource, ExtractedData } from "@personal-tracker/shared/broadcast";
+import { matchFormat, EpisodeDataFromSource, ExtractedData } from "@personal-tracker/shared/broadcast";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
@@ -13,6 +13,7 @@ import {
 	getDirectLatestEpisodes,
 	getInfoFromLink,
 	getLatestEpisodes,
+	planLatestEpisode,
 	programDetailsQuery,
 	programsQuery,
 	save,
@@ -74,6 +75,16 @@ export default function AddEpisodeModalForm({ programId, returnTo }: { programId
 
 	const [searchText, setSearchText] = useState("");
 
+	// "Ajouter à la liste": planned, without view; the modal stays open
+	const planMutation = useMutation({
+		mutationFn: (episode: EpisodeDataFromSource) =>
+			planLatestEpisode(programId!, episode, programData?.formats ?? []),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["programs"] });
+			queryClient.invalidateQueries({ queryKey: ["program"] });
+		},
+	});
+
 	const methods = useForm<Inputs>({
 		defaultValues: {
 			episode: {
@@ -91,6 +102,11 @@ export default function AddEpisodeModalForm({ programId, returnTo }: { programId
 
 	function changeInitialLink(e: React.ChangeEvent<HTMLInputElement>) {
 		setInitialLink(e.target.value);
+	}
+
+	// the program's format whose match rule fits the title (changeable before saving)
+	function preselectFormat(title: string) {
+		methods.setValue("episode.formatId", matchFormat(programData?.formats ?? [], title)?.id ?? "");
 	}
 
 	function selectSuggestedProgram(programId: string) {
@@ -123,6 +139,9 @@ export default function AddEpisodeModalForm({ programId, returnTo }: { programId
 					methods.setValue("episode.type", data.type);
 					methods.setValue("episode.link", data.link ?? "");
 					methods.setValue("episode.externalId", data.id ?? "");
+					methods.setValue("episode.description", data.description ?? "");
+					methods.setValue("episode.cover", data.cover ?? "");
+					preselectFormat(data.title);
 					setExtractedData(data);
 				}
 			},
@@ -180,6 +199,10 @@ export default function AddEpisodeModalForm({ programId, returnTo }: { programId
 			methods.setValue("episode.link", selectedEpisode.link ?? "");
 			methods.setValue("episode.type", selectedEpisode.type);
 			methods.setValue("episode.externalId", selectedEpisode.id);
+			methods.setValue("episode.releaseDate", selectedEpisode.date);
+			methods.setValue("episode.description", selectedEpisode.description ?? "");
+			methods.setValue("episode.cover", selectedEpisode.cover ?? "");
+			preselectFormat(selectedEpisode.title);
 
 			if (!selectedEpisode.durationInMinutes) {
 				extractMutation.mutate(link, {
@@ -216,7 +239,7 @@ export default function AddEpisodeModalForm({ programId, returnTo }: { programId
 		<FormProvider {...methods}>
 			<form onSubmit={methods.handleSubmit(onSubmit)}>
 				<Modal
-					className={`form modal ${showAddProgramPanel ? "dialog-extralarge" : "dialog-medium"}`}
+					className={`form modal ${showAddProgramPanel ? "dialog-extralarge" : "dialog-large"}`}
 					isOpen={true}
 					onClose={closeModal}
 					hasCloseBtn={true}
@@ -308,6 +331,29 @@ export default function AddEpisodeModalForm({ programId, returnTo }: { programId
 																	<span className="duration">{episode.duration}</span>
 																)}
 															</a>
+															{episode.status === "planned" && (
+																<span className="episode-status" title="À voir">
+																	<i className="fa-solid fa-bookmark"></i>
+																</span>
+															)}
+															{episode.status === "skipped" && (
+																<span className="episode-status" title="Ignoré">
+																	<i className="fa-solid fa-ban"></i>
+																</span>
+															)}
+															{programId &&
+																!episode.view &&
+																episode.status !== "planned" && (
+																	<button
+																		type="button"
+																		title="Ajouter à la liste"
+																		aria-label={`Ajouter « ${episode.title} » à la liste`}
+																		disabled={planMutation.isPending}
+																		onClick={() => planMutation.mutate(episode)}
+																	>
+																		<i className="fa-regular fa-bookmark"></i>
+																	</button>
+																)}
 														</li>
 													))}
 												</ul>
@@ -381,7 +427,7 @@ export default function AddEpisodeModalForm({ programId, returnTo }: { programId
 								</div>
 							</div>
 							<EpisodeForm />
-							<MutationError error={extractMutation.error} />
+							<MutationError error={extractMutation.error ?? planMutation.error} />
 						</div>
 						{showAddProgramPanel && (
 							<div className="form_part_2">

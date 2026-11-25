@@ -1,25 +1,51 @@
-import { randomUUID } from "node:crypto";
+import type { EpisodeCredit, EpisodeStatus, ProgramCredit, Tracking } from "@personal-tracker/shared/broadcast";
 
-// An episode as the API answers it: one view (id, date, durationReal, contextTags, comment, created) with the fields
-// of its episode (the release). The view/episode split reaches the API in ticket 04b.
+// A listening / watching of an episode
+export interface ViewDoc {
+	id: string;
+	date: string;
+	// minutes watched, when not the whole episode
+	duration?: number;
+	contextTags?: Array<string>;
+	comment?: string;
+	created?: string;
+}
+
+// A release, with its views (oldest first)
 export interface EpisodeDoc {
 	id: string;
 	name: string;
 	shortName?: string;
 	duration: number;
-	durationReal?: number;
-	date: string;
 	type: string;
+	releaseDate?: string;
 	link?: string;
 	tags?: Array<string>;
-	contextTags?: Array<string>;
 	ignoredTags?: Array<string>;
-	created?: string;
-	comment?: string;
 	externalId?: string;
+	seasonId?: string;
+	formatId?: string;
+	position?: number;
+	numberLabel?: string;
+	status?: EpisodeStatus;
+	description?: string;
+	// the proxy URL of its cover
+	cover?: string;
+	credits: Array<EpisodeCredit>;
+	views: Array<ViewDoc>;
 }
 
-// A program as the API answers it: `author` and `network` are its credits joined with " && "
+// Episode covers are stored as personal-tracker/broadcast/episode/<version>.avif (the version is random: the key is
+// made before a new episode has an id) and served through the images proxy; a replaced cover gets a new URL.
+export const EPISODE_COVER_URL_PREFIX = "/images/broadcast/episode/";
+
+export const episodeCoverKey = (version: string) => `personal-tracker/broadcast/episode/${version}.avif`;
+
+export function episodeCoverUrl(episodeId: string, key: string | null) {
+	return key ? `${EPISODE_COVER_URL_PREFIX}${episodeId}?v=${key.split("/").at(-1)!.split(".")[0]}` : undefined;
+}
+
+// A program as the API answers it: `author` and `network` are the names of its credits joined with " && "
 export interface ProgramDoc {
 	id: string;
 	name: string;
@@ -27,6 +53,8 @@ export interface ProgramDoc {
 	author?: string;
 	country?: string;
 	network?: string;
+	tracking: Tracking;
+	credits: Array<ProgramCredit>;
 	links?: Array<string>;
 	profile?: string;
 	banner?: string;
@@ -38,28 +66,31 @@ export interface ProgramDoc {
 	private?: boolean;
 }
 
-export function buildEpisode(input: any) {
-	return {
-		...input,
-		id: randomUUID(),
-		...(!input.created ? { created: Temporal.Now.plainDateTimeISO().toString() } : {}),
-	};
+// The time a view counts for: what was watched, else the whole episode
+export function viewDuration(episode: Pick<EpisodeDoc, "duration">, view: Pick<ViewDoc, "duration">) {
+	return view.duration ?? episode.duration;
 }
 
-export function cleanEpisode(episode: any) {
-	if (!episode.tags || episode.tags.length === 0) {
-		delete episode.tags;
+// Every view of these episodes, with its episode
+export function viewsOf(episodes: Array<EpisodeDoc>) {
+	return episodes.flatMap((episode) => episode.views.map((view) => ({ episode, view })));
+}
+
+// Latest first: by date, then by creation
+export function sortViewsDesc(a: Pick<ViewDoc, "date" | "created">, b: Pick<ViewDoc, "date" | "created">) {
+	if (b.date === a.date) {
+		return (b.created ?? "").localeCompare(a.created ?? "");
 	}
-	if (!episode.contextTags || episode.contextTags.length === 0) {
-		delete episode.contextTags;
-	}
-	if (!episode.ignoredTags || episode.ignoredTags.length === 0) {
-		delete episode.ignoredTags;
-	}
-	if (!episode.links || episode.links.length === 0) {
-		delete episode.links;
-	}
-	return episode;
+	return b.date.localeCompare(a.date);
+}
+
+const latestView = (episode: EpisodeDoc) => episode.views.toSorted(sortViewsDesc)[0];
+
+// The episode watched last first (an episode without view last)
+export function sortEpisodesDesc(a: EpisodeDoc, b: EpisodeDoc) {
+	const [viewA, viewB] = [latestView(a), latestView(b)];
+	if (!viewA || !viewB) return Number(!viewA) - Number(!viewB);
+	return sortViewsDesc(viewA, viewB);
 }
 
 // Tags of an episode: the program tags it does not ignore, plus its own (each once)
@@ -71,37 +102,31 @@ export function getEpisodeTags(
 	return [...new Set([...(programTags ?? []).filter((tag) => !ignored.includes(tag)), ...(episode.tags ?? [])])];
 }
 
-export function sortEpisodesDesc(a: EpisodeDoc, b: EpisodeDoc) {
-	if (b.date === a.date) {
-		return (b.created ?? "").localeCompare(a.created ?? "");
-	}
-	return b.date.localeCompare(a.date);
+// Figures of a program over its views (an episode watched twice counts twice); releases / watched count episodes
+export function getDetails(program: Pick<ProgramDoc, "episodes">) {
+	const views = viewsOf(program.episodes);
+	const totalDuration = views.reduce((sum, { episode }) => sum + episode.duration, 0);
+	const totalDurationReal = views.reduce((sum, { episode, view }) => sum + viewDuration(episode, view), 0);
+	const lastSeen = views.map(({ view }) => view).toSorted(sortViewsDesc)[0];
+	return {
+		episodes: views.length,
+		averageLength: views.length > 0 ? Math.round(totalDuration / views.length) : 0,
+		completionRate: views.length > 0 ? Math.round((totalDurationReal / totalDuration) * 100) : 0,
+		lastSeenDate: lastSeen?.date ?? "",
+		releases: program.episodes.length,
+		watched: program.episodes.filter(({ views }) => views.length > 0).length,
+		skipped: program.episodes.filter(({ status }) => status === "skipped").length,
+	};
 }
 
-export function getDetails(program: any) {
-	const { episodes, totalDuration, totalDurationReal, lastSeenDate } = program.episodes.reduce(
-		(acc: any, episode: any, index: number) => {
-			acc.episodes++;
-			acc.totalDuration += episode.duration;
-			acc.totalDurationReal += episode.durationReal ? episode.durationReal : episode.duration;
-			if (index === 0) {
-				acc.lastSeenDate = episode.date;
-			}
-			return acc;
-		},
-		{
-			episodes: 0,
-			totalDuration: 0,
-			totalDurationReal: 0,
-			lastSeenDate: "",
-		},
-	);
-	return {
-		episodes: episodes,
-		averageLength: episodes > 0 ? Math.round(totalDuration / episodes) : 0,
-		completionRate: episodes > 0 ? Math.round((totalDurationReal / totalDuration) * 100) : 0,
-		lastSeenDate: lastSeenDate,
-	};
+// Oldest release first, an episode without release date last; then by its number in the season, its name
+export function byRelease(a: Pick<EpisodeDoc, "releaseDate" | "position" | "name">, b: typeof a) {
+	if (a.releaseDate !== b.releaseDate) {
+		if (!a.releaseDate) return 1;
+		if (!b.releaseDate) return -1;
+		return a.releaseDate.localeCompare(b.releaseDate);
+	}
+	return (a.position ?? Infinity) - (b.position ?? Infinity) || a.name.localeCompare(b.name);
 }
 
 export function sortByDuration(obj1: { duration: number }, obj2: { duration: number }) {

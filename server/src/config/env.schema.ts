@@ -19,6 +19,8 @@ export const envSchema = z.object({
 	S3_ACCESS_KEY_ID: z.string().min(1),
 	S3_SECRET_ACCESS_KEY: z.string().min(1),
 	// gopodder (gpodder.net-compatible sync server fed by AntennaPod): the podcast sync is off when unset
+	// YouTube Data API v3 key (catalog import of the YouTube programs); empty: not configured
+	YOUTUBE_API_KEY: z.string().default(""),
 	GOPODDER_URL: z.string().default(""),
 	GOPODDER_USERNAME: z.string().default(""),
 	GOPODDER_PASSWORD: z.string().default(""),

@@ -14,6 +14,7 @@ const RESOURCES: Record<string, string> = {
 	edition: "Édition",
 	entity: "Entité",
 	episode: "Épisode",
+	format: "Format",
 	event: "Événement",
 	game: "Jeu",
 	genre: "Genre",
@@ -31,10 +32,12 @@ const RESOURCES: Record<string, string> = {
 	program: "Programme",
 	proposal: "Proposition",
 	reading: "Lecture",
+	season: "Saison",
 	series: "Série",
 	spectacle: "Spectacle",
 	tag: "Tag",
 	transaction: "Transaction",
+	view: "Écoute",
 	work: "Œuvre",
 };
 
@@ -84,6 +87,7 @@ const DUPLICATE_ITEMS: Record<string, string> = {
 };
 const EXTERNAL_SOURCE_NAMES: Record<string, string> = {
 	openLibrary: "Open Library",
+	feed: "de flux", // a broadcast episode's RSS guid / YouTube id
 };
 const SYNC_IN_PROGRESS: Record<string, string> = {
 	stores: "Une synchronisation des magasins est déjà en cours",
@@ -98,15 +102,17 @@ const TEXTS: Record<ErrorBody["code"], Text> = {
 	upstream_unavailable: ({ service, status, reason }) =>
 		service === "feed"
 			? "Impossible de récupérer les derniers épisodes"
-			: service === "openLibrary"
-				? status
-					? `Open Library a répondu ${status}`
-					: reason === "unexpected_body"
-						? "Open Library a donné une réponse illisible"
-						: "Open Library est injoignable"
-				: status
-					? `${service} a répondu ${status}`
-					: `${service} n'est pas configuré`,
+			: service === "catalog"
+				? "Impossible de lire le flux du catalogue"
+				: service === "openLibrary"
+					? status
+						? `Open Library a répondu ${status}`
+						: reason === "unexpected_body"
+							? "Open Library a donné une réponse illisible"
+							: "Open Library est injoignable"
+					: status
+						? `${service} a répondu ${status}`
+						: `${service} n'est pas configuré`,
 	invalid_image: ({ resource }) => INVALID_IMAGE[resource] ?? "Image illisible",
 	invalid_reference: (params) => INVALID_REFERENCE[params.resource]?.(params) ?? "Référence inconnue",
 	cycle: ({ resource }) => CYCLE[resource] ?? "Un élément ne peut pas se contenir lui-même",

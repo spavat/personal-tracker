@@ -51,6 +51,16 @@ export class ImagesController {
 		return this.serve(program?.[field], response, CACHE_A_DAY, "application/octet-stream");
 	}
 
+	// an episode's cover; the episodes of a private program are hidden from visitors
+	@Get("broadcast/episode/:id")
+	@Public()
+	async episodeCover(
+		@Param({ schema: IdParams }) { id }: { id: string },
+		@Res({ passthrough: true }) response: ServerResponse,
+	) {
+		return this.serve((await this.broadcast.findEpisodeCover(id))?.coverKey, response, CACHE_A_DAY);
+	}
+
 	@Get("reading-book/edition/:id")
 	@Public()
 	async cover(

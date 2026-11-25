@@ -5,6 +5,8 @@ import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
 import { programDetailsQuery, save } from "../api";
+import { toLines } from "../episode-lines";
+import { toCreditInputs } from "../forms/CreditRows";
 import EpisodeForm from "../forms/EpisodeForm";
 import { type EpisodeInputs, onSubmitEpisode } from "../forms/EpisodeForm.utils";
 
@@ -12,13 +14,14 @@ interface Inputs extends EpisodeInputs {
 	programId: string;
 }
 
+// Edits a line: its episode's fields (shared by the episode's views) and its view's
 export default function EditEpisodeModalForm({
 	programId,
-	episodeId,
+	viewId,
 	returnTo,
 }: {
 	programId: string;
-	episodeId: string;
+	viewId: string;
 	returnTo: string;
 }) {
 	const navigate = useNavigate();
@@ -35,7 +38,9 @@ export default function EditEpisodeModalForm({
 		},
 	});
 
-	const episode = data.episodes.find((ep) => ep.id === episodeId)!;
+	const lines = toLines(data.episodes);
+	const episode = lines.find((line) => line.id === viewId)!;
+	const viewCount = lines.filter((line) => line.episodeId === episode.episodeId).length;
 
 	const methods = useForm<Inputs>({
 		// data is loaded before the modal opens: applied once, never overwritten by a background refetch
@@ -46,6 +51,7 @@ export default function EditEpisodeModalForm({
 				tags: episode.tags?.map((t) => ({ value: t })) ?? [],
 				contextTags: episode.contextTags?.map((t) => ({ value: t })) ?? [],
 				ignoredTags: episode.ignoredTags?.map((t) => ({ value: t })) ?? [],
+				credits: toCreditInputs(episode.credits),
 			} as any,
 		},
 	});
@@ -62,7 +68,6 @@ export default function EditEpisodeModalForm({
 	const onSubmit: SubmitHandler<Inputs> = (data) => {
 		const dataEpisode = onSubmitEpisode(data);
 
-		console.log("sauvegarde episode", dataEpisode);
 		saveMutation.mutate({
 			programId: data.programId,
 			episode: dataEpisode,
@@ -72,12 +77,20 @@ export default function EditEpisodeModalForm({
 	return (
 		<FormProvider {...methods}>
 			<form onSubmit={methods.handleSubmit(onSubmit)}>
-				<Modal className={"form modal dialog-medium"} isOpen={true} onClose={closeModal} hasCloseBtn={true}>
+				<Modal className={"form modal dialog-large"} isOpen={true} onClose={closeModal} hasCloseBtn={true}>
 					<div className="dialog-header">
 						<h2 id="dialog-title">Modifier épisode</h2>
 					</div>
 
 					<div className="dialog-body single-panel">
+						{viewCount > 1 && (
+							<p>
+								<em>
+									Épisode écouté {viewCount} fois : son nom, sa durée, son lien et ses tags changent
+									pour chaque écoute.
+								</em>
+							</p>
+						)}
 						<EpisodeForm />
 					</div>
 

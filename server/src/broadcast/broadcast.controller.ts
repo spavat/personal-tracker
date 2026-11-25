@@ -1,5 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, SerializeOptions } from "@nestjs/common";
 import {
+	CreateEpisodeBodyRequestSchema,
+	type CreateEpisodeBodyRequestType,
 	type DeleteParamsRequest,
 	DeleteParamsRequestSchema,
 	DetailsProgramParamsRequestSchema,
@@ -15,7 +17,23 @@ import {
 	type SaveBodyRequestType,
 	SaveEpisodeBodyRequestSchema,
 	type SaveEpisodeBodyRequestType,
+	SaveFormatsBodyRequestSchema,
+	type SaveFormatsBodyRequestType,
+	SaveSeasonsBodyRequestSchema,
+	type SaveSeasonsBodyRequestType,
+	SeasonListResponseSchema,
+	FormatListResponseSchema,
+	EpisodeStatusBodyRequestSchema,
+	type EpisodeStatusBodyRequest,
+	ImportBodyRequestSchema,
+	type ImportBodyRequest,
+	ImportResponseSchema,
+	SaveViewBodyRequestSchema,
+	type SaveViewBodyRequestType,
 	SyncCoversResponseSchema,
+	type ViewParamsRequest,
+	ViewParamsRequestSchema,
+	ViewSchema,
 } from "@personal-tracker/shared/broadcast";
 
 import { Public } from "../auth/public.decorator.js";
@@ -75,11 +93,49 @@ export class BroadcastController {
 		return this.service.updateProgram(programId, body);
 	}
 
+	@Put("programs/:programId/seasons")
+	@SerializeOptions({ schema: SeasonListResponseSchema.element })
+	saveSeasons(
+		@Param({ schema: DetailsProgramParamsRequestSchema }) { programId }: { programId: string },
+		@Body({ schema: SaveSeasonsBodyRequestSchema }) body: SaveSeasonsBodyRequestType,
+	) {
+		return this.service.saveSeasons(programId, body);
+	}
+
+	@Put("programs/:programId/formats")
+	@SerializeOptions({ schema: FormatListResponseSchema.element })
+	saveFormats(
+		@Param({ schema: DetailsProgramParamsRequestSchema }) { programId }: { programId: string },
+		@Body({ schema: SaveFormatsBodyRequestSchema }) body: SaveFormatsBodyRequestType,
+	) {
+		return this.service.saveFormats(programId, body);
+	}
+
+	// a catalog: every release of the program's source; a feed: its stored episodes completed
+	@Post("programs/:programId/import")
+	@HttpCode(200)
+	@SerializeOptions({ schema: ImportResponseSchema })
+	importCatalog(
+		@Param({ schema: DetailsProgramParamsRequestSchema }) { programId }: { programId: string },
+		@Body({ schema: ImportBodyRequestSchema }) body: ImportBodyRequest,
+	) {
+		return this.service.importCatalog(programId, body);
+	}
+
+	@Put("programs/:programId/episodes/:episodeId/status")
+	@HttpCode(204)
+	setEpisodeStatus(
+		@Param({ schema: DeleteParamsRequestSchema }) { programId, episodeId }: DeleteParamsRequest,
+		@Body({ schema: EpisodeStatusBodyRequestSchema }) body: EpisodeStatusBodyRequest,
+	) {
+		return this.service.setEpisodeStatus(programId, episodeId, body);
+	}
+
 	@Post("programs/:programId/episodes")
 	@SerializeOptions({ schema: EpisodeSchema })
 	createEpisode(
 		@Param({ schema: DetailsProgramParamsRequestSchema }) { programId }: { programId: string },
-		@Body({ schema: SaveEpisodeBodyRequestSchema }) episode: SaveEpisodeBodyRequestType,
+		@Body({ schema: CreateEpisodeBodyRequestSchema }) episode: CreateEpisodeBodyRequestType,
 	) {
 		return this.service.createEpisode(programId, episode);
 	}
@@ -97,5 +153,30 @@ export class BroadcastController {
 	@HttpCode(204)
 	async deleteEpisode(@Param({ schema: DeleteParamsRequestSchema }) { programId, episodeId }: DeleteParamsRequest) {
 		await this.service.deleteEpisode(programId, episodeId);
+	}
+
+	@Post("programs/:programId/episodes/:episodeId/views")
+	@SerializeOptions({ schema: ViewSchema })
+	createView(
+		@Param({ schema: DeleteParamsRequestSchema }) { programId, episodeId }: DeleteParamsRequest,
+		@Body({ schema: SaveViewBodyRequestSchema }) view: SaveViewBodyRequestType,
+	) {
+		return this.service.createView(programId, episodeId, view);
+	}
+
+	@Put("programs/:programId/episodes/:episodeId/views/:viewId")
+	@SerializeOptions({ schema: ViewSchema })
+	updateView(
+		@Param({ schema: ViewParamsRequestSchema }) { programId, episodeId, viewId }: ViewParamsRequest,
+		@Body({ schema: SaveViewBodyRequestSchema }) view: SaveViewBodyRequestType,
+	) {
+		return this.service.updateView(programId, episodeId, viewId, view);
+	}
+
+	// the episode goes too when it was its last view
+	@Delete("programs/:programId/episodes/:episodeId/views/:viewId")
+	@HttpCode(204)
+	async deleteView(@Param({ schema: ViewParamsRequestSchema }) { programId, episodeId, viewId }: ViewParamsRequest) {
+		await this.service.deleteView(programId, episodeId, viewId);
 	}
 }

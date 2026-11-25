@@ -24,8 +24,8 @@ describe("StatsService", () => {
 				shortName: "P",
 				tags: ["news"],
 				episodes: [
-					{ duration: 60, tags: [] },
-					{ duration: 60, durationReal: 30, tags: ["special"] },
+					{ duration: 60, tags: [], views: [{ date: "2020-01-02" }] },
+					{ duration: 60, tags: ["special"], views: [{ date: "2020-01-03", duration: 30 }] },
 				],
 			},
 		]);
@@ -47,8 +47,8 @@ describe("StatsService", () => {
 				name: "Prog",
 				tags: ["news", "tech"],
 				episodes: [
-					{ duration: 60, tags: ["news"] },
-					{ duration: 30, tags: ["special"], ignoredTags: ["news"] },
+					{ duration: 60, tags: ["news"], views: [{ date: "2020-01-02" }] },
+					{ duration: 30, tags: ["special"], ignoredTags: ["news"], views: [{ date: "2020-01-03" }] },
 				],
 			},
 		]);
@@ -64,7 +64,9 @@ describe("StatsService", () => {
 
 	it("fortnight gives 14 days ending today, the empty days at 0", async () => {
 		const today = Temporal.Now.plainDateISO().toString();
-		repo.findEpisodesInRange.mockResolvedValue([{ episodes: [{ date: today, duration: 40, durationReal: 25 }] }]);
+		repo.findEpisodesInRange.mockResolvedValue([
+			{ episodes: [{ duration: 40, views: [{ date: today, duration: 25 }] }] },
+		]);
 
 		const days = await service.fortnight();
 

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 
+import { viewDuration, viewsOf } from "../broadcast/broadcast.entity.js";
 import { BroadcastRepository } from "../broadcast/broadcast.repository.js";
 import { GameRepository } from "../game/game.repository.js";
 import { MusicRepository } from "../music/music.repository.js";
@@ -66,8 +67,8 @@ export class CalendarService {
 
 		// Broadcast
 		for (let program of programs ?? []) {
-			for (let episode of program.episodes ?? []) {
-				const date = episode.date;
+			for (const { episode, view } of viewsOf(program.episodes)) {
+				const date = view.date;
 				if (!byDate[date]) {
 					byDate[date] = {};
 				}
@@ -78,7 +79,7 @@ export class CalendarService {
 						programs: new Set(),
 					};
 				}
-				byDate[date].broadcast.duration += episode.durationReal ?? episode.duration;
+				byDate[date].broadcast.duration += viewDuration(episode, view);
 				byDate[date].broadcast.episodes += 1;
 				byDate[date].broadcast.programs.add(program.id);
 			}
@@ -230,17 +231,18 @@ export class CalendarService {
 			})) ?? [];
 		const broadcastItems =
 			programs?.flatMap((program) => {
-				return program.episodes?.map((episode: any) => {
+				return viewsOf(program.episodes).map(({ episode, view }) => {
 					return {
 						programId: program.id,
 						programName: program.name,
 						episodeId: episode.id,
+						viewId: view.id,
 						episodeName: episode.name,
 						duration: episode.duration,
-						...(episode.durationReal && { durationReal: episode.durationReal }),
-						...((episode.contextTags?.length ?? 0) > 0 && { contextTags: episode.contextTags }),
-						created: episode.created,
-						comment: episode.comment,
+						...(view.duration && { durationReal: view.duration }),
+						...((view.contextTags?.length ?? 0) > 0 && { contextTags: view.contextTags }),
+						created: view.created,
+						comment: view.comment,
 					};
 				});
 			}) ?? [];

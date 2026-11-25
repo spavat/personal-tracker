@@ -18,6 +18,8 @@ describe("isoDurationToSeconds", () => {
 		["PT0H2M1S", 121],
 		["PT45M", 2700],
 		["PT30S", 30],
+		["P1DT2H", 93600],
+		["P0D", 0],
 	])("converts %s to %i seconds", (iso, expected) => {
 		expect(isoDurationToSeconds(iso)).toBe(expected);
 	});

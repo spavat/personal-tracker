@@ -1,0 +1,9 @@
+{
+	"items": [
+		{ "contentDetails": { "videoId": "vid00000009" , "videoPublishedAt": "2026-10-30T10:00:00Z" } },
+		{ "contentDetails": { "videoId": "vid00000003", "videoPublishedAt": "2026-10-23T10:00:00Z" } },
+		{ "contentDetails": { "videoId": "deleted0001" } },
+		{ "contentDetails": { "videoId": "vid00000002", "videoPublishedAt": "2026-10-22T10:00:00Z" } },
+		{ "contentDetails": { "videoId": "vid00000001", "videoPublishedAt": "2026-10-21T10:00:00Z" } }
+	]
+}

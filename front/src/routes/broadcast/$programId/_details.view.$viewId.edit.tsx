@@ -2,17 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { ModalError, ModalPending } from "../../../components/ModalStatus";
 import { programDetailsQuery } from "../../../modules/broadcast/api";
-import DeleteEpisodeModalForm from "../../../modules/broadcast/modals/DeleteEpisodeModalForm";
+import EditEpisodeModalForm from "../../../modules/broadcast/modals/EditEpisodeModalForm";
 import { withReturnToSchema } from "../../../router/search-params";
 
-export const Route = createFileRoute("/broadcast/$programId/_details/episode/$episodeId/delete")({
+export const Route = createFileRoute("/broadcast/$programId/_details/view/$viewId/edit")({
 	staticData: { modal: true },
 	loader: async ({ context, params }) => {
 		const program = await context.queryClient.query({
 			...programDetailsQuery(params.programId),
 			staleTime: "static",
 		});
-		if (!program.episodes.some((episode) => episode.id === params.episodeId)) {
+		if (!program.episodes.some(({ views }) => views.some((view) => view.id === params.viewId))) {
 			throw new Error("Épisode introuvable");
 		}
 	},
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/broadcast/$programId/_details/episode/$ep
 });
 
 function RouteComponent() {
-	const { programId, episodeId } = Route.useParams();
+	const { programId, viewId } = Route.useParams();
 	const { returnTo } = Route.useSearch();
-	return <DeleteEpisodeModalForm programId={programId} episodeId={episodeId} returnTo={returnTo} />;
+	return <EditEpisodeModalForm programId={programId} viewId={viewId} returnTo={returnTo} />;
 }

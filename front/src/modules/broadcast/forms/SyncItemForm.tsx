@@ -1,4 +1,4 @@
-import { SyncResponse, SyncValidateBodyRequestType } from "@personal-tracker/shared/broadcast";
+import { SyncResponse } from "@personal-tracker/shared/broadcast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
@@ -26,6 +26,13 @@ function toDefaultEpisode(item: SyncItem): Inputs["episode"] {
 		type: proposition?.type as string,
 		link: proposition?.link ?? "",
 		externalId: proposition?.externalId ?? item.origin.externalId,
+		releaseDate: proposition?.releaseDate,
+		seasonId: proposition?.seasonId ?? "",
+		formatId: proposition?.formatId ?? "",
+		position: proposition?.position,
+		numberLabel: proposition?.numberLabel,
+		description: proposition?.description,
+		cover: proposition?.cover,
 		tags: (proposition?.tags ?? []).map((t) => ({ value: t })),
 		contextTags: (proposition?.contextTags ?? []).map((t) => ({ value: t })),
 		ignoredTags: [],
@@ -48,7 +55,7 @@ export default function SyncItemForm({ item, onDone }: { item: SyncItem; onDone:
 	});
 
 	const saveMutation = useMutation({
-		mutationFn: (data: SyncValidateBodyRequestType) => validateSyncProposal(item.id, data),
+		mutationFn: (data: Parameters<typeof validateSyncProposal>[1]) => validateSyncProposal(item.id, data),
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({ queryKey: ["programs"] });
 			if (variables.programId) {

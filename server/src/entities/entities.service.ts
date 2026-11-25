@@ -27,16 +27,16 @@ export class EntitiesService {
 		return this.write(undefined, body);
 	}
 
-	// 404 for an unknown entity, or one of another kind
+	// 404 for an unknown entity
 	async update(id: string, body: SaveEntityBody) {
 		this.logger.log("update");
 		return (await this.write(id, body)) ?? notFound();
 	}
 
-	// undefined when updating an unknown entity (or with another kind)
+	// undefined when updating an unknown entity. Another kind moves the entity to it, its credits kept.
 	private async write(id: string | undefined, { picture, ...entity }: Omit<SaveEntityBody, "id">) {
 		const current = id ? await this.repo.findById(id) : undefined;
-		if (id && current?.kind !== entity.kind) {
+		if (id && !current) {
 			return undefined;
 		}
 		const entityId = id ?? randomUUID();

@@ -5,24 +5,31 @@ import { BroadcastRepository } from "../broadcast.repository.js";
 import { ReviewService } from "./review.service.js";
 
 describe("ReviewService", () => {
-	it("lists the episodes without any tag (own or kept from the program), most recent first", async () => {
+	it("lists the episodes without any tag (own or kept from the program), watched last first", async () => {
 		const repo = {
 			findAllWithEpisodes: vi.fn().mockResolvedValue([
-				{ id: "p1", name: "Tagged program", tags: ["news"], episodes: [{ id: "e1", date: "2024-01-01" }] },
+				{
+					id: "p1",
+					name: "Tagged program",
+					tags: ["news"],
+					episodes: [{ id: "e1", views: [{ id: "v1", date: "2024-01-01" }] }],
+				},
 				{
 					id: "p2",
 					name: "Bare",
 					episodes: [
-						{ id: "e2", date: "2024-01-01" },
-						{ id: "e3", date: "2024-02-01" },
-						{ id: "e4", date: "2024-03-01", tags: ["own"] },
+						{ id: "e2", views: [{ id: "v2", date: "2024-01-01" }] },
+						{ id: "e3", views: [{ id: "v3", date: "2024-02-01" }] },
+						{ id: "e4", views: [{ id: "v4", date: "2024-03-01" }], tags: ["own"] },
+						// a release of a catalog never watched
+						{ id: "e6", views: [] },
 					],
 				},
 				{
 					id: "p3",
 					name: "All ignored",
 					tags: ["news"],
-					episodes: [{ id: "e5", date: "2024-01-15", ignoredTags: ["news"] }],
+					episodes: [{ id: "e5", views: [{ id: "v5", date: "2024-01-15" }], ignoredTags: ["news"] }],
 				},
 			]),
 		};

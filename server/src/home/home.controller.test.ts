@@ -123,8 +123,19 @@ describe("home routes", () => {
 			{
 				id: "p1",
 				name: "Le Masque",
+				tracking: "feed",
+				credits: [],
 				profile: "personal-tracker/broadcast/p1.profile.avif",
-				episodes: [{ id: "e1", name: "Épisode", date: "2026-11-11", duration: 60, type: "podcast" }],
+				episodes: [
+					{
+						id: "e1",
+						name: "Épisode",
+						duration: 60,
+						type: "podcast",
+						credits: [],
+						views: [{ id: "v1", date: "2026-11-11" }],
+					},
+				],
 			},
 		]);
 
@@ -133,8 +144,19 @@ describe("home routes", () => {
 			{
 				id: "p1",
 				name: "Le Masque",
+				tracking: "feed",
+				credits: [],
 				profile: "/images/broadcast/p1.profile",
-				episodes: [{ id: "e1", name: "Épisode", date: "2026-11-11", duration: 60, type: "podcast" }],
+				episodes: [
+					{
+						id: "e1",
+						name: "Épisode",
+						duration: 60,
+						type: "podcast",
+						credits: [],
+						views: [{ id: "v1", date: "2026-11-11" }],
+					},
+				],
 			},
 		]);
 	});

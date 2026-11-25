@@ -42,6 +42,7 @@ export const ErrorResourceSchema = z.enum([
 	"entity",
 	"episode",
 	"event",
+	"format",
 	"game",
 	"genre",
 	"image",
@@ -62,11 +63,13 @@ export const ErrorResourceSchema = z.enum([
 	"program",
 	"proposal",
 	"reading",
+	"season",
 	"series",
 	"spectacle",
 	"store",
 	"tag",
 	"transaction",
+	"view",
 	"work",
 ]);
 export type ErrorResource = z.infer<typeof ErrorResourceSchema>;

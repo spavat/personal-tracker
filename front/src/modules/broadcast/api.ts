@@ -5,10 +5,25 @@ import {
 	ProgramDetails,
 	SaveBodyRequestSchema,
 	SaveEpisodeBodyRequestSchema,
-	DeleteParamsRequestSchema,
-	DeleteParamsRequest,
+	SaveViewBodyRequestSchema,
+	CreateEpisodeBodyRequestSchema,
+	ViewParamsRequestSchema,
+	ViewParamsRequest,
+	SaveSeasonsBodyRequestSchema,
+	SaveSeasonsBodyRequestType,
+	SaveFormatsBodyRequestSchema,
+	SaveFormatsBodyRequestType,
 	SyncValidateBodyRequestSchema,
 	SyncValidateBodyRequestType,
+	ImportResponse,
+	ImportBodyRequestSchema,
+	RefIdsEnum,
+	EpisodeDataFromSource,
+	EpisodeStatus,
+	EpisodeStatusBodyRequestSchema,
+	WatchlistResponse,
+	matchFormat,
+	Format,
 	StatsArrayResponse,
 	LatestEpisodesResponse,
 	FortnightStatsRespons,
@@ -32,6 +47,8 @@ import type { YearQueryConfig } from "../../hooks/use-year-changer";
 
 import { fetchJson, saveJson, sendJson, withQuery } from "../../api-utils";
 import { API_BASE_URL } from "../../config";
+import { getCurrentOrPreviousDate } from "../../utils";
+import { toCreateEpisodeBody, toEpisodeBody, toViewBody } from "./episode-lines";
 
 async function getProgramListYear(from: string, to: string) {
 	return fetchJson<Array<Program>>(withQuery(`${API_BASE_URL}/broadcast/episodes`, { from, to }));
@@ -99,25 +116,110 @@ export const reviewQuery = () =>
 		queryFn: () => getReview(),
 	});
 
-// a program (with an optional first episode), or an episode of the program `programId`
+// A program (with an optional first line), or a line of the program `programId`: a new line creates its episode
+// with its view (an episode of the program with the same externalId gets the view), an edited one saves its episode
+// (shared by its views) then its view
 export async function save({ program, episode, programId }: any) {
 	if (program) {
 		return saveJson(
 			`${API_BASE_URL}/broadcast/programs`,
 			program.id,
-			SaveBodyRequestSchema.parse({ program, episode }),
+			SaveBodyRequestSchema.parse({ program, episode: episode && toCreateEpisodeBody(episode) }),
 		);
 	}
-	return saveJson(
-		`${API_BASE_URL}/broadcast/programs/${programId}/episodes`,
-		episode.id,
-		SaveEpisodeBodyRequestSchema.parse(episode),
+	const episodesUrl = `${API_BASE_URL}/broadcast/programs/${programId}/episodes`;
+	if (!episode.id) {
+		return sendJson(episodesUrl, "POST", CreateEpisodeBodyRequestSchema.parse(toCreateEpisodeBody(episode)));
+	}
+	await sendJson(
+		`${episodesUrl}/${episode.episodeId}`,
+		"PUT",
+		SaveEpisodeBodyRequestSchema.parse(toEpisodeBody(episode)),
+	);
+	return sendJson(
+		`${episodesUrl}/${episode.episodeId}/views/${episode.id}`,
+		"PUT",
+		SaveViewBodyRequestSchema.parse(toViewBody(episode)),
 	);
 }
 
-export async function deleteItem(data: DeleteParamsRequest) {
-	const { programId, episodeId } = DeleteParamsRequestSchema.parse(data);
-	return sendJson(`${API_BASE_URL}/broadcast/programs/${programId}/episodes/${episodeId}`, "DELETE");
+// the whole ordered list of a program's seasons / formats
+export async function saveSeasons(programId: string, data: SaveSeasonsBodyRequestType) {
+	return sendJson(
+		`${API_BASE_URL}/broadcast/programs/${programId}/seasons`,
+		"PUT",
+		SaveSeasonsBodyRequestSchema.parse(data),
+	);
+}
+export async function saveFormats(programId: string, data: SaveFormatsBodyRequestType) {
+	return sendJson(
+		`${API_BASE_URL}/broadcast/programs/${programId}/formats`,
+		"PUT",
+		SaveFormatsBodyRequestSchema.parse(data),
+	);
+}
+
+// a catalog: every release of one of the program's sources; a feed: its stored episodes completed
+export async function importCatalog(programId: string, source: RefIdsEnum) {
+	return sendJson<ImportResponse>(
+		`${API_BASE_URL}/broadcast/programs/${programId}/import`,
+		"POST",
+		ImportBodyRequestSchema.parse({ source }),
+	);
+}
+
+// "Vu": a view of the whole episode, today
+export async function addView(programId: string, episodeId: string) {
+	return sendJson(
+		`${API_BASE_URL}/broadcast/programs/${programId}/episodes/${episodeId}/views`,
+		"POST",
+		SaveViewBodyRequestSchema.parse({ date: getCurrentOrPreviousDate() }),
+	);
+}
+
+// null clears it (an episode of a feed without any view goes)
+export async function setEpisodeStatus(programId: string, episodeId: string, status: EpisodeStatus | null) {
+	return sendJson(
+		`${API_BASE_URL}/broadcast/programs/${programId}/episodes/${episodeId}/status`,
+		"PUT",
+		EpisodeStatusBodyRequestSchema.parse({ status }),
+	);
+}
+
+// "Ajouter à la liste": a latest episode planned, without view (a stored one with this externalId gets the status)
+export async function planLatestEpisode(programId: string, episode: EpisodeDataFromSource, formats: Array<Format>) {
+	return sendJson(
+		`${API_BASE_URL}/broadcast/programs/${programId}/episodes`,
+		"POST",
+		CreateEpisodeBodyRequestSchema.parse({
+			name: episode.title,
+			duration: episode.durationInMinutes,
+			type: episode.type,
+			releaseDate: episode.date || undefined,
+			link: episode.link || undefined,
+			externalId: episode.id,
+			description: episode.description,
+			cover: episode.cover,
+			formatId: matchFormat(formats, episode.title)?.id,
+			status: "planned",
+		}),
+	);
+}
+
+// The planned episodes (key under ["programs"]: refreshed on every save)
+async function getWatchlist() {
+	return fetchJson<WatchlistResponse>(`${API_BASE_URL}/broadcast/watchlist`);
+}
+export const watchlistQuery = () =>
+	queryOptions({
+		queryKey: ["programs", "watchlist"],
+		queryFn: () => getWatchlist(),
+	});
+
+// a line: its view (the episode goes too when it was its last view)
+export async function deleteLine(data: ViewParamsRequest) {
+	const { programId, episodeId, viewId } = ViewParamsRequestSchema.parse(data);
+	return sendJson(`${API_BASE_URL}/broadcast/programs/${programId}/episodes/${episodeId}/views/${viewId}`, "DELETE");
 }
 
 export async function getFortnightStats() {
@@ -180,8 +282,15 @@ export async function reprocessSync(rssUrl?: string) {
 	return sendJson(`${API_BASE_URL}/broadcast/sync/reprocess`, "POST", rssUrl ? { rssUrl } : undefined);
 }
 
-export async function validateSyncProposal(id: string, data: SyncValidateBodyRequestType) {
-	const sentData = SyncValidateBodyRequestSchema.parse(data);
+// the proposal is edited as a line: its episode and its view
+export async function validateSyncProposal(
+	id: string,
+	{
+		episode,
+		...data
+	}: Omit<SyncValidateBodyRequestType, "episode"> & { episode: Parameters<typeof toCreateEpisodeBody>[0] },
+) {
+	const sentData = SyncValidateBodyRequestSchema.parse({ ...data, episode: toCreateEpisodeBody(episode) });
 	return sendJson(`${API_BASE_URL}/broadcast/sync/${id}/validate`, "POST", sentData);
 }
 

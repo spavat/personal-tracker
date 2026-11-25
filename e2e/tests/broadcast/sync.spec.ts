@@ -163,7 +163,7 @@ test.describe("Broadcast - Sync", () => {
 		await page.goto(`/broadcast/${oldShow.id}`);
 		await page.getByRole("heading", { name: oldShow.name }).getByRole("button", { name: "Modifier" }).click();
 		const dialog = page.getByRole("dialog", { name: "Modifier programme" });
-		await dialog.getByRole("combobox", { name: "Type" }).selectOption("podcast");
+		await dialog.getByRole("combobox", { name: "Type", exact: true }).selectOption("podcast");
 		await dialog.getByRole("button", { name: "Ajouter une référence" }).click();
 		await dialog.locator('select[name="program.refs.0.key"]').selectOption("rss");
 		await dialog.locator('input[name="program.refs.0.value"]').fill("https://feeds.example.com/third-podcast.xml");

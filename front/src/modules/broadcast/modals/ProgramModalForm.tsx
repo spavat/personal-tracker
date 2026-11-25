@@ -6,6 +6,7 @@ import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
 import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-query";
 import { programDetailsQuery, save } from "../api";
+import { toCreditInputs } from "../forms/CreditRows";
 import ProgramForm from "../forms/ProgramForm";
 import { onSubmitProgram, type ProgramInputs } from "../forms/ProgramForm.utils";
 
@@ -27,10 +28,11 @@ export default function ProgramModalForm({ programId, returnTo }: { programId?: 
 
 	let defaultValues: Inputs | null = null;
 	if (data?.episodes) {
-		const { episodes, tags, links, refs, ...props } = data;
+		const { episodes, tags, links, refs, author: _author, network: _network, credits, ...props } = data;
 		defaultValues = {
 			program: {
 				...props,
+				credits: toCreditInputs(credits),
 				...(refs ? { refs: Object.entries(refs).map(([key, value]) => ({ key: key as any, value })) } : {}),
 				// refs: refs ? Object.entries(refs).map(([key, value]) => ({ key, value })) : [],
 				tags: tags?.map((t) => ({ value: t })) ?? [],
@@ -61,7 +63,7 @@ export default function ProgramModalForm({ programId, returnTo }: { programId?: 
 	return (
 		<FormProvider {...methods}>
 			<form onSubmit={methods.handleSubmit(onSubmit)}>
-				<Modal className="modal form dialog-medium" isOpen={true} onClose={closeModal} hasCloseBtn={true}>
+				<Modal className="modal form dialog-large" isOpen={true} onClose={closeModal} hasCloseBtn={true}>
 					<div className="dialog-header">
 						<h2 id="dialog-title">{programId ? "Modifier programme" : "Ajouter programme"}</h2>
 					</div>

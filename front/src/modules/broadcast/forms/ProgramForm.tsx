@@ -2,28 +2,21 @@ import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import Badge from "../../../components/Badge";
 import BadgeEdit from "../../../components/BadgeEdit";
-import { API_BASE_URL } from "../../../config";
-import { type ProgramInputs } from "./ProgramForm.utils";
-
-function readImageFile(file: File): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onload = (e) => resolve(e.target?.result as string);
-		reader.onerror = reject;
-		reader.readAsDataURL(file);
-	});
-}
-
-function resolveImagePreviewSrc(value?: string) {
-	if (!value) return undefined;
-	return value.startsWith("/") ? `${API_BASE_URL}${value}` : value;
-}
+import { readImageFile, resolveImagePreviewSrc } from "../images";
+import CreditRows from "./CreditRows";
+import { PROGRAM_CREDIT_ROLES, type ProgramInputs } from "./ProgramForm.utils";
 
 export default function ProgramForm({ onLatestAsked }: { onLatestAsked?: (type: string, url: string) => void }) {
-	const { control, register, getValues, setValue } = useFormContext<ProgramInputs>();
-	const [country, profile, banner] = useWatch({
+	const {
 		control,
-		name: ["program.country", "program.profile", "program.banner"],
+		register,
+		getValues,
+		setValue,
+		formState: { defaultValues },
+	} = useFormContext<ProgramInputs>();
+	const [country, profile, banner, tracking] = useWatch({
+		control,
+		name: ["program.country", "program.profile", "program.banner", "program.tracking"],
 	});
 
 	async function onImageFileChange(field: "profile" | "banner", e: React.ChangeEvent<HTMLInputElement>) {
@@ -73,15 +66,7 @@ export default function ProgramForm({ onLatestAsked }: { onLatestAsked?: (type: 
 						<input {...register("program.shortName")} type="text" autoComplete="off" />
 					</label>
 
-					<label className="form-field">
-						<span>Auteur</span>
-						<input {...register("program.author")} type="text" />
-					</label>
-
-					<label className="form-field">
-						<span>Réseau</span>
-						<input {...register("program.network")} type="text" />
-					</label>
+					<CreditRows name="program.credits" roles={PROGRAM_CREDIT_ROLES} label="Crédits" />
 
 					<label className="form-field">
 						<span>Pays</span>
@@ -102,6 +87,17 @@ export default function ProgramForm({ onLatestAsked }: { onLatestAsked?: (type: 
 							<option value={"radio"}>Radio</option>
 							<option value={"twitch"}>Twitch</option>
 						</select>
+					</label>
+
+					<label className="form-field">
+						<span>Suivi</span>
+						<select {...register("program.tracking")}>
+							<option value="feed">Flux</option>
+							<option value="catalog">Catalogue</option>
+						</select>
+						{defaultValues?.program?.tracking === "catalog" && tracking === "feed" && (
+							<small>Les épisodes jamais vus seront supprimés</small>
+						)}
 					</label>
 
 					<label className="form-field full-width">

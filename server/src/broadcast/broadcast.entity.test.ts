@@ -1,38 +1,22 @@
 import { describe, expect, it } from "vitest";
 
 import {
-	buildEpisode,
-	cleanEpisode,
 	convertDurationInMinutes,
+	type EpisodeDoc,
 	getDetails,
 	getEpisodeTags,
 	sortByDuration,
 	sortEpisodesDesc,
+	sortViewsDesc,
 } from "./broadcast.entity.js";
 
-describe("buildEpisode", () => {
-	it("adds an id and a created timestamp when none is given", () => {
-		const ep = buildEpisode({ name: "Ep 1", duration: 30 });
-		expect(ep).toMatchObject({ name: "Ep 1", duration: 30 });
-		expect(ep.id).toEqual(expect.any(String));
-		expect(ep.created).toEqual(expect.any(String));
-	});
-
-	it("keeps an existing created timestamp", () => {
-		expect(buildEpisode({ name: "Ep 1", created: "2020-01-01T00:00:00" }).created).toBe("2020-01-01T00:00:00");
-	});
-});
-
-describe("cleanEpisode", () => {
-	it("drops empty tags / contextTags / ignoredTags / links", () => {
-		expect(cleanEpisode({ name: "x", tags: [], contextTags: [], ignoredTags: [], links: [] })).toEqual({
-			name: "x",
-		});
-	});
-	it("keeps populated arrays", () => {
-		const ep = { name: "x", tags: ["a"], contextTags: ["b"], links: ["c"] };
-		expect(cleanEpisode(ep)).toEqual(ep);
-	});
+const episode = (id: string, duration: number, views: EpisodeDoc["views"]): EpisodeDoc => ({
+	id,
+	name: id,
+	duration,
+	type: "podcast",
+	credits: [],
+	views,
 });
 
 describe("getEpisodeTags", () => {
@@ -54,12 +38,28 @@ describe("getEpisodeTags", () => {
 	});
 });
 
-describe("sortEpisodesDesc", () => {
+describe("sortViewsDesc", () => {
 	it("orders by date then created, descending", () => {
-		const a = { date: "2024-01-01", created: "2024-01-01T08:00:00" } as never;
-		const b = { date: "2024-01-01", created: "2024-01-01T20:00:00" } as never;
-		const c = { date: "2024-03-01" } as never;
-		expect([a, c, b].sort(sortEpisodesDesc)).toEqual([c, b, a]);
+		const a = { date: "2024-01-01", created: "2024-01-01T08:00:00" };
+		const b = { date: "2024-01-01", created: "2024-01-01T20:00:00" };
+		const c = { date: "2024-03-01" };
+		expect([a, c, b].sort(sortViewsDesc)).toEqual([c, b, a]);
+	});
+});
+
+describe("sortEpisodesDesc", () => {
+	it("orders by the latest view, an episode without view last", () => {
+		const old = episode("old", 10, [{ id: "v1", date: "2024-01-01" }]);
+		const relistened = episode("relistened", 10, [
+			{ id: "v2", date: "2023-12-01" },
+			{ id: "v3", date: "2024-02-01" },
+		]);
+		const unseen = episode("unseen", 10, []);
+		expect([unseen, old, relistened].sort(sortEpisodesDesc).map(({ id }) => id)).toEqual([
+			"relistened",
+			"old",
+			"unseen",
+		]);
 	});
 });
 
@@ -70,18 +70,26 @@ describe("sortByDuration", () => {
 });
 
 describe("getDetails", () => {
-	it("summarises episode counts, average length and completion rate", () => {
+	it("counts the views: an episode watched twice counts twice; the releases are the episodes", () => {
 		const program = {
 			episodes: [
-				{ date: "2024-03-01", duration: 100, durationReal: 50 },
-				{ date: "2024-02-01", duration: 100 },
+				episode("e1", 100, [
+					{ id: "v1", date: "2024-01-01", duration: 50 },
+					{ id: "v2", date: "2024-03-01" },
+				]),
+				episode("e2", 100, [{ id: "v3", date: "2024-02-01" }]),
+				// imported, not watched yet
+				episode("e3", 100, []),
 			],
 		};
 		expect(getDetails(program)).toEqual({
-			episodes: 2,
+			episodes: 3,
 			averageLength: 100,
-			completionRate: 75, // (50 + 100) / 200
-			lastSeenDate: "2024-03-01", // taken from index 0
+			completionRate: 83, // (50 + 100 + 100) / 300
+			lastSeenDate: "2024-03-01",
+			releases: 3,
+			watched: 2,
+			skipped: 0,
 		});
 	});
 
@@ -91,6 +99,9 @@ describe("getDetails", () => {
 			averageLength: 0,
 			completionRate: 0,
 			lastSeenDate: "",
+			releases: 0,
+			watched: 0,
+			skipped: 0,
 		});
 	});
 });

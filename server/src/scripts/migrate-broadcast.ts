@@ -1,12 +1,12 @@
+import { inArray, sql } from "drizzle-orm";
+import { MongoClient } from "mongodb";
+
 // One-off (ticket 03 of .scratch/broadcast-postgres): copies the Mongo `broadcast` collection into the Postgres
 // `broadcast` schema, in one transaction. Mongo is left untouched: the app reads it until ticket 04.
 // Refuses to run when broadcast.program already has rows, or when episodes of a program share an externalId with
 // different titles (listed, to fix by hand first). --dry-run does every write then rolls back.
 // Usage, from server/ after a build: npm run migrate-broadcast [-- --dry-run]
-import type { Program } from "@personal-tracker/shared/broadcast";
-
-import { inArray, sql } from "drizzle-orm";
-import { MongoClient } from "mongodb";
+import type { MongoProgram } from "./broadcast-migration.utils.js";
 
 import { envSchema } from "../config/env.schema.js";
 import { createDrizzle } from "../database/drizzle.js";
@@ -30,7 +30,7 @@ class DryRun extends Error {}
 const mongo = new MongoClient(env.MONGODB_URL);
 const documents = await mongo
 	.db()
-	.collection<Program>("broadcast")
+	.collection<MongoProgram>("broadcast")
 	.find({}, { projection: { _id: 0 } })
 	.toArray()
 	.finally(() => mongo.close());

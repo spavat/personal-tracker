@@ -22,6 +22,11 @@ const links = [
 		partial: true,
 	},
 	{
+		link: "/broadcast/watchlist",
+		label: "À voir",
+		ownerOnly: true,
+	},
+	{
 		link: "/broadcast/stats",
 		label: "Statistiques",
 		partial: true,
