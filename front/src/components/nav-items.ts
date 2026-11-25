@@ -1,6 +1,7 @@
 export const mainNavItems = [
 	{ path: "/", title: "Accueil", icon: "🏠" },
 	{ path: "/calendar", title: "Calendrier", icon: "📅" },
+	{ path: "/entities", title: "Répertoire", icon: "📇" },
 	{ path: "/shows", title: "Spectacle", icon: "🎭" },
 	{ path: "/music", title: "Musique", icon: "🎶" },
 	{ path: "/reading-book", title: "Livre", icon: "📖" },

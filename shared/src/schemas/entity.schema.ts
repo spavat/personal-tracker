@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-import { SearchQSSchema } from "./common.schema";
+import { SearchQSSchema, SortQSSchema } from "./common.schema";
 
 // People, groups and organizations shared by every module (authors, translators, publishers, artists…)
 export const EntityKindSchema = z.enum(["person", "group", "organization"]);
@@ -38,3 +38,29 @@ export const SaveEntityBodyRequestSchema = EntitySchema.omit({ id: true }).exten
 export type SaveEntityBody = z.infer<typeof SaveEntityBodyRequestSchema>;
 export const SaveEntityResponseSchema = EntitySchema;
 export const EntityParamsRequestSchema = z.object({ id: z.uuid() });
+
+//
+// DIRECTORY
+//
+// Every entity with what it is credited for, module by module: the distinct works (a book with two roles counts once
+// in `books`) and the works of each role. A visitor only sees the entities with a visible credit, and only those
+// credits are counted.
+export const EntityDirectoryItemSchema = EntitySchema.extend({
+	// on the book (author, illustrator, preface) or on one of its editions (translator, publisher)
+	book: z.object({
+		books: z.number(),
+		author: z.number(),
+		illustrator: z.number(),
+		preface: z.number(),
+		translator: z.number(),
+		publisher: z.number(),
+	}),
+	// spectacles: through a performance or a cast model
+	show: z.object({ spectacles: z.number(), performances: z.number() }),
+	program: z.object({ programs: z.number(), host: z.number(), producer: z.number(), network: z.number() }),
+	episode: z.object({ episodes: z.number(), host: z.number(), guest: z.number(), interviewee: z.number() }),
+});
+export type EntityDirectoryItem = z.infer<typeof EntityDirectoryItemSchema>;
+// search: in the names (the search modal)
+export const EntityDirectoryQuerystringRequestSchema = SortQSSchema.extend(SearchQSSchema.shape);
+export const EntityDirectoryResponseSchema = z.array(EntityDirectoryItemSchema);

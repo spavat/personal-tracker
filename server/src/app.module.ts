@@ -9,6 +9,7 @@ import { CommonModule } from "./common/common.module.js";
 import { envSchema } from "./config/env.schema.js";
 import { ContextTagsModule } from "./context-tags/context-tags.module.js";
 import { DatabaseModule } from "./database/database.module.js";
+import { DirectoryModule } from "./entities/directory/directory.module.js";
 import { EntitiesModule } from "./entities/entities.module.js";
 import { GameModule } from "./game/game.module.js";
 import { HealthController } from "./health/health.controller.js";
@@ -42,6 +43,7 @@ import { SportModule } from "./sport/sport.module.js";
 		ReadingBookModule,
 		ShowModule,
 		EntitiesModule,
+		DirectoryModule,
 		ImagesModule,
 		CalendarModule,
 		HomeModule,

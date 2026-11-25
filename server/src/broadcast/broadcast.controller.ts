@@ -5,6 +5,8 @@ import {
 	type DeleteParamsRequest,
 	DeleteParamsRequestSchema,
 	DetailsProgramParamsRequestSchema,
+	EntityBroadcastParamsRequestSchema,
+	EntityBroadcastResponseSchema,
 	EpisodeListQuerystringRequestSchema,
 	EpisodeListResponseSchema,
 	EpisodeSchema,
@@ -63,6 +65,13 @@ export class BroadcastController {
 	@SerializeOptions({ schema: ProgramDetailsSchema })
 	getProgram(@Param({ schema: DetailsProgramParamsRequestSchema }) { programId }: { programId: string }) {
 		return this.service.getProgram(programId);
+	}
+
+	@Get("entities/:entityId")
+	@Public()
+	@SerializeOptions({ schema: EntityBroadcastResponseSchema })
+	getEntityCredits(@Param({ schema: EntityBroadcastParamsRequestSchema }) { entityId }: { entityId: string }) {
+		return this.service.getEntityCredits(entityId);
 	}
 
 	@Get("extract")

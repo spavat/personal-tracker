@@ -1,11 +1,22 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { and, AnyColumn, asc, desc, eq, sql, SQL } from "drizzle-orm";
+import { and, AnyColumn, asc, desc, eq, isNotNull, sql, SQL } from "drizzle-orm";
 
 import { contains } from "../../database/contains.query.js";
 import { DRIZZLE } from "../../database/database.tokens.js";
 import { Drizzle } from "../../database/drizzle.js";
-import { coreEntity, showModelRole, showPerformance, showRole } from "../../database/schema.js";
-import { hasVisiblePerformance, visiblePerformanceDate } from "../performances/visible-performance.query.js";
+import {
+	coreEntity,
+	showModel,
+	showModelRole,
+	showPerformance,
+	showRole,
+	showSpectacle,
+} from "../../database/schema.js";
+import {
+	hasVisiblePerformance,
+	visiblePerformanceDate,
+	visibleSpectacle,
+} from "../performances/visible-performance.query.js";
 import { placeNameAt } from "../places/places.repository.js";
 
 // An artist is an entity credited in a show role or model role. Self-contained, for RQB RAW filters too.
@@ -79,6 +90,74 @@ export class ArtistsRepository {
 		artist?.showRoles.sort((a, b) => (a.performance?.date ?? "").localeCompare(b.performance?.date ?? ""));
 
 		return artist;
+	}
+
+	// Per entity credited in a show: its spectacles (through a performance or a cast model) and its performances, the
+	// ones a visitor may see. entityId: only this one.
+	async countEntityCredits(entityId?: string) {
+		const spectacleIds = (column: AnyColumn) => sql<string[]>`array_agg(distinct ${column})::text[]`;
+		const [roles, modelRoles] = await Promise.all([
+			this.db
+				.select({
+					entityId: showRole.entityId,
+					spectacleIds: spectacleIds(showPerformance.spectacleId),
+					nbPerformances: sql<number>`count(distinct ${showPerformance.id})::int`,
+				})
+				.from(showRole)
+				.innerJoin(
+					showPerformance,
+					and(eq(showPerformance.id, showRole.performanceId), visiblePerformanceDate(showPerformance.date)),
+				)
+				.where(entityId ? eq(showRole.entityId, entityId) : isNotNull(showRole.entityId))
+				.groupBy(showRole.entityId),
+			this.db
+				.select({ entityId: showModelRole.entityId, spectacleIds: spectacleIds(showModel.spectacleId) })
+				.from(showModelRole)
+				.innerJoin(showModel, eq(showModel.id, showModelRole.modelId))
+				.where(
+					and(
+						visibleSpectacle(showModel.spectacleId),
+						entityId ? eq(showModelRole.entityId, entityId) : isNotNull(showModelRole.entityId),
+					),
+				)
+				.groupBy(showModelRole.entityId),
+		]);
+		const credits = new Map<string, { spectacleIds: Set<string>; nbPerformances: number }>();
+		const creditsOf = (id: string) =>
+			credits.get(id) ?? credits.set(id, { spectacleIds: new Set(), nbPerformances: 0 }).get(id)!;
+		for (const row of roles) {
+			const entry = creditsOf(row.entityId!);
+			row.spectacleIds.forEach((id) => entry.spectacleIds.add(id));
+			entry.nbPerformances = row.nbPerformances;
+		}
+		for (const row of modelRoles) {
+			const entry = creditsOf(row.entityId!);
+			row.spectacleIds.forEach((id) => entry.spectacleIds.add(id));
+		}
+		return new Map(
+			[...credits].map(([id, { spectacleIds: ids, nbPerformances }]) => [
+				id,
+				{ spectacles: ids.size, performances: nbPerformances },
+			]),
+		);
+	}
+
+	// The artist's roles in the spectacles' cast models, by spectacle then model; a visitor only gets the spectacles
+	// with a visible performance
+	findModelRoles(entityId: string) {
+		return this.db
+			.select({
+				id: showModelRole.id,
+				role: showModelRole.name,
+				model: showModel.name,
+				spectacleId: showSpectacle.id,
+				spectacleName: showSpectacle.name,
+			})
+			.from(showModelRole)
+			.innerJoin(showModel, eq(showModel.id, showModelRole.modelId))
+			.innerJoin(showSpectacle, eq(showSpectacle.id, showModel.spectacleId))
+			.where(and(eq(showModelRole.entityId, entityId), visibleSpectacle(showModel.spectacleId)))
+			.orderBy(asc(showSpectacle.name), asc(showModel.name), asc(showModelRole.order));
 	}
 
 	findByName(search: string) {

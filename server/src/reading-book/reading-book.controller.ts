@@ -10,6 +10,8 @@ import {
 	BookSchema,
 	DeleteReadingParamsRequestSchema,
 	EditionParamsRequestSchema,
+	EntityBooksParamsRequestSchema,
+	EntityBooksResponseSchema,
 	EditionSchema,
 	GetReportQuerystringRequestSchema,
 	GetReportResponseSchema,
@@ -95,6 +97,14 @@ export class ReadingBookController {
 	@SerializeOptions({ schema: AuthorDetailsSchema })
 	getAuthor(@Param({ schema: AuthorParamsRequestSchema }) { id }: IdParams) {
 		return this.service.getAuthor(id);
+	}
+
+	// the books an entity is credited on, by role (its page in the directory)
+	@Get("entities/:entityId")
+	@Public()
+	@SerializeOptions({ schema: EntityBooksResponseSchema.element })
+	getEntityBooks(@Param({ schema: EntityBooksParamsRequestSchema }) { entityId }: { entityId: string }) {
+		return this.service.getEntityBooks(entityId);
 	}
 
 	// --- books ---

@@ -1,6 +1,7 @@
 import {
 	Author,
 	AuthorDetails,
+	EntityBooksResponse,
 	Book,
 	BookOverview,
 	GetReportResponse,
@@ -78,6 +79,12 @@ export const authorDetailsQuery = (id: string) =>
 	queryOptions({
 		queryKey: ["reading", "authors", id],
 		queryFn: () => fetchJson<AuthorDetails>(`${API_BASE_URL}/reading-book/authors/${id}`),
+	});
+
+export const entityBooksQuery = (entityId: string) =>
+	queryOptions({
+		queryKey: ["reading", "entities", entityId],
+		queryFn: () => fetchJson<EntityBooksResponse>(`${API_BASE_URL}/reading-book/entities/${entityId}`),
 	});
 
 export const seriesListQuery = () =>

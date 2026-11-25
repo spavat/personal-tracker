@@ -128,6 +128,7 @@ describe("BroadcastModule controllers", () => {
 
 		for (const url of [
 			"/broadcast/episodes",
+			`/broadcast/entities/${PROGRAM}`,
 			"/broadcast/stats?from=2024-01-01&to=2024-01-31",
 			"/broadcast/stats/fortnight",
 		]) {
@@ -147,6 +148,7 @@ describe("BroadcastModule controllers", () => {
 		it("rejects a non-uuid program id and non-uuid delete ids", async () => {
 			({ app } = await setup());
 			expect((await app.inject({ method: "GET", url: "/broadcast/programs/nope" })).statusCode).toBe(400);
+			expect((await app.inject({ method: "GET", url: "/broadcast/entities/nope" })).statusCode).toBe(400);
 			expect(
 				(await app.inject({ method: "DELETE", url: "/broadcast/programs/nope/episodes/nope" })).statusCode,
 			).toBe(400);

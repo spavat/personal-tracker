@@ -286,6 +286,19 @@ export const AuthorDetailsSchema = AuthorSchema.omit({ nbBooks: true, nbReadings
 export type AuthorDetails = z.infer<typeof AuthorDetailsSchema>;
 
 //
+// ENTITY BOOKS
+//
+// The books an entity is credited on, by role (a translator or a publisher through an edition), for its page in the
+// directory: in publication order, only the roles it has
+export const EntityBookRoleSchema = z.enum(["author", "illustrator", "preface", "translator", "publisher"]);
+export type EntityBookRole = z.infer<typeof EntityBookRoleSchema>;
+export const EntityBooksParamsRequestSchema = z.object({ entityId: z.uuid() });
+export const EntityBooksResponseSchema = z.array(
+	z.object({ role: EntityBookRoleSchema, books: z.array(BookOverviewSchema) }),
+);
+export type EntityBooksResponse = z.infer<typeof EntityBooksResponseSchema>;
+
+//
 // SAVE READING
 //
 // Request

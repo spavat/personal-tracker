@@ -23,6 +23,8 @@ const PUBLIC_PATHS = [
 	/^\/game(\/(history|list))?$/,
 	/^\/game\/history\/\d{4}$/,
 	/^\/game\/details\/[0-9a-f-]{36}$/,
+	/^\/entities$/,
+	/^\/entities\/[0-9a-f-]{36}$/,
 ];
 
 export function isPublicPath(pathname: string) {

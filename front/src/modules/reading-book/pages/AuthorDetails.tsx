@@ -1,10 +1,10 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
+import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
 import { useIsOwner } from "../../../hooks/use-is-owner";
 import { authorDetailsQuery } from "../api";
-import CardBook from "../components/CardBook";
-import { coverSrc, seriesGroups } from "../utils";
+import AuthorBooks from "../components/AuthorBooks";
+import { coverSrc } from "../utils";
 
 // A author and their books, in publication order
 export default function AuthorDetails({ authorId }: { authorId: string }) {
@@ -12,14 +12,6 @@ export default function AuthorDetails({ authorId }: { authorId: string }) {
 	const location = useLocation();
 	const isOwner = useIsOwner();
 	const { data: author } = useSuspenseQuery(authorDetailsQuery(authorId));
-	const groups = seriesGroups(author.books);
-	// the group where each book shows first (null: in no series)
-	const firstSeries = new Map<string, string | null>();
-	for (const { series, books } of groups) {
-		for (const { book } of books) {
-			if (!firstSeries.has(book.id)) firstSeries.set(book.id, series?.id ?? null);
-		}
-	}
 
 	return (
 		<div className="details">
@@ -70,31 +62,7 @@ export default function AuthorDetails({ authorId }: { authorId: string }) {
 				</div>
 			</div>
 			<h2>Liste des livres</h2>
-			{/* a book in two series shows twice: only its first card takes the cover transition */}
-			{groups.map(({ series, books }) => (
-				<section key={series?.id ?? "none"}>
-					{/* the books in no series come last, under their own heading when there are series */}
-					{series ? (
-						<h3>
-							<Link to="/reading-book/series/$seriesId" params={{ seriesId: series.id }}>
-								{series.title}
-							</Link>
-						</h3>
-					) : (
-						author.books.some((book) => book.series.length) && <h3>Hors série</h3>
-					)}
-					<div className="grid">
-						{books.map(({ book, label }) => (
-							<CardBook
-								key={book.id}
-								book={book}
-								label={label}
-								coverTransition={firstSeries.get(book.id) === (series?.id ?? null)}
-							/>
-						))}
-					</div>
-				</section>
-			))}
+			<AuthorBooks books={author.books} />
 
 			<Outlet />
 		</div>

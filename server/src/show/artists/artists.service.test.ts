@@ -8,6 +8,7 @@ function fakeRepo() {
 	return {
 		findAll: vi.fn().mockResolvedValue([]),
 		findByIdWithPerformances: vi.fn().mockResolvedValue(null),
+		findModelRoles: vi.fn().mockResolvedValue([]),
 		findByName: vi.fn().mockResolvedValue([]),
 	};
 }

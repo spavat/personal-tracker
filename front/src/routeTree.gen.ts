@@ -13,6 +13,7 @@ import { Route as HomeRouteImport } from './routes/_home'
 import { Route as BroadcastRouteImport } from './routes/broadcast'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as ContextTagsRouteImport } from './routes/context-tags'
+import { Route as EntitiesRouteImport } from './routes/entities'
 import { Route as GameRouteImport } from './routes/game'
 import { Route as LifespanRouteImport } from './routes/lifespan'
 import { Route as LoginRouteImport } from './routes/login'
@@ -29,6 +30,7 @@ import { Route as BroadcastIndexRouteImport } from './routes/broadcast/index'
 import { Route as CalendarIndexRouteImport } from './routes/calendar/index'
 import { Route as CalendarPeriodRouteImport } from './routes/calendar/$period'
 import { Route as ContextTagsListRouteImport } from './routes/context-tags/_list'
+import { Route as EntitiesIndexRouteImport } from './routes/entities/index'
 import { Route as GameIndexRouteImport } from './routes/game/index'
 import { Route as LifespanIndexRouteImport } from './routes/lifespan/index'
 import { Route as MoneyIndexRouteImport } from './routes/money/index'
@@ -50,6 +52,7 @@ import { Route as BroadcastWatchlistIndexRouteImport } from './routes/broadcast/
 import { Route as CalendarPeriodDateRouteImport } from './routes/calendar/$period.$date'
 import { Route as ContextTagsListIndexRouteImport } from './routes/context-tags/_list.index'
 import { Route as ContextTagsListAddRouteImport } from './routes/context-tags/_list.add'
+import { Route as EntitiesEntityIdDetailsRouteImport } from './routes/entities/$entityId/_details'
 import { Route as GameHistoryIndexRouteImport } from './routes/game/history/index'
 import { Route as GameHistoryYearRouteImport } from './routes/game/history/$year'
 import { Route as GameIntegrationsIntegrationsRouteImport } from './routes/game/integrations/_integrations'
@@ -110,6 +113,8 @@ import { Route as BroadcastListListAddRouteImport } from './routes/broadcast/lis
 import { Route as BroadcastReviewReviewIndexRouteImport } from './routes/broadcast/review/_review.index'
 import { Route as ContextTagsListDeleteIdRouteImport } from './routes/context-tags/_list.delete.$id'
 import { Route as ContextTagsListEditIdRouteImport } from './routes/context-tags/_list.edit.$id'
+import { Route as EntitiesEntityIdDetailsIndexRouteImport } from './routes/entities/$entityId/_details.index'
+import { Route as EntitiesEntityIdDetailsEditRouteImport } from './routes/entities/$entityId/_details.edit'
 import { Route as GameDetailsDetailsGameIdRouteImport } from './routes/game/details/_details.$gameId'
 import { Route as GameHistoryYearAddRouteImport } from './routes/game/history/$year.add'
 import { Route as GameListListAddRouteImport } from './routes/game/list/_list.add'
@@ -242,6 +247,11 @@ const ContextTagsRoute = ContextTagsRouteImport.update({
   path: '/context-tags',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EntitiesRoute = EntitiesRouteImport.update({
+  id: '/entities',
+  path: '/entities',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GameRoute = GameRouteImport.update({
   id: '/game',
   path: '/game',
@@ -320,6 +330,11 @@ const CalendarPeriodRoute = CalendarPeriodRouteImport.update({
 const ContextTagsListRoute = ContextTagsListRouteImport.update({
   id: '/_list',
   getParentRoute: () => ContextTagsRoute,
+} as any)
+const EntitiesIndexRoute = EntitiesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EntitiesRoute,
 } as any)
 const GameIndexRoute = GameIndexRouteImport.update({
   id: '/',
@@ -426,6 +441,11 @@ const ContextTagsListAddRoute = ContextTagsListAddRouteImport.update({
   id: '/add',
   path: '/add',
   getParentRoute: () => ContextTagsListRoute,
+} as any)
+const EntitiesEntityIdDetailsRoute = EntitiesEntityIdDetailsRouteImport.update({
+  id: '/$entityId/_details',
+  path: '/$entityId',
+  getParentRoute: () => EntitiesRoute,
 } as any)
 const GameHistoryIndexRoute = GameHistoryIndexRouteImport.update({
   id: '/history/',
@@ -742,6 +762,18 @@ const ContextTagsListEditIdRoute = ContextTagsListEditIdRouteImport.update({
   path: '/edit/$id',
   getParentRoute: () => ContextTagsListRoute,
 } as any)
+const EntitiesEntityIdDetailsIndexRoute =
+  EntitiesEntityIdDetailsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => EntitiesEntityIdDetailsRoute,
+  } as any)
+const EntitiesEntityIdDetailsEditRoute =
+  EntitiesEntityIdDetailsEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => EntitiesEntityIdDetailsRoute,
+  } as any)
 const GameDetailsDetailsGameIdRoute =
   GameDetailsDetailsGameIdRouteImport.update({
     id: '/details/_details/$gameId',
@@ -1393,6 +1425,7 @@ export interface FileRoutesByFullPath {
   '/broadcast': typeof BroadcastRouteWithChildren
   '/calendar': typeof CalendarRouteWithChildren
   '/context-tags': typeof ContextTagsRouteWithChildren
+  '/entities': typeof EntitiesRouteWithChildren
   '/game': typeof GameRouteWithChildren
   '/lifespan': typeof LifespanRouteWithChildren
   '/login': typeof LoginRoute
@@ -1408,6 +1441,7 @@ export interface FileRoutesByFullPath {
   '/money/analytics': typeof MoneyAnalyticsRoute
   '/broadcast/': typeof BroadcastIndexRoute
   '/calendar/': typeof CalendarIndexRoute
+  '/entities/': typeof EntitiesIndexRoute
   '/game/': typeof GameIndexRoute
   '/lifespan/': typeof LifespanIndexRoute
   '/money/': typeof MoneyIndexRoute
@@ -1423,6 +1457,7 @@ export interface FileRoutesByFullPath {
   '/broadcast/stats/$year': typeof BroadcastStatsYearRoute
   '/calendar/$period/$date': typeof CalendarPeriodDateRoute
   '/context-tags/add': typeof ContextTagsListAddRoute
+  '/entities/$entityId': typeof EntitiesEntityIdDetailsRouteWithChildren
   '/game/history/$year': typeof GameHistoryYearRouteWithChildren
   '/game/integrations': typeof GameIntegrationsIntegrationsRouteWithChildren
   '/game/list': typeof GameListListRouteWithChildren
@@ -1485,6 +1520,7 @@ export interface FileRoutesByFullPath {
   '/broadcast/list/add': typeof BroadcastListListAddRoute
   '/context-tags/delete/$id': typeof ContextTagsListDeleteIdRoute
   '/context-tags/edit/$id': typeof ContextTagsListEditIdRoute
+  '/entities/$entityId/edit': typeof EntitiesEntityIdDetailsEditRoute
   '/game/details/$gameId': typeof GameDetailsDetailsGameIdRouteWithChildren
   '/game/history/$year/add': typeof GameHistoryYearAddRoute
   '/game/list/add': typeof GameListListAddRoute
@@ -1524,6 +1560,7 @@ export interface FileRoutesByFullPath {
   '/broadcast/$programId/': typeof BroadcastProgramIdDetailsIndexRoute
   '/broadcast/list/': typeof BroadcastListListIndexRoute
   '/broadcast/review/': typeof BroadcastReviewReviewIndexRoute
+  '/entities/$entityId/': typeof EntitiesEntityIdDetailsIndexRoute
   '/lifespan/categories/': typeof LifespanCategoriesListIndexRoute
   '/lifespan/list/': typeof LifespanListListIndexRoute
   '/lifespan/timeline/': typeof LifespanTimelineTimelineIndexRoute
@@ -1611,6 +1648,7 @@ export interface FileRoutesByTo {
   '/': typeof HomeIndexRoute
   '/broadcast': typeof BroadcastIndexRoute
   '/calendar': typeof CalendarIndexRoute
+  '/entities': typeof EntitiesIndexRoute
   '/game': typeof GameIndexRoute
   '/lifespan': typeof LifespanIndexRoute
   '/money': typeof MoneyIndexRoute
@@ -1675,6 +1713,7 @@ export interface FileRoutesByTo {
   '/broadcast/list/add': typeof BroadcastListListAddRoute
   '/context-tags/delete/$id': typeof ContextTagsListDeleteIdRoute
   '/context-tags/edit/$id': typeof ContextTagsListEditIdRoute
+  '/entities/$entityId/edit': typeof EntitiesEntityIdDetailsEditRoute
   '/game/details/$gameId': typeof GameDetailsDetailsGameIdRouteWithChildren
   '/game/history/$year/add': typeof GameHistoryYearAddRoute
   '/game/list/add': typeof GameListListAddRoute
@@ -1711,6 +1750,7 @@ export interface FileRoutesByTo {
   '/broadcast/$programId': typeof BroadcastProgramIdDetailsIndexRoute
   '/broadcast/list': typeof BroadcastListListIndexRoute
   '/broadcast/review': typeof BroadcastReviewReviewIndexRoute
+  '/entities/$entityId': typeof EntitiesEntityIdDetailsIndexRoute
   '/lifespan/categories': typeof LifespanCategoriesListIndexRoute
   '/lifespan/list': typeof LifespanListListIndexRoute
   '/lifespan/timeline': typeof LifespanTimelineTimelineIndexRoute
@@ -1794,6 +1834,7 @@ export interface FileRoutesById {
   '/broadcast': typeof BroadcastRouteWithChildren
   '/calendar': typeof CalendarRouteWithChildren
   '/context-tags': typeof ContextTagsRouteWithChildren
+  '/entities': typeof EntitiesRouteWithChildren
   '/game': typeof GameRouteWithChildren
   '/lifespan': typeof LifespanRouteWithChildren
   '/login': typeof LoginRoute
@@ -1811,6 +1852,7 @@ export interface FileRoutesById {
   '/_home/': typeof HomeIndexRoute
   '/broadcast/': typeof BroadcastIndexRoute
   '/calendar/': typeof CalendarIndexRoute
+  '/entities/': typeof EntitiesIndexRoute
   '/game/': typeof GameIndexRoute
   '/lifespan/': typeof LifespanIndexRoute
   '/money/': typeof MoneyIndexRoute
@@ -1826,6 +1868,7 @@ export interface FileRoutesById {
   '/broadcast/stats/$year': typeof BroadcastStatsYearRoute
   '/calendar/$period/$date': typeof CalendarPeriodDateRoute
   '/context-tags/_list/add': typeof ContextTagsListAddRoute
+  '/entities/$entityId/_details': typeof EntitiesEntityIdDetailsRouteWithChildren
   '/game/history/$year': typeof GameHistoryYearRouteWithChildren
   '/game/integrations/_integrations': typeof GameIntegrationsIntegrationsRouteWithChildren
   '/game/list/_list': typeof GameListListRouteWithChildren
@@ -1888,6 +1931,7 @@ export interface FileRoutesById {
   '/broadcast/list/_list/add': typeof BroadcastListListAddRoute
   '/context-tags/_list/delete/$id': typeof ContextTagsListDeleteIdRoute
   '/context-tags/_list/edit/$id': typeof ContextTagsListEditIdRoute
+  '/entities/$entityId/_details/edit': typeof EntitiesEntityIdDetailsEditRoute
   '/game/details/_details/$gameId': typeof GameDetailsDetailsGameIdRouteWithChildren
   '/game/history/$year/add': typeof GameHistoryYearAddRoute
   '/game/list/_list/add': typeof GameListListAddRoute
@@ -1927,6 +1971,7 @@ export interface FileRoutesById {
   '/broadcast/$programId/_details/': typeof BroadcastProgramIdDetailsIndexRoute
   '/broadcast/list/_list/': typeof BroadcastListListIndexRoute
   '/broadcast/review/_review/': typeof BroadcastReviewReviewIndexRoute
+  '/entities/$entityId/_details/': typeof EntitiesEntityIdDetailsIndexRoute
   '/lifespan/categories/_list/': typeof LifespanCategoriesListIndexRoute
   '/lifespan/list/_list/': typeof LifespanListListIndexRoute
   '/lifespan/timeline/_timeline/': typeof LifespanTimelineTimelineIndexRoute
@@ -2011,6 +2056,7 @@ export interface FileRouteTypes {
     | '/broadcast'
     | '/calendar'
     | '/context-tags'
+    | '/entities'
     | '/game'
     | '/lifespan'
     | '/login'
@@ -2026,6 +2072,7 @@ export interface FileRouteTypes {
     | '/money/analytics'
     | '/broadcast/'
     | '/calendar/'
+    | '/entities/'
     | '/game/'
     | '/lifespan/'
     | '/money/'
@@ -2041,6 +2088,7 @@ export interface FileRouteTypes {
     | '/broadcast/stats/$year'
     | '/calendar/$period/$date'
     | '/context-tags/add'
+    | '/entities/$entityId'
     | '/game/history/$year'
     | '/game/integrations'
     | '/game/list'
@@ -2103,6 +2151,7 @@ export interface FileRouteTypes {
     | '/broadcast/list/add'
     | '/context-tags/delete/$id'
     | '/context-tags/edit/$id'
+    | '/entities/$entityId/edit'
     | '/game/details/$gameId'
     | '/game/history/$year/add'
     | '/game/list/add'
@@ -2142,6 +2191,7 @@ export interface FileRouteTypes {
     | '/broadcast/$programId/'
     | '/broadcast/list/'
     | '/broadcast/review/'
+    | '/entities/$entityId/'
     | '/lifespan/categories/'
     | '/lifespan/list/'
     | '/lifespan/timeline/'
@@ -2229,6 +2279,7 @@ export interface FileRouteTypes {
     | '/'
     | '/broadcast'
     | '/calendar'
+    | '/entities'
     | '/game'
     | '/lifespan'
     | '/money'
@@ -2293,6 +2344,7 @@ export interface FileRouteTypes {
     | '/broadcast/list/add'
     | '/context-tags/delete/$id'
     | '/context-tags/edit/$id'
+    | '/entities/$entityId/edit'
     | '/game/details/$gameId'
     | '/game/history/$year/add'
     | '/game/list/add'
@@ -2329,6 +2381,7 @@ export interface FileRouteTypes {
     | '/broadcast/$programId'
     | '/broadcast/list'
     | '/broadcast/review'
+    | '/entities/$entityId'
     | '/lifespan/categories'
     | '/lifespan/list'
     | '/lifespan/timeline'
@@ -2411,6 +2464,7 @@ export interface FileRouteTypes {
     | '/broadcast'
     | '/calendar'
     | '/context-tags'
+    | '/entities'
     | '/game'
     | '/lifespan'
     | '/login'
@@ -2428,6 +2482,7 @@ export interface FileRouteTypes {
     | '/_home/'
     | '/broadcast/'
     | '/calendar/'
+    | '/entities/'
     | '/game/'
     | '/lifespan/'
     | '/money/'
@@ -2443,6 +2498,7 @@ export interface FileRouteTypes {
     | '/broadcast/stats/$year'
     | '/calendar/$period/$date'
     | '/context-tags/_list/add'
+    | '/entities/$entityId/_details'
     | '/game/history/$year'
     | '/game/integrations/_integrations'
     | '/game/list/_list'
@@ -2505,6 +2561,7 @@ export interface FileRouteTypes {
     | '/broadcast/list/_list/add'
     | '/context-tags/_list/delete/$id'
     | '/context-tags/_list/edit/$id'
+    | '/entities/$entityId/_details/edit'
     | '/game/details/_details/$gameId'
     | '/game/history/$year/add'
     | '/game/list/_list/add'
@@ -2544,6 +2601,7 @@ export interface FileRouteTypes {
     | '/broadcast/$programId/_details/'
     | '/broadcast/list/_list/'
     | '/broadcast/review/_review/'
+    | '/entities/$entityId/_details/'
     | '/lifespan/categories/_list/'
     | '/lifespan/list/_list/'
     | '/lifespan/timeline/_timeline/'
@@ -2627,6 +2685,7 @@ export interface RootRouteChildren {
   BroadcastRoute: typeof BroadcastRouteWithChildren
   CalendarRoute: typeof CalendarRouteWithChildren
   ContextTagsRoute: typeof ContextTagsRouteWithChildren
+  EntitiesRoute: typeof EntitiesRouteWithChildren
   GameRoute: typeof GameRouteWithChildren
   LifespanRoute: typeof LifespanRouteWithChildren
   LoginRoute: typeof LoginRoute
@@ -2667,6 +2726,13 @@ declare module '@tanstack/react-router' {
       path: '/context-tags'
       fullPath: '/context-tags'
       preLoaderRoute: typeof ContextTagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entities': {
+      id: '/entities'
+      path: '/entities'
+      fullPath: '/entities'
+      preLoaderRoute: typeof EntitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/game': {
@@ -2780,6 +2846,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/context-tags'
       preLoaderRoute: typeof ContextTagsListRouteImport
       parentRoute: typeof ContextTagsRoute
+    }
+    '/entities/': {
+      id: '/entities/'
+      path: '/'
+      fullPath: '/entities/'
+      preLoaderRoute: typeof EntitiesIndexRouteImport
+      parentRoute: typeof EntitiesRoute
     }
     '/game/': {
       id: '/game/'
@@ -2927,6 +3000,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/context-tags/add'
       preLoaderRoute: typeof ContextTagsListAddRouteImport
       parentRoute: typeof ContextTagsListRoute
+    }
+    '/entities/$entityId/_details': {
+      id: '/entities/$entityId/_details'
+      path: '/$entityId'
+      fullPath: '/entities/$entityId'
+      preLoaderRoute: typeof EntitiesEntityIdDetailsRouteImport
+      parentRoute: typeof EntitiesRoute
     }
     '/game/history/': {
       id: '/game/history/'
@@ -3347,6 +3427,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/context-tags/edit/$id'
       preLoaderRoute: typeof ContextTagsListEditIdRouteImport
       parentRoute: typeof ContextTagsListRoute
+    }
+    '/entities/$entityId/_details/': {
+      id: '/entities/$entityId/_details/'
+      path: '/'
+      fullPath: '/entities/$entityId/'
+      preLoaderRoute: typeof EntitiesEntityIdDetailsIndexRouteImport
+      parentRoute: typeof EntitiesEntityIdDetailsRoute
+    }
+    '/entities/$entityId/_details/edit': {
+      id: '/entities/$entityId/_details/edit'
+      path: '/edit'
+      fullPath: '/entities/$entityId/edit'
+      preLoaderRoute: typeof EntitiesEntityIdDetailsEditRouteImport
+      parentRoute: typeof EntitiesEntityIdDetailsRoute
     }
     '/game/details/_details/$gameId': {
       id: '/game/details/_details/$gameId'
@@ -4311,6 +4405,36 @@ const ContextTagsRouteWithChildren = ContextTagsRoute._addFileChildren(
   ContextTagsRouteChildren,
 )
 
+interface EntitiesEntityIdDetailsRouteChildren {
+  EntitiesEntityIdDetailsEditRoute: typeof EntitiesEntityIdDetailsEditRoute
+  EntitiesEntityIdDetailsIndexRoute: typeof EntitiesEntityIdDetailsIndexRoute
+}
+
+const EntitiesEntityIdDetailsRouteChildren: EntitiesEntityIdDetailsRouteChildren =
+  {
+    EntitiesEntityIdDetailsEditRoute: EntitiesEntityIdDetailsEditRoute,
+    EntitiesEntityIdDetailsIndexRoute: EntitiesEntityIdDetailsIndexRoute,
+  }
+
+const EntitiesEntityIdDetailsRouteWithChildren =
+  EntitiesEntityIdDetailsRoute._addFileChildren(
+    EntitiesEntityIdDetailsRouteChildren,
+  )
+
+interface EntitiesRouteChildren {
+  EntitiesIndexRoute: typeof EntitiesIndexRoute
+  EntitiesEntityIdDetailsRoute: typeof EntitiesEntityIdDetailsRouteWithChildren
+}
+
+const EntitiesRouteChildren: EntitiesRouteChildren = {
+  EntitiesIndexRoute: EntitiesIndexRoute,
+  EntitiesEntityIdDetailsRoute: EntitiesEntityIdDetailsRouteWithChildren,
+}
+
+const EntitiesRouteWithChildren = EntitiesRoute._addFileChildren(
+  EntitiesRouteChildren,
+)
+
 interface GameHistoryYearRouteChildren {
   GameHistoryYearAddRoute: typeof GameHistoryYearAddRoute
 }
@@ -5139,6 +5263,7 @@ const rootRouteChildren: RootRouteChildren = {
   BroadcastRoute: BroadcastRouteWithChildren,
   CalendarRoute: CalendarRouteWithChildren,
   ContextTagsRoute: ContextTagsRouteWithChildren,
+  EntitiesRoute: EntitiesRouteWithChildren,
   GameRoute: GameRouteWithChildren,
   LifespanRoute: LifespanRouteWithChildren,
   LoginRoute: LoginRoute,

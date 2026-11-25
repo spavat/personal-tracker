@@ -10,6 +10,7 @@ import {
 } from "@personal-tracker/shared/broadcast";
 import {
 	and,
+	type AnyColumn,
 	asc,
 	desc,
 	eq,
@@ -413,6 +414,81 @@ export class BroadcastRepository {
 					direction * compareValues(a[sortField as keyof typeof a], b[sortField as keyof typeof b]) ||
 					-compareValues(a.latestEpisodeCreated, b.latestEpisodeCreated),
 			);
+	}
+
+	// The entity's program credits (by program name) and episode credits (latest release first, each episode with its
+	// views), one per role
+	async findEntityCredits(entityId: string) {
+		const programs = await this.db
+			.select({
+				id: broadcastProgram.id,
+				name: broadcastProgram.name,
+				profileKey: broadcastProgram.profileKey,
+				role: broadcastProgramContributor.role,
+				creditedAs: broadcastProgramContributor.creditedAs,
+			})
+			.from(broadcastProgramContributor)
+			.innerJoin(broadcastProgram, eq(broadcastProgram.id, broadcastProgramContributor.programId))
+			.where(and(this.visible(), eq(broadcastProgramContributor.entityId, entityId)))
+			.orderBy(asc(broadcastProgram.name));
+		const rows = await this.db
+			.select({
+				episode: broadcastEpisode,
+				role: broadcastEpisodeContributor.role,
+				creditedAs: broadcastEpisodeContributor.creditedAs,
+				program: { id: broadcastProgram.id, name: broadcastProgram.name },
+			})
+			.from(broadcastEpisodeContributor)
+			.innerJoin(broadcastEpisode, eq(broadcastEpisode.id, broadcastEpisodeContributor.episodeId))
+			.innerJoin(broadcastProgram, eq(broadcastProgram.id, broadcastEpisode.programId))
+			.where(and(this.visible(), eq(broadcastEpisodeContributor.entityId, entityId)))
+			.orderBy(sql`${broadcastEpisode.releaseDate} desc nulls last`, asc(broadcastEpisode.name));
+		const views = rows.length
+			? await this.db
+					.select()
+					.from(broadcastView)
+					.where(
+						inArray(
+							broadcastView.episodeId,
+							rows.map(({ episode }) => episode.id),
+						),
+					)
+					.orderBy(asc(broadcastView.date), asc(broadcastView.createdAt))
+			: [];
+		const episodes = rows.map(({ episode, ...credit }) => ({
+			...toEpisodeDoc(episode, views.filter((view) => view.episodeId === episode.id).map(toViewDoc)),
+			...credit,
+		}));
+		return { programs, episodes };
+	}
+
+	// Per entity and role: the ids of its programs, of its episodes. entityId: only this one.
+	async findEntityCreditIds(entityId?: string) {
+		const ids = (column: AnyColumn) => sql<string[]>`array_agg(distinct ${column})::text[]`;
+		const [programs, episodes] = await Promise.all([
+			this.db
+				.select({
+					entityId: broadcastProgramContributor.entityId,
+					role: broadcastProgramContributor.role,
+					ids: ids(broadcastProgramContributor.programId),
+				})
+				.from(broadcastProgramContributor)
+				.innerJoin(broadcastProgram, eq(broadcastProgram.id, broadcastProgramContributor.programId))
+				.where(and(this.visible(), entityId ? eq(broadcastProgramContributor.entityId, entityId) : undefined))
+				.groupBy(broadcastProgramContributor.entityId, broadcastProgramContributor.role),
+			this.db
+				.select({
+					entityId: broadcastEpisodeContributor.entityId,
+					role: broadcastEpisodeContributor.role,
+					ids: ids(broadcastEpisodeContributor.episodeId),
+				})
+				.from(broadcastEpisodeContributor)
+				.innerJoin(broadcastEpisode, eq(broadcastEpisode.id, broadcastEpisodeContributor.episodeId))
+				.innerJoin(broadcastProgram, eq(broadcastProgram.id, broadcastEpisode.programId))
+				.where(and(this.visible(), entityId ? eq(broadcastEpisodeContributor.entityId, entityId) : undefined))
+				.groupBy(broadcastEpisodeContributor.entityId, broadcastEpisodeContributor.role),
+		]);
+		return { programs, episodes };
 	}
 
 	// The programs with a view in the period, each keeping only those views (and their episodes), the program

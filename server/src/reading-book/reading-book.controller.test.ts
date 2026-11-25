@@ -118,6 +118,14 @@ describe("reading-book routes", () => {
 	});
 
 	describe("wiring", () => {
+		it("GET /entities/:entityId answers no role for an entity credited on no book", async () => {
+			const res = await ctx.app.inject({ method: "GET", url: `/reading-book/entities/${ENTITY_UUID}` });
+
+			expect(res.statusCode).toBe(200);
+			expect(res.json()).toEqual([]);
+			expect((await ctx.app.inject({ method: "GET", url: "/reading-book/entities/nope" })).statusCode).toBe(400);
+		});
+
 		it("GET /books runs the list query", async () => {
 			const res = await ctx.app.inject({ method: "GET", url: "/reading-book/books?withReadingsDetails=true" });
 

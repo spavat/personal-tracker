@@ -1,0 +1,33 @@
+@layer modules {
+	.entities {
+		.grid.entities {
+			grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+		}
+
+		/* the module sections of the details page */
+		section + section {
+			margin-top: 2rem;
+		}
+
+		.card_item.entity {
+			display: flex;
+			direction: row;
+		}
+
+		/* fixed layout (desktop only): widths come from the header, so they don't change as the
+		   virtualized rows come and go; the name column has no width and takes the rest */
+		@media (min-width: 769px) {
+			.list.entities {
+				table-layout: fixed;
+			}
+			.list.entities th {
+				&.cell-index {
+					width: 4rem;
+				}
+				&.col-count {
+					width: 10rem;
+				}
+			}
+		}
+	}
+}

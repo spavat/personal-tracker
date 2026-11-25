@@ -578,3 +578,30 @@ export const SyncUnknownFeedsResponseSchema = z.array(
 	}),
 );
 export type SyncUnknownFeedsResponse = z.infer<typeof SyncUnknownFeedsResponseSchema>;
+
+//
+// ENTITY CREDITS
+//
+// What an entity does in broadcast, for its page in the directory: its program credits (by program name) and its
+// episode credits (latest release first), one item per role
+export const EntityBroadcastParamsRequestSchema = z.object({ entityId: z.uuid() });
+export const EntityBroadcastResponseSchema = z.object({
+	programs: z.array(
+		z.object({
+			id: z.uuid(),
+			name: z.string(),
+			profile: z.string().optional(),
+			role: ProgramCreditRoleSchema,
+			creditedAs: z.string().nullable(),
+		}),
+	),
+	// each with its views, as in the program details (no credits)
+	episodes: z.array(
+		EpisodeSchema.extend({
+			role: EpisodeCreditRoleSchema,
+			creditedAs: z.string().nullable(),
+			program: z.object({ id: z.uuid(), name: z.string() }),
+		}),
+	),
+});
+export type EntityBroadcastResponse = z.infer<typeof EntityBroadcastResponseSchema>;

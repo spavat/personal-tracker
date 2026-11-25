@@ -188,12 +188,44 @@ test.describe("anonymous visitor", () => {
 				expect((await request.get(`${API}/broadcast/programs/${mockTube.id}`)).status()).toBe(404);
 			});
 
+			test("its host is left out of the directory", async ({ request }) => {
+				const [{ id: mockTuber }] = await queryDb(`SELECT id FROM core.entity WHERE name = 'Mock Tuber'`);
+				const names = (await (await request.get(`${API}/entities/directory`)).json()).map(
+					(entity: { name: string }) => entity.name,
+				);
+				expect(names).toContain("Pod Caster");
+				expect(names).not.toContain("Mock Tuber");
+				expect((await request.get(`${API}/entities/directory/${mockTuber}`)).status()).toBe(404);
+				const credits = await (await request.get(`${API}/broadcast/entities/${mockTuber}`)).json();
+				expect(credits).toEqual({ programs: [], episodes: [] });
+			});
+
 			test("is left out of the stats", async ({ request }) => {
 				const stats = await (await request.get(`${API}/broadcast/stats?from=2026-01-01&to=2026-12-31`)).json();
 				const names = stats.programs.map((p: { name: string }) => p.name);
 				expect(names).toContain(mockPodcast.name);
 				expect(names).not.toContain(mockTube.name);
 			});
+		});
+	});
+
+	test.describe("directory (read only)", () => {
+		test("lists the credited entities and opens one, without edit", async ({ page }) => {
+			await page.goto("/");
+			await page.getByRole("link", { name: "Répertoire" }).click();
+			await expect(page).toHaveURL("/entities");
+			await expect(page.getByRole("link", { name: artists.bob.name })).toBeVisible();
+			// credited nowhere: only the owner sees her
+			await expect(page.getByRole("link", { name: artists.claire.name })).toHaveCount(0);
+
+			await page.getByRole("link", { name: artists.bob.name }).click();
+			await expect(page.getByRole("heading", { name: artists.bob.name })).toBeVisible();
+			await expect(page.getByRole("heading", { name: "Représentations" })).toBeVisible();
+			await expect(page.getByRole("button", { name: "Modifier" })).toHaveCount(0);
+		});
+
+		test("an entity credited nowhere is not found", async ({ request }) => {
+			expect((await request.get(`${API}/entities/directory/${artists.claire.id}`)).status()).toBe(404);
 		});
 	});
 

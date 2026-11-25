@@ -9,9 +9,12 @@ import type {
 const byLatest = (a: EpisodeLine, b: EpisodeLine) =>
 	b.date === a.date ? (b.created ?? "").localeCompare(a.created ?? "") : b.date.localeCompare(a.date);
 
-// One line per view, with its episode's fields: what the lists show and the forms edit. Latest first, or oldest
-// first with "asc".
-export function toLines(episodes: Array<Episode>, order: "asc" | "desc" = "desc"): Array<EpisodeLine> {
+// One line per view, with its episode's fields (and the extra fields of `episodes`): what the lists show and the
+// forms edit. Latest first, or oldest first with "asc".
+export function toLines<E extends Episode>(
+	episodes: Array<E>,
+	order: "asc" | "desc" = "desc",
+): Array<EpisodeLine & Omit<E, "id" | "views">> {
 	const lines = episodes.flatMap(({ views, ...episode }) =>
 		views.map(({ id, duration, ...view }) => ({
 			...episode,
@@ -21,7 +24,10 @@ export function toLines(episodes: Array<Episode>, order: "asc" | "desc" = "desc"
 			...(duration !== undefined && { durationReal: duration }),
 		})),
 	);
-	return lines.toSorted((a, b) => (order === "desc" ? byLatest(a, b) : byLatest(b, a)));
+	// TypeScript can't follow the spread of a generic Omit: the fields are those of the declared type
+	return lines.toSorted((a, b) => (order === "desc" ? byLatest(a, b) : byLatest(b, a))) as Array<
+		EpisodeLine & Omit<E, "id" | "views">
+	>;
 }
 
 type LineFields = Omit<EpisodeLine, "id" | "episodeId" | "created">;

@@ -1,4 +1,5 @@
 import {
+	EntityBroadcastResponse,
 	Program,
 	ProgramSummaryItem,
 	ExtractedData,
@@ -85,6 +86,13 @@ export const programDetailsQuery = (id: string) =>
 	queryOptions({
 		queryKey: ["program", id],
 		queryFn: () => getProgramDetails(id),
+	});
+
+// What an entity does in broadcast, for its directory page ("programs": refreshed with the programs)
+export const entityBroadcastQuery = (entityId: string) =>
+	queryOptions({
+		queryKey: ["programs", "entities", entityId],
+		queryFn: () => fetchJson<EntityBroadcastResponse>(`${API_BASE_URL}/broadcast/entities/${entityId}`),
 	});
 
 export async function getLatestEpisodes(id: string, forceType?: string) {

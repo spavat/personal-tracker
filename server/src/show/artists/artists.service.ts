@@ -25,7 +25,10 @@ export class ArtistsService {
 
 	async get({ artistId, groupBySpectacle }: { artistId: string; groupBySpectacle: boolean }) {
 		this.logger.log("get");
-		const artistData = await this.repo.findByIdWithPerformances(artistId);
+		const [artistData, modelRoles] = await Promise.all([
+			this.repo.findByIdWithPerformances(artistId),
+			this.repo.findModelRoles(artistId),
+		]);
 		if (!artistData) {
 			return null;
 		}
@@ -76,6 +79,10 @@ export class ArtistsService {
 				(a.performances?.[0]?.date ?? "").localeCompare(b.performances?.[0]?.date ?? ""),
 			),
 			stats,
+			models: modelRoles.map(({ spectacleId, spectacleName, ...modelRole }) => ({
+				...modelRole,
+				spectacle: { id: spectacleId, name: spectacleName },
+			})),
 		};
 	}
 }

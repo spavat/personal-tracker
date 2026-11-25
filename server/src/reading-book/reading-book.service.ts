@@ -10,10 +10,12 @@ import type {
 	SaveSeriesRequest,
 	SeriesDetails,
 	AuthorDetails,
+	EntityBooksResponse,
 } from "@personal-tracker/shared/reading-book";
 import type { z } from "zod";
 
 import { Injectable, Logger } from "@nestjs/common";
+import { EntityBookRoleSchema } from "@personal-tracker/shared/reading-book";
 import { randomUUID } from "node:crypto";
 
 import type { EntityKind } from "../database/node.query.js";
@@ -99,6 +101,27 @@ export class ReadingBookService {
 			sortDirection: "asc",
 		});
 		return { ...toEntityView(author), books };
+	}
+
+	// in publication order, the roles in the order of EntityBookRoleSchema
+	async getEntityBooks(entityId: string): Promise<EntityBooksResponse> {
+		this.logger.log("getEntityBooks");
+		const credits = await this.repo.findEntityBookRoles(entityId);
+		const bookIds = [...new Set(credits.map(({ bookId }) => bookId))];
+		const books = bookIds.length
+			? await this.repo.findAll({
+					withReadingsDetails: false,
+					bookIds,
+					sortField: "originalYear",
+					sortDirection: "asc",
+				})
+			: [];
+		return EntityBookRoleSchema.options
+			.map((role) => {
+				const ids = new Set(credits.filter((credit) => credit.role === role).map(({ bookId }) => bookId));
+				return { role, books: books.filter((book) => ids.has(book.id)) };
+			})
+			.filter(({ books }) => books.length);
 	}
 
 	async listSeries() {

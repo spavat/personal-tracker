@@ -223,6 +223,15 @@ export const ArtistDetailsResponseSchema = ArtistViewSchema.extend({
 	// with the role played by the artist
 	groups: z.array(PerformanceGroupSchema(PerformanceViewSchema.extend({ role: z.string() }))),
 	stats: StatsArtistPlaceSchema,
+	// the roles of the spectacles' cast models (by spectacle), the ones a visitor may see
+	models: z.array(
+		z.object({
+			id: z.uuid(),
+			role: z.string().nullable(),
+			model: z.string(),
+			spectacle: z.object({ id: z.uuid(), name: z.string() }),
+		}),
+	),
 });
 export type ArtistDetailsResponse = z.infer<typeof ArtistDetailsResponseSchema>;
 

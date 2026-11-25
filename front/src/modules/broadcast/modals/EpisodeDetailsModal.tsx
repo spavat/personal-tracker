@@ -1,4 +1,3 @@
-import { creditName } from "@personal-tracker/shared/broadcast";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -7,6 +6,7 @@ import Modal from "../../../components/Modal";
 import TagBadge from "../../../components/TagBadge";
 import { formatDate, formatDateTime, getDurationString } from "../../../utils";
 import { programDetailsQuery } from "../api";
+import CreditLinks from "../components/CreditLinks";
 import EpisodeCover from "../components/EpisodeCover";
 import IgnoredTagBadge from "../components/IgnoredTagBadge";
 import { EPISODE_CREDIT_ROLES } from "../forms/EpisodeForm.utils";
@@ -95,7 +95,10 @@ export default function EpisodeDetailsModal({
 									"Participants",
 									episode.credits.map((credit) => (
 										<span key={`${credit.role}-${credit.entityId}`} className="episode-credit">
-											{CREDIT_LABELS[credit.role]} : <b>{creditName(credit)}</b>{" "}
+											{CREDIT_LABELS[credit.role]} :{" "}
+											<b>
+												<CreditLinks credits={[credit]} />
+											</b>{" "}
 										</span>
 									)),
 								)}

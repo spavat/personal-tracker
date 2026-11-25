@@ -6,6 +6,7 @@ import TagBadge from "../../../../components/TagBadge";
 import { API_BASE_URL } from "../../../../config";
 import { useIsOwner } from "../../../../hooks/use-is-owner";
 import { formatDate, getDurationString, getPeriodDifference } from "../../../../utils";
+import CreditLinks from "../../components/CreditLinks";
 import { getDomain } from "../../links";
 import { getIconType } from "../../search-fn";
 
@@ -60,7 +61,12 @@ export default function ProgramHeader({ program }: { program: ProgramDetails }) 
 						{program.author && (
 							<>
 								<span>
-									par : <b>{program.author}</b>
+									par :{" "}
+									<b>
+										<CreditLinks
+											credits={program.credits.filter(({ role }) => role !== "network")}
+										/>
+									</b>
 								</span>
 								<br />
 							</>
@@ -68,7 +74,12 @@ export default function ProgramHeader({ program }: { program: ProgramDetails }) 
 						{program.network && (
 							<>
 								<span>
-									Réseau : <b>{program.network}</b>
+									Réseau :{" "}
+									<b>
+										<CreditLinks
+											credits={program.credits.filter(({ role }) => role === "network")}
+										/>
+									</b>
 								</span>
 								<br />
 							</>

@@ -4,13 +4,14 @@ import type {
 	BookOverview,
 	BookSeries,
 	Credit,
+	EntityBookRole,
 	SaveSeriesItem,
 	ReadingDetails,
 	ReadingModelItem,
 } from "@personal-tracker/shared/reading-book";
 
 import { Inject, Injectable } from "@nestjs/common";
-import { and, asc, between, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
+import { and, type AnyColumn, asc, between, eq, inArray, isNotNull, isNull, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import type { EditionType, ReadingStatus } from "./book.entity.js";
@@ -408,6 +409,65 @@ export class BookRepository {
 			.leftJoin(readingReading, eq(readingReading.editionId, readingEdition.id))
 			.groupBy(coreEntity.id)
 			.orderBy(sql`coalesce(${coreEntity.sortName}, ${coreEntity.name})`);
+	}
+
+	// The entity's credits, one per book and role: on the book (author, illustrator, preface), on one of its editions
+	// (translator, publisher)
+	async findEntityBookRoles(entityId: string): Promise<Array<{ bookId: string; role: EntityBookRole }>> {
+		const [books, translations, publications] = await Promise.all([
+			this.db
+				.select({ bookId: readingBookContributor.bookId, role: readingBookContributor.role })
+				.from(readingBookContributor)
+				.where(eq(readingBookContributor.entityId, entityId)),
+			this.db
+				.selectDistinct({ bookId: readingEdition.bookId })
+				.from(readingEditionContributor)
+				.innerJoin(readingEdition, eq(readingEdition.id, readingEditionContributor.editionId))
+				.where(eq(readingEditionContributor.entityId, entityId)),
+			this.db
+				.selectDistinct({ bookId: readingEdition.bookId })
+				.from(readingEdition)
+				.where(eq(readingEdition.publisherId, entityId)),
+		]);
+		return [
+			...books,
+			...translations.map(({ bookId }) => ({ bookId, role: "translator" as const })),
+			...publications.map(({ bookId }) => ({ bookId, role: "publisher" as const })),
+		];
+	}
+
+	// Per entity and role (see findEntityBookRoles): the ids of its books. entityId: only this one.
+	async findEntityBookIds(
+		entityId?: string,
+	): Promise<Array<{ entityId: string; role: EntityBookRole; ids: string[] }>> {
+		const ids = (column: AnyColumn) => sql<string[]>`array_agg(distinct ${column})::text[]`;
+		const [books, translations, publications] = await Promise.all([
+			this.db
+				.select({
+					entityId: readingBookContributor.entityId,
+					role: readingBookContributor.role,
+					ids: ids(readingBookContributor.bookId),
+				})
+				.from(readingBookContributor)
+				.where(entityId ? eq(readingBookContributor.entityId, entityId) : undefined)
+				.groupBy(readingBookContributor.entityId, readingBookContributor.role),
+			this.db
+				.select({ entityId: readingEditionContributor.entityId, ids: ids(readingEdition.bookId) })
+				.from(readingEditionContributor)
+				.innerJoin(readingEdition, eq(readingEdition.id, readingEditionContributor.editionId))
+				.where(entityId ? eq(readingEditionContributor.entityId, entityId) : undefined)
+				.groupBy(readingEditionContributor.entityId),
+			this.db
+				.select({ entityId: readingEdition.publisherId, ids: ids(readingEdition.bookId) })
+				.from(readingEdition)
+				.where(entityId ? eq(readingEdition.publisherId, entityId) : isNotNull(readingEdition.publisherId))
+				.groupBy(readingEdition.publisherId),
+		]);
+		return [
+			...books,
+			...translations.map((row) => ({ ...row, role: "translator" as const })),
+			...publications.map((row) => ({ ...row, entityId: row.entityId!, role: "publisher" as const })),
+		];
 	}
 
 	async findEntity(id: string) {

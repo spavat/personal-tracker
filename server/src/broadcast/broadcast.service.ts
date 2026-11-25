@@ -70,6 +70,18 @@ export class BroadcastService {
 		return programs.map((program) => this.images.resolveImages(program));
 	}
 
+	// The programs the entity hosts and the episodes it is a guest of: empty lists for an entity credited nowhere
+	async getEntityCredits(entityId: string) {
+		this.logger.log("getEntityCredits");
+		const { programs, episodes } = await this.repo.findEntityCredits(entityId);
+		return {
+			programs: programs.map(({ profileKey, ...program }) =>
+				this.images.resolveImages({ ...program, profile: profileKey ?? undefined }),
+			),
+			episodes,
+		};
+	}
+
 	async getProgram(programId: string) {
 		this.logger.log("getProgram");
 		const program = (await this.repo.findById(programId)) ?? programNotFound();

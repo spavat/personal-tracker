@@ -33,6 +33,18 @@ async function openProgram(page: Page, program: { id: string; name: string }) {
 test.describe("Broadcast - Program details", () => {
 	test.afterEach(resetDb);
 
+	test("the program's credits lead to their directory page", async ({ page }) => {
+		await openProgram(page, mockPodcast);
+		const general = page.locator(".presentation .general");
+		await general.getByRole("link", { name: "Mock Radio" }).click();
+		await expect(page.getByRole("heading", { name: "Mock Radio" })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "Émissions diffusées" })).toBeVisible();
+
+		await openProgram(page, mockPodcast);
+		await general.getByRole("link", { name: "Pod Caster" }).click();
+		await expect(page.getByRole("heading", { name: "Émissions animées" })).toBeVisible();
+	});
+
 	test("details page shows the program and its episodes", async ({ page }) => {
 		await openProgram(page, mockPodcast);
 		const general = page.locator(".presentation .general");
@@ -255,6 +267,11 @@ test.describe("Broadcast - Program details", () => {
 
 		const details = await openDetails(page, "Podcast épisode 0");
 		await expect(details).toContainText("Invité·e : JG");
+		// the participant leads to its directory page
+		await details.getByRole("link", { name: "JG" }).click();
+		await expect(page).toHaveURL(/\/entities\/[0-9a-f-]{36}$/);
+		await expect(page.getByRole("heading", { name: "Jane Guest" })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "Invitations" })).toBeVisible();
 	});
 
 	test("fix an entity from its credit: renamed, and moved to another kind", async ({ page }) => {
