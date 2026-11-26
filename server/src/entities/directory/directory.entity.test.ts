@@ -4,7 +4,14 @@ import { describe, expect, it } from "vitest";
 
 import { countByRole, hasCredits, sortDirectory, toDirectoryItems } from "./directory.entity.js";
 
-const entity = (id: string, name: string) => ({ id, kind: "person" as const, name, sortName: null, pictureKey: null });
+const entity = (id: string, name: string) => ({
+	id,
+	kind: "person" as const,
+	name,
+	sortName: null,
+	realName: null,
+	pictureKey: null,
+});
 const NO_CREDITS = { show: new Map(), books: [], programs: [], episodes: [] };
 
 // an item credited only on `books` books (as author)

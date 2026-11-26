@@ -48,11 +48,10 @@ test.describe("anonymous visitor", () => {
 
 	test.describe("shows (read only)", () => {
 		test("lists without add, edit or delete buttons", async ({ page }) => {
-			await page.goto("/shows/artists");
-			await page.getByLabel("Affichage").selectOption("list");
-			await expect(page.getByRole("link", { name: artists.alice.name })).toBeVisible();
+			await page.goto("/shows/places");
+			await expect(page.getByRole("link", { name: "Théâtre du Châtelet" })).toBeVisible();
 			await expect(page.getByRole("columnheader", { name: "Actions" })).toHaveCount(0);
-			await expect(page.getByRole("button", { name: "Ajouter un artiste" })).toHaveCount(0);
+			await expect(page.getByTitle("Ajouter un lieu")).toHaveCount(0);
 			await expect(page.getByTitle("Modifier")).toHaveCount(0);
 		});
 
@@ -68,8 +67,8 @@ test.describe("anonymous visitor", () => {
 		});
 
 		for (const url of [
-			`/shows/artists/edit/${artists.alice.id}`,
-			`/shows/artists/${artists.alice.id}/edit`,
+			`/entities/${artists.alice.id}/edit`,
+			"/entities/merge",
 			`/shows/performances/${performances.paris2025}/casting`,
 			`/shows/performances/${performances.paris2025}/delete`,
 			"/shows/history/2026/add",
@@ -81,7 +80,7 @@ test.describe("anonymous visitor", () => {
 		}
 
 		test("reads the public endpoints but cannot write", async ({ request }) => {
-			expect((await request.get(`${API}/show/artists/`)).status()).toBe(200);
+			expect((await request.get(`${API}/show/artists/${artists.alice.id}`)).status()).toBe(200);
 			expect((await request.get(`${API}/show/performances/${performances.paris2025}`)).status()).toBe(200);
 			expect((await request.get(`${API}/show/reports?from=2026-01-01&to=2026-12-31`)).status()).toBe(401);
 			expect((await request.post(`${API}/entities`, { data: { kind: "person", name: "Intrus" } })).status()).toBe(
@@ -364,10 +363,10 @@ test.describe("anonymous visitor", () => {
 				await expect(page.getByTitle("Supprimer")).toHaveCount(0);
 			});
 
-			test("author list and page without owner buttons", async ({ page }) => {
-				await page.goto("/reading-book/authors");
-				await page.getByRole("link", { name: "Lewis Carroll" }).click();
-				await expect(page).toHaveURL(/\/reading-book\/authors\/[0-9a-f-]{36}$/);
+			test("an author's entity page without owner buttons", async ({ page }) => {
+				await page.goto(`/reading-book/book/${alice.id}`);
+				await page.locator(".details .general").getByRole("link", { name: "Lewis Carroll" }).click();
+				await expect(page).toHaveURL(/\/entities\/[0-9a-f-]{36}$/);
 				await expect(page.getByRole("link", { name: alice.book })).toBeVisible();
 				await expect(page.getByTitle("Modifier")).toHaveCount(0);
 			});
@@ -381,7 +380,6 @@ test.describe("anonymous visitor", () => {
 			"/reading-book/series/add",
 			`/reading-book/series/${ALICE_READING_ID}/edit`,
 			`/reading-book/series/${ALICE_READING_ID}/delete`,
-			`/reading-book/authors/${ALICE_READING_ID}/edit`,
 			`/reading-book/book/${alice.id}/reading/${ALICE_READING_ID}/delete`,
 		]) {
 			test(`is sent back home from ${url}`, async ({ page }) => {
@@ -393,7 +391,7 @@ test.describe("anonymous visitor", () => {
 		test("reads the public endpoints but cannot write", async ({ request }) => {
 			expect((await request.get(`${API}/reading-book/books`)).status()).toBe(200);
 			expect((await request.get(`${API}/reading-book/books/${alice.id}`)).status()).toBe(200);
-			expect((await request.get(`${API}/reading-book/authors`)).status()).toBe(200);
+			expect((await request.get(`${API}/reading-book/entities/${artists.alice.id}`)).status()).toBe(200);
 			expect((await request.get(`${API}/reading-book/series`)).status()).toBe(200);
 			expect(
 				(await request.post(`${API}/reading-book/series`, { data: { title: "Intrus", books: [] } })).status(),

@@ -5,29 +5,17 @@ import {
 	ArtistDetailsParamsRequestSchema,
 	ArtistDetailsQuerystringRequestSchema,
 	ArtistDetailsResponseSchema,
-	ArtistListQuerystringRequestSchema,
-	ArtistListResponseSchema,
 } from "@personal-tracker/shared/show";
 
 import { Public } from "../../auth/public.decorator.js";
 import { orNotFound } from "../show-reply.utils.js";
 import { ArtistsService } from "./artists.service.js";
 
-// Read only: an artist is an entity, edited through /entities and created by the casting and model forms
+// Read only: an artist is an entity (listed in the directory, edited through /entities), created by the casting
+// and model forms. Its performances and cast-model roles are shown on its entity page.
 @Controller()
 export class ArtistsController {
 	constructor(private readonly service: ArtistsService) {}
-
-	@Get()
-	@Public()
-	@SerializeOptions({ schema: ArtistListResponseSchema.element })
-	list(
-		@Query({ schema: ArtistListQuerystringRequestSchema }) {
-			sort,
-		}: z.infer<typeof ArtistListQuerystringRequestSchema>,
-	) {
-		return this.service.list(sort);
-	}
 
 	@Get(":id")
 	@Public()

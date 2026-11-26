@@ -1,0 +1,1 @@
+ALTER TABLE "core"."entity" ADD COLUMN "real_name" text;

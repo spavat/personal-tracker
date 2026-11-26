@@ -9,7 +9,7 @@ import { EntitiesService } from "./entities.service.js";
 const ID = "0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e";
 const OLD_KEY = `personal-tracker/entity/${ID}.old.avif`;
 const NEW_KEY = `personal-tracker/entity/${ID}.new.avif`;
-const CARROLL = { kind: "person" as const, name: "Lewis Carroll", sortName: null };
+const CARROLL = { kind: "person" as const, name: "Lewis Carroll", sortName: null, realName: null };
 
 function build(current?: { pictureKey: string | null; kind?: "person" | "organization" }) {
 	const stored = current && { id: ID, ...CARROLL, ...current };

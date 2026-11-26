@@ -18,11 +18,6 @@ const links = [
 		link: "/reading-book/series",
 		label: "Séries",
 	},
-	{
-		// strict: on an author's page it stays a link back to the list
-		link: "/reading-book/authors",
-		label: "Auteur·ices",
-	},
 ];
 
 export default function AppReadingBook() {

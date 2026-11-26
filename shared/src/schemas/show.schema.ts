@@ -186,9 +186,6 @@ const ItemOverviewSchema = z.object({
 	nbSpectacles: z.number(),
 });
 
-export const ArtistListResponseSchema = z.array(ArtistViewSchema.extend(ItemOverviewSchema.shape));
-export type ArtistListResponse = z.infer<typeof ArtistListResponseSchema.element>;
-
 export const PlaceListResponseSchema = z.array(PlaceSchema.extend(ItemOverviewSchema.shape));
 export type PlaceListResponse = z.infer<typeof PlaceListResponseSchema.element>;
 
@@ -202,12 +199,6 @@ const PerformanceGroupSchema = <T extends z.ZodType>(performance: T) =>
 	SpectacleSchema.omit({ models: true })
 		.partial()
 		.extend({ performances: z.array(performance) });
-
-//
-// ARTIST: LIST
-//
-// Request
-export const ArtistListQuerystringRequestSchema = SortQSSchema;
 
 //
 // ARTIST: DETAILS

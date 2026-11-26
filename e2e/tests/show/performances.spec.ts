@@ -88,7 +88,7 @@ test.describe("Shows - Performances", () => {
 		await expect(page.getByText("Origine: program")).toBeVisible();
 
 		await castingRows(page).getByRole("link", { name: artists.bob.name }).click();
-		await expect(page).toHaveURL(`/shows/artists/${artists.bob.id}`);
+		await expect(page).toHaveURL(`/entities/${artists.bob.id}`);
 	});
 
 	test("edit a performance", async ({ page }) => {
@@ -186,8 +186,10 @@ test.describe("Shows - Performances", () => {
 		await expect(dialog).not.toBeVisible();
 		await expect(castingRows(page).first()).toContainText("Denis Laurent");
 		// a person entity, now an artist: credited in a role
-		await page.goto("/shows/artists");
-		await expect(page.locator(".card_item.artist")).toHaveCount(3);
+		await page.goto("/entities");
+		await page.getByLabel("Rôle").selectOption("Artiste");
+		await expect(page.locator(".card_item.entity")).toHaveCount(3);
+		await expect(page.locator(".card_item.entity").filter({ hasText: "Denis Laurent" })).toBeVisible();
 	});
 
 	test("edit the casting: apply the model and remove a role", async ({ page }) => {
@@ -244,13 +246,14 @@ test.describe("Shows - Performances", () => {
 		await expect(page).toHaveURL(`/shows/spectacles/${spectacles.hamlet.id}`);
 
 		await page.keyboard.press("Control+Shift+F");
-		await search.fill("bob");
-		await page.locator(".search .result-item", { hasText: artists.bob.name }).click();
-		await expect(page).toHaveURL(`/shows/artists/${artists.bob.id}`);
-
-		await page.keyboard.press("Control+Shift+F");
 		await search.fill("sondheim");
 		await page.locator(".search .result-item", { hasText: places.sondheim.name }).click();
 		await expect(page).toHaveURL(`/shows/places/${places.sondheim.id}`);
+
+		// last: an artist opens its entity page, outside the show module (and its search)
+		await page.keyboard.press("Control+Shift+F");
+		await search.fill("bob");
+		await page.locator(".search .result-item", { hasText: artists.bob.name }).click();
+		await expect(page).toHaveURL(`/entities/${artists.bob.id}`);
 	});
 });

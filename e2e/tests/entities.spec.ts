@@ -2,11 +2,16 @@ import type { Page } from "@playwright/test";
 
 import { expect, queryDb, resetDb, SEED, test } from "../fixtures";
 
-const { artists, spectacles } = SEED.show;
+const { artists, spectacles, performances } = SEED.show;
 const { alice } = SEED.book;
 const { mockPodcast, secondPodcast } = SEED.broadcast;
 // an episode of Mock Podcast (seed.js)
 const MOCK_EPISODE_ID = "ea2929e9-9a5f-465d-8074-4e54e83a3d19";
+// Served by e2e/mocks/fetch-mock.mjs
+const PORTRAIT_URL = "https://images.example.com/book-cover.svg";
+const SVG_PORTRAIT = Buffer.from(
+	'<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><circle cx="100" cy="100" r="90" fill="teal"/></svg>',
+);
 
 function entityRow(page: Page, name: string) {
 	return page.locator("table.entities tbody tr").filter({ hasText: name });
@@ -195,9 +200,27 @@ test.describe("Entities - Répertoire", () => {
 		await expect(dialog).not.toBeVisible();
 		await expect(page.getByRole("heading", { name: "Alice Martin-Durand" })).toBeVisible();
 		await expect(page.getByText("Martin-Durand, Alice")).toBeVisible();
-		// the same entity on its show artist page
-		await page.goto(`/shows/artists/${artists.alice.id}`);
-		await expect(page.getByRole("heading", { name: "Alice Martin-Durand" })).toBeVisible();
+		// the performances show the entity's new name
+		await page.goto(`/shows/performances/${performances.paris2025}`);
+		await expect(page.getByRole("link", { name: "Alice Martin-Durand" }).first()).toBeVisible();
+	});
+
+	test("a real name is shown on the entity page and found by the search", async ({ page }) => {
+		await page.goto(`/entities/${artists.alice.id}`);
+		await page.getByRole("heading", { name: artists.alice.name }).getByRole("button", { name: "Modifier" }).click();
+		const dialog = page.getByRole("dialog", { name: `Modifier ${artists.alice.name}` });
+		await dialog.getByRole("textbox", { name: "Nom réel" }).fill("Alicia Zwanziger");
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+
+		await expect(dialog).not.toBeVisible();
+		await expect(page.getByText("Nom réel : Alicia Zwanziger")).toBeVisible();
+
+		await page.goto("/entities");
+		await expect(page.locator(".card_item.entity").first()).toBeVisible();
+		await page.keyboard.press("Control+Shift+F");
+		await page.getByPlaceholder("Recherche").fill("zwanziger");
+		await expect(page.locator(".search .result-item")).toHaveCount(1);
+		await expect(page.locator(".search .result-item")).toContainText(`${artists.alice.name} (Alicia Zwanziger)`);
 	});
 
 	test("change an entity's kind: its credits are kept", async ({ page }) => {
@@ -275,5 +298,109 @@ test.describe("Entities - Répertoire", () => {
 		expect(await queryDb(`SELECT sort_name FROM core.entity WHERE id = $1`, [podCaster])).toEqual([
 			{ sort_name: "Caster, P." },
 		]);
+	});
+});
+
+// Lewis Carroll: the author of Alice's book
+async function openCarroll(page: Page) {
+	const [{ id }] = await queryDb(`SELECT id FROM core.entity WHERE name = 'Lewis Carroll'`);
+	await page.goto(`/entities/${id}`);
+	await expect(page.getByRole("heading", { name: "Lewis Carroll" })).toBeVisible();
+}
+
+async function openEditModal(page: Page) {
+	await page.locator(".presentation-with-picture").getByRole("button", { name: "Modifier" }).click();
+	const dialog = page.getByRole("dialog");
+	await expect(dialog).toBeVisible();
+	return dialog;
+}
+
+test.describe("Entities - links and portrait", () => {
+	test.afterEach(resetDb);
+
+	test("an author in the book list links to their entity page", async ({ page }) => {
+		await page.goto("/reading-book/list");
+		const row = page.locator("table.books tbody tr").filter({ hasText: alice.book });
+		await row.getByRole("link", { name: "Lewis Carroll" }).click();
+		await expect(page).toHaveURL(/\/entities\/[0-9a-f-]{36}$/);
+		await expect(page.getByRole("heading", { name: "Lewis Carroll" })).toBeVisible();
+	});
+
+	test("an author credited under another name on the book page links to their entity page", async ({ page }) => {
+		await page.goto(`/reading-book/book/${alice.id}`);
+		await page.getByRole("heading", { name: alice.book }).getByRole("button", { name: "Modifier" }).click();
+		const dialog = page.getByRole("dialog", { name: "Modifier le livre" });
+		await dialog.getByRole("textbox", { name: "Auteur·ice 1 crédité·e comme" }).fill("L. Carroll");
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+		await expect(dialog).not.toBeVisible();
+
+		// the book shows the credited name, the entity keeps its own
+		await expect(page.locator(".details .general")).toContainText("Auteur.ic.es: L. Carroll");
+		await page.locator(".details .general").getByRole("link", { name: "L. Carroll" }).click();
+		await expect(page).toHaveURL(/\/entities\/[0-9a-f-]{36}$/);
+		await expect(page.getByRole("heading", { name: "Lewis Carroll" })).toBeVisible();
+	});
+
+	test("an artist of a performance links to their entity page", async ({ page }) => {
+		await page.goto(`/shows/performances/${performances.paris2025}`);
+		await page.getByRole("link", { name: artists.bob.name }).first().click();
+		await expect(page).toHaveURL(`/entities/${artists.bob.id}`);
+		await expect(page.getByRole("heading", { name: "Représentations" })).toBeVisible();
+	});
+
+	test("the name is required", async ({ page }) => {
+		await openCarroll(page);
+		const dialog = await openEditModal(page);
+		await dialog.getByRole("textbox", { name: "Nom *" }).fill(" ");
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+		await expect(dialog.getByText("Le nom est obligatoire")).toBeVisible();
+	});
+
+	test("add a portrait from a URL, then remove it", async ({ page }) => {
+		await openCarroll(page);
+		let dialog = await openEditModal(page);
+		await dialog.getByRole("textbox", { name: "URL de l'image" }).fill(PORTRAIT_URL);
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+		await expect(dialog).not.toBeVisible();
+
+		const portrait = page.getByRole("img", { name: "Portrait de Lewis Carroll" });
+		await expect(portrait).toHaveAttribute("src", /\/images\/entity\/[0-9a-f-]+\?v=[0-9a-f]+$/);
+		// served by the images proxy
+		await expect.poll(() => portrait.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+
+		dialog = await openEditModal(page);
+		await dialog.getByRole("button", { name: "Retirer le portrait" }).click();
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+		await expect(dialog).not.toBeVisible();
+		await expect(portrait).toHaveCount(0);
+	});
+
+	test("paste an image: it opens the cropper", async ({ page }) => {
+		await openCarroll(page);
+		const dialog = await openEditModal(page);
+		await expect(dialog.getByText("ou coller une image (Ctrl+V)")).toBeVisible();
+		// a paste event carrying an image file, as the browser sends it
+		await page.evaluate((svg) => {
+			const data = new DataTransfer();
+			data.items.add(new File([svg], "pasted.svg", { type: "image/svg+xml" }));
+			window.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data }));
+		}, SVG_PORTRAIT.toString());
+		await expect(dialog.getByRole("button", { name: "Valider" })).toBeVisible();
+	});
+
+	test("crop a portrait from a file", async ({ page }) => {
+		await openCarroll(page);
+		const dialog = await openEditModal(page);
+		await dialog
+			.getByLabel("Fichier image")
+			.setInputFiles({ name: "portrait.svg", mimeType: "image/svg+xml", buffer: SVG_PORTRAIT });
+		// saving waits for the crop
+		await expect(dialog.getByRole("button", { name: "Enregistrer" })).toBeDisabled();
+		await dialog.getByRole("button", { name: "Valider" }).click();
+		await expect(dialog.getByRole("img", { name: "Portrait" })).toHaveAttribute("src", /^data:image\/jpeg;base64,/);
+		await dialog.getByRole("button", { name: "Enregistrer" }).click();
+		await expect(dialog).not.toBeVisible();
+
+		await expect(page.getByRole("img", { name: "Portrait de Lewis Carroll" })).toBeVisible();
 	});
 });

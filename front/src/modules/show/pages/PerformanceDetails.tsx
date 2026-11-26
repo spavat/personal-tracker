@@ -156,10 +156,7 @@ export default function PerformanceDetails({ performanceId }: { performanceId: s
 											<td className="cell-index">{index + 1}</td>
 											<td className="cell-text">{role.name}</td>
 											<td className="cell-text" data-label="Artiste">
-												<Link
-													to="/shows/artists/$artistId"
-													params={{ artistId: String(role.artist.id) }}
-												>
+												<Link to="/entities/$entityId" params={{ entityId: role.artist.id }}>
 													{role.picture && (
 														<img
 															src={mediaSrc(role.picture)}

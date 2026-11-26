@@ -440,25 +440,6 @@ describe("reading-book routes", () => {
 			expect(res.statusCode).toBe(400);
 		});
 
-		it("GET /authors lists the authors, publicly", async () => {
-			await ctx.app.close();
-			ctx = await buildApp([
-				{ id: ENTITY_UUID, name: "Lewis Carroll", sortName: null, nbBooks: 1, nbReadings: 2 },
-			]);
-
-			const res = await ctx.app.inject({ method: "GET", url: "/reading-book/authors" });
-
-			expect(res.statusCode).toBe(200);
-			expect(res.json()).toEqual([
-				{ id: ENTITY_UUID, name: "Lewis Carroll", sortName: null, picture: null, nbBooks: 1, nbReadings: 2 },
-			]);
-		});
-
-		it("GET /authors/:id 404s on an unknown author", async () => {
-			const res = await ctx.app.inject({ method: "GET", url: `/reading-book/authors/${ENTITY_UUID}` });
-			expect(res.statusCode).toBe(404);
-		});
-
 		it("POST /series creates the node, the series and its items in order", async () => {
 			await ctx.app.close();
 			// every select answers this row: 1 book and 1 sub-series found, and no item (no cycle); the series read back
@@ -515,12 +496,16 @@ describe("reading-book routes", () => {
 });
 
 describe("reading-book access", () => {
-	it("opens the books, series and authors to visitors, not the report nor the writes", async () => {
+	it("opens the books, series and entity books to visitors, not the report nor the writes", async () => {
 		const { mongo } = makeFakeMongo();
 		const { db } = makeFakeDrizzle();
 		const app = await buildTestApp(ReadingBookModule, { mongoDb: mongo.db, drizzle: db, session: null });
 		try {
-			for (const url of ["/reading-book/books", "/reading-book/series", "/reading-book/authors"]) {
+			for (const url of [
+				"/reading-book/books",
+				"/reading-book/series",
+				`/reading-book/entities/${ENTITY_UUID}`,
+			]) {
 				expect((await app.inject({ method: "GET", url })).statusCode, url).toBe(200);
 			}
 			const report = await app.inject({

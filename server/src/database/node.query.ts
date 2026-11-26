@@ -40,18 +40,30 @@ export async function createEntity(
 		kind,
 		name,
 		sortName = null,
+		realName = null,
 		pictureKey = null,
 		id,
-	}: { kind: EntityKind; name: string; sortName?: string | null; pictureKey?: string | null; id?: string },
+	}: {
+		kind: EntityKind;
+		name: string;
+		sortName?: string | null;
+		realName?: string | null;
+		pictureKey?: string | null;
+		id?: string;
+	},
 ) {
 	const entityId = await createNode(tx, { type: "entity", label: name, id });
-	const [entity] = await tx.insert(coreEntity).values({ id: entityId, kind, name, sortName, pictureKey }).returning({
-		id: coreEntity.id,
-		kind: coreEntity.kind,
-		name: coreEntity.name,
-		sortName: coreEntity.sortName,
-		pictureKey: coreEntity.pictureKey,
-	});
+	const [entity] = await tx
+		.insert(coreEntity)
+		.values({ id: entityId, kind, name, sortName, realName, pictureKey })
+		.returning({
+			id: coreEntity.id,
+			kind: coreEntity.kind,
+			name: coreEntity.name,
+			sortName: coreEntity.sortName,
+			realName: coreEntity.realName,
+			pictureKey: coreEntity.pictureKey,
+		});
 	await tx.insert(ENTITY_SUBTYPE_TABLE[kind]).values({ id: entityId });
 	return entity;
 }

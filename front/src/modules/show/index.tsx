@@ -29,10 +29,6 @@ const links = [
 		label: "Oeuvres",
 	},
 	{
-		link: "/shows/artists",
-		label: "Artistes",
-	},
-	{
 		link: "/shows/places",
 		label: "Lieux",
 	},

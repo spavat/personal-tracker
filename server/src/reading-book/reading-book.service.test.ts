@@ -26,7 +26,6 @@ function fakeRepo() {
 		deleteModel: vi.fn().mockResolvedValue(undefined),
 		// every credited entity exists with the expected kind
 		countEntities: vi.fn((ids: string[]) => Promise.resolve(new Set(ids).size)),
-		findAuthors: vi.fn().mockResolvedValue([]),
 		findSeries: vi.fn().mockResolvedValue(undefined),
 		findAllSeries: vi.fn().mockResolvedValue([]),
 		findAllSeriesItems: vi.fn().mockResolvedValue([]),
@@ -34,7 +33,6 @@ function fakeRepo() {
 		countSeries: vi.fn((ids: string[]) => Promise.resolve(new Set(ids).size)),
 		saveSeries: vi.fn().mockResolvedValue("series-1"),
 		deleteSeries: vi.fn().mockResolvedValue(undefined),
-		findEntity: vi.fn().mockResolvedValue(undefined),
 		pushReading: vi.fn().mockResolvedValue(true),
 		findEdition: vi.fn().mockResolvedValue(undefined),
 		saveEdition: vi.fn().mockResolvedValue(true),
@@ -182,41 +180,6 @@ describe("ReadingBookService.saveBook", () => {
 		expect(repo.insert).toHaveBeenCalledWith(expect.any(String), book);
 		// the reloaded book uses the same generated id
 		expect(repo.findById).toHaveBeenCalledWith(repo.insert.mock.calls[0][0]);
-	});
-});
-
-describe("ReadingBookService.getAuthor", () => {
-	it("gives the author with their books, in publication order", async () => {
-		const repo = fakeRepo();
-		repo.findEntity.mockResolvedValue({
-			id: "carroll",
-			kind: "person",
-			name: "Lewis Carroll",
-			sortName: null,
-			pictureKey: "personal-tracker/entity/carroll.0a1b2c3d.avif",
-		});
-		repo.findAll.mockResolvedValue([{ id: "alice" }]);
-
-		expect(await buildService(repo).getAuthor("carroll")).toEqual({
-			id: "carroll",
-			kind: "person",
-			name: "Lewis Carroll",
-			sortName: null,
-			picture: "/images/entity/carroll?v=0a1b2c3d",
-			books: [{ id: "alice" }],
-		});
-		expect(repo.findAll).toHaveBeenCalledWith({
-			withReadingsDetails: false,
-			authorId: "carroll",
-			sortField: "originalYear",
-			sortDirection: "asc",
-		});
-	});
-
-	it("404s on an unknown entity", async () => {
-		const repo = fakeRepo();
-		await expect(buildService(repo).getAuthor("nobody")).rejects.toBeInstanceOf(NotFoundError);
-		expect(repo.findAll).not.toHaveBeenCalled();
 	});
 });
 

@@ -403,8 +403,8 @@ export const coreEntity = core.table(
 			.references(() => coreNode.id, { onDelete: "cascade" }),
 		kind: coreEntityKind().notNull(),
 		name: text().notNull(),
-		// "Carroll, Lewis"
 		sortName: text(),
+		realName: text(),
 		pictureKey: text(),
 	},
 	// (id, kind) is the target of the subtype FKs: a subtype row can only belong to an entity of its kind

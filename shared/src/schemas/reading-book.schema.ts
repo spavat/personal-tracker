@@ -9,7 +9,6 @@ import {
 	PeriodQSSchema,
 	UUIDParamsSchema,
 } from "./common.schema";
-import { EntityKindSchema } from "./entity.schema";
 
 const ReadingContextItemSchema = z.object({
 	date: z.iso.date(),
@@ -263,27 +262,6 @@ export const SaveSeriesRequestSchema = z.object({
 	items: z.array(SaveSeriesItemSchema),
 });
 export type SaveSeriesRequest = z.infer<typeof SaveSeriesRequestSchema>;
-
-//
-// AUTHORS (the people credited as author of a book)
-//
-export const AuthorSchema = z.object({
-	id: z.uuid(),
-	name: z.string(),
-	sortName: z.string().nullable(),
-	// the portrait of the entity
-	picture: z.string().nullable(),
-	nbBooks: z.number(),
-	nbReadings: z.number(),
-});
-export type Author = z.infer<typeof AuthorSchema>;
-export const AuthorListResponseSchema = z.array(AuthorSchema);
-export const AuthorParamsRequestSchema = UUIDParamsSchema;
-export const AuthorDetailsSchema = AuthorSchema.omit({ nbBooks: true, nbReadings: true }).extend({
-	kind: EntityKindSchema,
-	books: z.array(BookOverviewSchema),
-});
-export type AuthorDetails = z.infer<typeof AuthorDetailsSchema>;
 
 //
 // ENTITY BOOKS

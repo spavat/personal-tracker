@@ -1,8 +1,5 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, SerializeOptions } from "@nestjs/common";
 import {
-	AuthorDetailsSchema,
-	AuthorListResponseSchema,
-	AuthorParamsRequestSchema,
 	BookDetailsParamsSchema,
 	BookListRequestSchema,
 	BookListResponseSchema,
@@ -81,22 +78,6 @@ export class ReadingBookController {
 	@HttpCode(204)
 	async deleteSeries(@Param({ schema: SeriesParamsRequestSchema }) { id }: IdParams) {
 		await this.service.deleteSeries(id);
-	}
-
-	// --- authors (public, like the books) ---
-
-	@Get("authors")
-	@Public()
-	@SerializeOptions({ schema: AuthorListResponseSchema.element })
-	listAuthors() {
-		return this.service.listAuthors();
-	}
-
-	@Get("authors/:id")
-	@Public()
-	@SerializeOptions({ schema: AuthorDetailsSchema })
-	getAuthor(@Param({ schema: AuthorParamsRequestSchema }) { id }: IdParams) {
-		return this.service.getAuthor(id);
 	}
 
 	// the books an entity is credited on, by role (its page in the directory)

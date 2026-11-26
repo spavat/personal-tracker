@@ -73,7 +73,7 @@ export default function EpisodeDetailsModal({
 						</h2>
 					</div>
 					<div className="general">
-						<EpisodeCover episode={episode} watched={views.length > 0} className="large" />
+						<EpisodeCover episode={episode} className="large" />
 						<div>
 							{row("Programme", <b>{program.name}</b>)}
 							{season && row("Saison", <b>{season.label}</b>)}

@@ -11,7 +11,7 @@ export const EntitySchema = z.object({
 	kind: EntityKindSchema,
 	name: z.string().trim().nonempty(),
 	sortName: z.string().trim().nonempty().nullable(),
-	// portrait (square), served through /images/entity/:id
+	realName: z.string().trim().nonempty().nullable(),
 	picture: z.string().nullable(),
 });
 export type Entity = z.infer<typeof EntitySchema>;
@@ -33,6 +33,7 @@ export const EntityListResponseSchema = z.array(EntitySchema);
 // null = no portrait
 export const SaveEntityBodyRequestSchema = EntitySchema.omit({ id: true }).extend({
 	sortName: EntitySchema.shape.sortName.default(null),
+	realName: EntitySchema.shape.realName.default(null),
 	picture: EntitySchema.shape.picture.optional(),
 });
 export type SaveEntityBody = z.infer<typeof SaveEntityBodyRequestSchema>;
@@ -61,7 +62,6 @@ export const EntityDirectoryItemSchema = EntitySchema.extend({
 	episode: z.object({ episodes: z.number(), host: z.number(), guest: z.number(), interviewee: z.number() }),
 });
 export type EntityDirectoryItem = z.infer<typeof EntityDirectoryItemSchema>;
-// search: in the names (the search modal)
 export const EntityDirectoryQuerystringRequestSchema = SortQSSchema.extend(SearchQSSchema.shape);
 export const EntityDirectoryResponseSchema = z.array(EntityDirectoryItemSchema);
 

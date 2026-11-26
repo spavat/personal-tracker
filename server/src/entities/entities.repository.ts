@@ -1,7 +1,7 @@
 import type { EntityKind } from "@personal-tracker/shared/entity";
 
 import { Inject, Injectable } from "@nestjs/common";
-import { and, asc, eq, notInArray, sql } from "drizzle-orm";
+import { and, asc, eq, notInArray, or, sql } from "drizzle-orm";
 
 import { contains } from "../database/contains.query.js";
 import { DRIZZLE } from "../database/database.tokens.js";
@@ -14,6 +14,7 @@ const ENTITY_COLUMNS = {
 	kind: coreEntity.kind,
 	name: coreEntity.name,
 	sortName: coreEntity.sortName,
+	realName: coreEntity.realName,
 	pictureKey: coreEntity.pictureKey,
 };
 
@@ -22,6 +23,7 @@ export type EntityFields = {
 	kind: EntityKind;
 	name: string;
 	sortName: string | null;
+	realName: string | null;
 	pictureKey: string | null;
 };
 
@@ -37,7 +39,7 @@ export class EntitiesRepository {
 			.where(
 				and(
 					kind ? eq(coreEntity.kind, kind) : undefined,
-					search ? contains(coreEntity.name, search) : undefined,
+					search ? or(contains(coreEntity.name, search), contains(coreEntity.realName, search)) : undefined,
 				),
 			)
 			.orderBy(asc(sql`coalesce(${coreEntity.sortName}, ${coreEntity.name})`));
@@ -81,7 +83,7 @@ export class EntitiesRepository {
 	}
 
 	// A merge, once the credits are moved: `keep` gets the external ids of `remove` for the sources it lacks, and its
-	// sort name and portrait when it has none; `remove` is deleted (its node, cascading)
+	// sort name, real name and portrait when it has none; `remove` is deleted (its node, cascading)
 	async absorb(tx: Tx, keep: EntityFields, remove: EntityFields) {
 		await tx
 			.update(coreExternalId)
@@ -100,7 +102,11 @@ export class EntitiesRepository {
 			);
 		await tx
 			.update(coreEntity)
-			.set({ sortName: keep.sortName ?? remove.sortName, pictureKey: keep.pictureKey ?? remove.pictureKey })
+			.set({
+				sortName: keep.sortName ?? remove.sortName,
+				realName: keep.realName ?? remove.realName,
+				pictureKey: keep.pictureKey ?? remove.pictureKey,
+			})
 			.where(eq(coreEntity.id, keep.id));
 		await tx.delete(coreNode).where(eq(coreNode.id, remove.id));
 	}
@@ -110,7 +116,7 @@ export class EntitiesRepository {
 	}
 
 	// undefined when no entity has this id. Another kind moves the entity to it (see changeEntityKind).
-	update({ id, kind, name, sortName, pictureKey }: EntityFields) {
+	update({ id, kind, name, sortName, realName, pictureKey }: EntityFields) {
 		return this.db.transaction(async (tx) => {
 			const [current] = await tx.select({ kind: coreEntity.kind }).from(coreEntity).where(eq(coreEntity.id, id));
 			if (!current) {
@@ -121,7 +127,7 @@ export class EntitiesRepository {
 			}
 			const [entity] = await tx
 				.update(coreEntity)
-				.set({ name, sortName, pictureKey })
+				.set({ name, sortName, realName, pictureKey })
 				.where(eq(coreEntity.id, id))
 				.returning(ENTITY_COLUMNS);
 			if (!entity) {

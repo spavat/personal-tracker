@@ -1,5 +1,3 @@
-import type { ArtistListResponse } from "@personal-tracker/shared/show";
-
 import { Injectable, Logger } from "@nestjs/common";
 
 import { toPerformanceView } from "../performances/performance.entity.js";
@@ -11,17 +9,6 @@ export class ArtistsService {
 	private readonly logger = new Logger(ArtistsService.name);
 
 	constructor(private readonly repo: ArtistsRepository) {}
-
-	async list(sort: string[] | undefined) {
-		this.logger.log("list");
-		const [sortField, sortDirection] = sort ?? ["name", "asc"];
-		const artists = await this.repo.findAll({ sortField, sortDirection });
-		return artists.map(({ nbPerformances, nbSpectacles, ...artist }): ArtistListResponse => ({
-			...toArtistView(artist),
-			nbPerformances,
-			nbSpectacles,
-		}));
-	}
 
 	async get({ artistId, groupBySpectacle }: { artistId: string; groupBySpectacle: boolean }) {
 		this.logger.log("get");

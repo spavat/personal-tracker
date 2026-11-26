@@ -50,7 +50,7 @@ export class DirectoryService {
 	}
 
 	// The main entity gets every credit of the secondary one (a credit it already has is dropped), its external ids,
-	// sort name and portrait where it has none; the secondary is deleted. 404 for an unknown entity.
+	// sort name, real name and portrait where it has none; the secondary is deleted. 404 for an unknown entity.
 	async merge({ keepId, removeId }: EntityMergeBody) {
 		this.logger.log("merge");
 		const [keep, remove] = await Promise.all([this.entities.findById(keepId), this.entities.findById(removeId)]);

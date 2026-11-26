@@ -50,10 +50,7 @@ export default function BookDetails({ bookId }: { bookId: string }) {
 								{book.authors.map((author, i) => (
 									<span key={author.entityId}>
 										{i > 0 && ", "}
-										<Link
-											to="/reading-book/authors/$authorId"
-											params={{ authorId: author.entityId }}
-										>
+										<Link to="/entities/$entityId" params={{ entityId: author.entityId }}>
 											{creditName(author)}
 										</Link>
 									</span>

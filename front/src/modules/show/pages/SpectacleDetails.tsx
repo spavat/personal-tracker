@@ -200,8 +200,8 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 																/>
 															)}
 															<Link
-																to="/shows/artists/$artistId"
-																params={{ artistId: String(role.artist.id) }}
+																to="/entities/$entityId"
+																params={{ entityId: role.artist.id }}
 															>
 																{role.artist.name}
 															</Link>{" "}
@@ -328,8 +328,8 @@ export default function SpectacleDetails({ spectacleId }: { spectacleId: string 
 																<>
 																	:{" "}
 																	<Link
-																		to="/shows/artists/$artistId"
-																		params={{ artistId: String(role.artist.id) }}
+																		to="/entities/$entityId"
+																		params={{ entityId: role.artist.id }}
 																	>
 																		{role.artist.name}
 																	</Link>

@@ -29,7 +29,7 @@ export function linkItem(item: any) {
 			thepath = `/shows/spectacles/${item.id}`;
 			break;
 		case "artist":
-			thepath = `/shows/artists/${item.id}`;
+			thepath = `/entities/${item.id}`;
 			break;
 		case "place":
 			thepath = `/shows/places/${item.id}`;

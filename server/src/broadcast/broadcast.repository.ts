@@ -381,7 +381,13 @@ export class BroadcastRepository {
 			.select({ id: broadcastProgramContributor.programId })
 			.from(broadcastProgramContributor)
 			.innerJoin(coreEntity, eq(coreEntity.id, broadcastProgramContributor.entityId))
-			.where(or(contains(coreEntity.name, search), contains(broadcastProgramContributor.creditedAs, search)));
+			.where(
+				or(
+					contains(coreEntity.name, search),
+					contains(coreEntity.realName, search),
+					contains(broadcastProgramContributor.creditedAs, search),
+				),
+			);
 		const rows = await this.selectPrograms(
 			search ? or(contains(broadcastProgram.name, search), inArray(broadcastProgram.id, credited)) : undefined,
 		);

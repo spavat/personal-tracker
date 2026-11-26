@@ -24,7 +24,7 @@ export default function EntityDetails({ entityId }: { entityId: string }) {
 			{/* same layout and classes as the show artist page */}
 			<div className="presentation-with-picture">
 				<div className="picture">
-					<EntityPortrait entity={entity} className="artist-picture" />
+					<EntityPortrait entity={entity} className="artist-picture" alt={`Portrait de ${entity.name}`} />
 				</div>
 				<div className="general">
 					<div className="title">
@@ -53,6 +53,7 @@ export default function EntityDetails({ entityId }: { entityId: string }) {
 					<span className="subtitle">
 						{KIND_LABELS[entity.kind]}
 						{entity.sortName && <> · {entity.sortName}</>}
+						{entity.realName && <> · Nom réel : {entity.realName}</>}
 					</span>
 					{creditCounts(entity).map(({ field, icon, count, label }) => (
 						<div key={field}>

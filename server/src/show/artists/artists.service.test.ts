@@ -6,7 +6,6 @@ import { ArtistsService } from "./artists.service.js";
 
 function fakeRepo() {
 	return {
-		findAll: vi.fn().mockResolvedValue([]),
 		findByIdWithPerformances: vi.fn().mockResolvedValue(null),
 		findModelRoles: vi.fn().mockResolvedValue([]),
 		findByName: vi.fn().mockResolvedValue([]),
@@ -14,20 +13,6 @@ function fakeRepo() {
 }
 const asRepo = (r: ReturnType<typeof fakeRepo>) => r as unknown as ArtistsRepository;
 const ARTIST_ID = "00000000-0000-4000-8000-000000000001";
-
-describe("ArtistsService.list", () => {
-	it("defaults the sort to name asc", async () => {
-		const repo = fakeRepo();
-		await new ArtistsService(asRepo(repo)).list(undefined);
-		expect(repo.findAll).toHaveBeenCalledWith({ sortField: "name", sortDirection: "asc" });
-	});
-
-	it("forwards an explicit sort tuple", async () => {
-		const repo = fakeRepo();
-		await new ArtistsService(asRepo(repo)).list(["nbPerformances", "desc"]);
-		expect(repo.findAll).toHaveBeenCalledWith({ sortField: "nbPerformances", sortDirection: "desc" });
-	});
-});
 
 describe("ArtistsService.get", () => {
 	it("returns null when the artist is unknown", async () => {

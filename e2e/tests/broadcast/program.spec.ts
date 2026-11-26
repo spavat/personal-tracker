@@ -436,8 +436,7 @@ test.describe("Broadcast - Program details", () => {
 		const thirdCover = rows.filter({ hasText: "Podcast épisode 3" }).locator(".episode-cover img");
 		await expect(thirdCover).toHaveAttribute("src", /\/images\/broadcast\/episode\/[0-9a-f-]+\?v=[0-9a-f]+$/);
 		expect((await page.request.get((await thirdCover.getAttribute("src"))!)).status()).toBe(200);
-		// square: a podcast's; the watched release has its check, the others none
-		await expect(rows.filter({ hasText: "Podcast épisode 3" }).locator(".episode-cover")).not.toHaveClass(/wide/);
+		// the watched release has its check, the others none
 		await expect(rows.first()).toHaveClass(/watched/);
 		await expect(rows.filter({ hasText: "Podcast épisode 3" }).locator(".cover-check")).toHaveCount(0);
 		const details = await openDetails(page, "Podcast épisode 3");
@@ -519,8 +518,6 @@ test.describe("Broadcast - Program details", () => {
 		await expect(third).toContainText("23/10/26");
 		await expect(third).toContainText("10min");
 		await expect(third.locator(".episode-cover img")).toHaveAttribute("src", /\/images\/broadcast\/episode\//);
-		// 16:9: a video's
-		await expect(third.locator(".episode-cover")).toHaveClass(/wide/);
 		const details = await openDetails(page, "Mock video 3");
 		await expect(details.locator(".dialog-body > .description")).toContainText("La troisième vidéo");
 		const [{ type }] = await queryDb("SELECT type FROM broadcast.episode WHERE external_id = $1", ["vid00000003"]);

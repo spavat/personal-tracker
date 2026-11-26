@@ -76,29 +76,6 @@
 			}
 		}
 
-		/* ARTISTS */
-		/* fixed layout (desktop only): widths come from the header, so they don't change as the
-		   virtualized rows come and go; the name column has no width and takes the rest */
-		@media (min-width: 769px) {
-			.list.artists {
-				table-layout: fixed;
-			}
-			.list.artists th {
-				&.cell-index {
-					width: 4rem;
-				}
-				&.col-spectacles {
-					width: 9rem;
-				}
-				&.col-performances {
-					width: 13rem;
-				}
-				&.col-actions {
-					width: 6rem;
-				}
-			}
-		}
-
 		/* WORKS */
 		.list.works tbody.year {
 			text-align: left;

@@ -8,7 +8,13 @@ import { EntitiesModule } from "./entities.module.js";
 const OWNER = { user: { id: "owner" }, session: { id: "session" } };
 
 const ID = "0b9c1a2e-5d3f-4c8a-9e7b-1f2a3b4c5d6e";
-const CARROLL = { id: ID, kind: "person", name: "Lewis Carroll", sortName: "Carroll, Lewis" };
+const CARROLL = {
+	id: ID,
+	kind: "person",
+	name: "Lewis Carroll",
+	sortName: "Carroll, Lewis",
+	realName: "Charles Lutwidge Dodgson",
+};
 // as stored: the portrait is a key, given as a URL
 const CARROLL_ROW = { ...CARROLL, pictureKey: null };
 const CARROLL_VIEW = { ...CARROLL, picture: null };

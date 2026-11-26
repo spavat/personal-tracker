@@ -56,7 +56,11 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: (kind: Entit
 	const [kind, setKind] = useState(entity.kind);
 	const [sortName, setSortName] = useState(entity.sortName ?? "");
 	const saveMutation = useMutation({
-		mutationFn: () => saveEntity({ kind, name: name.trim(), sortName: sortName.trim() || null }, entity.id),
+		mutationFn: () =>
+			saveEntity(
+				{ kind, name: name.trim(), sortName: sortName.trim() || null, realName: entity.realName },
+				entity.id,
+			),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["entities"] });
 			queryClient.invalidateQueries({ queryKey: ["programs"] });

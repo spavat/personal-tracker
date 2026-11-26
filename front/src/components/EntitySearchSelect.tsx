@@ -26,13 +26,13 @@ export default function EntitySearchSelect({ kind, value, onChange, ...props }: 
 	const { data = [] } = useQuery(entitiesQuery(kind));
 
 	const createMutation = useMutation({
-		mutationFn: (name: string) => saveEntity({ kind, name, sortName: null }),
+		mutationFn: (name: string) => saveEntity({ kind, name, sortName: null, realName: null }),
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ["entities", kind] }),
 	});
 
 	return (
 		<SearchSelect
-			items={data}
+			items={data.map(({ id, name, realName }) => ({ id, name, otherName: realName }))}
 			value={value}
 			onChange={onChange}
 			onCreate={(name) => createMutation.mutateAsync(name)}

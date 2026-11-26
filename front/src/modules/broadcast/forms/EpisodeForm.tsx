@@ -4,6 +4,7 @@ import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import Badge from "../../../components/Badge";
 import BadgeEdit from "../../../components/BadgeEdit";
+import ImageDropZone from "../../../components/ImageDropZone";
 import TagBadge from "../../../components/TagBadge";
 import { programDetailsQuery, programsQuery } from "../api";
 import { readImageFile, resolveImagePreviewSrc } from "../images";
@@ -13,12 +14,6 @@ import { EPISODE_CREDIT_ROLES, type EpisodeInputs } from "./EpisodeForm.utils";
 export default function EpisodeForm() {
 	const { control, register, setValue } = useFormContext<EpisodeInputs & { programId?: string }>();
 	const cover = useWatch({ control, name: "episode.cover" });
-
-	async function onCoverFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-		const file = e.target.files?.[0];
-		if (!file) return;
-		setValue("episode.cover", await readImageFile(file), { shouldDirty: true });
-	}
 	const [showParentTags, setShowParentTags] = useState(false);
 
 	const {
@@ -174,26 +169,36 @@ export default function EpisodeForm() {
 						<label htmlFor="episode-cover">
 							<span>Couverture</span>
 						</label>
-						<input
-							id="episode-cover"
-							{...register("episode.cover")}
-							type="text"
-							placeholder="https://…"
-							autoComplete="off"
-						/>
-						<input
-							type="file"
-							accept="image/*"
-							aria-label="Fichier de couverture"
-							onChange={onCoverFileChange}
-						/>
-						{cover && (
-							<img
-								src={resolveImagePreviewSrc(cover)}
-								alt="Couverture"
-								className="image-preview cover-preview"
+						{/* the current cover, left of the zone that replaces it (dropped, picked or pasted) */}
+						<div className="cover-input">
+							{cover && (
+								<img src={resolveImagePreviewSrc(cover)} alt="Couverture" className="cover-preview" />
+							)}
+							<ImageDropZone
+								onImage={async (file) =>
+									setValue("episode.cover", await readImageFile(file), { shouldDirty: true })
+								}
 							/>
-						)}
+						</div>
+						<div className="full-fields-row">
+							<input
+								id="episode-cover"
+								{...register("episode.cover")}
+								type="text"
+								placeholder="ou https://…"
+								autoComplete="off"
+								className="flex"
+							/>
+							{cover && (
+								<button
+									type="button"
+									onClick={() => setValue("episode.cover", "", { shouldDirty: true })}
+									title="Retirer la couverture"
+								>
+									<i className="fa-regular fa-trash-can"></i>
+								</button>
+							)}
+						</div>
 					</div>
 					<label className="form-field full-width">
 						<span>Commentaire</span>

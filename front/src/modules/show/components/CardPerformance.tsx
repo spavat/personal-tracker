@@ -57,7 +57,7 @@ export default function Card({ performance }: { performance: PerformanceView }) 
 											loading="lazy"
 										/>
 									)}
-									<Link to="/shows/artists/$artistId" params={{ artistId: String(role.artist.id) }}>
+									<Link to="/entities/$entityId" params={{ entityId: role.artist.id }}>
 										{role.artist.name}
 									</Link>{" "}
 									- {role.name} {role.status && <>({role.status})</>}

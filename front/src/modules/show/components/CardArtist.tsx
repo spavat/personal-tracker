@@ -23,7 +23,7 @@ export default function Card({
 					alt=""
 					className="portrait-card"
 					loading="lazy"
-					style={{ viewTransitionName: `artist-portrait-${artist.id}` }}
+					style={{ viewTransitionName: `entity-portrait-${artist.id}` }}
 				/>
 			) : (
 				<div className="portrait-card">
@@ -32,7 +32,7 @@ export default function Card({
 			)}
 			<div>
 				<span className="title">
-					<Link to="/shows/artists/$artistId" params={{ artistId: String(artist.id) }} viewTransition>
+					<Link to="/entities/$entityId" params={{ entityId: artist.id }} viewTransition>
 						{artist.name}
 					</Link>
 				</span>

@@ -49,8 +49,6 @@ interface BookListFilters {
 	sortField?: string;
 	sortDirection?: string;
 	limit?: number;
-	// only the books credited to this entity as author
-	authorId?: string;
 	// only these books (the books of a series' tree)
 	bookIds?: string[];
 }
@@ -116,7 +114,6 @@ export class BookRepository {
 		sortField = "book",
 		sortDirection = "asc",
 		limit,
-		authorId,
 		bookIds,
 	}: BookListFilters) {
 		const inPeriod = from && to ? between(readingEntry.date, from, to) : undefined;
@@ -208,17 +205,7 @@ export class BookRepository {
 			.leftJoin(readingEdition, eq(readingEdition.bookId, readingBook.id))
 			.leftJoin(readingReading, eq(readingReading.editionId, readingEdition.id))
 			.leftJoin(readingEntry, and(eq(readingEntry.readingId, readingReading.id), inPeriod))
-			.where(
-				and(
-					authorId
-						? sql`exists (
-							select 1 from ${readingBookContributor} bc
-							where bc.book_id = ${readingBook.id} and bc.role = 'author' and bc.entity_id = ${authorId}
-						)`
-						: undefined,
-					bookIds ? inArray(readingBook.id, bookIds) : undefined,
-				),
-			)
+			.where(bookIds ? inArray(readingBook.id, bookIds) : undefined)
 			.groupBy(readingBook.id, mainEdition.id)
 			.having(inPeriod ? sql`count(${readingEntry.date}) > 0` : undefined)
 			.orderBy(
@@ -391,27 +378,6 @@ export class BookRepository {
 	}
 
 	// The entities credited as author, with how many of their books are in the tracker and read
-	findAuthors() {
-		return this.db
-			.select({
-				id: coreEntity.id,
-				name: coreEntity.name,
-				sortName: coreEntity.sortName,
-				pictureKey: coreEntity.pictureKey,
-				nbBooks: sql<number>`count(distinct ${readingBookContributor.bookId})`.mapWith(Number),
-				nbReadings: sql<number>`count(distinct ${readingReading.id})`.mapWith(Number),
-			})
-			.from(coreEntity)
-			.innerJoin(
-				readingBookContributor,
-				and(eq(readingBookContributor.entityId, coreEntity.id), eq(readingBookContributor.role, "author")),
-			)
-			.leftJoin(readingEdition, eq(readingEdition.bookId, readingBookContributor.bookId))
-			.leftJoin(readingReading, eq(readingReading.editionId, readingEdition.id))
-			.groupBy(coreEntity.id)
-			.orderBy(sql`coalesce(${coreEntity.sortName}, ${coreEntity.name})`);
-	}
-
 	// The entity's credits, one per book and role: on the book (author, illustrator, preface), on one of its editions
 	// (translator, publisher)
 	async findEntityBookRoles(entityId: string): Promise<Array<{ bookId: string; role: EntityBookRole }>> {
@@ -476,20 +442,6 @@ export class BookRepository {
 		await moveCredits(tx, readingBookContributor, "book_id", fromId, toId);
 		await moveCredits(tx, readingEditionContributor, "edition_id", fromId, toId);
 		await tx.update(readingEdition).set({ publisherId: toId }).where(eq(readingEdition.publisherId, fromId));
-	}
-
-	async findEntity(id: string) {
-		const [entity] = await this.db
-			.select({
-				id: coreEntity.id,
-				kind: coreEntity.kind,
-				name: coreEntity.name,
-				sortName: coreEntity.sortName,
-				pictureKey: coreEntity.pictureKey,
-			})
-			.from(coreEntity)
-			.where(eq(coreEntity.id, id));
-		return entity;
 	}
 
 	// undefined when the book has no such edition

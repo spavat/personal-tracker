@@ -1,7 +1,8 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-export type SearchSelectItem<Id> = { id: Id; name: string };
+// otherName: also matched by the search, shown after the name (an entity's real name)
+export type SearchSelectItem<Id> = { id: Id; name: string; otherName?: string | null };
 
 type SearchSelectProps<Id> = {
 	items: Array<SearchSelectItem<Id>>;
@@ -19,6 +20,12 @@ type SearchSelectProps<Id> = {
 	// also given the input: lets a form focus it (react-hook-form Controller's field.ref)
 	inputRef?: (input: HTMLInputElement | null) => void;
 };
+
+const normalize = (text: string) =>
+	text
+		.normalize("NFD")
+		.replace(/\p{Diacritic}/gu, "")
+		.toLowerCase();
 
 // A text input filtering a list of items, to pick one or create it
 export default function SearchSelect<Id>({
@@ -67,8 +74,11 @@ export default function SearchSelect<Id>({
 	}, [isOpen]);
 
 	const trimmedSearch = search.trim();
-	const matches = items.filter((item) => item.name.toLowerCase().includes(trimmedSearch.toLowerCase()));
-	const hasExactMatch = matches.some((item) => item.name.toLowerCase() === trimmedSearch.toLowerCase());
+	const normalizedSearch = normalize(trimmedSearch);
+	const matches = items.filter((item) =>
+		[item.name, item.otherName].some((name) => name && normalize(name).includes(normalizedSearch)),
+	);
+	const hasExactMatch = matches.some((item) => normalize(item.name) === normalizedSearch);
 	const canCreate = onCreate !== undefined && trimmedSearch !== "" && !hasExactMatch;
 
 	function selectItem(id: Id | null, name: string) {
@@ -164,6 +174,7 @@ export default function SearchSelect<Id>({
 								onClick={() => selectItem(item.id, item.name)}
 							>
 								{item.name}
+								{item.otherName && <span className="smalltext"> ({item.otherName})</span>}
 							</div>
 						))}
 						{matches.length === 0 && !canCreate && <div className="search-select-empty">{emptyLabel}</div>}

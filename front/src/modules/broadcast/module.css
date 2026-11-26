@@ -65,25 +65,18 @@
 			flex: none;
 			position: relative;
 			display: inline-block;
-			/* width: 48px; */
-			height: 48px;
+			/* the height is fixed, the width follows the image's own ratio */
 			img {
-				width: 100%;
-				height: 100%;
-				object-fit: cover;
+				height: 48px;
+				width: auto;
 				border-radius: 4px;
 				display: block;
 			}
-			/* &.wide {
-				width: 85px;
-			} */
 			&.large {
-				/* width: 120px; */
-				height: 120px;
 				margin-right: 10px;
-				/* &.wide {
-					width: 213px;
-				} */
+				img {
+					height: 120px;
+				}
 			}
 			.cover-check {
 				position: absolute;
@@ -350,10 +343,26 @@
 			border-radius: 8px;
 			object-fit: cover;
 		}
-		.profile-preview,
-		.cover-preview {
+		.profile-preview {
 			width: 120px;
 			height: 120px;
+		}
+		/* an episode cover's preview (square or wide, kept at its own ratio) left of the drop zone that replaces it */
+		.cover-input {
+			display: flex;
+			gap: 12px;
+			align-items: center;
+			margin-bottom: 8px;
+			.image-drop-zone {
+				flex: 1;
+				margin-bottom: 0;
+			}
+		}
+		.cover-preview {
+			width: auto;
+			height: 120px;
+			border-radius: 8px;
+			flex-shrink: 0;
 		}
 		.banner-preview {
 			width: 100%;

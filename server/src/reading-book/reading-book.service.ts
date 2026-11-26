@@ -9,7 +9,6 @@ import type {
 	SaveReadingRequestSchema,
 	SaveSeriesRequest,
 	SeriesDetails,
-	AuthorDetails,
 	EntityBooksResponse,
 } from "@personal-tracker/shared/reading-book";
 import type { z } from "zod";
@@ -23,7 +22,6 @@ import type { EntityKind } from "../database/node.query.js";
 import { BadRequestError, ConflictError, NotFoundError } from "../common/errors.js";
 import { ContextTagsRepository } from "../context-tags/context-tags.repository.js";
 import { isExternalIdTaken } from "../database/node.query.js";
-import { toEntityView } from "../entities/entity.entity.js";
 import { buildInitialReading, getLongestConsecutiveStreak, median } from "./book.entity.js";
 import { BookRepository } from "./book.repository.js";
 import { CoverStorage } from "./cover.storage.js";
@@ -80,27 +78,6 @@ export class ReadingBookService {
 			throw externalIdTakenOr(error, book.externalIds);
 		}
 		return (await this.repo.findById(bookId)) ?? notFound("book");
-	}
-
-	async listAuthors() {
-		this.logger.log("listAuthors");
-		return (await this.repo.findAuthors()).map(toEntityView);
-	}
-
-	async getAuthor(id: string): Promise<AuthorDetails> {
-		this.logger.log("getAuthor");
-		const author = await this.repo.findEntity(id);
-		if (!author) {
-			notFound("author");
-		}
-		// in publication order
-		const books = await this.repo.findAll({
-			withReadingsDetails: false,
-			authorId: id,
-			sortField: "originalYear",
-			sortDirection: "asc",
-		});
-		return { ...toEntityView(author), books };
 	}
 
 	// in publication order, the roles in the order of EntityBookRoleSchema

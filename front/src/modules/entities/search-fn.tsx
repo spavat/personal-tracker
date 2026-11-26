@@ -15,6 +15,7 @@ export function renderEntityResultItem(
 			</div>
 			<div>
 				{item.name}
+				{item.realName && <span className="smalltext"> ({item.realName})</span>}
 				<br />
 				{KIND_LABELS[item.kind]}
 				{creditCounts(item).map(({ field, count, label }) => (

@@ -45,6 +45,7 @@ describe("directory routes", () => {
 				kind: "person",
 				name: "Lewis Carroll",
 				sortName: null,
+				realName: null,
 				pictureKey: null,
 				spectacleIds: [],
 				ids: [],

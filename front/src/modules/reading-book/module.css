@@ -93,13 +93,6 @@
 				opacity: 0.5;
 			}
 		}
-		/* the portraits (.artist-picture, .portrait-card) are styled in App.css, shared with the show artists */
-		.grid.authors {
-			grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-		}
-		.card_item.author {
-			display: flex;
-		}
 		.series-label {
 			margin-right: 6px;
 			padding: 0 6px;

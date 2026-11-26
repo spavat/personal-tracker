@@ -6,7 +6,6 @@ const UNKNOWN = "00000000-0000-4000-8000-000000000999";
 
 // Opened from a stale or typed URL: the modal says so instead of showing an empty form
 const CASES: Array<[string, string]> = [
-	[`/shows/artists/edit/${UNKNOWN}?returnTo=/shows/artists`, "Artiste introuvable"],
 	[`/shows/places/edit/${UNKNOWN}?returnTo=/shows/places`, "Salle introuvable"],
 	[`/shows/places/delete/${UNKNOWN}?returnTo=/shows/places`, "Salle introuvable"],
 	[`/shows/works/edit/${UNKNOWN}?returnTo=/shows/works`, "Œuvre introuvable"],

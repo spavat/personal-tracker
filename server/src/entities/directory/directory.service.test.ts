@@ -9,12 +9,20 @@ import type { PortraitStorage } from "../portrait.storage.js";
 import { NotFoundError } from "../../common/errors.js";
 import { DirectoryService } from "./directory.service.js";
 
-const KEEP: EntityFields = { id: "keep", kind: "person", name: "Émile Zola", sortName: null, pictureKey: "keep.avif" };
+const KEEP: EntityFields = {
+	id: "keep",
+	kind: "person",
+	name: "Émile Zola",
+	sortName: null,
+	realName: null,
+	pictureKey: "keep.avif",
+};
 const REMOVE = {
 	id: "remove",
 	kind: "person" as const,
 	name: "E. Zola",
 	sortName: "Zola, E.",
+	realName: null,
 	pictureKey: "remove.avif",
 };
 

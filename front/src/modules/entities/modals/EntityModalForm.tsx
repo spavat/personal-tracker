@@ -16,6 +16,7 @@ type EntityFormData = {
 	kind: EntityKind;
 	name: string;
 	sortName: string;
+	realName: string;
 	// the server's URL (unchanged), an image URL or a data URI (new), empty (no portrait)
 	picture: string;
 };
@@ -39,6 +40,7 @@ export default function EntityModalForm({ entityId, returnTo }: { entityId: stri
 			kind: entity.kind,
 			name: entity.name,
 			sortName: entity.sortName ?? "",
+			realName: entity.realName ?? "",
 			picture: entity.picture ?? "",
 		},
 	});
@@ -53,6 +55,7 @@ export default function EntityModalForm({ entityId, returnTo }: { entityId: stri
 					kind: data.kind,
 					name: data.name.trim(),
 					sortName: data.sortName.trim() || null,
+					realName: data.realName.trim() || null,
 					picture: data.picture.trim() || null,
 				},
 				entity.id,
@@ -112,6 +115,15 @@ export default function EntityModalForm({ entityId, returnTo }: { entityId: stri
 									{...register("sortName")}
 									type="text"
 									placeholder="Carroll, Lewis"
+									autoComplete="off"
+								/>
+							</label>
+							<label className="form-field">
+								<span>Nom réel</span>
+								<input
+									{...register("realName")}
+									type="text"
+									placeholder="Charles Lutwidge Dodgson"
 									autoComplete="off"
 								/>
 							</label>

@@ -23,12 +23,6 @@ describe("show/artists routes", () => {
 		await ctx.app.close();
 	});
 
-	it("GET / runs the sorted list query", async () => {
-		const res = await ctx.app.inject({ method: "GET", url: "/show/artists" });
-		expect(res.statusCode).toBe(200);
-		expect(ctx.db.select).toHaveBeenCalled();
-	});
-
 	it("GET /:id rejects an id that is not a uuid", async () => {
 		expect((await ctx.app.inject({ method: "GET", url: "/show/artists/abc" })).statusCode).toBe(400);
 	});

@@ -15,5 +15,5 @@ export const KIND_ICONS: Record<EntityKind, string> = {
 	organization: "fa-building",
 };
 
-// the grouping of the show artist page's performances, shared with it
+// whether the entity page groups its performances by spectacle (the key of the former show artist page)
 export const GROUP_BY_SPECTACLE_KEY = "show_artist_details_groupBySpectacle";

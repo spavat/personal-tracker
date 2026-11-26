@@ -1,5 +1,4 @@
 import {
-	ArtistListResponse,
 	ArtistDetailsResponse,
 	PerformanceView,
 	PlaceDetailsResponse,
@@ -115,16 +114,6 @@ export const performanceDetailsQuery = (id: string) =>
 	});
 
 // ARTISTS
-async function getArtists(field: string, direction: string) {
-	return fetchJson<Array<ArtistListResponse>>(
-		withQuery(`${API_BASE_URL}/show/artists/`, { sort: [field, direction] }),
-	);
-}
-export const artistListSort: SortListConfig<ArtistListResponse> = {
-	sortOptions: { localKey: "show_artist_list", defaultField: "nbPerformances", defaultDirection: "desc" },
-	queryKey: ["shows", "artists"],
-	queryFn: getArtists,
-};
 async function getArtistDetails(id: string, groupBySpectacle: boolean) {
 	return fetchJson<ArtistDetailsResponse>(
 		withQuery(`${API_BASE_URL}/show/artists/${id}`, { groupBySpectacle: Boolean(groupBySpectacle) }),

@@ -107,8 +107,9 @@ test.describe("Reading Book - Series", () => {
 		await page.locator(".details .general").getByRole("link", { name: "Classiques" }).click();
 		await expect(page.getByRole("heading", { name: "Classiques" })).toBeVisible();
 
-		await page.goto("/reading-book/authors");
-		await page.getByRole("link", { name: "Lewis Carroll" }).click();
+		// the author's entity page: the books by series
+		await page.goto(`/reading-book/book/${alice.id}`);
+		await page.locator(".details .general").getByRole("link", { name: "Lewis Carroll" }).click();
 		const section = page.locator("section").filter({ has: page.getByRole("heading", { name: "Classiques" }) });
 		await expect(section.locator(".card_item .series-label")).toHaveText(["1"]);
 	});
