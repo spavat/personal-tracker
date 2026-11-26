@@ -3,13 +3,11 @@ import { Outlet, useLocation } from "@tanstack/react-router";
 import "./App.css";
 import { useEffect, useRef, useState } from "react";
 
-import { mainNavItems, moneyNavItem } from "./components/nav-items";
+import { allNavItems } from "./components/nav-items";
 import PageTitle from "./components/PageTitle";
 import Sidebar from "./components/Sidebar";
 import { APP_VERSION, BUILD_DATE } from "./config";
 import { useHeaderSlot } from "./hooks/use-header-slot";
-
-const allNavItems = [...mainNavItems, moneyNavItem];
 
 export default function App() {
 	const location = useLocation();

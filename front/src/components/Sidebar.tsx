@@ -1,11 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { Fragment } from "react";
 
 import { authClient } from "../auth/auth-client";
 import { isPublicPath } from "../auth/public-paths";
 import { useStoredValue } from "../hooks/stored-value";
 import { useIsOwner } from "../hooks/use-is-owner";
-import { mainNavItems, moneyNavItem } from "./nav-items";
+import { navSections } from "./nav-items";
 
 const SIDEBAR_COLLAPSED_KEY = "tracker_sidebar_collapsed";
 
@@ -25,7 +26,13 @@ export default function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
 	const isOwner = useIsOwner();
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
-	const navItems = mainNavItems.filter((item) => isOwner || isPublicPath(item.path));
+	// a section whose items are all hidden is dropped, title included
+	const sections = navSections
+		.map((section) => ({
+			...section,
+			items: section.items.filter((item) => isOwner || isPublicPath(item.path)),
+		}))
+		.filter((section) => section.items.length > 0);
 
 	function toggleCollapsed() {
 		setCollapsed(!collapsed);
@@ -50,32 +57,29 @@ export default function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
 					{!collapsed && <span className="sidebar-app-title">Personal Tracker</span>}
 				</div>
 				<ul className="sidebar-nav" onClick={onCloseMobile}>
-					{navItems.map((item) => (
-						<li key={item.path}>
-							<Link
-								to={item.path}
-								className={isActive(location.pathname, item.path) ? "active" : ""}
-								title={item.title}
-							>
-								<span className="sidebar-icon">{item.icon}</span>
-								{!collapsed && <span className="sidebar-label">{item.title}</span>}
-							</Link>
-						</li>
+					{sections.map((section, index) => (
+						<Fragment key={section.title ?? index}>
+							{section.title && (
+								<li className="sidebar-section-title" title={section.title}>
+									{!collapsed && section.title}
+								</li>
+							)}
+							{section.items.map((item) => (
+								<li key={item.path}>
+									<Link
+										to={item.path}
+										className={isActive(location.pathname, item.path) ? "active" : ""}
+										title={item.title}
+									>
+										<span className="sidebar-icon">{item.icon}</span>
+										{!collapsed && <span className="sidebar-label">{item.title}</span>}
+									</Link>
+								</li>
+							))}
+						</Fragment>
 					))}
 				</ul>
 				<ul className="sidebar-nav sidebar-nav-secondary" onClick={onCloseMobile}>
-					{(isOwner || isPublicPath(moneyNavItem.path)) && (
-						<li>
-							<Link
-								to={moneyNavItem.path}
-								className={isActive(location.pathname, moneyNavItem.path) ? "active" : ""}
-								title={moneyNavItem.title}
-							>
-								<span className="sidebar-icon">{moneyNavItem.icon}</span>
-								{!collapsed && <span className="sidebar-label">{moneyNavItem.title}</span>}
-							</Link>
-						</li>
-					)}
 					<li>
 						{isOwner ? (
 							<a href="#" onClick={(event) => (event.preventDefault(), logout())} title="Se déconnecter">
