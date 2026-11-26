@@ -6,7 +6,7 @@ import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
 import { useOptionalSuspenseQuery } from "../../../hooks/use-optional-suspense-query";
 import { programDetailsQuery, save } from "../api";
-import { toCreditInputs } from "../forms/CreditRows";
+import { toCreditInputs } from "../forms/CreditRows.utils";
 import ProgramForm from "../forms/ProgramForm";
 import { onSubmitProgram, type ProgramInputs } from "../forms/ProgramForm.utils";
 

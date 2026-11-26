@@ -6,7 +6,7 @@ import Modal from "../../../components/Modal";
 import MutationError from "../../../components/MutationError";
 import { programDetailsQuery, save } from "../api";
 import { toLines } from "../episode-lines";
-import { toCreditInputs } from "../forms/CreditRows";
+import { toCreditInputs } from "../forms/CreditRows.utils";
 import EpisodeForm from "../forms/EpisodeForm";
 import { type EpisodeInputs, onSubmitEpisode } from "../forms/EpisodeForm.utils";
 

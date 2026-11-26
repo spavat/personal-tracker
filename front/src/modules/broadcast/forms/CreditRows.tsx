@@ -29,25 +29,6 @@ const KINDS: Array<{ value: EntityKind; label: string }> = [
 	{ value: "organization", label: "Organisation" },
 ];
 
-// The rows as the API saves them: the rows without entity left out
-export function toSaveCredits(rows: Array<CreditInput> | undefined) {
-	return (rows ?? [])
-		.filter(({ entityId }) => entityId)
-		.map(({ entityId, role, creditedAs }) => ({ entityId, role, creditedAs: creditedAs.trim() || null }));
-}
-
-// The credits of a program / an episode as rows
-export function toCreditInputs(
-	credits: Array<{ entityId: string; kind: EntityKind; role: string; creditedAs: string | null }> | undefined,
-): Array<CreditInput> {
-	return (credits ?? []).map(({ entityId, kind, role, creditedAs }) => ({
-		entityId,
-		kind,
-		role,
-		creditedAs: creditedAs ?? "",
-	}));
-}
-
 // Edits the picked entity itself (every program, episode or book crediting it sees the change). Another kind keeps
 // its credits.
 function EntityEditor({ entity, onDone }: { entity: Entity; onDone: (kind: EntityKind) => void }) {

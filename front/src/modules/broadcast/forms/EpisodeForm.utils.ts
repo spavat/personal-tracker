@@ -1,4 +1,5 @@
-import { type CreditInput, type CreditRole, toSaveCredits } from "./CreditRows";
+import { type CreditInput, type CreditRole } from "./CreditRows";
+import { toSaveCredits } from "./CreditRows.utils";
 
 interface Item {
 	value: string;
