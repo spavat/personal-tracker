@@ -86,6 +86,8 @@
 		.title {
 			flex-grow: 1;
 			justify-content: center;
+			/* a long month ("novembre 2026") wrapping makes the selector taller than the header: it covers the module menu */
+			white-space: nowrap;
 		}
 		button {
 			vertical-align: middle;
