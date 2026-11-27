@@ -20,9 +20,9 @@ test.describe("Reading Book - Details", () => {
 		await expect(page.getByRole("heading", { name: alice.book })).toBeVisible();
 
 		const general = page.locator(".details .general");
-		await expect(general).toContainText("Auteur.ic.es: Lewis Carroll");
+		await expect(general).toContainText("Auteur·ice: Lewis Carroll");
 		await expect(general).toContainText("Langue originale : anglais");
-		await expect(general).toContainText("Pays : gb");
+		await expect(general).toContainText("Pays : Royaume-Uni");
 		await expect(page.locator("section.edition")).toContainText("anglais · 181 pages");
 
 		await expect(page.getByRole("heading", { name: "Lecture #1" })).toBeVisible();
@@ -58,14 +58,14 @@ test.describe("Reading Book - Details", () => {
 		await pickEntity(dialog, "Auteur·ice 2", "John Tenniel");
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 		await expect(dialog).not.toBeVisible();
-		await expect(page.getByText("Auteur.ic.es: Lewis Carroll, John Tenniel")).toBeVisible();
+		await expect(page.getByText("Auteur·ice: Lewis Carroll, John Tenniel")).toBeVisible();
 
 		dialog = await openEditModal(page);
 		await dialog.getByRole("button", { name: "Supprimer" }).first().click();
 		await expect(dialog.getByRole("textbox", { name: "Auteur·ice 1", exact: true })).toHaveValue("John Tenniel");
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 		await expect(dialog).not.toBeVisible();
-		await expect(page.getByText("Auteur.ic.es: John Tenniel")).toBeVisible();
+		await expect(page.getByText("Auteur·ice: John Tenniel")).toBeVisible();
 	});
 
 	test("clear the page count of an edition", async ({ page }) => {

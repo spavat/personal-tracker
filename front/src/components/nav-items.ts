@@ -5,18 +5,21 @@ export interface NavItem {
 }
 
 export interface NavSection {
+	id: string;
 	title?: string;
 	items: Array<NavItem>;
 }
 
 export const navSections: NavSection[] = [
 	{
+		id: "4e3ffd47-7827-48cd-a974-ba4f5ca24b35",
 		items: [
 			{ path: "/", title: "Accueil", icon: "🏠" },
 			{ path: "/calendar", title: "Calendrier", icon: "📅" },
 		],
 	},
 	{
+		id: "543b3fe1-d62f-480d-a144-6f9c9c776546",
 		title: "Culture",
 		items: [
 			{ path: "/shows", title: "Spectacle", icon: "🎭" },
@@ -30,6 +33,7 @@ export const navSections: NavSection[] = [
 		],
 	},
 	{
+		id: "a2f91bb6-5311-4485-a828-a203f5f00dce",
 		title: "Vie",
 		items: [
 			{ path: "/sport", title: "Sport", icon: "🏃" },
@@ -38,6 +42,7 @@ export const navSections: NavSection[] = [
 		],
 	},
 	{
+		id: "697a20c1-618f-41d3-813d-42f9fea9d00e",
 		title: "Config",
 		items: [{ path: "/context-tags", title: "Tags", icon: "🏷️" }],
 	},

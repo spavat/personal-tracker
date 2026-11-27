@@ -57,8 +57,8 @@ export default function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
 					{!collapsed && <span className="sidebar-app-title">Personal Tracker</span>}
 				</div>
 				<ul className="sidebar-nav" onClick={onCloseMobile}>
-					{sections.map((section, index) => (
-						<Fragment key={section.title ?? index}>
+					{sections.map((section) => (
+						<Fragment key={section.id}>
 							{section.title && (
 								<li className="sidebar-section-title" title={section.title}>
 									{!collapsed && section.title}

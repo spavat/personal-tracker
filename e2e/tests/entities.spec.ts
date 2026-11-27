@@ -335,7 +335,7 @@ test.describe("Entities - links and portrait", () => {
 		await expect(dialog).not.toBeVisible();
 
 		// the book shows the credited name, the entity keeps its own
-		await expect(page.locator(".details .general")).toContainText("Auteur.ic.es: L. Carroll");
+		await expect(page.locator(".details .general")).toContainText("Auteur·ice: L. Carroll");
 		await page.locator(".details .general").getByRole("link", { name: "L. Carroll" }).click();
 		await expect(page).toHaveURL(/\/entities\/[0-9a-f-]{36}$/);
 		await expect(page.getByRole("heading", { name: "Lewis Carroll" })).toBeVisible();

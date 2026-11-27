@@ -138,7 +138,17 @@ export function languageName(code: string) {
 	try {
 		return LANGUAGE_NAMES.of(code) ?? code;
 	} catch {
-		// not a valid language tag
+		return code;
+	}
+}
+
+const COUNTRY_NAMES = new Intl.DisplayNames(["fr"], { type: "region" });
+// The French name of an ISO 3166-1 alpha-2 code ("gb" → "Royaume-Uni"), the code itself when unknown
+export function countryName(code: string) {
+	try {
+		// Uppercase for V8, it wasn't needed for SpiderMonkey
+		return COUNTRY_NAMES.of(code.toUpperCase()) ?? code;
+	} catch {
 		return code;
 	}
 }

@@ -28,13 +28,13 @@ test.describe("Reading Manga - Details", () => {
 		await expect(general).toContainText("Scenario: Kanehito YAMADA");
 		await expect(general).toContainText("Type : Shonen");
 		await expect(general).toContainText("Genres : aventure, fantastique");
-		await expect(general).not.toContainText("Auteur.ic.es");
+		await expect(general).not.toContainText("Auteur·ice");
 		await expect(readingRows(page)).toHaveCount(1);
 	});
 
 	test("details page shows the readings, newest first", async ({ page }) => {
 		await page.goto(`/reading-manga/manga/${onePiece.id}`);
-		await expect(page.locator(".details .general")).toContainText("Auteur.ic.es: Eiichirô ODA");
+		await expect(page.locator(".details .general")).toContainText("Auteur·ice: Eiichirô ODA");
 
 		await expect(readingRows(page)).toHaveCount(6);
 		await expect(readingRows(page).locator("td:nth-child(3)")).toHaveText([
@@ -75,7 +75,7 @@ test.describe("Reading Manga - Details", () => {
 		await expect(page.getByRole("heading", { name: "Sousou no Frieren" })).toBeVisible();
 		await expect(page.getByText("Frieren: Beyond Journey's End")).toBeVisible();
 		const general = page.locator(".details .general");
-		await expect(general).toContainText("Auteur.ic.es: Someone");
+		await expect(general).toContainText("Auteur·ice: Someone");
 		await expect(general).toContainText("Genres : fantastique");
 		await expect(general).toContainText("Dessin: Tsukasa ABE");
 	});

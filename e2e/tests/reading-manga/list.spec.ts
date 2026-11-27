@@ -98,7 +98,7 @@ test.describe("Reading Manga - List", () => {
 		await expect(page.getByRole("heading", { name: "Dragon Ball", exact: true })).toBeVisible();
 		const general = page.locator(".details .general");
 		await expect(page.getByText("Dragon Ball EN")).toBeVisible();
-		await expect(general).toContainText("Auteur.ic.es: Akira TORIYAMA");
+		await expect(general).toContainText("Auteur·ice: Akira TORIYAMA");
 		await expect(general).toContainText("Type : Seinen");
 		await expect(general).toContainText("Genres : action");
 		await expect(general.getByRole("link", { name: "Wiki" })).toHaveAttribute(

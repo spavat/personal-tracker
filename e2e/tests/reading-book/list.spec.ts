@@ -79,7 +79,7 @@ test.describe("Reading Book - List", () => {
 
 		// Redirected to the page of the new book
 		await expect(page.getByRole("heading", { name: "New Test Book", level: 2 })).toBeVisible();
-		await expect(page.getByText("Auteur.ic.es: New Author")).toBeVisible();
+		await expect(page.getByText("Auteur·ice: New Author")).toBeVisible();
 		await expect(page.getByText("Langue originale : français")).toBeVisible();
 
 		await page.getByRole("link", { name: "Liste" }).click();

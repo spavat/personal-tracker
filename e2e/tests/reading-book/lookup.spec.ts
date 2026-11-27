@@ -45,7 +45,7 @@ test.describe("Reading Book - Open Library lookup", () => {
 		await dialog.getByRole("button", { name: "Enregistrer" }).click();
 
 		await expect(page.getByRole("heading", { name: "Through the Looking-Glass", level: 2 })).toBeVisible();
-		await expect(page.getByText("Auteur.ic.es: Lewis Carroll, John Tenniel")).toBeVisible();
+		await expect(page.getByText("Auteur·ice: Lewis Carroll, John Tenniel")).toBeVisible();
 		await expect(page.getByText("Année de publication : 1871")).toBeVisible();
 		const [{ external_id }] = await queryDb(
 			`SELECT x.external_id FROM core.external_id x JOIN reading.book b ON b.id = x.node_id

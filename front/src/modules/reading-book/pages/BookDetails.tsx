@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 
 import { useIsOwner } from "../../../hooks/use-is-owner";
-import { languageName } from "../../../utils";
+import { countryName, languageName } from "../../../utils";
 import { bookDetailsQuery } from "../api";
 import EditionCard from "../components/EditionCard";
 import SeriesPath from "../components/SeriesPath";
@@ -45,7 +45,7 @@ export default function BookDetails({ bookId }: { bookId: string }) {
 				<div className="general">
 					<div>
 						<span>
-							Auteur.ic.es:{" "}
+							Auteur·ice:{" "}
 							<b>
 								{book.authors.map((author, i) => (
 									<span key={author.entityId}>
@@ -66,7 +66,7 @@ export default function BookDetails({ bookId }: { bookId: string }) {
 								<br />
 							</>
 						)}
-						Pays : {book.country} <span className={`fi fi-${book.country}`}></span>
+						Pays : {countryName(book.country)} <span className={`fi fi-${book.country}`}></span>
 						{book.series.map((series) => (
 							<span key={series.id}>
 								<br />

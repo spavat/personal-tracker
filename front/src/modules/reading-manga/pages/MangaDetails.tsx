@@ -103,7 +103,7 @@ export default function MangaDetails({ mangaId }: { mangaId: string }) {
 					<div>
 						{authors.length > 0 && (
 							<p>
-								Auteur.ic.es: <b>{authors.join(", ")}</b>
+								Auteur·ice: <b>{authors.join(", ")}</b>
 							</p>
 						)}
 						{artists.length > 0 && (
