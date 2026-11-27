@@ -60,6 +60,8 @@ export default function AddEpisodeModalForm({ programId, returnTo }: { programId
 		enabled: Boolean((programId && Object.keys(programData?.refs ?? {}).length > 0) || directLatestParams),
 	});
 
+	// read-only GET triggered on click (fills the form): no cached query to invalidate
+	// oxlint-disable-next-line react-doctor/query-mutation-missing-invalidation
 	const extractMutation = useMutation({
 		mutationFn: getInfoFromLink,
 	});

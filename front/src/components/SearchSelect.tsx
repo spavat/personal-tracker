@@ -43,7 +43,7 @@ export default function SearchSelect<Id>({
 }: SearchSelectProps<Id>) {
 	const [search, setSearch] = useState("");
 	const [isOpen, setIsOpen] = useState(false);
-	const [isCreating, setIsCreating] = useState(false);
+	const isCreatingRef = useRef(false);
 	const [position, setPosition] = useState<{ top: number; left: number; width: number } | null>(null);
 	const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -89,15 +89,15 @@ export default function SearchSelect<Id>({
 	}
 
 	async function createItem() {
-		if (!onCreate || !canCreate || isCreating) {
+		if (!onCreate || !canCreate || isCreatingRef.current) {
 			return;
 		}
-		setIsCreating(true);
+		isCreatingRef.current = true;
 		try {
 			const created = await onCreate(trimmedSearch);
 			selectItem(created.id, created.name);
 		} finally {
-			setIsCreating(false);
+			isCreatingRef.current = false;
 		}
 	}
 

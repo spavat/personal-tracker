@@ -167,6 +167,8 @@ function CreditRow({
 			</div>
 			{editing && entity && (
 				<EntityEditor
+					// another entity picked while editing: a fresh draft, not the previous entity's values
+					key={entity.id}
 					entity={entity}
 					onDone={(newKind) => {
 						setEditing(false);
