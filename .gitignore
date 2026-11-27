@@ -39,5 +39,7 @@ playwright-report
 
 # Agent skills scratch (local specs & tickets)
 .scratch
+# Playwright MCP session output
+.playwright-mcp
 
 TODO.md
