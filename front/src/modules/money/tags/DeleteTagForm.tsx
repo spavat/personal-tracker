@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
-import Modal from "../../../components/Modal";
-import MutationError from "../../../components/MutationError";
+import ConfirmDeleteModal from "../../../components/ConfirmDeleteModal";
 import { deleteTag, tagQuery } from "../api";
 
 interface Form {
@@ -39,31 +38,17 @@ export default function DeleteTagForm({ tagId, returnTo }: Form) {
 	const nbTransactions = data.transactions;
 
 	return (
-		<Modal className="modal form dialog-medium" isOpen={true} onClose={closeModal} hasCloseBtn={true}>
-			<div className="dialog-header">
-				<h2 id="dialog-title">Supprimer le tag "{data.name}"</h2>
-			</div>
-			<div className="dialog-body">
-				<p>
-					Sous tag associé à "{data.name}" ? {nbSubTags ? <>❌ {nbSubTags} tag(s)</> : "✅ Aucun"}
-				</p>
-				<p>Transactions utilisant ce tag ? {nbTransactions ? <>❌ {nbTransactions} trouvées </> : "✅"}</p>
-				<MutationError error={deleteMutation.error} />
-			</div>
-
-			<div className="dialog-footer">
-				<button type="button" onClick={closeModal}>
-					Fermer
-				</button>
-				<button
-					type="submit"
-					className="main"
-					onClick={save}
-					disabled={Boolean(nbSubTags || nbTransactions) || deleteMutation.isPending}
-				>
-					Supprimer le tag
-				</button>
-			</div>
-		</Modal>
+		<ConfirmDeleteModal
+			title={`Supprimer le tag "${data.name}"`}
+			onClose={closeModal}
+			onConfirm={save}
+			mutation={deleteMutation}
+			canDelete={!(nbSubTags || nbTransactions)}
+		>
+			<p>
+				Sous tag associé à "{data.name}" ? {nbSubTags ? <>❌ {nbSubTags} tag(s)</> : "✅ Aucun"}
+			</p>
+			<p>Transactions utilisant ce tag ? {nbTransactions ? <>❌ {nbTransactions} trouvées </> : "✅"}</p>
+		</ConfirmDeleteModal>
 	);
 }

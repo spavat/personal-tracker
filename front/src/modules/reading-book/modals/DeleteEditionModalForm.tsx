@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
-import Modal from "../../../components/Modal";
-import MutationError from "../../../components/MutationError";
+import ConfirmDeleteModal from "../../../components/ConfirmDeleteModal";
 import { bookDetailsQuery, deleteEdition } from "../api";
 
 export default function DeleteEditionModalForm({
@@ -40,35 +39,20 @@ export default function DeleteEditionModalForm({
 				: null;
 
 	return (
-		<Modal className={"modal form dialog-medium"} isOpen={true} onClose={closeModal} hasCloseBtn={true}>
-			<div className="dialog-header">
-				<h2 id="dialog-title">Supprimer l'édition</h2>
-			</div>
-			<div className="dialog-body">
-				<p>
-					{reason ?? (
-						<>
-							Êtes-vous sûr de vouloir supprimer l'édition <strong>{edition.title ?? book.book}</strong> ?
-						</>
-					)}
-				</p>
-				<MutationError error={deleteMutation.error} />
-			</div>
-			<div className="dialog-footer">
-				<button type="button" onClick={closeModal}>
-					Annuler
-				</button>
-				{!reason && (
-					<button
-						type="submit"
-						className="main"
-						onClick={() => deleteMutation.mutate({ id: bookId, editionId })}
-						disabled={deleteMutation.isPending}
-					>
-						Supprimer
-					</button>
+		<ConfirmDeleteModal
+			title="Supprimer l'édition"
+			onClose={closeModal}
+			onConfirm={() => deleteMutation.mutate({ id: bookId, editionId })}
+			mutation={deleteMutation}
+			canDelete={!reason}
+		>
+			<p>
+				{reason ?? (
+					<>
+						Êtes-vous sûr de vouloir supprimer l'édition <strong>{edition.title ?? book.book}</strong> ?
+					</>
 				)}
-			</div>
-		</Modal>
+			</p>
+		</ConfirmDeleteModal>
 	);
 }

@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
-import Modal from "../../../components/Modal";
-import MutationError from "../../../components/MutationError";
+import ConfirmDeleteModal from "../../../components/ConfirmDeleteModal";
 import { bookDetailsQuery, deleteModel } from "../api";
 
 export default function DeleteModelModalForm({
@@ -37,41 +36,26 @@ export default function DeleteModelModalForm({
 	const isUsedByReadEdition = editions.some((edition) => edition.readings.length > 0);
 
 	return (
-		<Modal className={"modal form dialog-medium"} isOpen={true} onClose={closeModal} hasCloseBtn={true}>
-			<div className="dialog-header">
-				<h2 id="dialog-title">Supprimer le modèle</h2>
-			</div>
-			<div className="dialog-body">
-				{isUsedByReadEdition ? (
-					<p>Ce modèle est utilisé par une édition qui a des lectures : il ne peut pas être supprimé.</p>
-				) : (
-					<p>
-						Êtes-vous sûr de vouloir supprimer le modèle <strong>{model.name}</strong> ?
-						{editions.length > 0 && (
-							<>
-								<br />
-								Ces éditions n'auront plus de modèle : {editions.map(editionName).join(", ")}.
-							</>
-						)}
-					</p>
-				)}
-				<MutationError error={deleteMutation.error} />
-			</div>
-			<div className="dialog-footer">
-				<button type="button" onClick={closeModal}>
-					Annuler
-				</button>
-				{!isUsedByReadEdition && (
-					<button
-						type="submit"
-						className="main"
-						onClick={() => deleteMutation.mutate({ id: bookId, modelId })}
-						disabled={deleteMutation.isPending}
-					>
-						Supprimer
-					</button>
-				)}
-			</div>
-		</Modal>
+		<ConfirmDeleteModal
+			title="Supprimer le modèle"
+			onClose={closeModal}
+			onConfirm={() => deleteMutation.mutate({ id: bookId, modelId })}
+			mutation={deleteMutation}
+			canDelete={!isUsedByReadEdition}
+		>
+			{isUsedByReadEdition ? (
+				<p>Ce modèle est utilisé par une édition qui a des lectures : il ne peut pas être supprimé.</p>
+			) : (
+				<p>
+					Êtes-vous sûr de vouloir supprimer le modèle <strong>{model.name}</strong> ?
+					{editions.length > 0 && (
+						<>
+							<br />
+							Ces éditions n'auront plus de modèle : {editions.map(editionName).join(", ")}.
+						</>
+					)}
+				</p>
+			)}
+		</ConfirmDeleteModal>
 	);
 }

@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
-import Modal from "../../../components/Modal";
-import MutationError from "../../../components/MutationError";
+import ConfirmDeleteModal from "../../../components/ConfirmDeleteModal";
 import { formatDate } from "../../../utils.tsx";
 import { deleteReading, mangaDetailsQuery } from "../api.ts";
 import { getMangaPrefixName } from "../utils.ts";
@@ -46,37 +45,22 @@ export default function DeleteReadingModalForm({
 	}
 
 	return (
-		<Modal className={"form dialog-medium"} isOpen={true} onClose={closeModal} hasCloseBtn={true}>
-			<div className="dialog-header">
-				<h2 id="dialog-title">Supprimer lecture</h2>
-			</div>
-			<div className="dialog-body">
-				<p>
-					Êtes-vous sûr de vouloir supprimer la lecture ?<br />
-					Nom :{" "}
-					<strong>
-						{getMangaPrefixName(reading)}
-						{reading.name}
-					</strong>
-					<br />
-					Date : {formatDate(reading.date)}
-				</p>
-				<MutationError error={deleteReadingMutation.error} />
-			</div>
-
-			<div className="dialog-footer">
-				<button type="button" onClick={closeModal}>
-					Annuler
-				</button>
-				<button
-					type="submit"
-					className="main"
-					onClick={deleteAndClose}
-					disabled={deleteReadingMutation.isPending}
-				>
-					Supprimer
-				</button>
-			</div>
-		</Modal>
+		<ConfirmDeleteModal
+			title="Supprimer lecture"
+			onClose={closeModal}
+			onConfirm={deleteAndClose}
+			mutation={deleteReadingMutation}
+		>
+			<p>
+				Êtes-vous sûr de vouloir supprimer la lecture ?<br />
+				Nom :{" "}
+				<strong>
+					{getMangaPrefixName(reading)}
+					{reading.name}
+				</strong>
+				<br />
+				Date : {formatDate(reading.date)}
+			</p>
+		</ConfirmDeleteModal>
 	);
 }

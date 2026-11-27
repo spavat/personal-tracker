@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
-import Modal from "../../../components/Modal";
-import MutationError from "../../../components/MutationError";
+import ConfirmDeleteModal from "../../../components/ConfirmDeleteModal";
 import { deleteTransaction, transactionQuery } from "../api";
 
 interface Form {
@@ -36,29 +35,18 @@ export default function DeleteTransactionForm({ transactionId, returnTo }: Form)
 	}
 
 	return (
-		<Modal className="modal form dialog-medium" isOpen={true} onClose={closeModal} hasCloseBtn={true}>
-			<div className="dialog-header">
-				<h2 id="dialog-title">Confirmation de suppression</h2>
-			</div>
-
-			<div className="dialog-body">
-				<p>Êtes-vous sur de supprimer la transaction</p>
-				<p>
-					{data.name} - {data.description}
-					<br />
-					{data.amount} €
-				</p>
-				<MutationError error={deleteMutation.error} />
-			</div>
-
-			<div className="dialog-footer">
-				<button type="button" onClick={closeModal}>
-					Fermer
-				</button>
-				<button type="submit" className="main" onClick={save} disabled={deleteMutation.isPending}>
-					Supprimer
-				</button>
-			</div>
-		</Modal>
+		<ConfirmDeleteModal
+			title="Confirmation de suppression"
+			onClose={closeModal}
+			onConfirm={save}
+			mutation={deleteMutation}
+		>
+			<p>Êtes-vous sur de supprimer la transaction</p>
+			<p>
+				{data.name} - {data.description}
+				<br />
+				{data.amount} €
+			</p>
+		</ConfirmDeleteModal>
 	);
 }

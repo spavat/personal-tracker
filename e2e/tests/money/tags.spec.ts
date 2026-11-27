@@ -53,7 +53,7 @@ test.describe("Tags", () => {
 		const dialog = page.getByRole("dialog", { name: 'Supprimer le tag "Food\\Miam"' });
 		await expect(dialog).toBeVisible();
 		await expect(dialog).toContainText("3 trouvées");
-		await expect(dialog.getByRole("button", { name: "Supprimer le tag" })).toBeDisabled();
+		await expect(dialog.getByRole("button", { name: "Supprimer" })).toBeDisabled();
 	});
 
 	test("delete a tag", async ({ page }) => {
@@ -69,7 +69,7 @@ test.describe("Tags", () => {
 		// Assert modal
 		const dialog = page.getByRole("dialog", { name: 'Supprimer le tag "Temporary"' });
 		await expect(dialog).toBeVisible();
-		await dialog.getByRole("button", { name: "Supprimer le tag" }).click();
+		await dialog.getByRole("button", { name: "Supprimer" }).click();
 		// Assertion
 		await expect(dialog).not.toBeVisible();
 		await expect(rows).toHaveCount(initialCount - 1);

@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
-import Modal from "../../../components/Modal";
-import MutationError from "../../../components/MutationError";
+import ConfirmDeleteModal from "../../../components/ConfirmDeleteModal";
 import { deleteModel, modelDetailsQuery } from "../api";
 
 export default function DeleteReadingModalForm({
@@ -40,36 +39,21 @@ export default function DeleteReadingModalForm({
 	}
 
 	return (
-		<Modal className={"form dialog-medium"} isOpen={true} onClose={closeModal} hasCloseBtn={true}>
-			<div className="dialog-header">
-				<h2 id="dialog-title">Supprimer modèle</h2>
-			</div>
-			<div className="dialog-body">
-				<p>
-					Êtes-vous sûr de vouloir supprimer le modèle?
-					<br />
-					Spectacle : {data.spectacle.name}
-					<br />
-					Nom : {data.name}
-					<br />
-					Rôles définis : {data.roles.length}
-				</p>
-				<MutationError error={deleteModelMutation.error} />
-			</div>
-
-			<div className="dialog-footer">
-				<button type="button" onClick={closeModal}>
-					Annuler
-				</button>
-				<button
-					type="submit"
-					className="main"
-					onClick={deleteAndClose}
-					disabled={deleteModelMutation.isPending}
-				>
-					Supprimer
-				</button>
-			</div>
-		</Modal>
+		<ConfirmDeleteModal
+			title="Supprimer modèle"
+			onClose={closeModal}
+			onConfirm={deleteAndClose}
+			mutation={deleteModelMutation}
+		>
+			<p>
+				Êtes-vous sûr de vouloir supprimer le modèle?
+				<br />
+				Spectacle : {data.spectacle.name}
+				<br />
+				Nom : {data.name}
+				<br />
+				Rôles définis : {data.roles.length}
+			</p>
+		</ConfirmDeleteModal>
 	);
 }

@@ -206,7 +206,7 @@ test.describe("Reading Book - Model", () => {
 		await detailsModel(page).getByRole("button", { name: "Supprimer le modèle" }).click();
 		const dialog = page.getByRole("dialog", { name: "Supprimer le modèle" });
 		await expect(dialog).toContainText("Ce modèle est utilisé par une édition qui a des lectures");
-		await expect(dialog.getByRole("button", { name: "Supprimer" })).toHaveCount(0);
+		await expect(dialog.getByRole("button", { name: "Supprimer" })).toBeDisabled();
 	});
 
 	test("delete a model: its editions are left without model", async ({ page }) => {

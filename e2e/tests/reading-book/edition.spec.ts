@@ -83,7 +83,7 @@ test.describe("Reading Book - Editions", () => {
 		const dialog = page.getByRole("dialog", { name: "Supprimer l'édition" });
 
 		await expect(dialog).toContainText("Cette édition a des lectures : supprimez-les d'abord.");
-		await expect(dialog.getByRole("button", { name: "Supprimer" })).toHaveCount(0);
+		await expect(dialog.getByRole("button", { name: "Supprimer" })).toBeDisabled();
 	});
 
 	test("delete an edition without readings", async ({ page }) => {
@@ -113,7 +113,7 @@ test.describe("Reading Book - Editions", () => {
 		await edition(page, "Édition").getByRole("button", { name: "Supprimer l'édition" }).click();
 		const dialog = page.getByRole("dialog", { name: "Supprimer l'édition" });
 		await expect(dialog).toContainText("Un livre garde au moins une édition.");
-		await expect(dialog.getByRole("button", { name: "Supprimer" })).toHaveCount(0);
+		await expect(dialog.getByRole("button", { name: "Supprimer" })).toBeDisabled();
 	});
 
 	// the delete modals don't offer it: the server's own checks are called directly

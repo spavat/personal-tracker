@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
-import Modal from "../../../components/Modal";
-import MutationError from "../../../components/MutationError";
+import ConfirmDeleteModal from "../../../components/ConfirmDeleteModal";
 import { deletePaymentType, paymentTypeDetailsQuery } from "../api";
 
 interface Form {
@@ -38,31 +37,17 @@ export default function DeletePaymentTypeForm({ paymentTypeId, returnTo }: Form)
 	}
 
 	return (
-		<Modal className="modal form dialog-medium" isOpen={true} onClose={closeModal} hasCloseBtn={true}>
-			<div className="dialog-header">
-				<h2 id="dialog-title">Supprimer le type de paiement "{data.name}"</h2>
-			</div>
-			<div className="dialog-body">
-				<p>
-					Transactions associées à "{data.name}" ?{" "}
-					{data.transactions.length ? <>❌ {data.transactions.length} transactions(s)</> : "✅ Aucun"}
-				</p>
-				<MutationError error={mutation.error} />
-			</div>
-
-			<div className="dialog-footer">
-				<button type="button" onClick={closeModal}>
-					Fermer
-				</button>
-				<button
-					type="submit"
-					className="main"
-					onClick={save}
-					disabled={Boolean(data.transactions.length) || mutation.isPending}
-				>
-					Supprimer
-				</button>
-			</div>
-		</Modal>
+		<ConfirmDeleteModal
+			title={`Supprimer le type de paiement "${data.name}"`}
+			onClose={closeModal}
+			onConfirm={save}
+			mutation={mutation}
+			canDelete={!data.transactions.length}
+		>
+			<p>
+				Transactions associées à "{data.name}" ?{" "}
+				{data.transactions.length ? <>❌ {data.transactions.length} transactions(s)</> : "✅ Aucun"}
+			</p>
+		</ConfirmDeleteModal>
 	);
 }

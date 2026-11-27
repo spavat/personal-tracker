@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
-import Modal from "../../../components/Modal";
-import MutationError from "../../../components/MutationError";
+import ConfirmDeleteModal from "../../../components/ConfirmDeleteModal";
 import { deletePlace, placeDetailsQuery } from "../api";
 
 export default function DeletePlaceModalForm({ placeId, returnTo }: { placeId: string; returnTo: string }) {
@@ -35,43 +34,29 @@ export default function DeletePlaceModalForm({ placeId, returnTo }: { placeId: s
 	const canBeDeleted = nbSpectacles === 0 && nbPerformances === 0;
 
 	return (
-		<Modal className={"form dialog-medium"} isOpen={true} onClose={closeModal} hasCloseBtn={true}>
-			<div className="dialog-header">
-				<h2 id="dialog-title">Supprimer lieu</h2>
-			</div>
-			<div className="dialog-body">
-				{canBeDeleted ? (
-					<p>
-						Êtes-vous sûr de vouloir supprimer le lieu ?
-						<br />
-						Nom : {data.name}
-						<br />
-					</p>
-				) : (
-					<p>
-						Impossible de supprimer le lieux <strong>{data.name}</strong>
-						<br />
-						Spectacles : {nbSpectacles}
-						<br />
-						Représentations : {nbPerformances}
-					</p>
-				)}
-				<MutationError error={deletePlaceMutation.error} />
-			</div>
-
-			<div className="dialog-footer">
-				<button type="button" onClick={closeModal}>
-					Annuler
-				</button>
-				<button
-					type="submit"
-					className="main"
-					onClick={deleteAndClose}
-					disabled={!canBeDeleted || deletePlaceMutation.isPending}
-				>
-					Supprimer
-				</button>
-			</div>
-		</Modal>
+		<ConfirmDeleteModal
+			title="Supprimer lieu"
+			onClose={closeModal}
+			onConfirm={deleteAndClose}
+			mutation={deletePlaceMutation}
+			canDelete={canBeDeleted}
+		>
+			{canBeDeleted ? (
+				<p>
+					Êtes-vous sûr de vouloir supprimer le lieu ?
+					<br />
+					Nom : {data.name}
+					<br />
+				</p>
+			) : (
+				<p>
+					Impossible de supprimer le lieux <strong>{data.name}</strong>
+					<br />
+					Spectacles : {nbSpectacles}
+					<br />
+					Représentations : {nbPerformances}
+				</p>
+			)}
+		</ConfirmDeleteModal>
 	);
 }
