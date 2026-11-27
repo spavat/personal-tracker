@@ -24,7 +24,7 @@ export const test = base.extend<{}, { asOwner: boolean; ownerState: string | und
 			await page.getByLabel("Email").fill(OWNER.email);
 			await page.getByLabel("Mot de passe").fill(OWNER.password);
 			await page.getByRole("button", { name: "Se connecter" }).click();
-			await expect(page.getByRole("link", { name: "Se déconnecter" })).toBeVisible();
+			await expect(page.getByRole("button", { name: "Se déconnecter" })).toBeVisible();
 			await page.context().storageState({ path: file });
 			await page.close();
 			await provide(file);

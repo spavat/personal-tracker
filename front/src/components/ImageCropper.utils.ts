@@ -2,7 +2,9 @@ import type { Area } from "react-easy-crop";
 
 // the image as is (blob: of a pasted/picked file, or a CORS-enabled URL)
 export async function uncroppedImage(src: string): Promise<File> {
-	const blob = await (await fetch(src)).blob();
+	const response = await fetch(src);
+	if (!response.ok) throw new Error(`Image inaccessible (${response.status})`);
+	const blob = await response.blob();
 	if (!blob.type.startsWith("image/")) throw new Error("Pas une image");
 	return new File([blob], `image.${blob.type.split("/")[1]}`, { type: blob.type });
 }

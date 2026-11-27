@@ -1156,7 +1156,8 @@
 		border-top: 1px solid var(--primary-color);
 	}
 
-	.sidebar-nav a {
+	.sidebar-nav a,
+	.sidebar-nav button {
 		display: flex;
 		align-items: center;
 		gap: 10px;
@@ -1167,7 +1168,19 @@
 		overflow: hidden;
 	}
 
-	.sidebar-nav a:hover {
+	/* the logout action: a button drawn like the links */
+	.sidebar-nav button {
+		width: 100%;
+		border: none;
+		border-radius: 0;
+		background: none;
+		font: inherit;
+		font-weight: 500; /* the links' weight (index.css) */
+		cursor: pointer;
+	}
+
+	.sidebar-nav a:hover,
+	.sidebar-nav button:hover {
 		background-color: var(--hover-background);
 	}
 

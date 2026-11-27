@@ -82,10 +82,10 @@ export default function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
 				<ul className="sidebar-nav sidebar-nav-secondary" onClick={onCloseMobile}>
 					<li>
 						{isOwner ? (
-							<a href="#" onClick={(event) => (event.preventDefault(), logout())} title="Se déconnecter">
+							<button type="button" onClick={logout} title="Se déconnecter">
 								<span className="sidebar-icon">🔓</span>
 								{!collapsed && <span className="sidebar-label">Se déconnecter</span>}
-							</a>
+							</button>
 						) : (
 							<Link
 								to="/login"
